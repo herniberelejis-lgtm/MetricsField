@@ -17,7 +17,17 @@ interface DbShape {
   clientes: Cliente[];
 }
 
+// En Vercel (serverless) el filesystem es de solo lectura: los datos se
+// editan en tu PC y viajan al deploy con cada `git push`. Este guard evita
+// un error críptico si se intenta escribir desde el sitio publicado.
+const SOLO_LECTURA = !!process.env.VERCEL;
+
 function persist(db: DbShape): void {
+  if (SOLO_LECTURA) {
+    throw new Error(
+      "Este deploy es de solo lectura. Cargá los datos desde tu PC (npm run dev) y publicalos con git push.",
+    );
+  }
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const tmp = `${DB_PATH}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(db, null, 2), "utf8");
@@ -27,7 +37,7 @@ function persist(db: DbShape): void {
 function load(): DbShape {
   if (!fs.existsSync(DB_PATH)) {
     const db: DbShape = { clientes: seedClientes };
-    persist(db);
+    if (!SOLO_LECTURA) persist(db); // en read-only servimos el seed en memoria
     return db;
   }
   return JSON.parse(fs.readFileSync(DB_PATH, "utf8")) as DbShape;

@@ -46,8 +46,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-slate-200 p-4 text-xs text-slate-400">
-        v0.1 · datos de ejemplo
+      <div className="flex items-center justify-between border-t border-slate-200 p-4 text-xs text-slate-400">
+        <span>v0.2</span>
+        <form action="/api/logout" method="post">
+          <button type="submit" className="text-slate-400 hover:text-slate-700">
+            Salir
+          </button>
+        </form>
       </div>
     </aside>
   );
