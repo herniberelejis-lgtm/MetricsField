@@ -42,7 +42,7 @@ export default async function ClienteDetallePage({
   return (
     <div>
       <div className="mb-4 text-sm">
-        <Link href="/clientes" className="text-slate-500 hover:text-brand-fg">
+        <Link href="/admin/clientes" className="text-slate-500 hover:text-brand-fg">
           ← Clientes
         </Link>
       </div>
@@ -61,19 +61,19 @@ export default async function ClienteDetallePage({
       {/* Acciones */}
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
-          href={`/clientes/${c.id}/metricas`}
+          href={`/admin/clientes/${c.id}/metricas`}
           className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
         >
           + Cargar métricas
         </Link>
         <Link
-          href={`/clientes/${c.id}/editar`}
+          href={`/admin/clientes/${c.id}/editar`}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
         >
           Editar / Venta NFC
         </Link>
         <Link
-          href={`/reportes/${c.id}`}
+          href={`/admin/reportes/${c.id}`}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
         >
           Ver reporte mensual

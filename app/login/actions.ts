@@ -24,7 +24,7 @@ export async function accionLogin(fd: FormData): Promise<void> {
     maxAge: 60 * 60 * 24 * 30, // 30 días
     path: "/",
   });
-  redirect("/");
+  redirect("/admin");
 }
 
 export async function accionLogout(): Promise<void> {

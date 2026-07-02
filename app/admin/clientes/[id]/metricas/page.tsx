@@ -26,7 +26,7 @@ export default async function MetricasPage({
     <div className="mx-auto max-w-xl">
       <div className="mb-4 text-sm">
         <Link
-          href={`/clientes/${c.id}`}
+          href={`/admin/clientes/${c.id}`}
           className="text-slate-500 hover:text-brand-fg"
         >
           ← {c.nombre}

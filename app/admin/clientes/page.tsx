@@ -23,7 +23,7 @@ export default function ClientesPage() {
         subtitle={`${clientes.length} cuentas en cartera`}
         actions={
           <Link
-            href="/clientes/nuevo"
+            href="/admin/clientes/nuevo"
             className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
           >
             + Nuevo cliente
@@ -35,7 +35,7 @@ export default function ClientesPage() {
         {ordenados.map((c) => {
           const m = metricaActual(c);
           return (
-            <Link key={c.id} href={`/clientes/${c.id}`}>
+            <Link key={c.id} href={`/admin/clientes/${c.id}`}>
               <Card className="h-full transition-shadow hover:shadow-md">
                 <div className="flex items-start justify-between gap-2">
                   <div>

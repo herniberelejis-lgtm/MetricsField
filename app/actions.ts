@@ -41,7 +41,7 @@ export async function accionCrearCliente(fd: FormData): Promise<void> {
     fee: num(fd, "fee"),
   });
   revalidatePath("/", "layout");
-  redirect(`/clientes/${cliente.id}`);
+  redirect(`/admin/clientes/${cliente.id}`);
 }
 
 export async function accionActualizarCliente(fd: FormData): Promise<void> {
@@ -58,7 +58,7 @@ export async function accionActualizarCliente(fd: FormData): Promise<void> {
     fee: num(fd, "fee"),
   });
   revalidatePath("/", "layout");
-  redirect(`/clientes/${id}`);
+  redirect(`/admin/clientes/${id}`);
 }
 
 export async function accionGuardarMetrica(fd: FormData): Promise<void> {
@@ -82,14 +82,14 @@ export async function accionGuardarMetrica(fd: FormData): Promise<void> {
   }
   db.guardarMetrica(id, metrica);
   revalidatePath("/", "layout");
-  redirect(`/clientes/${id}`);
+  redirect(`/admin/clientes/${id}`);
 }
 
 export async function accionEliminarMetrica(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   db.eliminarMetrica(id, str(fd, "mes"));
   revalidatePath("/", "layout");
-  redirect(`/clientes/${id}/metricas`);
+  redirect(`/admin/clientes/${id}/metricas`);
 }
 
 export async function accionRegistrarVentaNFC(fd: FormData): Promise<void> {
@@ -101,12 +101,12 @@ export async function accionRegistrarVentaNFC(fd: FormData): Promise<void> {
     fecha: str(fd, "fecha") || new Date().toISOString().slice(0, 10),
   });
   revalidatePath("/", "layout");
-  redirect(`/clientes/${id}`);
+  redirect(`/admin/clientes/${id}`);
 }
 
 export async function accionRegenerarCodigo(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   db.regenerarCodigo(id);
   revalidatePath("/", "layout");
-  redirect(`/clientes/${id}`);
+  redirect(`/admin/clientes/${id}`);
 }

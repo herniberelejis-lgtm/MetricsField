@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Protege el panel interno con la contraseña de ADMIN_PASSWORD.
-// Público sin login: el portal de clientes (/portal/…) y /login.
-// Sin ADMIN_PASSWORD configurada: abierto en desarrollo (tu PC),
+// Protege el panel interno (/admin) con la contraseña de ADMIN_PASSWORD.
+// Todo lo demás es público: la landing (/), el portal de clientes
+// (/portal/…) y /login.
+// Sin ADMIN_PASSWORD configurada: /admin abierto en desarrollo (tu PC),
 // bloqueado en producción (nunca se publica el panel sin contraseña).
 
-const PUBLICAS = [/^\/portal(\/|$)/, /^\/login(\/|$)/];
+const PROTEGIDAS = /^\/admin(\/|$)/;
 
 async function sha256(texto: string): Promise<string> {
   const buf = await crypto.subtle.digest(
@@ -19,7 +20,7 @@ async function sha256(texto: string): Promise<string> {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (PUBLICAS.some((r) => r.test(pathname))) return NextResponse.next();
+  if (!PROTEGIDAS.test(pathname)) return NextResponse.next();
 
   const password = process.env.ADMIN_PASSWORD;
   if (!password) {
@@ -37,5 +38,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)"],
 };

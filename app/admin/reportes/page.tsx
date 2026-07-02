@@ -31,7 +31,7 @@ export default function ReportesPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {activos.map((c) => (
-          <Link key={c.id} href={`/reportes/${c.id}`}>
+          <Link key={c.id} href={`/admin/reportes/${c.id}`}>
             <Card className="flex items-center justify-between transition-shadow hover:shadow-md">
               <div>
                 <div className="font-medium text-slate-900">{c.nombre}</div>

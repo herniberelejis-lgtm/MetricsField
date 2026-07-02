@@ -142,7 +142,7 @@ function Row({ c }: { c: Cliente }) {
     <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
       <td className="px-4 py-3">
         <Link
-          href={`/clientes/${c.id}`}
+          href={`/admin/clientes/${c.id}`}
           className="font-medium text-slate-900 hover:text-brand-fg"
         >
           {c.nombre}

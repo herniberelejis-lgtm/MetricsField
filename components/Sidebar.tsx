@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const nav = [
-  { href: "/", label: "Panel", icon: "◧" },
-  { href: "/analytics", label: "Analytics", icon: "∿" },
-  { href: "/clientes", label: "Clientes", icon: "☰" },
-  { href: "/reportes", label: "Reportes", icon: "▤" },
+  { href: "/admin", label: "Panel", icon: "◧" },
+  { href: "/admin/analytics", label: "Analytics", icon: "∿" },
+  { href: "/admin/clientes", label: "Clientes", icon: "☰" },
+  { href: "/admin/reportes", label: "Reportes", icon: "▤" },
 ];
 
 export default function Sidebar() {
@@ -25,8 +25,8 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1 p-3">
         {nav.map((item) => {
           const active =
-            item.href === "/"
-              ? pathname === "/"
+            item.href === "/admin"
+              ? pathname === "/admin"
               : pathname.startsWith(item.href);
           return (
             <Link

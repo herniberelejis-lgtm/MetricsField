@@ -35,7 +35,7 @@ export default async function ReporteClientePage({
   return (
     <div>
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href="/reportes" className="text-sm text-slate-500 hover:text-brand-fg">
+        <Link href="/admin/reportes" className="text-sm text-slate-500 hover:text-brand-fg">
           ← Reportes
         </Link>
         <span className="text-xs text-slate-400">
