@@ -4,10 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as db from "@/lib/db";
 import type {
+  DestinoLink,
   EstadoCliente,
+  EstadoFeedback,
+  EstadoResena,
   FormatoNFC,
   MetricaMensual,
   Plan,
+  PlataformaIA,
   Rubro,
   Zona,
 } from "@/lib/types";
@@ -109,4 +113,144 @@ export async function accionRegenerarCodigo(fd: FormData): Promise<void> {
   await db.regenerarCodigo(id);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}`);
+}
+
+// ---------- Links NFC ----------
+
+export async function accionCrearLink(fd: FormData): Promise<void> {
+  const comercioId = str(fd, "comercioId");
+  const destino = str(fd, "destino") as DestinoLink;
+  const urlDestino = str(fd, "urlDestino");
+  if (destino !== "resena" && !urlDestino) {
+    throw new Error("Este destino necesita una URL.");
+  }
+  await db.crearLink(comercioId, {
+    etiqueta: str(fd, "etiqueta") || "Nuevo link",
+    destino,
+    urlDestino: destino === "resena" ? null : urlDestino,
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/links`);
+}
+
+export async function accionActualizarLink(fd: FormData): Promise<void> {
+  const linkId = str(fd, "linkId");
+  const comercioId = str(fd, "comercioId");
+  const destino = str(fd, "destino") as DestinoLink;
+  const urlDestino = str(fd, "urlDestino");
+  await db.actualizarLink(linkId, {
+    etiqueta: str(fd, "etiqueta"),
+    destino,
+    urlDestino: destino === "resena" ? null : urlDestino,
+    activo: fd.get("activo") === "1",
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/links`);
+}
+
+export async function accionEliminarLink(fd: FormData): Promise<void> {
+  const linkId = str(fd, "linkId");
+  const comercioId = str(fd, "comercioId");
+  await db.eliminarLink(linkId);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/links`);
+}
+
+// ---------- CRM: feedback privado ----------
+
+export async function accionActualizarFeedback(fd: FormData): Promise<void> {
+  const id = Number(fd.get("id"));
+  const comercioId = str(fd, "comercioId");
+  await db.actualizarFeedback(id, {
+    estado: str(fd, "estado") as EstadoFeedback,
+    notasInternas: str(fd, "notasInternas"),
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/crm`);
+}
+
+// ---------- CRM: reseñas ----------
+
+export async function accionCrearResena(fd: FormData): Promise<void> {
+  const comercioId = str(fd, "comercioId");
+  await db.crearResena(comercioId, {
+    autor: str(fd, "autor") || "Anónimo",
+    estrellas: Number(fd.get("estrellas")) as 1 | 2 | 3 | 4 | 5,
+    texto: str(fd, "texto"),
+    plataforma: (str(fd, "plataforma") || "google") as "google" | "otra",
+    fecha: str(fd, "fecha") || new Date().toISOString().slice(0, 10),
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/crm`);
+}
+
+export async function accionActualizarResena(fd: FormData): Promise<void> {
+  const id = Number(fd.get("id"));
+  const comercioId = str(fd, "comercioId");
+  await db.actualizarResena(id, {
+    estado: str(fd, "estado") as EstadoResena,
+    respuestaSugerida: str(fd, "respuestaSugerida"),
+    respuestaPublicada: fd.get("respuestaPublicada") === "1",
+    responsable: str(fd, "responsable"),
+    notas: str(fd, "notas"),
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/crm`);
+}
+
+// ---------- Checklist SEO ----------
+
+export async function accionToggleChecklist(fd: FormData): Promise<void> {
+  const comercioId = str(fd, "comercioId");
+  const itemKey = str(fd, "itemKey");
+  const hecho = fd.get("hecho") === "1";
+  await db.toggleChecklistItem(comercioId, itemKey, hecho);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/seo`);
+}
+
+// ---------- Audit GEO ----------
+
+export async function accionRegistrarAudit(fd: FormData): Promise<void> {
+  const comercioId = str(fd, "comercioId");
+  await db.crearAudit(comercioId, {
+    pregunta: str(fd, "pregunta"),
+    plataforma: str(fd, "plataforma") as PlataformaIA,
+    aparece: fd.get("aparece") === "1",
+    competidoresMencionados: str(fd, "competidoresMencionados"),
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/geo`);
+}
+
+// ---------- Competencia ----------
+
+export async function accionCrearCompetidor(fd: FormData): Promise<void> {
+  const comercioId = str(fd, "comercioId");
+  await db.crearCompetidor(comercioId, {
+    nombre: str(fd, "nombre"),
+    rating: fd.get("rating") ? num(fd, "rating") : null,
+    totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/competencia`);
+}
+
+export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
+  const id = Number(fd.get("id"));
+  const comercioId = str(fd, "comercioId");
+  await db.actualizarCompetidor(id, {
+    rating: fd.get("rating") ? num(fd, "rating") : null,
+    totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
+  });
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/competencia`);
+}
+
+export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
+  const id = Number(fd.get("id"));
+  const comercioId = str(fd, "comercioId");
+  await db.eliminarCompetidor(id);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/competencia`);
 }
