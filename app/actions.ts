@@ -28,7 +28,7 @@ function num(fd: FormData, key: string): number {
 export async function accionCrearCliente(fd: FormData): Promise<void> {
   const nombre = str(fd, "nombre");
   if (!nombre) throw new Error("El nombre del negocio es obligatorio.");
-  const cliente = db.crearCliente({
+  const cliente = await db.crearCliente({
     nombre,
     rubro: str(fd, "rubro") as Rubro,
     zona: str(fd, "zona") as Zona,
@@ -46,7 +46,7 @@ export async function accionCrearCliente(fd: FormData): Promise<void> {
 
 export async function accionActualizarCliente(fd: FormData): Promise<void> {
   const id = str(fd, "id");
-  db.actualizarCliente(id, {
+  await db.actualizarCliente(id, {
     nombre: str(fd, "nombre"),
     rubro: str(fd, "rubro") as Rubro,
     zona: str(fd, "zona") as Zona,
@@ -80,21 +80,21 @@ export async function accionGuardarMetrica(fd: FormData): Promise<void> {
     metrica.citasCopilot = num(fd, "citasCopilot");
     metrica.citasPerplexity = num(fd, "citasPerplexity");
   }
-  db.guardarMetrica(id, metrica);
+  await db.guardarMetrica(id, metrica);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}`);
 }
 
 export async function accionEliminarMetrica(fd: FormData): Promise<void> {
   const id = str(fd, "id");
-  db.eliminarMetrica(id, str(fd, "mes"));
+  await db.eliminarMetrica(id, str(fd, "mes"));
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}/metricas`);
 }
 
 export async function accionRegistrarVentaNFC(fd: FormData): Promise<void> {
   const id = str(fd, "id");
-  db.registrarVentaNFC(id, {
+  await db.registrarVentaNFC(id, {
     formato: str(fd, "formato") as FormatoNFC,
     cantidad: Math.max(1, Math.round(num(fd, "cantidad"))),
     precioUnitario: num(fd, "precioUnitario"),
@@ -106,7 +106,7 @@ export async function accionRegistrarVentaNFC(fd: FormData): Promise<void> {
 
 export async function accionRegenerarCodigo(fd: FormData): Promise<void> {
   const id = str(fd, "id");
-  db.regenerarCodigo(id);
+  await db.regenerarCodigo(id);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}`);
 }

@@ -1,11 +1,8 @@
 import type { Cliente } from "./types";
 
-// Datos semilla: se usan UNA sola vez para crear data/db.json si no existe.
-// A partir de ahí la fuente de verdad es la base de datos (lib/db.ts).
-
-// Datos de ejemplo (mock). En una siguiente etapa esto se reemplaza por
-// una base de datos / integraciones (Google Business Profile, Search Console,
-// Bing Webmaster Tools, OtterlyAI). Por ahora alcanza para dar forma a la UI.
+// Datos de ejemplo (mock). Ya NO los usa la app en tiempo de ejecución — la
+// fuente de verdad es Postgres (lib/db.ts). Este archivo solo lo lee
+// scripts/generar-seed-sql.mts para producir db/seed.sql una vez.
 
 const MESES = ["2026-02", "2026-03", "2026-04", "2026-05", "2026-06"];
 

@@ -86,3 +86,89 @@ export function citasIA(m?: MetricaMensual): number {
 export function ingresoNFC(c: Cliente): number {
   return c.ventasNFC.reduce((acc, v) => acc + v.cantidad * v.precioUnitario, 0);
 }
+
+// ---------- Fase 1+: captación, CRM, SEO/GEO ----------
+// "comercio" en la base de datos es el mismo concepto que "Cliente" acá.
+
+export type DestinoLink = "resena" | "menu" | "instagram" | "promo" | "url_custom";
+
+export interface LinkNFC {
+  id: string; // slug corto: taply.app/t/<id>
+  comercioId: string;
+  etiqueta: string;
+  destino: DestinoLink;
+  urlDestino: string | null;
+  activo: boolean;
+  creadoEn: string;
+  taps: number; // total histórico, calculado
+}
+
+export type EstadoFeedback = "nuevo" | "en_proceso" | "resuelto";
+
+export interface Feedback {
+  id: number;
+  comercioId: string;
+  estrellas: 1 | 2 | 3;
+  texto: string;
+  contacto: string | null;
+  estado: EstadoFeedback;
+  notasInternas: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
+export type EstadoResena = "nueva" | "respondida" | "escalada" | "resuelta";
+
+export interface ResenaCRM {
+  id: number;
+  comercioId: string;
+  autor: string;
+  estrellas: 1 | 2 | 3 | 4 | 5;
+  texto: string;
+  plataforma: "google" | "otra";
+  estado: EstadoResena;
+  respuestaSugerida: string | null;
+  respuestaPublicada: boolean;
+  responsable: string | null;
+  notas: string;
+  fecha: string;
+}
+
+export type PlataformaIA = "ChatGPT" | "Claude" | "Perplexity" | "Gemini" | "Otra";
+
+export interface AuditGEOResultado {
+  id: number;
+  comercioId: string;
+  fecha: string;
+  pregunta: string;
+  plataforma: PlataformaIA;
+  aparece: boolean;
+  competidoresMencionados: string;
+}
+
+export interface ChecklistItemSEO {
+  key: string;
+  label: string;
+  hecho: boolean;
+}
+
+export interface Competidor {
+  id: number;
+  comercioId: string;
+  nombre: string;
+  rating: number | null;
+  totalResenas: number | null;
+  googlePlaceId: string | null;
+  actualizadoEn: string;
+}
+
+/** Checklist SEO estandarizado (mismo para todos los rubros por ahora). */
+export const CHECKLIST_SEO_ITEMS: { key: string; label: string }[] = [
+  { key: "categoria", label: "Categoría principal correcta en Google Business" },
+  { key: "fotos", label: "Al menos 10 fotos recientes cargadas" },
+  { key: "horarios", label: "Horarios y feriados al día" },
+  { key: "atributos", label: "Atributos de servicio completos" },
+  { key: "descripcion", label: "Descripción con palabras clave del rubro y zona" },
+  { key: "qa", label: "Preguntas y respuestas frecuentes cargadas" },
+  { key: "schema", label: "Schema LocalBusiness instalado en el sitio (si tiene web)" },
+];

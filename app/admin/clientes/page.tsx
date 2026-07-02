@@ -12,8 +12,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default function ClientesPage() {
-  const clientes = getClientes();
+export default async function ClientesPage() {
+  const clientes = await getClientes();
   const ordenados = [...clientes].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   return (

@@ -6,8 +6,8 @@ import { fmtMes } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default function ReportesPage() {
-  const clientes = getClientes();
+export default async function ReportesPage() {
+  const clientes = await getClientes();
   const activos = clientes.filter((c) => c.estado === "activo");
   const conDatos = activos.find((c) => c.historico.length > 0);
   const mesRef = conDatos ? metricaActual(conDatos)?.mes : undefined;

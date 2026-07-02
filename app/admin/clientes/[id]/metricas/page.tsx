@@ -15,7 +15,7 @@ export default async function MetricasPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const c = getCliente(id);
+  const c = await getCliente(id);
   if (!c) notFound();
 
   const esPremium = c.plan === "Premium";

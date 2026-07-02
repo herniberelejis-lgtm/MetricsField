@@ -3,6 +3,6 @@ import AnalyticsView from "@/components/AnalyticsView";
 
 export const dynamic = "force-dynamic";
 
-export default function AnalyticsPage() {
-  return <AnalyticsView clientes={getClientes()} />;
+export default async function AnalyticsPage() {
+  return <AnalyticsView clientes={await getClientes()} />;
 }

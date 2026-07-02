@@ -20,7 +20,7 @@ export default async function PortalPage({
   params: Promise<{ codigo: string }>;
 }) {
   const { codigo } = await params;
-  const c = getClientePorCodigo(codigo);
+  const c = await getClientePorCodigo(codigo);
   if (!c || c.estado === "baja") notFound();
 
   const m = metricaActual(c);

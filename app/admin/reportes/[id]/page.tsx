@@ -22,7 +22,7 @@ export default async function ReporteClientePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const c = getCliente(id);
+  const c = await getCliente(id);
   if (!c) notFound();
 
   const m = metricaActual(c);
