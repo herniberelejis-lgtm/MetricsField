@@ -166,11 +166,17 @@ read-only. Migrá a **Postgres serverless (Neon) con Prisma**:
 - Carga manual de reseñas (mientras no haya API de Google): formulario rápido
   "pegar reseña" con autor, estrellas, texto. El objetivo es que el fundador
   cargue las reseñas importantes en 20 segundos.
-- Botón **"Sugerir respuesta con IA"**: llama a la API de Anthropic
-  (`claude-sonnet-5`, env var `ANTHROPIC_API_KEY`) con el tono de marca del
-  comercio y la reseña; guarda la sugerencia; botón "copiar" para pegarla en
-  Google. Si no hay API key configurada, el botón muestra cómo configurarla
-  (nunca rompas la página por falta de key).
+- Botón **"Sugerir respuesta"** — MODO GRATIS (el default): un generador de
+  plantillas propio, sin ninguna API paga. Combina (sentimiento × tema ×
+  tono de marca del comercio) con variantes para no repetir: agradecimiento
+  para 4–5★, disculpa + acción concreta + invitación a volver para 1–3★,
+  siempre nombrando al autor. Guarda la sugerencia y botón "copiar" para
+  pegarla en Google. Diseñá las plantillas con cuidado: tienen que sonar
+  humanas y argentinas, no robóticas.
+- El mismo botón tiene un upgrade opcional a IA real (`ANTHROPIC_API_KEY`,
+  modelo `claude-sonnet-5`) — SOLO si la env var existe. El fundador decidió
+  no gastar en APIs todavía: el modo gratis es el producto, el modo IA es un
+  plus futuro. Nunca rompas ni degrades la página por falta de key.
 - El `Feedback` nuevo dispara notificación (ver 1d) y aparece con badge de
   urgencia.
 
@@ -195,12 +201,20 @@ read-only. Migrá a **Postgres serverless (Neon) con Prisma**:
 
 ### 2b. Audit GEO (la demo de venta)
 
-- Pantalla admin "Nuevo audit": elegís comercio → el sistema genera las
-  preguntas del rubro/zona ("mejor {rubro} en {zona}", "dónde {acción} en
-  {zona} Córdoba"...) → las consulta contra la API de Anthropic (y OpenAI y/o
-  Perplexity si hay keys; cada integración es opcional e independiente) → 
-  parsea si el comercio aparece y qué competidores se mencionan → guarda
-  `AuditGEO`.
+- Pantalla admin "Nuevo audit" — MODO GRATIS (el default, sin APIs pagas):
+  1. Elegís comercio → el sistema genera las preguntas del rubro/zona
+     ("mejor {rubro} en {zona}", "dónde {acción} en {zona} Córdoba"...) con
+     botón "copiar" por pregunta.
+  2. El fundador las pega en los chats gratuitos (ChatGPT, Claude.ai,
+     Perplexity, Gemini) desde su navegador — links directos a cada uno.
+  3. Vuelve y registra el resultado en 2 clics por pregunta: ¿apareció el
+     comercio? (sí/no) + qué competidores mencionó la IA (texto corto) →
+     se guarda como `AuditGEO`.
+  El flujo entero tiene que tomar menos de 5 minutos por comercio. Es
+  trabajo manual asistido, y está bien: el valor está en el registro
+  histórico y el antes/después, no en la automatización.
+- Upgrade opcional a automático vía `ANTHROPIC_API_KEY` (u otras) SOLO si la
+  env var existe — misma regla que las respuestas: gratis es el producto.
 - Vista de resultados estilo "antes/después" (como el mockup: ❌ "la IA no te
   menciona, nombra a 3 competidores" → ✅ "apareciste"). Historial por mes
   para mostrar la evolución. Esta pantalla también se muestra (read-only) en
@@ -243,14 +257,21 @@ vivir en `/admin` (mové el route group y actualizá el middleware).
 
 ## Integraciones — la verdad de lo que se puede hoy
 
+**Regla del fundador: TODO el producto tiene que quedar 100% terminado y
+usable con costo cero.** Nada de lo esencial puede depender de una API paga.
+Las APIs pagas (Anthropic, etc.) son enchufes opcionales para más adelante:
+dejá la interfaz lista pero el producto completo funciona sin ellas.
+
 Construí SOLO integraciones reales. Cada una detrás de una env var, opcional,
 con pantalla de "cómo conseguir esta key" para que el fundador aprenda:
 
 | Integración | Para qué | Cómo | Estado |
 |---|---|---|---|
-| Anthropic API | Respuestas sugeridas + Audit GEO | `ANTHROPIC_API_KEY`, modelo `claude-sonnet-5` | HACER |
-| Resend | Email de alertas y reportes | `RESEND_API_KEY` | HACER |
-| Google Places API | Rating/total de reseñas propios y de competidores | `GOOGLE_PLACES_API_KEY` (sin OAuth) | HACER (opcional) |
+| Plantillas de respuesta propias | Respuestas sugeridas sin costo | Código propio, cero APIs | HACER (es el default) |
+| Audit GEO manual asistido | Medir presencia en IA sin costo | Genera preguntas + registro en 2 clics | HACER (es el default) |
+| Resend | Email de alertas y reportes | `RESEND_API_KEY` (tier gratis 3.000/mes) | HACER |
+| Google Places API | Rating/total de reseñas propios y de competidores | `GOOGLE_PLACES_API_KEY` (tiene tier gratis mensual) | HACER (opcional) |
+| Anthropic API | Upgrade de respuestas + audit automático | `ANTHROPIC_API_KEY` — EL FUNDADOR NO LA VA A CARGAR TODAVÍA | Dejar el enchufe listo, no depender de ella |
 | Mercado Pago | Cobro de suscripciones | Fase posterior: por ahora, campo "link de pago" por comercio donde el fundador pega su link de suscripción de MP creado en la web de MP | SIMPLE AHORA |
 | wa.me links | Avisos y venta | Sin API, gratis, siempre funciona | HACER |
 | WhatsApp Cloud API | Asistente del dueño (Capa 3) | Requiere verificación de negocio en Meta | NO PROMETER — dejá el módulo como "próximamente" |
