@@ -17,7 +17,7 @@ export default function Sidebar() {
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="border-b border-slate-200 px-5 py-5">
         <div className="text-sm font-semibold tracking-tight text-slate-900">
-          GEO · SEO Analytics
+          Taply
         </div>
         <div className="mt-0.5 text-xs text-slate-500">Córdoba · presencia digital</div>
       </div>

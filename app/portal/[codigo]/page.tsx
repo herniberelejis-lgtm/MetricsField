@@ -59,7 +59,7 @@ export default async function PortalPage({
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <div>
             <div className="text-xs font-medium uppercase tracking-wide text-brand-fg">
-              GEO · SEO Analytics — Portal de cliente
+              Taply — Portal de cliente
             </div>
             <h1 className="mt-0.5 text-lg font-semibold text-slate-900">
               {c.nombre}
@@ -309,7 +309,7 @@ export default async function PortalPage({
         )}
 
         <footer className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-400">
-          Portal privado de {c.nombre} · gestionado por GEO · SEO Analytics,
+          Portal privado de {c.nombre} · gestionado por Taply,
           Córdoba. No compartas este link.
         </footer>
       </main>

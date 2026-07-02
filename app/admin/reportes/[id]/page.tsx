@@ -58,7 +58,7 @@ export default async function ReporteClientePage({
             </div>
           </div>
           <div className="text-right text-xs text-slate-400">
-            <div>GEO · SEO Analytics</div>
+            <div>Taply</div>
             <div>Córdoba</div>
           </div>
         </header>
