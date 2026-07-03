@@ -28,6 +28,11 @@ export const sql =
   postgres(connectionString, {
     ssl: connectionString.includes("neon.tech") ? "require" : undefined,
     max: 5,
+    // Neon en modo pooler (PgBouncer) no lleva bien los prepared statements
+    // con nombre: cada ALTER TABLE puede dejar conexiones con un plan de
+    // consulta cacheado y desactualizado ("cached plan must not change
+    // result type"). Server-side prepare desactivado evita ese problema.
+    prepare: false,
   });
 
 if (process.env.NODE_ENV !== "production") {
