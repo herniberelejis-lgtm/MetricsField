@@ -76,6 +76,20 @@ function StarRow({
   );
 }
 
+/** Solo muestra la calificación ya elegida — no es tocable, evita que
+ * parezca que hay que volver a puntuar en la pantalla siguiente. */
+function StarsReadOnly({ value }: { value: number }) {
+  return (
+    <div className="flex justify-center gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <div key={n} className="p-1">
+          <StarIcon filled={value >= n} size={36} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function GoogleButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
@@ -169,7 +183,7 @@ export default function TapStarGate({
 
         {esPositiva && (
           <div className="mt-8">
-            <StarRow value={estrellas} onSelect={setEstrellas} />
+            <StarsReadOnly value={estrellas} />
             <p className="mt-5 text-[15px]" style={{ color: INK }}>
               ¡Qué bueno! Contanos en Google — te toma 10 segundos.
             </p>
@@ -182,9 +196,7 @@ export default function TapStarGate({
 
         {esNegativa && !enviado && (
           <form onSubmit={handleEnviarFeedback} className="mt-8 text-left">
-            <div className="flex justify-center">
-              <StarRow value={estrellas} onSelect={setEstrellas} />
-            </div>
+            <StarsReadOnly value={estrellas} />
             <p className="mt-5 text-center text-[15px] font-medium" style={{ color: INK }}>
               Lamentamos que no fue perfecto
             </p>
