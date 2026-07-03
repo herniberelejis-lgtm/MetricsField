@@ -223,7 +223,7 @@ export async function accionToggleChecklist(fd: FormData): Promise<void> {
   const hecho = fd.get("hecho") === "1";
   await db.toggleChecklistItem(comercioId, itemKey, hecho);
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/seo`);
+  redirect(`/admin/clientes/${comercioId}/auditoria`);
 }
 
 // ---------- Audit GEO ----------
@@ -238,7 +238,7 @@ export async function accionRegistrarAudit(fd: FormData): Promise<void> {
     competidoresMencionados: str(fd, "competidoresMencionados"),
   });
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/geo`);
+  redirect(`/admin/clientes/${comercioId}/auditoria`);
 }
 
 // ---------- Competencia ----------
@@ -252,7 +252,7 @@ export async function accionCrearCompetidor(fd: FormData): Promise<void> {
     totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
   });
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/competencia`);
+  redirect(`/admin/clientes/${comercioId}/auditoria`);
 }
 
 export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
@@ -264,7 +264,7 @@ export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
     totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
   });
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/competencia`);
+  redirect(`/admin/clientes/${comercioId}/auditoria`);
 }
 
 export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
@@ -273,7 +273,7 @@ export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
   const comercioId = str(fd, "comercioId");
   await db.eliminarCompetidor(id);
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/competencia`);
+  redirect(`/admin/clientes/${comercioId}/auditoria`);
 }
 
 // ---------- Prospectos ----------

@@ -59,54 +59,45 @@ export default async function ClienteDetallePage({
       />
 
       {/* Acciones */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <Link
-          href={`/admin/clientes/${c.id}/metricas`}
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          + Cargar métricas
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/editar`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          Editar / Venta NFC
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/links`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          Links NFC
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/crm`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          CRM de reseñas
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/seo`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          Checklist SEO
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/geo`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          Audit GEO
-        </Link>
-        <Link
-          href={`/admin/clientes/${c.id}/competencia`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-        >
-          Competencia
-        </Link>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/clientes/${c.id}/metricas`}
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            + Cargar métricas
+          </Link>
+          <Link
+            href={`/admin/clientes/${c.id}/editar`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+          >
+            Editar suscripción
+          </Link>
+          <Link
+            href={`/admin/clientes/${c.id}/links`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+          >
+            Gestionar hardware
+          </Link>
+          <Link
+            href={`/admin/clientes/${c.id}/crm`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+          >
+            Feedback privado
+          </Link>
+          <Link
+            href={`/admin/clientes/${c.id}/auditoria`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+          >
+            Auditoría Google My Business
+          </Link>
+        </div>
+
         <Link
           href={`/admin/reportes/${c.id}`}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+          className="rounded-lg border border-brand/30 bg-brand/5 px-3 py-1.5 text-sm font-medium text-brand-fg hover:bg-brand/10"
         >
-          Ver reporte mensual
+          📄 Generar reporte mensual
         </Link>
       </div>
 
