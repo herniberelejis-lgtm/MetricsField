@@ -103,6 +103,60 @@ function GoogleButton({ href, children }: { href: string; children: React.ReactN
   );
 }
 
+// Solo para 4-5★: una idea de reseña para copiar y pegar en Google. La
+// persona la lee, la puede cambiar, y la publica ella misma — no es
+// automático ni se manda por nosotros, por eso no viola las políticas de
+// Google (sería distinto si la publicáramos nosotros en su nombre). Varía
+// entre varias frases para que no queden reseñas idénticas repetidas.
+const SUGERENCIAS = [
+  "Muy buena experiencia en {nombre}, totalmente recomendable.",
+  "{nombre} superó mis expectativas, la atención fue excelente.",
+  "Encantado con mi visita a {nombre}, seguro vuelvo.",
+  "Todo diez en {nombre}: atención y calidad de primera.",
+  "Recomiendo {nombre} sin dudarlo, muy buena atención.",
+  "Excelente lugar, en {nombre} te tratan genial.",
+  "Quedé muy conforme con {nombre}, se nota el buen servicio.",
+];
+
+function useSugerenciaResena(nombre: string): string {
+  const [idx] = useState(() => Math.floor(Math.random() * SUGERENCIAS.length));
+  return SUGERENCIAS[idx].replace("{nombre}", nombre);
+}
+
+function SugerenciaResena({ texto }: { texto: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Clipboard API no disponible (navegador viejo/sin HTTPS) — la
+      // persona igual puede seleccionar el texto a mano.
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-xl border p-3.5 text-left" style={{ borderColor: LINE }}>
+      <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: INK_SOFT }}>
+        Una idea para tu reseña (la podés cambiar)
+      </p>
+      <p className="mt-1.5 text-[14px]" style={{ color: INK }}>
+        {texto}
+      </p>
+      <button
+        type="button"
+        onClick={copiar}
+        className="mt-2.5 rounded-full border px-3.5 py-1.5 text-[12.5px] font-medium transition"
+        style={{ borderColor: copiado ? "#34A853" : LINE, color: copiado ? "#34A853" : INK_SOFT }}
+      >
+        {copiado ? "Copiado ✓" : "Copiar texto"}
+      </button>
+    </div>
+  );
+}
+
 export default function TapStarGate({
   comercioId,
   nombre,
@@ -123,6 +177,7 @@ export default function TapStarGate({
 
   const esPositiva = estrellas >= 4;
   const esNegativa = estrellas >= 1 && estrellas <= 3;
+  const sugerencia = useSugerenciaResena(nombre);
 
   async function handleEnviarFeedback(e: React.FormEvent) {
     e.preventDefault();
@@ -186,6 +241,10 @@ export default function TapStarGate({
             <StarsReadOnly value={estrellas} />
             <p className="mt-5 text-[15px]" style={{ color: INK }}>
               ¡Qué bueno! Contanos en Google — te toma 10 segundos.
+            </p>
+            <SugerenciaResena texto={sugerencia} />
+            <p className="mt-3 text-[12px]" style={{ color: INK_SOFT }}>
+              Copiala, tocá el botón y pegala en Google
             </p>
             <GoogleButton href={googleReviewUrl}>Publicar reseña</GoogleButton>
             <p className="mt-5 text-[11px]" style={{ color: INK_SOFT }}>
