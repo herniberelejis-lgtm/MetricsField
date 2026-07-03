@@ -9,6 +9,7 @@ import type {
   DestinoLink,
   EstadoCliente,
   EstadoFeedback,
+  EstadoProspecto,
   EstadoResena,
   Feedback,
   FormatoNFC,
@@ -16,6 +17,7 @@ import type {
   MetricaMensual,
   Plan,
   PlataformaIA,
+  Prospecto,
   ResenaCRM,
   Rubro,
   TonoMarca,
@@ -579,4 +581,74 @@ export async function actualizarCompetidor(
 
 export async function eliminarCompetidor(id: number): Promise<void> {
   await sql`DELETE FROM competidores WHERE id = ${id}`;
+}
+
+// ---------- Prospectos ----------
+
+function mapProspecto(r: Record<string, unknown>): Prospecto {
+  return {
+    id: r.id as string,
+    local: r.local as string,
+    zona: r.zona as string,
+    contacto: r.contacto as string,
+    redes: r.redes as string,
+    web: r.web as string,
+    resenas: r.resenas as string,
+    producto: r.producto as string,
+    precio: r.precio as string,
+    estado: r.estado as EstadoProspecto,
+    segFecha: r.seg_fecha as string,
+    segTexto: r.seg_texto as string,
+    notas: r.notas as string,
+    capturas: (r.capturas as string[]) ?? [],
+    creadoEn: fechaISO(r.creado_en),
+  };
+}
+
+export async function getProspectos(): Promise<Prospecto[]> {
+  const rows = await sql`SELECT * FROM prospectos ORDER BY creado_en DESC`;
+  return rows.map(mapProspecto);
+}
+
+export async function crearProspecto(local = ""): Promise<Prospecto> {
+  const id = `prospecto-${crypto.randomBytes(4).toString("hex")}`;
+  await sql`INSERT INTO prospectos (id, local) VALUES (${id}, ${local})`;
+  const rows = await sql`SELECT * FROM prospectos WHERE id = ${id}`;
+  return mapProspecto(rows[0]);
+}
+
+export async function actualizarProspecto(
+  id: string,
+  datos: Partial<Omit<Prospecto, "id" | "capturas" | "creadoEn">>,
+): Promise<void> {
+  const rows = await sql`SELECT * FROM prospectos WHERE id = ${id}`;
+  if (rows.length === 0) throw new Error(`Prospecto no encontrado: ${id}`);
+  const n = { ...mapProspecto(rows[0]), ...datos };
+  await sql`
+    UPDATE prospectos SET
+      local = ${n.local}, zona = ${n.zona}, contacto = ${n.contacto},
+      redes = ${n.redes}, web = ${n.web}, resenas = ${n.resenas},
+      producto = ${n.producto}, precio = ${n.precio}, estado = ${n.estado},
+      seg_fecha = ${n.segFecha}, seg_texto = ${n.segTexto}, notas = ${n.notas}
+    WHERE id = ${id}
+  `;
+}
+
+export async function eliminarProspecto(id: string): Promise<void> {
+  await sql`DELETE FROM prospectos WHERE id = ${id}`;
+}
+
+export async function agregarCapturas(id: string, nuevas: string[]): Promise<void> {
+  const rows = await sql`SELECT capturas FROM prospectos WHERE id = ${id}`;
+  if (rows.length === 0) return;
+  const capturas = [...((rows[0].capturas as string[]) ?? []), ...nuevas];
+  await sql`UPDATE prospectos SET capturas = ${sql.json(capturas)} WHERE id = ${id}`;
+}
+
+export async function eliminarCaptura(id: string, index: number): Promise<void> {
+  const rows = await sql`SELECT capturas FROM prospectos WHERE id = ${id}`;
+  if (rows.length === 0) return;
+  const capturas = (rows[0].capturas as string[]) ?? [];
+  capturas.splice(index, 1);
+  await sql`UPDATE prospectos SET capturas = ${sql.json(capturas)} WHERE id = ${id}`;
 }

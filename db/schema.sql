@@ -126,3 +126,24 @@ CREATE TABLE IF NOT EXISTS competidores (
   google_place_id  TEXT,
   actualizado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Prospectos: locales a los que se les está vendiendo, todavía no son
+-- clientes (eso pasa recién cuando se dan de alta en `comercios`). Tabla
+-- separada a propósito, es prospección, no operación de un cliente activo.
+CREATE TABLE IF NOT EXISTS prospectos (
+  id          TEXT PRIMARY KEY,
+  local       TEXT NOT NULL DEFAULT '',
+  zona        TEXT NOT NULL DEFAULT '',
+  contacto    TEXT NOT NULL DEFAULT '',
+  redes       TEXT NOT NULL DEFAULT '',
+  web         TEXT NOT NULL DEFAULT '',
+  resenas     TEXT NOT NULL DEFAULT '',
+  producto    TEXT NOT NULL DEFAULT '',
+  precio      TEXT NOT NULL DEFAULT '',
+  estado      TEXT NOT NULL DEFAULT 'a-contactar',
+  seg_fecha   TEXT NOT NULL DEFAULT '',
+  seg_texto   TEXT NOT NULL DEFAULT '',
+  notas       TEXT NOT NULL DEFAULT '',
+  capturas    JSONB NOT NULL DEFAULT '[]',
+  creado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
+);

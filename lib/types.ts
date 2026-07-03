@@ -166,6 +166,35 @@ export interface Competidor {
   actualizadoEn: string;
 }
 
+export type EstadoProspecto =
+  | "a-contactar"
+  | "contactado"
+  | "en-conversacion"
+  | "visita-agendada"
+  | "vendido"
+  | "rechazado";
+
+/** Un local al que todavía se le está vendiendo — no es cliente hasta que
+ * se da de alta como Cliente en /admin/clientes. Vive en su propia tabla,
+ * separado a propósito: acá se registra la prospección, no la operación. */
+export interface Prospecto {
+  id: string;
+  local: string;
+  zona: string;
+  contacto: string;
+  redes: string;
+  web: string;
+  resenas: string;
+  producto: string;
+  precio: string;
+  estado: EstadoProspecto;
+  segFecha: string;
+  segTexto: string;
+  notas: string;
+  capturas: string[];
+  creadoEn: string;
+}
+
 /** Checklist SEO estandarizado (mismo para todos los rubros por ahora). */
 export const CHECKLIST_SEO_ITEMS: { key: string; label: string }[] = [
   { key: "categoria", label: "Categoría principal correcta en Google Business" },

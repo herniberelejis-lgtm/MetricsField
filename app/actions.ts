@@ -8,6 +8,7 @@ import type {
   DestinoLink,
   EstadoCliente,
   EstadoFeedback,
+  EstadoProspecto,
   EstadoResena,
   FormatoNFC,
   MetricaMensual,
@@ -273,4 +274,71 @@ export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
   await db.eliminarCompetidor(id);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/competencia`);
+}
+
+// ---------- Prospectos ----------
+// Locales a los que se les está vendiendo — todavía no son clientes. Cuando
+// uno confirma, se marca "vendido" acá y se da de alta aparte en Clientes.
+
+export async function accionCrearProspecto(): Promise<void> {
+  await requireAdmin();
+  await db.crearProspecto();
+  revalidatePath("/admin/prospectos");
+  redirect("/admin/prospectos");
+}
+
+export async function accionActualizarProspecto(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await db.actualizarProspecto(id, {
+    local: str(fd, "local"),
+    zona: str(fd, "zona"),
+    contacto: str(fd, "contacto"),
+    redes: str(fd, "redes"),
+    web: str(fd, "web"),
+    resenas: str(fd, "resenas"),
+    producto: str(fd, "producto"),
+    precio: str(fd, "precio"),
+    estado: str(fd, "estado") as EstadoProspecto,
+    segFecha: str(fd, "segFecha"),
+    segTexto: str(fd, "segTexto"),
+    notas: str(fd, "notas"),
+  });
+  revalidatePath("/admin/prospectos");
+  redirect("/admin/prospectos");
+}
+
+export async function accionEliminarProspecto(fd: FormData): Promise<void> {
+  await requireAdmin();
+  await db.eliminarProspecto(str(fd, "id"));
+  revalidatePath("/admin/prospectos");
+  redirect("/admin/prospectos");
+}
+
+const CAPTURA_MAX_BYTES = 4 * 1024 * 1024; // 4MB por imagen — suficiente para una captura de pantalla
+
+export async function accionAgregarCapturas(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const archivos = fd.getAll("capturas").filter((f): f is File => f instanceof File && f.size > 0);
+  const dataUrls: string[] = [];
+  for (const archivo of archivos) {
+    if (archivo.size > CAPTURA_MAX_BYTES) {
+      throw new Error(`"${archivo.name}" pesa demasiado (máx 4MB).`);
+    }
+    const buf = Buffer.from(await archivo.arrayBuffer());
+    dataUrls.push(`data:${archivo.type};base64,${buf.toString("base64")}`);
+  }
+  if (dataUrls.length > 0) await db.agregarCapturas(id, dataUrls);
+  revalidatePath("/admin/prospectos");
+  redirect("/admin/prospectos");
+}
+
+export async function accionEliminarCaptura(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const index = Number(fd.get("index"));
+  await db.eliminarCaptura(id, index);
+  revalidatePath("/admin/prospectos");
+  redirect("/admin/prospectos");
 }
