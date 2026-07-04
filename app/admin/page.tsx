@@ -120,6 +120,7 @@ export default async function DashboardPage() {
               <th className="px-4 py-3 font-medium">Negocio</th>
               <th className="px-4 py-3 font-medium">Plan</th>
               <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Alta</th>
               <th className="px-4 py-3 font-medium">Rating</th>
               <th className="px-4 py-3 font-medium">Visitas</th>
               <th className="px-4 py-3 font-medium">Reseñas (5m)</th>
@@ -156,6 +157,9 @@ function Row({ c }: { c: Cliente }) {
       </td>
       <td className="px-4 py-3">
         <EstadoBadge estado={c.estado} />
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-slate-600 tabular-nums">
+        {new Date(c.fechaAlta).toLocaleDateString("es-AR")}
       </td>
       <td className="px-4 py-3">
         {m ? <Stars rating={m.ratingPromedio} /> : "—"}

@@ -6,8 +6,10 @@ import { accessTokenDesdeRefresh } from "./google-oauth";
 import { listarUbicaciones, rendimientoDelMes } from "./gbp";
 import type {
   AuditGEOResultado,
+  BenchmarkMes,
   ChecklistItemSEO,
   Cliente,
+  Cobro,
   Competidor,
   DestinoLink,
   EstadoCliente,
@@ -753,6 +755,154 @@ export async function actualizarCompetidor(
 
 export async function eliminarCompetidor(id: number): Promise<void> {
   await sql`DELETE FROM competidores WHERE id = ${id}`;
+}
+
+// ---------- Benchmarking histórico (fotos mensuales de competencia) ----------
+
+function mesActual(): string {
+  return new Date().toISOString().slice(0, 7);
+}
+
+/** Guarda la foto del mes en curso de TODOS los competidores cargados: su
+ * rating y total de reseñas actuales. Idempotente por (competidor, mes) —
+ * correrla varias veces en el mismo mes solo actualiza la fila; al cambiar
+ * de mes, la del mes anterior queda congelada. Pensada para el cron diario. */
+export async function snapshotCompetenciaMensual(mes = mesActual()): Promise<number> {
+  const rows = await sql`
+    INSERT INTO competidores_snapshots (competidor_id, comercio_id, nombre, mes, rating, total_resenas)
+    SELECT id, comercio_id, nombre, ${mes}, rating, total_resenas FROM competidores
+    ON CONFLICT (competidor_id, mes) DO UPDATE SET
+      nombre = EXCLUDED.nombre,
+      rating = EXCLUDED.rating,
+      total_resenas = EXCLUDED.total_resenas,
+      comercio_id = EXCLUDED.comercio_id,
+      capturado_en = now()
+    RETURNING competidor_id
+  `;
+  return rows.length;
+}
+
+/** Benchmarking mensual de un comercio: por cada mes con foto de competencia,
+ * nuestras métricas de ese mes (del histórico propio) + la foto de cada
+ * competidor. Orden descendente por mes (más reciente primero). */
+export async function getBenchmarkMensual(comercioId: string): Promise<BenchmarkMes[]> {
+  const [snaps, propias] = await Promise.all([
+    sql`
+      SELECT mes, nombre, rating, total_resenas
+      FROM competidores_snapshots
+      WHERE comercio_id = ${comercioId}
+      ORDER BY mes DESC, nombre ASC
+    `,
+    sql`
+      SELECT mes, resenas_total, rating_promedio
+      FROM metricas_mensuales
+      WHERE comercio_id = ${comercioId}
+    `,
+  ]);
+
+  const propiaPorMes = new Map<string, { resenas: number; rating: number }>();
+  for (const r of propias) {
+    propiaPorMes.set(r.mes as string, {
+      resenas: Number(r.resenas_total),
+      rating: Number(r.rating_promedio),
+    });
+  }
+
+  const porMes = new Map<string, BenchmarkMes>();
+  for (const r of snaps) {
+    const mes = r.mes as string;
+    let fila = porMes.get(mes);
+    if (!fila) {
+      const propia = propiaPorMes.get(mes);
+      fila = {
+        mes,
+        propioResenas: propia ? propia.resenas : null,
+        propioRating: propia ? propia.rating : null,
+        competidores: [],
+      };
+      porMes.set(mes, fila);
+    }
+    fila.competidores.push({
+      nombre: r.nombre as string,
+      rating: r.rating === null ? null : Number(r.rating),
+      totalResenas: r.total_resenas === null ? null : Number(r.total_resenas),
+    });
+  }
+
+  return [...porMes.values()];
+}
+
+// ---------- Finanzas (cobros) ----------
+
+function mapCobro(r: Record<string, unknown>): Cobro {
+  return {
+    id: Number(r.id),
+    comercioId: r.comercio_id as string,
+    periodo: r.periodo as string,
+    concepto: r.concepto as string,
+    monto: Number(r.monto),
+    estado: r.estado as Cobro["estado"],
+    metodo: r.metodo as string,
+    venceEl: r.vence_el === null ? null : fechaISO(r.vence_el),
+    pagadoEl: r.pagado_el === null ? null : fechaISO(r.pagado_el),
+    nota: r.nota as string,
+    creadoEn: String(r.creado_en),
+  };
+}
+
+/** Todos los cobros con el nombre del comercio, para el historial de cobranza. */
+export async function getCobrosConComercio(): Promise<(Cobro & { comercioNombre: string })[]> {
+  const rows = await sql`
+    SELECT c.*, m.nombre AS comercio_nombre
+    FROM cobros c
+    JOIN comercios m ON m.id = c.comercio_id
+    ORDER BY c.periodo DESC, c.creado_en DESC
+  `;
+  return rows.map((r) => ({ ...mapCobro(r), comercioNombre: r.comercio_nombre as string }));
+}
+
+export async function getCobrosDeComercio(comercioId: string): Promise<Cobro[]> {
+  const rows = await sql`
+    SELECT * FROM cobros WHERE comercio_id = ${comercioId} ORDER BY periodo DESC, creado_en DESC
+  `;
+  return rows.map(mapCobro);
+}
+
+export async function crearCobro(datos: {
+  comercioId: string;
+  periodo: string;
+  concepto?: string;
+  monto: number;
+  metodo?: string;
+  venceEl?: string | null;
+  estado?: Cobro["estado"];
+  pagadoEl?: string | null;
+  nota?: string;
+}): Promise<Cobro> {
+  const rows = await sql`
+    INSERT INTO cobros (comercio_id, periodo, concepto, monto, estado, metodo, vence_el, pagado_el, nota)
+    VALUES (
+      ${datos.comercioId}, ${datos.periodo}, ${datos.concepto ?? "abono"}, ${datos.monto},
+      ${datos.estado ?? "pendiente"}, ${datos.metodo ?? ""}, ${datos.venceEl ?? null},
+      ${datos.pagadoEl ?? null}, ${datos.nota ?? ""}
+    )
+    RETURNING *
+  `;
+  return mapCobro(rows[0]);
+}
+
+/** Marca un cobro como pagado (o lo revierte a pendiente si pagado=false). */
+export async function marcarCobroPagado(id: number, pagado: boolean): Promise<void> {
+  await sql`
+    UPDATE cobros SET
+      estado = ${pagado ? "pagado" : "pendiente"},
+      pagado_el = ${pagado ? sql`CURRENT_DATE` : sql`NULL`}
+    WHERE id = ${id}
+  `;
+}
+
+export async function eliminarCobro(id: number): Promise<void> {
+  await sql`DELETE FROM cobros WHERE id = ${id}`;
 }
 
 // ---------- Prospectos ----------

@@ -185,6 +185,39 @@ export interface Competidor {
   actualizadoEn: string;
 }
 
+/** Foto de un competidor en un mes dado (benchmarking histórico). */
+export interface SnapshotCompetidor {
+  nombre: string;
+  rating: number | null;
+  totalResenas: number | null;
+}
+
+/** Una fila del benchmarking mensual: nuestras métricas de ese mes (del
+ * histórico del propio cliente) enfrentadas a la foto de cada competidor. */
+export interface BenchmarkMes {
+  mes: string; // 'YYYY-MM'
+  propioResenas: number | null;
+  propioRating: number | null;
+  competidores: SnapshotCompetidor[];
+}
+
+export type EstadoCobro = "pendiente" | "pagado";
+
+/** Un cobro del abono (u otro concepto) de un comercio. */
+export interface Cobro {
+  id: number;
+  comercioId: string;
+  periodo: string; // 'YYYY-MM'
+  concepto: string; // 'abono' | 'nfc' | 'otro'
+  monto: number;
+  estado: EstadoCobro;
+  metodo: string;
+  venceEl: string | null; // ISO date
+  pagadoEl: string | null; // ISO date
+  nota: string;
+  creadoEn: string;
+}
+
 export type EstadoProspecto =
   | "a-contactar"
   | "contactado"

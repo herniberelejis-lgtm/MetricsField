@@ -163,6 +163,42 @@ CREATE TABLE IF NOT EXISTS competidores (
   actualizado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Foto mensual de cada competidor: su rating y total de reseñas "al corte"
+-- de cada mes. El snapshot del mes en curso se va pisando (upsert) en cada
+-- sincronización; cuando el mes cambia, la fila del mes anterior queda
+-- congelada con su último valor. Así se arma el benchmarking histórico sin
+-- depender de que alguien anote nada a mano cada 30 días.
+CREATE TABLE IF NOT EXISTS competidores_snapshots (
+  competidor_id  INTEGER NOT NULL REFERENCES competidores(id) ON DELETE CASCADE,
+  comercio_id    TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  nombre         TEXT NOT NULL,                    -- denormalizado para mostrar aunque cambie
+  mes            TEXT NOT NULL,                    -- 'YYYY-MM'
+  rating         NUMERIC,
+  total_resenas  INTEGER,
+  capturado_en   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (competidor_id, mes)
+);
+CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(comercio_id, mes);
+
+-- Cobros del abono mensual (y otros conceptos) de cada comercio. La cobranza
+-- se opera a mano desde /admin/finanzas: se registra el cobro del período y
+-- se marca pagado cuando entra. El estado "vencido" se deriva en la vista
+-- (pendiente + vence_el pasado), no se guarda como transición.
+CREATE TABLE IF NOT EXISTS cobros (
+  id           SERIAL PRIMARY KEY,
+  comercio_id  TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  periodo      TEXT NOT NULL,                       -- 'YYYY-MM' que cubre el cobro
+  concepto     TEXT NOT NULL DEFAULT 'abono',        -- 'abono' | 'nfc' | 'otro'
+  monto        NUMERIC NOT NULL DEFAULT 0,
+  estado       TEXT NOT NULL DEFAULT 'pendiente',    -- 'pendiente' | 'pagado'
+  metodo       TEXT NOT NULL DEFAULT '',             -- transferencia, efectivo, MP…
+  vence_el     DATE,
+  pagado_el    DATE,
+  nota         TEXT NOT NULL DEFAULT '',
+  creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_cobros_comercio ON cobros(comercio_id, periodo);
+
 -- Prospectos: locales a los que se les está vendiendo, todavía no son
 -- clientes (eso pasa recién cuando se dan de alta en `comercios`). Tabla
 -- separada a propósito, es prospección, no operación de un cliente activo.

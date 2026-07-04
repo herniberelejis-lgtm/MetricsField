@@ -8,9 +8,11 @@ const nav = [
   { href: "/admin/analytics", label: "Analytics", icon: "∿" },
   { href: "/admin/clientes", label: "Clientes", icon: "☰" },
   { href: "/admin/prospectos", label: "Prospectos", icon: "◎" },
+  { href: "/admin/finanzas", label: "Finanzas", icon: "$" },
   { href: "/admin/reportes", label: "Reportes", icon: "▤" },
   { href: "/admin/administradores", label: "Administradores", icon: "◇" },
   { href: "/admin/actividad", label: "Actividad", icon: "≡" },
+  { href: "/admin/tutoriales", label: "Tutoriales", icon: "◑" },
 ];
 
 export default function Sidebar() {
