@@ -406,9 +406,10 @@ export async function regenerarCodigo(id: string): Promise<Cliente> {
 function mapLink(r: Record<string, unknown>): LinkNFC {
   return {
     id: r.id as string,
-    comercioId: r.comercio_id as string,
+    comercioId: (r.comercio_id as string | null) ?? null,
     etiqueta: r.etiqueta as string,
     tipo: (r.tipo as TipoSoporte) ?? "nfc",
+    lote: (r.lote as string) ?? "",
     destino: r.destino as DestinoLink,
     urlDestino: (r.url_destino as string | null) ?? null,
     activo: Boolean(r.activo),
@@ -489,6 +490,96 @@ export async function actualizarLink(
 
 export async function eliminarLink(linkId: string): Promise<void> {
   await sql`DELETE FROM links_nfc WHERE id = ${linkId}`;
+}
+
+// ---------- Inventario de hardware (piezas pre-generadas en lote) ----------
+// El circuito real: se generan N piezas ANTES de saber a qué cliente van
+// (código fijo tipo "p-0001", listo para imprimir/programar), se mandan los
+// QR al proveedor, y recién cuando se vende un cliente se ASIGNA una pieza
+// libre — el código impreso nunca cambia, solo el destino al que redirige.
+
+export interface PiezaHardware extends LinkNFC {
+  clienteNombre: string | null;
+}
+
+function mapPiezaHardware(r: Record<string, unknown>): PiezaHardware {
+  return { ...mapLink(r), clienteNombre: (r.cliente_nombre as string | null) ?? null };
+}
+
+/** Genera `cantidad` piezas nuevas, libres (sin cliente), con código fijo
+ * correlativo ("p-0001", "p-0002"...) que continúa donde quedó el último
+ * lote — nunca reutiliza un código ya emitido, aunque se hayan borrado
+ * piezas viejas. */
+export async function generarLotePiezas(
+  cantidad: number,
+  tipo: TipoSoporte,
+  lote: string,
+): Promise<PiezaHardware[]> {
+  const rows = await sql`
+    SELECT id FROM links_nfc WHERE id LIKE 'p-%'
+  `;
+  let max = 0;
+  for (const r of rows) {
+    const n = Number((r.id as string).slice(2));
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+
+  const nuevas: string[] = [];
+  for (let i = 1; i <= cantidad; i++) {
+    nuevas.push(`p-${String(max + i).padStart(4, "0")}`);
+  }
+
+  for (const id of nuevas) {
+    await sql`
+      INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino)
+      VALUES (${id}, NULL, '', ${tipo}, ${lote}, 'resena')
+    `;
+  }
+
+  const creadas = await sql`SELECT *, 0 AS taps FROM links_nfc WHERE id = ANY(${nuevas})`;
+  return creadas.map(mapPiezaHardware);
+}
+
+/** Todo el inventario de hardware — libre y asignado, de todos los
+ * clientes — para saber de un vistazo cuántas piezas hay, cuáles están
+ * libres y a quién le toca cada una de las asignadas. */
+export async function getInventarioHardware(): Promise<PiezaHardware[]> {
+  const rows = await sql`
+    SELECT l.*, co.nombre AS cliente_nombre, COUNT(t.id)::int AS taps
+    FROM links_nfc l
+    LEFT JOIN comercios co ON co.id = l.comercio_id
+    LEFT JOIN taps t ON t.link_id = l.id
+    GROUP BY l.id, co.nombre
+    ORDER BY (l.comercio_id IS NULL) DESC, l.id ASC
+  `;
+  return rows.map(mapPiezaHardware);
+}
+
+/** Asigna una pieza libre del inventario a un cliente — el código (y por lo
+ * tanto el QR/NFC ya impreso) no cambia, solo pasa de "libre" a
+ * pertenecerle a ese comercio con su etiqueta/destino. Falla si la pieza ya
+ * estaba asignada, para no pisar una asignación existente por error. */
+export async function asignarPiezaACliente(
+  id: string,
+  comercioId: string,
+  datos: { etiqueta: string; tipo?: TipoSoporte; destino: DestinoLink; urlDestino?: string | null },
+): Promise<LinkNFC> {
+  const rows = await sql`
+    UPDATE links_nfc SET
+      comercio_id = ${comercioId},
+      etiqueta = ${datos.etiqueta},
+      tipo = COALESCE(${datos.tipo ?? null}, tipo),
+      destino = ${datos.destino},
+      url_destino = ${datos.urlDestino ?? null}
+    WHERE id = ${id} AND comercio_id IS NULL
+    RETURNING *
+  `;
+  if (rows.length === 0) {
+    throw new Error("Esa pieza no está libre (ya fue asignada, o el código no existe).");
+  }
+  const l = await getLink(id);
+  if (!l) throw new Error(`Pieza no encontrada: ${id}`);
+  return l;
 }
 
 export async function registrarTap(linkId: string, userAgent: string | null): Promise<void> {

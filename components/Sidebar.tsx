@@ -8,6 +8,7 @@ const nav = [
   { href: "/admin/analytics", label: "Analytics", icon: "∿" },
   { href: "/admin/clientes", label: "Clientes", icon: "☰" },
   { href: "/admin/prospectos", label: "Prospectos", icon: "◎" },
+  { href: "/admin/hardware", label: "Hardware", icon: "▢" },
   { href: "/admin/finanzas", label: "Finanzas", icon: "$" },
   { href: "/admin/reportes", label: "Reportes", icon: "▤" },
   { href: "/admin/administradores", label: "Administradores", icon: "◇" },

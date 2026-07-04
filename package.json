@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "motion": "^12.42.2",
     "next": "^15.5.20",
     "postgres": "^3.4.9",

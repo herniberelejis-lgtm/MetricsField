@@ -80,11 +80,15 @@ CREATE TABLE IF NOT EXISTS ventas_nfc (
 
 -- El gestor de links: la URL corta que el comercio nunca cambia
 -- (taply.app/t/<slug>) pero cuyo destino se administra desde el panel.
+-- comercio_id puede ser NULL: son piezas de hardware pre-generadas en lote
+-- (impresas antes de saber a qué cliente van) que todavía esperan en el
+-- inventario para asignarse — ver "Hardware" en el panel.
 CREATE TABLE IF NOT EXISTS links_nfc (
-  id           TEXT PRIMARY KEY,                     -- slug corto, único global: /t/<id>
-  comercio_id  TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  etiqueta     TEXT NOT NULL,                         -- "mostrador", "mesa 4"...
+  id           TEXT PRIMARY KEY,                     -- slug corto, único global: /t/<id> — FIJO una vez impreso
+  comercio_id  TEXT REFERENCES comercios(id) ON DELETE SET NULL,
+  etiqueta     TEXT NOT NULL DEFAULT '',               -- "mostrador", "mesa 4"... vacío mientras está libre
   tipo         TEXT NOT NULL DEFAULT 'nfc',            -- 'nfc'|'qr'|'ambos' — qué soporte físico es
+  lote         TEXT NOT NULL DEFAULT '',                -- identifica la tanda de fabricación/pedido
   destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom'
   url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
   activo       BOOLEAN NOT NULL DEFAULT TRUE,

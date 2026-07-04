@@ -225,6 +225,40 @@ export async function accionEliminarLink(fd: FormData): Promise<void> {
   redirect(`/admin/clientes/${comercioId}/links`);
 }
 
+// ---------- Inventario de hardware (piezas en lote: QR + NFC) ----------
+
+export async function accionGenerarLotePiezas(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const cantidad = Math.max(1, Math.min(500, Math.round(num(fd, "cantidad"))));
+  const tipo = (str(fd, "tipo") || "ambos") as TipoSoporte;
+  const lote = str(fd, "lote");
+  const piezas = await db.generarLotePiezas(cantidad, tipo, lote);
+  await auditar("generar_lote_piezas", `${piezas.length} piezas · lote "${lote}" · ${tipo}`);
+  revalidatePath("/admin/hardware");
+  redirect("/admin/hardware");
+}
+
+export async function accionAsignarPieza(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const comercioId = str(fd, "comercioId");
+  if (!comercioId) throw new Error("Elegí a qué cliente asignarla.");
+  const destino = (str(fd, "destino") || "resena") as DestinoLink;
+  const urlDestino = str(fd, "urlDestino");
+  if (destino !== "resena" && !urlDestino) {
+    throw new Error("Este destino necesita una URL.");
+  }
+  await db.asignarPiezaACliente(id, comercioId, {
+    etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
+    tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
+    destino,
+    urlDestino: destino === "resena" ? null : urlDestino,
+  });
+  await auditar("asignar_pieza_hardware", `${id} → ${comercioId}`);
+  revalidatePath("/", "layout");
+  redirect("/admin/hardware");
+}
+
 // ---------- CRM: feedback privado ----------
 
 export async function accionActualizarFeedback(fd: FormData): Promise<void> {

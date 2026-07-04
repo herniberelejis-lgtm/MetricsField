@@ -115,10 +115,15 @@ export type DestinoLink = "resena" | "menu" | "instagram" | "promo" | "url_custo
 export type TipoSoporte = "nfc" | "qr" | "ambos";
 
 export interface LinkNFC {
-  id: string; // slug corto: taply.app/t/<id>
-  comercioId: string;
-  etiqueta: string; // dónde/quién lo usa: "Mesa 4", "Mozo Juan", "Caja"...
+  id: string; // slug corto: taply.app/t/<id> — FIJO desde que se imprime, nunca cambia
+  /** null = pieza libre en el inventario de hardware, todavía sin asignar
+   * a ningún cliente (se generó en lote antes de saber a quién le toca). */
+  comercioId: string | null;
+  etiqueta: string; // dónde/quién lo usa: "Mesa 4", "Mozo Juan", "Caja"... vacío mientras está libre
   tipo: TipoSoporte;
+  /** Tanda de fabricación/pedido a la que pertenece — útil para saber qué
+   * pedido a China corresponde a cada pieza. */
+  lote: string;
   destino: DestinoLink;
   urlDestino: string | null;
   activo: boolean;
