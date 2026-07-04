@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { sincronizarGoogleTodos, sincronizarRendimientoTodos } from "@/lib/db";
+import {
+  sincronizarGoogleTodos,
+  sincronizarRendimientoTodos,
+  snapshotCompetenciaMensual,
+} from "@/lib/db";
 
 // Job diario (ver vercel.json) que actualiza rating/reseñas de todos los
 // comercios con Google Place ID cargado. Vercel Cron llama esta ruta con
@@ -22,5 +26,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const resenas = await sincronizarGoogleTodos();
   const rendimiento = await sincronizarRendimientoTodos();
-  return NextResponse.json({ resenas, rendimiento });
+  // Congela la foto de competencia del mes en curso con los ratings recién
+  // sincronizados — así el benchmarking histórico se arma solo.
+  const competencia = await snapshotCompetenciaMensual();
+  return NextResponse.json({ resenas, rendimiento, competencia });
 }

@@ -7,6 +7,8 @@ import {
   getFeedback,
   getChecklist,
   getAudits,
+  getResenas,
+  getBenchmarkMensual,
 } from "@/lib/db";
 import {
   citasIA,
@@ -17,7 +19,10 @@ import { fmtMes, fmtNum, delta } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
 import { waUrl } from "@/lib/whatsapp";
 import { Card, Kpi, Stars, Sparkline, PlanBadge } from "@/components/ui";
-import TapsChart from "@/components/TapsChart";
+import { terminosFrecuentes } from "@/lib/keywords";
+import TendenciaResenasChart from "@/components/TendenciaResenasChart";
+import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
+import BenchmarkCompetencia from "@/components/BenchmarkCompetencia";
 
 export const dynamic = "force-dynamic";
 
@@ -68,14 +73,17 @@ export default async function PortalPage({
   const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
-  const [tapsDelMes, tapsPorDia, links, feedback, checklist, audits] = await Promise.all([
-    getTapsDelMesActual(c.id),
-    getTapsPorDia(c.id, 14),
-    getLinks(c.id),
-    getFeedback(c.id),
-    getChecklist(c.id),
-    getAudits(c.id),
-  ]);
+  const [tapsDelMes, tapsPorDia, links, feedback, checklist, audits, resenas, benchmark] =
+    await Promise.all([
+      getTapsDelMesActual(c.id),
+      getTapsPorDia(c.id, 14),
+      getLinks(c.id),
+      getFeedback(c.id),
+      getChecklist(c.id),
+      getAudits(c.id),
+      getResenas(c.id),
+      getBenchmarkMensual(c.id),
+    ]);
 
   const m = metricaActual(c);
   const prev = metricaAnterior(c);
@@ -90,9 +98,23 @@ export default async function PortalPage({
     : 0;
   const ultimosAudits = audits.slice(0, 3);
 
+  // Drill-down por mes calculado en el servidor: por cada mes del histórico,
+  // los temas recurrentes de las reseñas y el feedback con texto de ese mes.
+  // El texto crudo (feedback privado incluido) nunca se manda al cliente:
+  // solo viaja el agregado.
+  const detalleMensual: Record<string, DetalleMes> = {};
+  for (const h of c.historico) {
+    const textos = [
+      ...resenas.filter((r) => r.fecha.startsWith(h.mes)).map((r) => r.texto),
+      ...feedback.filter((f) => f.creadoEn.startsWith(h.mes)).map((f) => f.texto),
+    ].filter((t) => t && t.trim().length > 0);
+    detalleMensual[h.mes] = {
+      terminos: terminosFrecuentes(textos),
+      nResenasTexto: textos.length,
+    };
+  }
+
   const diasConTaps = [...new Set(tapsPorDia.map((d) => d.fecha))].sort();
-  const valoresTaps = diasConTaps.map((d) => tapsPorDia.find((x) => x.fecha === d)?.taps ?? 0);
-  const etiquetasTaps = diasConTaps.map((d) => d.slice(5).replace("-", "/"));
   const linksConTaps = [...links].sort((a, b) => b.taps - a.taps);
   const totalTapsHistorico = links.reduce((acc, l) => acc + l.taps, 0);
 
@@ -260,10 +282,18 @@ export default async function PortalPage({
           )}
         </div>
 
-        {diasConTaps.length > 0 && (
-          <div className="mt-4">
-            <TapsChart labels={etiquetasTaps} values={valoresTaps} tabla={diasConTaps.map((d, i) => [d, String(valoresTaps[i])])} />
-          </div>
+        {totalTapsHistorico > 0 && (
+          <Card className="mt-4">
+            <p className="text-sm font-medium text-slate-700">
+              Taps totales del cartel
+            </p>
+            <p className="mt-2 text-4xl font-semibold text-slate-900 tabular-nums">
+              {fmtNum(totalTapsHistorico)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              veces que alguien tocó tu cartel desde que se instaló · se actualiza solo
+            </p>
+          </Card>
         )}
 
         {linksConTaps.length > 1 && totalTapsHistorico > 0 && (
@@ -297,7 +327,7 @@ export default async function PortalPage({
           <Card className="mt-4">
             <p className="text-sm text-slate-600">
               Todavía no hay actividad del cartel. En cuanto alguien lo
-              toque por primera vez, vas a ver acá el gráfico de taps y
+              toque por primera vez, vas a ver acá el total de taps y
               cualquier feedback que deje.
             </p>
           </Card>
@@ -489,51 +519,28 @@ export default async function PortalPage({
             <h2 id="evolucion" className="mb-3 mt-8 scroll-mt-4 text-sm font-semibold text-slate-900">
               Evolución mes a mes
             </h2>
-            <Card className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="px-4 py-3 font-medium">Mes</th>
-                    <th className="px-4 py-3 font-medium">Reseñas nuevas</th>
-                    <th className="px-4 py-3 font-medium">Total</th>
-                    <th className="px-4 py-3 font-medium">Rating</th>
-                    <th className="px-4 py-3 font-medium">Visitas</th>
-                    {esPremium && (
-                      <th className="px-4 py-3 font-medium">Citas IA</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...c.historico].reverse().map((h) => (
-                    <tr
-                      key={h.mes}
-                      className="border-b border-slate-100 last:border-0"
-                    >
-                      <td className="px-4 py-2.5 font-medium text-slate-800">
-                        {fmtMes(h.mes)}
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums">
-                        {fmtNum(h.resenasNuevas)}
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums">
-                        {fmtNum(h.resenasTotal)}
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums">
-                        {h.ratingPromedio.toFixed(1)}
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums">
-                        {fmtNum(h.visitasPerfil)}
-                      </td>
-                      {esPremium && (
-                        <td className="px-4 py-2.5 tabular-nums">
-                          {fmtNum(citasIA(h))}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
+            {c.historico.length >= 2 && (
+              <div className="mb-4">
+                <TendenciaResenasChart
+                  labels={c.historico.map((h) => fmtMes(h.mes))}
+                  totales={c.historico.map((h) => h.resenasTotal)}
+                  ratings={c.historico.map((h) => h.ratingPromedio)}
+                />
+              </div>
+            )}
+            <p className="mb-2 text-xs text-slate-500">
+              Tocá un mes para ver el detalle de ese período.
+            </p>
+            <EvolucionMensual
+              historico={c.historico}
+              esPremium={esPremium}
+              detalle={detalleMensual}
+            />
+            {benchmark.length > 0 && (
+              <div className="mt-4">
+                <BenchmarkCompetencia meses={benchmark} />
+              </div>
+            )}
           </>
         )}
 

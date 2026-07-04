@@ -109,10 +109,16 @@ export function ingresoNFC(c: Cliente): number {
 
 export type DestinoLink = "resena" | "menu" | "instagram" | "promo" | "url_custom";
 
+/** Qué soporte físico usa este link: chip NFC, sticker/impreso con QR, o un
+ * standee que trae los dos apuntando al mismo lugar. Sirve para saber, sin
+ * abrir cada uno, cuántos QR y cuántos NFC tiene un local instalados. */
+export type TipoSoporte = "nfc" | "qr" | "ambos";
+
 export interface LinkNFC {
   id: string; // slug corto: taply.app/t/<id>
   comercioId: string;
-  etiqueta: string;
+  etiqueta: string; // dónde/quién lo usa: "Mesa 4", "Mozo Juan", "Caja"...
+  tipo: TipoSoporte;
   destino: DestinoLink;
   urlDestino: string | null;
   activo: boolean;
@@ -177,6 +183,39 @@ export interface Competidor {
   totalResenas: number | null;
   googlePlaceId: string | null;
   actualizadoEn: string;
+}
+
+/** Foto de un competidor en un mes dado (benchmarking histórico). */
+export interface SnapshotCompetidor {
+  nombre: string;
+  rating: number | null;
+  totalResenas: number | null;
+}
+
+/** Una fila del benchmarking mensual: nuestras métricas de ese mes (del
+ * histórico del propio cliente) enfrentadas a la foto de cada competidor. */
+export interface BenchmarkMes {
+  mes: string; // 'YYYY-MM'
+  propioResenas: number | null;
+  propioRating: number | null;
+  competidores: SnapshotCompetidor[];
+}
+
+export type EstadoCobro = "pendiente" | "pagado";
+
+/** Un cobro del abono (u otro concepto) de un comercio. */
+export interface Cobro {
+  id: number;
+  comercioId: string;
+  periodo: string; // 'YYYY-MM'
+  concepto: string; // 'abono' | 'nfc' | 'otro'
+  monto: number;
+  estado: EstadoCobro;
+  metodo: string;
+  venceEl: string | null; // ISO date
+  pagadoEl: string | null; // ISO date
+  nota: string;
+  creadoEn: string;
 }
 
 export type EstadoProspecto =

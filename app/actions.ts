@@ -15,6 +15,7 @@ import type {
   Plan,
   PlataformaIA,
   Rubro,
+  TipoSoporte,
   Zona,
 } from "@/lib/types";
 
@@ -189,6 +190,7 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
   }
   await db.crearLink(comercioId, {
     etiqueta: str(fd, "etiqueta") || "Nuevo link",
+    tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
   });
@@ -204,6 +206,7 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
   const urlDestino = str(fd, "urlDestino");
   await db.actualizarLink(linkId, {
     etiqueta: str(fd, "etiqueta"),
+    tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
     activo: fd.get("activo") === "1",

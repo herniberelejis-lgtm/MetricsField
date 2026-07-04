@@ -21,6 +21,24 @@ const DESTINOS: { value: string; label: string }[] = [
   { value: "url_custom", label: "Otra URL" },
 ];
 
+const TIPOS: { value: string; label: string }[] = [
+  { value: "nfc", label: "Chip NFC" },
+  { value: "qr", label: "QR impreso" },
+  { value: "ambos", label: "NFC + QR (mismo standee)" },
+];
+
+const LABEL_TIPO: Record<string, string> = {
+  nfc: "NFC",
+  qr: "QR",
+  ambos: "NFC + QR",
+};
+
+const COLOR_TIPO: Record<string, string> = {
+  nfc: "bg-slate-100 text-slate-600",
+  qr: "bg-indigo-50 text-indigo-700",
+  ambos: "bg-brand/10 text-brand-fg",
+};
+
 export default async function LinksPage({
   params,
 }: {
@@ -35,6 +53,14 @@ export default async function LinksPage({
   if (!c) notFound();
 
   const totalTaps = links.reduce((acc, l) => acc + l.taps, 0);
+
+  const resumenTipo = { nfc: { cant: 0, taps: 0 }, qr: { cant: 0, taps: 0 }, ambos: { cant: 0, taps: 0 } };
+  for (const l of links) {
+    resumenTipo[l.tipo].cant += 1;
+    resumenTipo[l.tipo].taps += l.taps;
+  }
+  const totalConQr = resumenTipo.qr.cant + resumenTipo.ambos.cant;
+  const totalConNfc = resumenTipo.nfc.cant + resumenTipo.ambos.cant;
 
   const dias = [...new Set(tapsPorDia.map((d) => d.fecha))].sort();
   const valores = dias.map(
@@ -54,6 +80,36 @@ export default async function LinksPage({
         subtitle={`${c.nombre} · ${fmtNum(totalTaps)} taps históricos en ${links.length} link${links.length === 1 ? "" : "s"}`}
       />
 
+      {links.length > 0 && (
+        <Card className="mb-6">
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Inventario y desempeño por soporte
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-lg font-semibold text-slate-900">{totalConNfc}</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-400">chips NFC instalados</div>
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">{totalConQr}</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-400">QR impresos instalados</div>
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">
+                {fmtNum(resumenTipo.nfc.taps)}
+              </div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps solo-NFC</div>
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">
+                {fmtNum(resumenTipo.qr.taps + resumenTipo.ambos.taps)}
+              </div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps con QR habilitado</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {tapsPorDia.length > 0 && (
         <div className="mb-6">
           <TapsChart
@@ -68,14 +124,23 @@ export default async function LinksPage({
       <Card>
         <form action={accionCrearLink} className="space-y-4">
           <input type="hidden" name="comercioId" value={c.id} />
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Etiqueta" hint="dónde va este cartel">
+          <div className="grid grid-cols-3 gap-4">
+            <Field label="Etiqueta" hint="dónde/quién lo usa">
               <input
                 name="etiqueta"
                 required
-                placeholder="Mesa 4, vidriera, mostrador..."
+                placeholder="Mesa 4, mozo Juan, caja..."
                 className={inputCls}
               />
+            </Field>
+            <Field label="Soporte físico">
+              <select name="tipo" className={inputCls} defaultValue="nfc">
+                {TIPOS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Destino">
               <select name="destino" className={inputCls} defaultValue="resena">
@@ -114,6 +179,9 @@ export default async function LinksPage({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-900">{l.etiqueta}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${COLOR_TIPO[l.tipo]}`}>
+                        {LABEL_TIPO[l.tipo]}
+                      </span>
                       {!l.activo && (
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">
                           desactivado
@@ -133,12 +201,33 @@ export default async function LinksPage({
                       {l.urlDestino && <> → {l.urlDestino}</>}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-semibold text-slate-900">
-                      {fmtNum(l.taps)}
-                    </div>
-                    <div className="text-[11px] uppercase tracking-wide text-slate-400">
-                      taps
+                  <div className="flex items-center gap-4">
+                    {(l.tipo === "qr" || l.tipo === "ambos") && (
+                      <div className="flex flex-col items-center gap-1">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`/api/admin/qr?linkId=${l.id}`}
+                          alt={`QR de ${l.etiqueta}`}
+                          width={56}
+                          height={56}
+                          className="rounded border border-slate-200"
+                        />
+                        <a
+                          href={`/api/admin/qr?linkId=${l.id}&download=1`}
+                          download={`qr-${l.id}.png`}
+                          className="text-[11px] font-medium text-brand-fg hover:underline"
+                        >
+                          Descargar
+                        </a>
+                      </div>
+                    )}
+                    <div className="text-right">
+                      <div className="text-lg font-semibold text-slate-900">
+                        {fmtNum(l.taps)}
+                      </div>
+                      <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                        taps
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -150,13 +239,26 @@ export default async function LinksPage({
                   <form action={accionActualizarLink} className="mt-3 space-y-3">
                     <input type="hidden" name="linkId" value={l.id} />
                     <input type="hidden" name="comercioId" value={c.id} />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <Field label="Etiqueta">
                         <input
                           name="etiqueta"
                           defaultValue={l.etiqueta}
                           className={inputCls}
                         />
+                      </Field>
+                      <Field label="Soporte físico">
+                        <select
+                          name="tipo"
+                          defaultValue={l.tipo}
+                          className={inputCls}
+                        >
+                          {TIPOS.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
                       </Field>
                       <Field label="Destino">
                         <select
