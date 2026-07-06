@@ -102,22 +102,30 @@ const SALUDOS: Record<TonoMarca, string[]> = {
   formal: ["Estimado/a {autor}, muchas gracias por su reseña.", "Sr./Sra. {autor}, agradecemos su comentario."],
 };
 
+/**
+ * `intento` deja pedir una variante distinta a propósito (botón "Regenerar")
+ * sin volverse aleatorio: mismo intento + mismo texto siempre da la misma
+ * combinación, así no "tiembla" si se re-renderiza sin que el usuario pida
+ * cambiarla.
+ */
 export function generarRespuestaSugerida(
   autor: string,
   estrellas: number,
   texto: string,
   tono: TonoMarca = "cercano",
+  intento = 0,
 ): string {
   const positiva = estrellas >= 4;
   const tema = detectarTema(texto);
-  const saludo = variante(autor + texto, SALUDOS[tono]).replace("{autor}", autor);
+  const sal = String(intento);
+  const saludo = variante(autor + texto + sal, SALUDOS[tono]).replace("{autor}", autor);
   const cuerpoTema =
     tema === "general"
       ? positiva
         ? { cercano: "Nos alegra mucho que hayas tenido una buena experiencia.", formal: "Nos complace que su experiencia haya sido positiva." }[tono]
         : { cercano: "Lamentamos que la experiencia no haya sido la esperada.", formal: "Lamentamos que su experiencia no haya cumplido sus expectativas." }[tono]
       : (positiva ? TEMA_POSITIVO : TEMA_NEGATIVO)[tema][tono];
-  const cierre = variante(texto + tono, positiva ? CIERRE_POSITIVO[tono] : CIERRE_NEGATIVO[tono]);
+  const cierre = variante(texto + tono + sal, positiva ? CIERRE_POSITIVO[tono] : CIERRE_NEGATIVO[tono]);
 
   return `${saludo} ${cuerpoTema} ${cierre}`;
 }

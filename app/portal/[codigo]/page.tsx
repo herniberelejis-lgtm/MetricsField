@@ -23,6 +23,7 @@ import { terminosFrecuentes } from "@/lib/keywords";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
 import BenchmarkCompetencia from "@/components/BenchmarkCompetencia";
+import GestionResenas from "@/components/GestionResenas";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,8 @@ export default async function PortalPage({
     };
   }
 
+  const resenasPendientes = resenas.filter((r) => r.estado === "nueva");
+
   const diasConTaps = [...new Set(tapsPorDia.map((d) => d.fecha))].sort();
   const linksConTaps = [...links].sort((a, b) => b.taps - a.taps);
   const totalTapsHistorico = links.reduce((acc, l) => acc + l.taps, 0);
@@ -161,6 +164,16 @@ export default async function PortalPage({
           {m && (
             <a href="#metricas" className="text-slate-500 hover:text-brand-fg">
               Métricas del mes
+            </a>
+          )}
+          {resenas.length > 0 && (
+            <a href="#resenas" className="text-slate-500 hover:text-brand-fg">
+              Reseñas
+              {resenasPendientes.length > 0 && (
+                <span className="ml-1 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                  {resenasPendientes.length}
+                </span>
+              )}
             </a>
           )}
           {esPremium && (
@@ -330,6 +343,25 @@ export default async function PortalPage({
               toque por primera vez, vas a ver acá el total de taps y
               cualquier feedback que deje.
             </p>
+          </Card>
+        )}
+
+        {/* Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida
+            para sus reseñas de Google, sin depender del equipo de Taply */}
+        {resenas.length > 0 && (
+          <Card className="mt-4 scroll-mt-4" id="resenas">
+            <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Respuestas sugeridas para tus reseñas de Google — editalas, aprobalas, y copialas
+              para pegarlas vos mismo en Google (todavía no publicamos ahí de forma automática).
+            </p>
+            <div className="mt-3">
+              <GestionResenas
+                resenasIniciales={resenasPendientes}
+                tonoMarca={c.tonoMarca}
+                codigo={c.codigoAcceso}
+              />
+            </div>
           </Card>
         )}
 
