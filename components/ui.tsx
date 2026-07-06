@@ -1,6 +1,42 @@
 import type { ReactNode } from "react";
 import type { EstadoCliente, Plan } from "@/lib/types";
 
+// Botones consistentes para todo lo que sea un CTA de verdad (no cada
+// pantalla inventando su propio padding/radio) — foco visible siempre,
+// para teclado y lectores de pantalla.
+export const btnPrimary =
+  "inline-flex items-center justify-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+export const btnSecondary =
+  "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+export const btnGhost =
+  "inline-flex items-center justify-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+export const btnSuccess =
+  "inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-50";
+
+/** Encabezado de sección reutilizable: título + descripción corta, mismo
+ * peso tipográfico en toda la app en vez de que cada pantalla lo reinvente. */
+export function SectionHeading({
+  id,
+  title,
+  subtitle,
+  action,
+}: {
+  id?: string;
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div id={id} className="mb-3 mt-9 scroll-mt-6 flex items-end justify-between gap-3 first:mt-0">
+      <div>
+        <h2 className="text-base font-semibold tracking-tight text-slate-900">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export function Card({
   children,
   className = "",

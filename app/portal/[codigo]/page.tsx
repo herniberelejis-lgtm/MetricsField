@@ -17,7 +17,7 @@ import {
 import { fmtMes, fmtNum, delta } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
 import { waUrl } from "@/lib/whatsapp";
-import { Card, Kpi, Stars, Sparkline, PlanBadge } from "@/components/ui";
+import { Card, Kpi, Stars, Sparkline, PlanBadge, SectionHeading, btnPrimary, btnSecondary } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
@@ -133,67 +133,67 @@ export default async function PortalPage({
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header del portal */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-brand-fg">
-              Taply — Portal de cliente
+      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-5">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-fg">
+              Taply · Portal de cliente
             </div>
-            <h1 className="mt-0.5 text-lg font-semibold text-slate-900">
+            <h1 className="mt-0.5 truncate text-xl font-semibold tracking-tight text-slate-900">
               {c.nombre}
             </h1>
-            <div className="text-xs text-slate-500">
+            <div className="mt-0.5 text-xs text-slate-500">
               {c.rubro} · {c.zona}
               {m && <> · datos a {fmtMes(m.mes)}</>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <PlanBadge plan={c.plan} />
             {AGENCIA_WHATSAPP && (
               <a
                 href={waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`)}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
               >
-                Hablar con tu agencia
+                <span aria-hidden>💬</span> Hablar con tu agencia
               </a>
             )}
           </div>
         </div>
 
         {/* Accesos rápidos: solo a las secciones que existen para este cliente */}
-        <nav className="mx-auto flex max-w-4xl flex-wrap gap-x-4 gap-y-1 px-6 pb-3 text-xs">
-          <a href="#en-vivo" className="text-slate-500 hover:text-brand-fg">
+        <nav className="mx-auto flex max-w-4xl flex-wrap gap-x-5 gap-y-1.5 px-6 pb-3 text-xs font-medium">
+          <a href="#en-vivo" className="text-slate-500 transition hover:text-brand-fg">
             En vivo
           </a>
           {m && (
-            <a href="#metricas" className="text-slate-500 hover:text-brand-fg">
+            <a href="#metricas" className="text-slate-500 transition hover:text-brand-fg">
               Métricas del mes
             </a>
           )}
           {resenas.length > 0 && (
-            <a href="#resenas" className="text-slate-500 hover:text-brand-fg">
+            <a href="#resenas" className="inline-flex items-center gap-1 text-slate-500 transition hover:text-brand-fg">
               Reseñas
               {resenasPendientes.length > 0 && (
-                <span className="ml-1 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
                   {resenasPendientes.length}
                 </span>
               )}
             </a>
           )}
           {esPremium && (
-            <a href="#ia" className="text-slate-500 hover:text-brand-fg">
+            <a href="#ia" className="text-slate-500 transition hover:text-brand-fg">
               Tu negocio en la IA
             </a>
           )}
           {checklist.length > 0 && (
-            <a href="#seo" className="text-slate-500 hover:text-brand-fg">
+            <a href="#seo" className="text-slate-500 transition hover:text-brand-fg">
               Ficha de Google
             </a>
           )}
           {c.historico.length > 0 && (
-            <a href="#evolucion" className="text-slate-500 hover:text-brand-fg">
+            <a href="#evolucion" className="text-slate-500 transition hover:text-brand-fg">
               Evolución
             </a>
           )}
@@ -217,32 +217,49 @@ export default async function PortalPage({
             ficha (este cliente), no la agencia — así las visitas y llamadas
             se traen solas sin que nadie tenga que cargar nada a mano. */}
         <Card className="mb-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-slate-700">
-                Conectar tu Google Business Profile
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                {gbpConectado
-                  ? "Conectado — así traemos solas las visitas, llamadas y clics de “cómo llegar” de tu ficha."
-                  : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
-              </p>
-              {gbpConectado && (
-                <p className="mt-1 text-xs text-slate-400">
-                  Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span
+                className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${
+                  gbpConectado ? "bg-emerald-500" : "bg-slate-300"
+                }`}
+                aria-hidden
+              />
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-800">
+                    Google Business Profile
+                  </p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      gbpConectado ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {gbpConectado ? "Conectado" : "No conectado"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {gbpConectado
+                    ? "Así traemos solas las visitas, llamadas y clics de “cómo llegar” de tu ficha."
+                    : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
                 </p>
-              )}
+                {gbpConectado && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
+                  </p>
+                )}
+              </div>
             </div>
             <a
               href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}`}
-              className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+              className={`shrink-0 ${gbpConectado ? btnSecondary : btnPrimary}`}
             >
               {gbpConectado ? "Reconectar" : "Conectar con Google"}
             </a>
           </div>
           {gbpPorVencer && (
             <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              Todavía estamos terminando de verificar la app con Google —
+              ⏳ Todavía estamos terminando de verificar la app con Google —
               mientras tanto, este permiso vence cada 7 días. Tocá
               "Reconectar" una vez por semana para que no se corte.
             </p>
@@ -250,31 +267,37 @@ export default async function PortalPage({
         </Card>
 
         {/* En vivo: no depende de que se hayan cargado métricas del mes */}
-        <h2 id="en-vivo" className="mb-1 scroll-mt-4 text-sm font-semibold text-slate-900">
-          En vivo
-        </h2>
-        <p className="mb-3 text-xs text-slate-500">
-          Esto se actualiza solo, apenas pasa — nadie tiene que cargar nada.
-        </p>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
-            <p className="mt-2 text-4xl font-semibold text-slate-900 tabular-nums">
-              {fmtNum(totalTapsHistorico)}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              veces que alguien tocó o escaneó tu cartel desde que se instaló
-            </p>
+        <SectionHeading
+          id="en-vivo"
+          title="En vivo"
+          subtitle="Esto se actualiza solo, apenas pasa — nadie tiene que cargar nada."
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card className="md:col-span-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
+                <p className="mt-2 text-5xl font-semibold tracking-tight text-slate-900 tabular-nums">
+                  {fmtNum(totalTapsHistorico)}
+                </p>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  veces que alguien tocó o escaneó tu cartel desde que se instaló
+                </p>
+              </div>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand/10 text-lg" aria-hidden>
+                📶
+              </span>
+            </div>
             {tieneSoporteQr && (
-              <div className="mt-3 flex gap-4 border-t border-slate-100 pt-3">
-                <div>
-                  <div className="text-lg font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsNfc)}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">vía NFC</div>
-                </div>
-                <div>
-                  <div className="text-lg font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsQr)}</div>
-                  <div className="text-[11px] uppercase tracking-wide text-slate-400">vía QR (aprox.)</div>
-                </div>
+              <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                  <span className="font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsNfc)}</span>
+                  vía NFC
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                  <span className="font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsQr)}</span>
+                  vía QR (aprox.)
+                </span>
               </div>
             )}
           </Card>
@@ -282,22 +305,22 @@ export default async function PortalPage({
             <p className="text-sm font-medium text-slate-700">
               Reputación protegida
             </p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+            <p className="mt-2 text-4xl font-semibold tracking-tight text-slate-900 tabular-nums">
               {feedbackResueltos}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-slate-500">
               {feedback.length > 0
                 ? `de ${feedback.length} queja${feedback.length === 1 ? "" : "s"} resuelta${feedbackResueltos === 1 ? "" : "s"} antes de llegar a Google`
                 : "todavía no llegó ningún feedback privado"}
             </p>
           </Card>
           {c.googleSyncEn && (
-            <Card className="md:col-span-2">
+            <Card className="md:col-span-3">
               <p className="text-sm font-medium text-slate-700">
                 Tu ficha de Google ahora mismo
               </p>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold text-slate-900">
+                <span className="text-3xl font-semibold tracking-tight text-slate-900">
                   {c.ratingGoogle?.toFixed(1)}★
                 </span>
                 <span className="text-sm text-slate-500">
@@ -424,9 +447,7 @@ export default async function PortalPage({
         )}
 
         {/* Métricas del mes: manuales, con estado vacío que no bloquea lo de arriba */}
-        <h2 id="metricas" className="mb-3 mt-8 scroll-mt-4 text-sm font-semibold text-slate-900">
-          Métricas del mes
-        </h2>
+        <SectionHeading id="metricas" title="Métricas del mes" />
         {!m ? (
           <Card>
             <p className="text-sm text-slate-600">
@@ -506,8 +527,8 @@ export default async function PortalPage({
 
         {/* Premium: IA */}
         {esPremium && (
-          <Card className="mt-8 scroll-mt-4" id="ia">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <Card className="mt-9 scroll-mt-6" id="ia">
+            <h2 className="text-sm font-medium text-slate-700">
               Tu negocio en la IA este mes
             </h2>
             <ul className="mt-2 space-y-1 text-sm text-slate-600">
@@ -568,9 +589,7 @@ export default async function PortalPage({
         {/* Histórico */}
         {c.historico.length > 0 && (
           <>
-            <h2 id="evolucion" className="mb-3 mt-8 scroll-mt-4 text-sm font-semibold text-slate-900">
-              Evolución mes a mes
-            </h2>
+            <SectionHeading id="evolucion" title="Evolución mes a mes" />
             {c.historico.length >= 2 && (
               <div className="mb-4">
                 <TendenciaResenasChart
