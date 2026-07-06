@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { ResenaCRM, TonoMarca } from "@/lib/types";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
 import { accionAprobarResenaPortal, accionDescartarResenaPortal } from "@/app/portal/actions";
+import { btnSuccess, btnSecondary, btnGhost } from "@/components/ui";
 
 // Gestión de reseñas desde el portal del cliente: el dueño ve sus reseñas
 // pendientes, edita/regenera la respuesta sugerida (gratis, sin IA paga —
@@ -129,26 +130,17 @@ function TarjetaResena({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          disabled={pendiente}
-          onClick={aprobar}
-          className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          Aprobar respuesta
+        <button type="button" disabled={pendiente} onClick={aprobar} className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}>
+          ✓ Aprobar respuesta
         </button>
-        <button
-          type="button"
-          onClick={copiar}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
-        >
+        <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
           {copiado ? "¡Copiada!" : "Copiar texto"}
         </button>
         <button
           type="button"
           disabled={pendiente}
           onClick={descartar}
-          className="ml-auto text-xs font-medium text-slate-400 hover:text-rose-600 disabled:opacity-50"
+          className={`${btnGhost} ml-auto !text-xs hover:!text-rose-600`}
         >
           Descartar
         </button>
