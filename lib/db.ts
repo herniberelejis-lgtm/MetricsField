@@ -604,6 +604,33 @@ export async function getTapsPorDia(comercioId: string, dias = 14): Promise<Taps
   return rows.map((r) => ({ fecha: r.fecha as string, taps: Number(r.taps) }));
 }
 
+export interface TapsPorDiaSoporte {
+  fecha: string;
+  nfc: number;
+  qr: number;
+}
+
+/** Igual que getTapsPorDia, pero separando cuánto vino de un link puramente
+ * NFC vs. uno con QR habilitado (tipo 'qr' o 'ambos') — para el portal del
+ * cliente. Un link 'ambos' no permite saber si ESE tap puntual fue toque o
+ * escaneo (Google/nosotros no lo distinguimos), así que cuenta del lado QR
+ * como aproximación honesta, no como atribución exacta. */
+export async function getTapsPorDiaPorSoporte(comercioId: string, dias = 14): Promise<TapsPorDiaSoporte[]> {
+  const rows = await sql`
+    SELECT
+      to_char(t.creado_en::date, 'YYYY-MM-DD') AS fecha,
+      COUNT(*) FILTER (WHERE l.tipo = 'nfc')::int AS nfc,
+      COUNT(*) FILTER (WHERE l.tipo IN ('qr', 'ambos'))::int AS qr
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    WHERE l.comercio_id = ${comercioId}
+      AND t.creado_en >= now() - (${dias}::text || ' days')::interval
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+  return rows.map((r) => ({ fecha: r.fecha as string, nfc: Number(r.nfc), qr: Number(r.qr) }));
+}
+
 /** Total de taps del mes en curso — para el portal del cliente. */
 export async function getTapsDelMesActual(comercioId: string): Promise<number> {
   const rows = await sql`

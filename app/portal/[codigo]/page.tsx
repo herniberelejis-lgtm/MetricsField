@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   getClientePorCodigo,
-  getTapsDelMesActual,
-  getTapsPorDia,
+  getTapsPorDiaPorSoporte,
   getLinks,
   getFeedback,
   getChecklist,
@@ -24,6 +23,7 @@ import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
 import BenchmarkCompetencia from "@/components/BenchmarkCompetencia";
 import GestionResenas from "@/components/GestionResenas";
+import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
 
 export const dynamic = "force-dynamic";
 
@@ -74,10 +74,9 @@ export default async function PortalPage({
   const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
-  const [tapsDelMes, tapsPorDia, links, feedback, checklist, audits, resenas, benchmark] =
+  const [tapsPorDiaSoporte, links, feedback, checklist, audits, resenas, benchmark] =
     await Promise.all([
-      getTapsDelMesActual(c.id),
-      getTapsPorDia(c.id, 14),
+      getTapsPorDiaPorSoporte(c.id, 14),
       getLinks(c.id),
       getFeedback(c.id),
       getChecklist(c.id),
@@ -117,9 +116,16 @@ export default async function PortalPage({
 
   const resenasPendientes = resenas.filter((r) => r.estado === "nueva");
 
-  const diasConTaps = [...new Set(tapsPorDia.map((d) => d.fecha))].sort();
+  const diasConTaps = [...new Set(tapsPorDiaSoporte.map((d) => d.fecha))].sort();
+  const labelsTaps = diasConTaps.map((d) => d.slice(5).replace("-", "/"));
+  const nfcPorDia = diasConTaps.map((d) => tapsPorDiaSoporte.find((x) => x.fecha === d)?.nfc ?? 0);
+  const qrPorDia = diasConTaps.map((d) => tapsPorDiaSoporte.find((x) => x.fecha === d)?.qr ?? 0);
+
   const linksConTaps = [...links].sort((a, b) => b.taps - a.taps);
   const totalTapsHistorico = links.reduce((acc, l) => acc + l.taps, 0);
+  const totalTapsNfc = links.filter((l) => l.tipo === "nfc").reduce((acc, l) => acc + l.taps, 0);
+  const totalTapsQr = links.filter((l) => l.tipo === "qr" || l.tipo === "ambos").reduce((acc, l) => acc + l.taps, 0);
+  const tieneSoporteQr = links.some((l) => l.tipo === "qr" || l.tipo === "ambos");
 
   const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
   const dCitas = delta(citasIA(m), citasIA(prev));
@@ -252,15 +258,25 @@ export default async function PortalPage({
         </p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card>
-            <p className="text-sm font-medium text-slate-700">
-              Cartel NFC este mes
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
-              {fmtNum(tapsDelMes)}
+            <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
+            <p className="mt-2 text-4xl font-semibold text-slate-900 tabular-nums">
+              {fmtNum(totalTapsHistorico)}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              veces que alguien tocó tu cartel
+              veces que alguien tocó o escaneó tu cartel desde que se instaló
             </p>
+            {tieneSoporteQr && (
+              <div className="mt-3 flex gap-4 border-t border-slate-100 pt-3">
+                <div>
+                  <div className="text-lg font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsNfc)}</div>
+                  <div className="text-[11px] uppercase tracking-wide text-slate-400">vía NFC</div>
+                </div>
+                <div>
+                  <div className="text-lg font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsQr)}</div>
+                  <div className="text-[11px] uppercase tracking-wide text-slate-400">vía QR (aprox.)</div>
+                </div>
+              </div>
+            )}
           </Card>
           <Card>
             <p className="text-sm font-medium text-slate-700">
@@ -295,18 +311,15 @@ export default async function PortalPage({
           )}
         </div>
 
-        {totalTapsHistorico > 0 && (
-          <Card className="mt-4">
-            <p className="text-sm font-medium text-slate-700">
-              Taps totales del cartel
-            </p>
-            <p className="mt-2 text-4xl font-semibold text-slate-900 tabular-nums">
-              {fmtNum(totalTapsHistorico)}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              veces que alguien tocó tu cartel desde que se instaló · se actualiza solo
-            </p>
-          </Card>
+        {diasConTaps.length > 0 && (
+          <div className="mt-4">
+            <TapsPorSoporteChart
+              labels={labelsTaps}
+              nfc={nfcPorDia}
+              qr={qrPorDia}
+              mostrarQr={tieneSoporteQr}
+            />
+          </div>
         )}
 
         {linksConTaps.length > 1 && totalTapsHistorico > 0 && (
@@ -320,7 +333,14 @@ export default async function PortalPage({
             <div className="mt-3 space-y-2">
               {linksConTaps.map((l) => (
                 <div key={l.id} className="flex items-center gap-3">
-                  <span className="w-28 shrink-0 truncate text-xs text-slate-600">{l.etiqueta}</span>
+                  <span className="w-28 shrink-0 truncate text-xs text-slate-600">
+                    {l.etiqueta}
+                    {tieneSoporteQr && (
+                      <span className="ml-1 text-[10px] uppercase text-slate-400">
+                        · {l.tipo === "ambos" ? "NFC+QR" : l.tipo}
+                      </span>
+                    )}
+                  </span>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
                     <div
                       className="h-full rounded-full bg-brand"
