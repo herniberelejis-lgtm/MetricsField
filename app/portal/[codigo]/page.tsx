@@ -19,10 +19,13 @@ import { recomendacionDelMes } from "@/lib/recomendacion";
 import { waUrl } from "@/lib/whatsapp";
 import { Card, Kpi, Stars, Sparkline, PlanBadge, SectionHeading, btnPrimary, btnSecondary } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
+import { resenasApiHabilitada } from "@/lib/google-reviews";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
 import BenchmarkCompetencia from "@/components/BenchmarkCompetencia";
 import GestionResenas from "@/components/GestionResenas";
+import AutomatizacionResenas from "@/components/AutomatizacionResenas";
+import ResumenResenas, { type ResumenResenasData } from "@/components/ResumenResenas";
 import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
 
 export const dynamic = "force-dynamic";
@@ -115,6 +118,47 @@ export default async function PortalPage({
   }
 
   const resenasPendientes = resenas.filter((r) => r.estado === "nueva");
+  const resenasAutomaticas = resenas.filter((r) => r.publicadaAutomaticamente).slice(0, 5);
+
+  // Resumen de "cómo van las reseñas": distribución por estrellas, si la
+  // tendencia reciente mejora o empeora, y qué se repite en las quejas —
+  // sobre TODAS las reseñas, no solo las pendientes de responder.
+  const resumenResenas: ResumenResenasData = (() => {
+    const distribucion = ([5, 4, 3, 2, 1] as const).map((estrellas) => ({
+      estrellas,
+      cantidad: resenas.filter((r) => r.estrellas === estrellas).length,
+    }));
+    const total = resenas.length;
+    const promedio = total > 0 ? resenas.reduce((acc, r) => acc + r.estrellas, 0) / total : null;
+
+    let tendencia: ResumenResenasData["tendencia"] = null;
+    if (total >= 4) {
+      // resenas viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo
+      const mitad = Math.floor(total / 2);
+      const recientes = resenas.slice(0, mitad);
+      const anteriores = resenas.slice(mitad, mitad * 2);
+      const promedioDe = (arr: typeof resenas) =>
+        arr.reduce((acc, r) => acc + r.estrellas, 0) / arr.length;
+      const diferencia = promedioDe(recientes) - promedioDe(anteriores);
+      const dir = diferencia > 0.15 ? "up" : diferencia < -0.15 ? "down" : "flat";
+      tendencia = {
+        dir,
+        texto:
+          dir === "up"
+            ? "mejorando en las últimas reseñas"
+            : dir === "down"
+              ? "bajando en las últimas reseñas"
+              : "estable",
+      };
+    }
+
+    const temasRecurrentes = terminosFrecuentes(
+      resenas.filter((r) => r.estrellas <= 3).map((r) => r.texto),
+      { max: 6, minimo: 2 },
+    );
+
+    return { distribucion, total, promedio, tendencia, temasRecurrentes };
+  })();
 
   const diasConTaps = [...new Set(tapsPorDiaSoporte.map((d) => d.fecha))].sort();
   const labelsTaps = diasConTaps.map((d) => d.slice(5).replace("-", "/"));
@@ -288,9 +332,24 @@ export default async function PortalPage({
           <Card className="mb-4 scroll-mt-4" id="resenas">
             <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
             <p className="mt-1 text-xs text-slate-500">
-              Respuestas sugeridas para tus reseñas de Google — editalas, aprobalas, y copialas
-              para pegarlas vos mismo en Google (todavía no publicamos ahí de forma automática).
+              Las positivas se responden solas (ver más abajo); las que necesitan tu
+              criterio quedan acá para que las edites, apruebes y copies a Google vos mismo.
             </p>
+
+            <div className="mt-3">
+              <ResumenResenas data={resumenResenas} />
+            </div>
+
+            <div className="mt-3">
+              <AutomatizacionResenas
+                codigo={c.codigoAcceso}
+                activa={c.autoResponderPositivas}
+                umbral={c.autoResponderUmbral}
+                apiHabilitada={resenasApiHabilitada()}
+                resenasAutomaticas={resenasAutomaticas}
+              />
+            </div>
+
             <div className="mt-3">
               <GestionResenas
                 resenasIniciales={resenasPendientes}

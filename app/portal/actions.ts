@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getClientePorCodigo, getResenas, actualizarResena } from "@/lib/db";
+import { getClientePorCodigo, getResenas, actualizarResena, actualizarAutomatizacionResenas } from "@/lib/db";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial. Toda acción vuelve a resolver el
@@ -38,5 +38,18 @@ export async function accionDescartarResenaPortal(fd: FormData): Promise<void> {
   await reseñaDelComercio(codigo, id);
 
   await actualizarResena(id, { estado: "escalada" });
+  revalidatePath(`/portal/${codigo}`);
+}
+
+export async function accionActualizarAutomatizacionResenasPortal(fd: FormData): Promise<void> {
+  const codigo = String(fd.get("codigo") ?? "");
+  const cliente = await getClientePorCodigo(codigo);
+  if (!cliente) throw new Error("Portal inválido.");
+
+  const autoResponderPositivas = fd.get("autoResponderPositivas") === "on";
+  const umbral = Number(fd.get("autoResponderUmbral"));
+  const autoResponderUmbral = umbral === 5 ? 5 : 4;
+
+  await actualizarAutomatizacionResenas(cliente.id, { autoResponderPositivas, autoResponderUmbral });
   revalidatePath(`/portal/${codigo}`);
 }

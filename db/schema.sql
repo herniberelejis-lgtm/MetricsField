@@ -22,7 +22,10 @@ CREATE TABLE IF NOT EXISTS comercios (
   resenas_google      INTEGER,                        -- último total de reseñas traído automáticamente
   google_sync_en      TIMESTAMPTZ,                     -- cuándo se sincronizó por última vez
   google_refresh_token TEXT NOT NULL DEFAULT '',       -- OAuth propio del cliente (Business Profile), no de la agencia
-  google_conectado_en  TIMESTAMPTZ                     -- cuándo autorizó su cuenta de Google — sirve para el aviso de reconexión semanal (app en modo Testing)
+  google_conectado_en  TIMESTAMPTZ,                    -- cuándo autorizó su cuenta de Google — sirve para el aviso de reconexión semanal (app en modo Testing)
+  auto_responder_positivas BOOLEAN NOT NULL DEFAULT TRUE, -- responder solas las reseñas positivas (requiere Reviews API aprobada — ver GOOGLE_REVIEWS_API_ENABLED)
+  auto_responder_umbral    INTEGER NOT NULL DEFAULT 4 CHECK (auto_responder_umbral IN (4, 5)), -- a partir de cuántas estrellas se responde sola
+  resenas_sync_en          TIMESTAMPTZ                 -- última sincronización de reseñas vía Google Reviews API
 );
 
 -- Ajustes de la agencia (clave/valor). Uso general para configuración suelta.
@@ -132,8 +135,16 @@ CREATE TABLE IF NOT EXISTS resenas (
   respuesta_publicada   BOOLEAN NOT NULL DEFAULT FALSE,
   responsable           TEXT,
   notas                 TEXT NOT NULL DEFAULT '',
-  fecha                 DATE NOT NULL DEFAULT CURRENT_DATE
+  fecha                 DATE NOT NULL DEFAULT CURRENT_DATE,
+  origen_google_id           TEXT,                     -- resource name en Google ("accounts/…/locations/…/reviews/…"), NULL si se cargó a mano
+  publicada_automaticamente  BOOLEAN NOT NULL DEFAULT FALSE -- true si la respondió sola el sync (reseña positiva + automatización activa)
 );
+
+-- Único solo entre las reseñas que vienen de Google — evita duplicar si el
+-- sync corre dos veces. Las cargadas a mano en el CRM quedan con NULL.
+CREATE UNIQUE INDEX IF NOT EXISTS resenas_origen_google_id_idx
+  ON resenas (origen_google_id)
+  WHERE origen_google_id IS NOT NULL;
 
 -- Audit GEO: registro manual asistido de si la IA recomienda al comercio.
 CREATE TABLE IF NOT EXISTS audits_geo (

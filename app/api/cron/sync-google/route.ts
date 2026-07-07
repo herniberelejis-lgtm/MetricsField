@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   sincronizarGoogleTodos,
   sincronizarRendimientoTodos,
+  sincronizarResenasGoogleTodos,
   snapshotCompetenciaMensual,
 } from "@/lib/db";
 
@@ -26,8 +27,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const resenas = await sincronizarGoogleTodos();
   const rendimiento = await sincronizarRendimientoTodos();
+  // No hace nada (0 en todos los conteos) mientras GOOGLE_REVIEWS_API_ENABLED
+  // no esté prendido — ver lib/google-reviews.ts.
+  const resenasDetalle = await sincronizarResenasGoogleTodos();
   // Congela la foto de competencia del mes en curso con los ratings recién
   // sincronizados — así el benchmarking histórico se arma solo.
   const competencia = await snapshotCompetenciaMensual();
-  return NextResponse.json({ resenas, rendimiento, competencia });
+  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competencia });
 }

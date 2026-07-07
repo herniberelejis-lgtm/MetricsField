@@ -81,6 +81,15 @@ export interface Cliente {
    * y hay que reconectar. No incluye el refresh token (eso vive solo en la
    * base, nunca se manda al cliente). */
   googleConectadoEn: string | null;
+  /** Responder solas las reseñas positivas (sin que nadie las apruebe a
+   * mano) apenas Google apruebe el acceso a la Reviews API — ver
+   * lib/google-reviews.ts. El cliente elige esto desde su portal. */
+  autoResponderPositivas: boolean;
+  /** A partir de cuántas estrellas se considera "positiva" para responder sola. */
+  autoResponderUmbral: 4 | 5;
+  /** Última vez que se trajeron reseñas nuevas desde la Reviews API — null
+   * si nunca sincronizó (hoy siempre, hasta que Google apruebe el acceso). */
+  resenasSyncEn: string | null;
 }
 
 /** Tono usado por el generador de respuestas sugeridas (lib/respuestas.ts). */
@@ -160,6 +169,12 @@ export interface ResenaCRM {
   responsable: string | null;
   notas: string;
   fecha: string;
+  /** Resource name de la reseña en Google ("accounts/…/locations/…/reviews/…")
+   * — null si se cargó a mano en el CRM en vez de venir del sync. */
+  origenGoogleId: string | null;
+  /** true si la respondió el sync automático (positiva + automatización
+   * activa), sin que nadie la haya aprobado a mano. */
+  publicadaAutomaticamente: boolean;
 }
 
 export type PlataformaIA = "ChatGPT" | "Claude" | "Perplexity" | "Gemini" | "Otra";

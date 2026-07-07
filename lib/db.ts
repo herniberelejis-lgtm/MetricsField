@@ -4,6 +4,8 @@ import { sql } from "./sql";
 import { fetchGooglePlaceStats } from "./places";
 import { accessTokenDesdeRefresh } from "./google-oauth";
 import { listarUbicaciones, rendimientoDelMes } from "./gbp";
+import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "./google-reviews";
+import { generarRespuestaSugerida } from "./respuestas";
 import type {
   AuditGEOResultado,
   BenchmarkMes,
@@ -97,6 +99,9 @@ async function ensambleCliente(row: Record<string, unknown>): Promise<Cliente> {
     googleConectadoEn: row.google_conectado_en
       ? new Date(row.google_conectado_en as string).toISOString()
       : null,
+    autoResponderPositivas: Boolean(row.auto_responder_positivas),
+    autoResponderUmbral: (Number(row.auto_responder_umbral) as 4 | 5) || 4,
+    resenasSyncEn: row.resenas_sync_en ? new Date(row.resenas_sync_en as string).toISOString() : null,
   };
 }
 
@@ -149,7 +154,21 @@ function slugify(nombre: string): string {
 }
 
 export async function crearCliente(
-  datos: Omit<Cliente, "id" | "codigoAcceso" | "ventasNFC" | "historico" | "ratingGoogle" | "resenasGoogle" | "googleSyncEn" | "googleLocation" | "googleConectadoEn">,
+  datos: Omit<
+    Cliente,
+    | "id"
+    | "codigoAcceso"
+    | "ventasNFC"
+    | "historico"
+    | "ratingGoogle"
+    | "resenasGoogle"
+    | "googleSyncEn"
+    | "googleLocation"
+    | "googleConectadoEn"
+    | "autoResponderPositivas"
+    | "autoResponderUmbral"
+    | "resenasSyncEn"
+  >,
 ): Promise<Cliente> {
   let id = slugify(datos.nombre) || "comercio";
   // asegurar unicidad del id/slug
@@ -308,6 +327,27 @@ export async function desconectarGoogleComercio(id: string): Promise<void> {
   `;
 }
 
+/** Resuelve (y cachea en la fila del comercio) el resource name de su ficha
+ * en Business Profile, matcheando por place_id contra las ubicaciones que
+ * administra la cuenta conectada. Compartido por rendimiento y reseñas —
+ * ambas APIs identifican la ficha de la misma forma. null si falta
+ * cualquier pieza: sin place_id cargado, o la cuenta conectada no administra
+ * esa ficha. */
+async function resolverLocationGBP(id: string, token: string): Promise<string | null> {
+  const rows = await sql`SELECT google_place_id, google_location FROM comercios WHERE id = ${id}`;
+  if (rows.length === 0) return null;
+  const location = rows[0].google_location as string;
+  if (location) return location;
+
+  const placeId = rows[0].google_place_id as string;
+  if (!placeId) return null;
+  const ubicaciones = await listarUbicaciones(token);
+  const match = ubicaciones.find((u) => u.placeId === placeId);
+  if (!match) return null;
+  await sql`UPDATE comercios SET google_location = ${match.location} WHERE id = ${id}`;
+  return match.location;
+}
+
 /** Trae visitas al perfil, llamadas y clics "cómo llegar" del mes en curso
  * y los guarda en metricas_mensuales, usando la cuenta de Google que ESE
  * comercio conectó. Vincula la ficha sola la primera vez, matcheando por
@@ -319,19 +359,8 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
   const token = await accessTokenGBPComercio(id);
   if (!token) return false;
 
-  const rows = await sql`SELECT google_place_id, google_location FROM comercios WHERE id = ${id}`;
-  if (rows.length === 0) return false;
-  let location = rows[0].google_location as string;
-  const placeId = rows[0].google_place_id as string;
-
-  if (!location) {
-    if (!placeId) return false;
-    const ubicaciones = await listarUbicaciones(token);
-    const match = ubicaciones.find((u) => u.placeId === placeId);
-    if (!match) return false;
-    location = match.location;
-    await sql`UPDATE comercios SET google_location = ${location} WHERE id = ${id}`;
-  }
+  const location = await resolverLocationGBP(id, token);
+  if (!location) return false;
 
   const hoy = new Date();
   const r = await rendimientoDelMes(token, location, hoy.getFullYear(), hoy.getMonth() + 1);
@@ -358,6 +387,98 @@ export async function sincronizarRendimientoTodos(): Promise<{ total: number; ac
     if (await sincronizarRendimiento(row.id as string)) actualizados += 1;
   }
   return { total: rows.length, actualizados };
+}
+
+/** Trae reseñas nuevas desde la Reviews API de Google y las carga en el CRM
+ * (`resenas`). Las positivas (según el umbral que eligió el cliente en su
+ * portal) se responden solas con el mismo generador de respuestas que usa
+ * la cola manual, y quedan marcadas `publicadaAutomaticamente`; el resto
+ * entra tal cual a la cola manual existente. No hace nada (0 sincronizadas)
+ * si falta cualquier pieza — sin conectar, sin ficha vinculada, o mientras
+ * `GOOGLE_REVIEWS_API_ENABLED` no esté prendido, porque esa API todavía
+ * necesita una aprobación de Google que hoy no tenemos. */
+export async function sincronizarResenasGoogle(
+  id: string,
+): Promise<{ nuevas: number; autoRespondidas: number }> {
+  if (!resenasApiHabilitada()) return { nuevas: 0, autoRespondidas: 0 };
+
+  const token = await accessTokenGBPComercio(id);
+  if (!token) return { nuevas: 0, autoRespondidas: 0 };
+  const location = await resolverLocationGBP(id, token);
+  if (!location) return { nuevas: 0, autoRespondidas: 0 };
+
+  const cliente = await getCliente(id);
+  if (!cliente) return { nuevas: 0, autoRespondidas: 0 };
+
+  const resenasGoogle = await listarResenasGoogle(token, location);
+  let nuevas = 0;
+  let autoRespondidas = 0;
+
+  for (const rg of resenasGoogle) {
+    const existe = await sql`SELECT 1 FROM resenas WHERE origen_google_id = ${rg.name}`;
+    if (existe.length > 0) continue;
+
+    const creada = await crearResena(
+      id,
+      {
+        autor: rg.autor,
+        estrellas: rg.estrellas,
+        texto: rg.texto,
+        plataforma: "google",
+        fecha: rg.fecha.slice(0, 10),
+      },
+      rg.name,
+    );
+    nuevas += 1;
+
+    const esPositivaSegunUmbral = rg.estrellas >= cliente.autoResponderUmbral;
+    if (!rg.yaRespondida && cliente.autoResponderPositivas && esPositivaSegunUmbral) {
+      const respuesta = generarRespuestaSugerida(rg.autor, rg.estrellas, rg.texto, cliente.tonoMarca, 0);
+      const publicada = await responderResenaGoogle(token, rg.name, respuesta);
+      if (publicada) {
+        await actualizarResena(creada.id, {
+          estado: "respondida",
+          respuestaSugerida: respuesta,
+          respuestaPublicada: true,
+          publicadaAutomaticamente: true,
+        });
+        autoRespondidas += 1;
+      }
+    }
+  }
+
+  await sql`UPDATE comercios SET resenas_sync_en = now() WHERE id = ${id}`;
+  return { nuevas, autoRespondidas };
+}
+
+/** Reseñas de todos los comercios con Google conectado — para el cron diario. */
+export async function sincronizarResenasGoogleTodos(): Promise<{
+  total: number;
+  nuevas: number;
+  autoRespondidas: number;
+}> {
+  const rows = await sql`SELECT id FROM comercios WHERE google_refresh_token != ''`;
+  let nuevas = 0;
+  let autoRespondidas = 0;
+  for (const row of rows) {
+    const r = await sincronizarResenasGoogle(row.id as string);
+    nuevas += r.nuevas;
+    autoRespondidas += r.autoRespondidas;
+  }
+  return { total: rows.length, nuevas, autoRespondidas };
+}
+
+/** Toggle de automatización que el cliente elige desde su portal. */
+export async function actualizarAutomatizacionResenas(
+  id: string,
+  datos: { autoResponderPositivas: boolean; autoResponderUmbral: 4 | 5 },
+): Promise<void> {
+  await sql`
+    UPDATE comercios SET
+      auto_responder_positivas = ${datos.autoResponderPositivas},
+      auto_responder_umbral = ${datos.autoResponderUmbral}
+    WHERE id = ${id}
+  `;
 }
 
 export async function guardarMetrica(id: string, m: MetricaMensual): Promise<Cliente> {
@@ -710,6 +831,8 @@ function mapResena(r: Record<string, unknown>): ResenaCRM {
     responsable: (r.responsable as string | null) ?? null,
     notas: r.notas as string,
     fecha: fechaISO(r.fecha),
+    origenGoogleId: (r.origen_google_id as string | null) ?? null,
+    publicadaAutomaticamente: Boolean(r.publicada_automaticamente),
   };
 }
 
@@ -729,10 +852,11 @@ export async function crearResena(
     plataforma: "google" | "otra";
     fecha: string;
   },
+  origenGoogleId: string | null = null,
 ): Promise<ResenaCRM> {
   const rows = await sql`
-    INSERT INTO resenas (comercio_id, autor, estrellas, texto, plataforma, fecha)
-    VALUES (${comercioId}, ${datos.autor}, ${datos.estrellas}, ${datos.texto}, ${datos.plataforma}, ${datos.fecha})
+    INSERT INTO resenas (comercio_id, autor, estrellas, texto, plataforma, fecha, origen_google_id)
+    VALUES (${comercioId}, ${datos.autor}, ${datos.estrellas}, ${datos.texto}, ${datos.plataforma}, ${datos.fecha}, ${origenGoogleId})
     RETURNING *
   `;
   return mapResena(rows[0]);
@@ -746,6 +870,7 @@ export async function actualizarResena(
     respuestaPublicada: boolean;
     responsable: string;
     notas: string;
+    publicadaAutomaticamente: boolean;
   }>,
 ): Promise<ResenaCRM> {
   const rows = await sql`
@@ -754,7 +879,8 @@ export async function actualizarResena(
       respuesta_sugerida = COALESCE(${datos.respuestaSugerida ?? null}, respuesta_sugerida),
       respuesta_publicada = COALESCE(${datos.respuestaPublicada ?? null}, respuesta_publicada),
       responsable = COALESCE(${datos.responsable ?? null}, responsable),
-      notas = COALESCE(${datos.notas ?? null}, notas)
+      notas = COALESCE(${datos.notas ?? null}, notas),
+      publicada_automaticamente = COALESCE(${datos.publicadaAutomaticamente ?? null}, publicada_automaticamente)
     WHERE id = ${id}
     RETURNING *
   `;
