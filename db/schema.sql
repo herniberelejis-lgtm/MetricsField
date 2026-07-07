@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS ventas_nfc (
   precio_unitario   NUMERIC NOT NULL DEFAULT 0,
   fecha             DATE NOT NULL DEFAULT CURRENT_DATE
 );
+CREATE INDEX IF NOT EXISTS idx_ventas_nfc_comercio ON ventas_nfc(comercio_id);
 
 -- El gestor de links: la URL corta que el comercio nunca cambia
 -- (taply.app/t/<slug>) pero cuyo destino se administra desde el panel.
@@ -98,6 +99,7 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   usar_filtro  BOOLEAN NOT NULL DEFAULT TRUE,           -- solo aplica si destino='resena': false = va directo a Google, sin star-gate
   creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE INDEX IF NOT EXISTS idx_links_nfc_comercio ON links_nfc(comercio_id);
 
 -- Cada tap registrado (solo inserción, nunca se edita).
 CREATE TABLE IF NOT EXISTS taps (
@@ -121,6 +123,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   creado_en        TIMESTAMPTZ NOT NULL DEFAULT now(),
   actualizado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE INDEX IF NOT EXISTS idx_feedback_comercio ON feedback(comercio_id, creado_en DESC);
 
 -- CRM de reseñas (las que el fundador carga a mano mientras no haya API
 -- oficial de Google Business Profile).
@@ -146,6 +149,7 @@ CREATE TABLE IF NOT EXISTS resenas (
 CREATE UNIQUE INDEX IF NOT EXISTS resenas_origen_google_id_idx
   ON resenas (origen_google_id)
   WHERE origen_google_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resenas_comercio ON resenas(comercio_id, fecha DESC);
 
 -- Audit GEO: registro manual asistido de si la IA recomienda al comercio.
 CREATE TABLE IF NOT EXISTS audits_geo (
@@ -157,6 +161,7 @@ CREATE TABLE IF NOT EXISTS audits_geo (
   aparece                  BOOLEAN NOT NULL,
   competidores_mencionados TEXT NOT NULL DEFAULT ''
 );
+CREATE INDEX IF NOT EXISTS idx_audits_geo_comercio ON audits_geo(comercio_id, fecha DESC);
 
 -- Checklist SEO: un ítem estandarizado por fila. hecho=false hasta marcarlo.
 CREATE TABLE IF NOT EXISTS checklist_seo (
@@ -178,6 +183,7 @@ CREATE TABLE IF NOT EXISTS competidores (
   google_place_id  TEXT,
   actualizado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE INDEX IF NOT EXISTS idx_competidores_comercio ON competidores(comercio_id);
 
 -- Foto mensual de cada competidor: su rating y total de reseñas "al corte"
 -- de cada mes. El snapshot del mes en curso se va pisando (upsert) en cada
