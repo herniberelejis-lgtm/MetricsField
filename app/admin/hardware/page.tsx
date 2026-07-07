@@ -160,6 +160,13 @@ export default async function HardwarePage() {
                             </option>
                           ))}
                         </select>
+                        <label
+                          className="flex items-center gap-1 text-[11px] text-slate-500"
+                          title="Solo aplica si el destino es 'Reseña de Google': va directo a Google para todos, sin star-gate."
+                        >
+                          <input type="checkbox" name="sinFiltro" value="1" className="rounded" />
+                          Sin filtro
+                        </label>
                         <button
                           type="submit"
                           className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"

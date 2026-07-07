@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom'
   url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
+  usar_filtro  BOOLEAN NOT NULL DEFAULT TRUE,           -- solo aplica si destino='resena': false = va directo a Google, sin star-gate
   creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

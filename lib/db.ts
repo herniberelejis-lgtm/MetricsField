@@ -534,6 +534,7 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     destino: r.destino as DestinoLink,
     urlDestino: (r.url_destino as string | null) ?? null,
     activo: Boolean(r.activo),
+    usarFiltro: r.usar_filtro === undefined ? true : Boolean(r.usar_filtro),
     creadoEn: String(r.creado_en),
     taps: Number(r.taps ?? 0),
   };
@@ -571,7 +572,13 @@ function slugLink(etiqueta: string): string {
 
 export async function crearLink(
   comercioId: string,
-  datos: { etiqueta: string; tipo?: TipoSoporte; destino: DestinoLink; urlDestino?: string | null },
+  datos: {
+    etiqueta: string;
+    tipo?: TipoSoporte;
+    destino: DestinoLink;
+    urlDestino?: string | null;
+    usarFiltro?: boolean;
+  },
 ): Promise<LinkNFC> {
   let id = slugLink(datos.etiqueta);
   for (let i = 0; i < 50; i++) {
@@ -580,8 +587,8 @@ export async function crearLink(
     id = `${slugLink(datos.etiqueta)}-${crypto.randomBytes(2).toString("hex")}`;
   }
   await sql`
-    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino)
-    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${datos.urlDestino ?? null})
+    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, usar_filtro)
+    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${datos.urlDestino ?? null}, ${datos.usarFiltro ?? true})
   `;
   const l = await getLink(id);
   if (!l) throw new Error("No se pudo crear el link.");
@@ -590,7 +597,14 @@ export async function crearLink(
 
 export async function actualizarLink(
   linkId: string,
-  datos: Partial<{ etiqueta: string; tipo: TipoSoporte; destino: DestinoLink; urlDestino: string | null; activo: boolean }>,
+  datos: Partial<{
+    etiqueta: string;
+    tipo: TipoSoporte;
+    destino: DestinoLink;
+    urlDestino: string | null;
+    activo: boolean;
+    usarFiltro: boolean;
+  }>,
 ): Promise<LinkNFC> {
   const actual = await getLink(linkId);
   if (!actual) throw new Error(`Link no encontrado: ${linkId}`);
@@ -601,7 +615,8 @@ export async function actualizarLink(
       tipo = ${nuevo.tipo},
       destino = ${nuevo.destino},
       url_destino = ${nuevo.urlDestino},
-      activo = ${nuevo.activo}
+      activo = ${nuevo.activo},
+      usar_filtro = ${nuevo.usarFiltro}
     WHERE id = ${linkId}
   `;
   const l = await getLink(linkId);
@@ -683,7 +698,13 @@ export async function getInventarioHardware(): Promise<PiezaHardware[]> {
 export async function asignarPiezaACliente(
   id: string,
   comercioId: string,
-  datos: { etiqueta: string; tipo?: TipoSoporte; destino: DestinoLink; urlDestino?: string | null },
+  datos: {
+    etiqueta: string;
+    tipo?: TipoSoporte;
+    destino: DestinoLink;
+    urlDestino?: string | null;
+    usarFiltro?: boolean;
+  },
 ): Promise<LinkNFC> {
   const rows = await sql`
     UPDATE links_nfc SET
@@ -691,7 +712,8 @@ export async function asignarPiezaACliente(
       etiqueta = ${datos.etiqueta},
       tipo = COALESCE(${datos.tipo ?? null}, tipo),
       destino = ${datos.destino},
-      url_destino = ${datos.urlDestino ?? null}
+      url_destino = ${datos.urlDestino ?? null},
+      usar_filtro = ${datos.usarFiltro ?? true}
     WHERE id = ${id} AND comercio_id IS NULL
     RETURNING *
   `;

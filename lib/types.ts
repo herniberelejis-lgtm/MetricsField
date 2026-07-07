@@ -136,6 +136,12 @@ export interface LinkNFC {
   destino: DestinoLink;
   urlDestino: string | null;
   activo: boolean;
+  /** Solo importa cuando destino='resena': true (default) = pasa por el
+   * star-gate de estrellas; false = va derecho a googleReviewUrl para
+   * todo el mundo, sin desviar las malas a feedback privado. Algunos
+   * clientes prefieren no usar el filtro — es su elección, no la nuestra.
+   * El tap se sigue contando igual en cualquiera de los dos casos. */
+  usarFiltro: boolean;
   creadoEn: string;
   taps: number; // total histórico, calculado
 }

@@ -43,6 +43,15 @@ export default async function TapPage({
   const comercio = await getClientePorLinkId(slug);
   if (!comercio) notFound();
 
+  // Algunos clientes no quieren el filtro de estrellas — van derecho a la
+  // reseña de Google para todo el mundo, sin desviar las malas a feedback
+  // privado. Es una elección por link (lib/db.ts: usar_filtro), no algo que
+  // decida Taply; el tap ya quedó contado arriba en cualquiera de los casos.
+  if (!link.usarFiltro) {
+    if (!comercio.googleReviewUrl) notFound();
+    redirect(comercio.googleReviewUrl);
+  }
+
   return (
     <TapStarGate
       comercioId={comercio.id}

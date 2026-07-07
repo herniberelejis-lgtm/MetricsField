@@ -173,6 +173,18 @@ export default async function LinksPage({
               className={inputCls}
             />
           </Field>
+          <label className="flex items-start gap-2 text-sm text-slate-600">
+            <input type="checkbox" name="sinFiltro" value="1" className="mt-0.5 rounded" />
+            <span>
+              Sin filtro de estrellas — va directo a la reseña de Google para todos.
+              <br />
+              <span className="text-xs text-slate-400">
+                Solo aplica si el destino es "Reseña de Google". Por default el cartel
+                muestra primero el star-gate (1-3★ ofrece feedback privado en vez de
+                Google) — marcá esto si el cliente prefiere no usar ese filtro.
+              </span>
+            </span>
+          </label>
           <SubmitButton>Crear link</SubmitButton>
         </form>
       </Card>
@@ -209,6 +221,11 @@ export default async function LinksPage({
                       {" · "}
                       {DESTINOS.find((d) => d.value === l.destino)?.label ?? l.destino}
                       {l.urlDestino && <> → {l.urlDestino}</>}
+                      {l.destino === "resena" && !l.usarFiltro && (
+                        <span className="ml-1.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                          sin filtro
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -301,6 +318,21 @@ export default async function LinksPage({
                         className="rounded"
                       />
                       Link activo
+                    </label>
+                    <label className="flex items-start gap-2 text-sm text-slate-600">
+                      <input
+                        type="checkbox"
+                        name="sinFiltro"
+                        value="1"
+                        defaultChecked={!l.usarFiltro}
+                        className="mt-0.5 rounded"
+                      />
+                      <span>
+                        Sin filtro de estrellas — va directo a la reseña de Google para todos.
+                        <span className="block text-xs text-slate-400">
+                          Solo aplica si el destino es "Reseña de Google".
+                        </span>
+                      </span>
                     </label>
                     <div className="flex items-center gap-2">
                       <SubmitButton>Guardar cambios</SubmitButton>
