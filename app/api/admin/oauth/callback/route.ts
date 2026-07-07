@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { canjearCodigo, decodificarIdToken } from "@/lib/google-oauth";
-import { crearCookieSesionGoogle, COOKIE_GOOGLE } from "@/lib/auth";
+import { crearCookieSesionGoogle, COOKIE_GOOGLE, SESION_MAX_MS } from "@/lib/auth";
 import { esAdminPermitido, registrarAuditoria } from "@/lib/db";
 
 // Callback del login del equipo: valida el state, canjea el code por el
@@ -34,11 +34,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   await registrarAuditoria(datos.email, "login", "Inicio de sesión con Google");
 
   const res = NextResponse.redirect(new URL("/admin", req.url));
-  res.cookies.set(COOKIE_GOOGLE, crearCookieSesionGoogle(datos.email, datos.nombre), {
+  res.cookies.set(COOKIE_GOOGLE, await crearCookieSesionGoogle(datos.email, datos.nombre), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 30, // 30 días
+    maxAge: SESION_MAX_MS / 1000, // 30 días — el exp firmado dentro del payload es el que manda
     path: "/",
   });
   return limpiar(res);

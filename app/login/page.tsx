@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 const ERRORES: Record<string, string> = {
   "1": "Contraseña incorrecta. Probá de nuevo.",
+  limite: "Demasiados intentos. Esperá 15 minutos y probá de nuevo.",
   "no-autorizado": "Esa cuenta de Google no tiene acceso al panel. Pedile a un admin que te sume.",
   estado: "Algo falló verificando la sesión de Google. Probá de nuevo.",
   cancelado: "Cancelaste el inicio de sesión con Google.",

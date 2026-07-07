@@ -1,9 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { getLink, getClientePorLinkId, registrarTap } from "@/lib/db";
+import { getDatosTap, registrarTap } from "@/lib/db";
 import TapStarGate from "@/components/tap/TapStarGate";
 
 export const dynamic = "force-dynamic";
+
+// Crawlers y generadores de preview (WhatsApp, Google, etc.) abren esta URL
+// sin que nadie haya tocado el cartel — no deben inflar los taps del cliente.
+// Solo patrones de fetchers: "whatsapp/" es el bot de previews (el navegador
+// in-app de WhatsApp con una persona real no lleva ese token en el UA), y
+// "bot" ya cubre TelegramBot, Twitterbot, Googlebot, etc.
+const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp\/|slurp|curl/i;
 
 // La URL corta que va en el cartel NFC: taply.app/t/<slug>. El comercio
 // nunca cambia esta URL — el destino se administra desde el panel
@@ -15,14 +22,17 @@ export default async function TapPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const link = await getLink(slug);
-  if (!link) notFound();
+  // Una sola consulta con lo justo: link + datos mínimos del comercio.
+  const datos = await getDatosTap(slug);
+  if (!datos) notFound();
+  const { link, comercio } = datos;
 
   const h = await headers();
+  const userAgent = h.get("user-agent") ?? "";
   const esPrefetch =
     h.get("purpose") === "prefetch" || h.get("next-router-prefetch") === "1";
-  if (!esPrefetch) {
-    await registrarTap(slug, h.get("user-agent"));
+  if (!esPrefetch && !UA_BOT.test(userAgent)) {
+    await registrarTap(slug, userAgent || null);
   }
 
   if (!link.activo) {
@@ -40,7 +50,6 @@ export default async function TapPage({
     redirect(link.urlDestino);
   }
 
-  const comercio = await getClientePorLinkId(slug);
   if (!comercio) notFound();
 
   // Algunos clientes no quieren el filtro de estrellas — van derecho a la

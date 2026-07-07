@@ -16,6 +16,16 @@ if (!connectionString) {
   );
 }
 
+// En serverless cada instancia abre su propio pool: la URL debe ser la del
+// pooler de Neon (host con "-pooler"), no la conexión directa — con la
+// directa un pico de tráfico agota las conexiones reales de la base.
+if (connectionString.includes("neon.tech") && !connectionString.includes("-pooler")) {
+  console.warn(
+    "DATABASE_URL apunta a Neon SIN pooler (falta '-pooler' en el host). " +
+      "En producción serverless usá la connection string 'Pooled' de Neon.",
+  );
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var __taplySql: ReturnType<typeof postgres> | undefined;
@@ -27,7 +37,13 @@ export const sql =
   globalThis.__taplySql ??
   postgres(connectionString, {
     ssl: connectionString.includes("neon.tech") ? "require" : undefined,
-    max: 5,
+    // Por instancia serverless: 2 alcanza (cada request usa 1-2 consultas a
+    // la vez) y evita que un pico de instancias acumule conexiones ociosas
+    // contra el pooler. Las ociosas se devuelven a los 20s; connect_timeout
+    // corta rápido si Neon está despertando en un cold start.
+    max: 2,
+    idle_timeout: 20,
+    connect_timeout: 10,
     // Neon en modo pooler (PgBouncer) no lleva bien los prepared statements
     // con nombre: cada ALTER TABLE puede dejar conexiones con un plan de
     // consulta cacheado y desactualizado ("cached plan must not change
