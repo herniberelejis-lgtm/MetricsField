@@ -34,7 +34,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   await registrarAuditoria(datos.email, "login", "Inicio de sesión con Google");
 
   const res = NextResponse.redirect(new URL("/admin", req.url));
-  res.cookies.set(COOKIE_GOOGLE, crearCookieSesionGoogle(datos.email, datos.nombre), {
+  res.cookies.set(COOKIE_GOOGLE, await crearCookieSesionGoogle(datos.email, datos.nombre), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

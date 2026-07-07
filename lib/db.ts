@@ -193,7 +193,8 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
       destino: r.destino as DestinoLink,
       urlDestino: (r.url_destino as string | null) ?? null,
       activo: Boolean(r.activo),
-      usarFiltro: r.usar_filtro === undefined ? true : Boolean(r.usar_filtro),
+      // la columna es NOT NULL DEFAULT TRUE y siempre viene en el SELECT
+      usarFiltro: Boolean(r.usar_filtro),
     },
     comercio: r.comercio_id
       ? {
@@ -349,25 +350,36 @@ export async function sincronizarGoogle(id: string): Promise<boolean> {
   return true;
 }
 
-// Tamaño de lote de los syncs masivos del cron: secuencial era demasiado
-// lento (moría por timeout con la lista creciendo) y todo junto castigaría
-// la cuota de las APIs de Google. Un fallo en un comercio no corta el resto.
+// Syncs masivos del cron en lotes de a 5 en paralelo: secuencial era
+// demasiado lento (moría por timeout con la lista creciendo) y todo junto
+// castigaría la cuota de las APIs de Google. Un fallo en un comercio no
+// corta el resto, pero queda logueado — sin esto los rechazos se tragaban
+// y el cron reportaba conteos sanos con comercios sin sincronizar.
 const LOTE_SYNC = 5;
+
+async function sincronizarEnLotes<T>(
+  ids: string[],
+  fn: (id: string) => Promise<T>,
+): Promise<T[]> {
+  const exitosos: T[] = [];
+  for (let i = 0; i < ids.length; i += LOTE_SYNC) {
+    const lote = ids.slice(i, i + LOTE_SYNC);
+    const resultados = await Promise.allSettled(lote.map(fn));
+    resultados.forEach((r, j) => {
+      if (r.status === "fulfilled") exitosos.push(r.value);
+      else console.error(`Sync falló para el comercio ${lote[j]}:`, r.reason);
+    });
+  }
+  return exitosos;
+}
 
 /** Sincroniza todos los comercios que tengan un place_id cargado — usado
  * por el cron diario. Devuelve cuántos se actualizaron correctamente. */
 export async function sincronizarGoogleTodos(): Promise<{ total: number; actualizados: number }> {
   const rows = await sql`SELECT id FROM comercios WHERE google_place_id != ''`;
-  let actualizados = 0;
-  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
-    const resultados = await Promise.allSettled(
-      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarGoogle(row.id as string)),
-    );
-    for (const r of resultados) {
-      if (r.status === "fulfilled" && r.value) actualizados += 1;
-    }
-  }
-  return { total: rows.length, actualizados };
+  const ids = rows.map((r) => r.id as string);
+  const resultados = await sincronizarEnLotes(ids, sincronizarGoogle);
+  return { total: ids.length, actualizados: resultados.filter(Boolean).length };
 }
 
 // ---------- Ajustes (clave/valor de la agencia) ----------
@@ -471,16 +483,9 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
  * conectada — para el cron diario. */
 export async function sincronizarRendimientoTodos(): Promise<{ total: number; actualizados: number }> {
   const rows = await sql`SELECT id FROM comercios WHERE google_refresh_token != ''`;
-  let actualizados = 0;
-  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
-    const resultados = await Promise.allSettled(
-      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarRendimiento(row.id as string)),
-    );
-    for (const r of resultados) {
-      if (r.status === "fulfilled" && r.value) actualizados += 1;
-    }
-  }
-  return { total: rows.length, actualizados };
+  const ids = rows.map((r) => r.id as string);
+  const resultados = await sincronizarEnLotes(ids, sincronizarRendimiento);
+  return { total: ids.length, actualizados: resultados.filter(Boolean).length };
 }
 
 /** Trae reseñas nuevas desde la Reviews API de Google y las carga en el CRM
@@ -552,20 +557,15 @@ export async function sincronizarResenasGoogleTodos(): Promise<{
   autoRespondidas: number;
 }> {
   const rows = await sql`SELECT id FROM comercios WHERE google_refresh_token != ''`;
+  const ids = rows.map((r) => r.id as string);
+  const resultados = await sincronizarEnLotes(ids, sincronizarResenasGoogle);
   let nuevas = 0;
   let autoRespondidas = 0;
-  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
-    const resultados = await Promise.allSettled(
-      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarResenasGoogle(row.id as string)),
-    );
-    for (const r of resultados) {
-      if (r.status === "fulfilled") {
-        nuevas += r.value.nuevas;
-        autoRespondidas += r.value.autoRespondidas;
-      }
-    }
+  for (const r of resultados) {
+    nuevas += r.nuevas;
+    autoRespondidas += r.autoRespondidas;
   }
-  return { total: rows.length, nuevas, autoRespondidas };
+  return { total: ids.length, nuevas, autoRespondidas };
 }
 
 /** Toggle de automatización que el cliente elige desde su portal. */

@@ -8,6 +8,18 @@ import "server-only";
 type Ventana = { conteo: number; reinicia: number };
 const mapa = new Map<string, Ventana>();
 
+/** IP del cliente para usar como clave de rate limit. En Vercel estos
+ * headers los pone la plataforma (no los controla el cliente). Compartido
+ * por todas las actions con límite para que la clave no divirja entre
+ * endpoints. */
+export function ipDelRequest(h: Headers): string {
+  return (
+    h.get("x-real-ip") ||
+    h.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "desconocida"
+  );
+}
+
 /** Devuelve true si el request está permitido; false si superó el límite. */
 export function permitir(clave: string, maximo: number, ventanaMs: number): boolean {
   const ahora = Date.now();

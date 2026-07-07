@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 
 // Crawlers y generadores de preview (WhatsApp, Google, etc.) abren esta URL
 // sin que nadie haya tocado el cartel — no deben inflar los taps del cliente.
-const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|slurp|curl/i;
+// Solo patrones de fetchers: "whatsapp/" es el bot de previews (el navegador
+// in-app de WhatsApp con una persona real no lleva ese token en el UA), y
+// "bot" ya cubre TelegramBot, Twitterbot, Googlebot, etc.
+const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp\/|slurp|curl/i;
 
 // La URL corta que va en el cartel NFC: taply.app/t/<slug>. El comercio
 // nunca cambia esta URL — el destino se administra desde el panel

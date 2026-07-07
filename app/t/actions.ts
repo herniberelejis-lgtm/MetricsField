@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { crearFeedback, existeComercio } from "@/lib/db";
-import { permitir, limpiarVencidos } from "@/lib/ratelimit";
+import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
 // Server action pública (sin login): la usa cualquiera que toque un cartel
 // y elija 1-3 estrellas. Con rate limit por IP para frenar spam.
@@ -23,11 +23,7 @@ export async function enviarFeedback(
 
   // Rate limit: máx 5 envíos por IP cada 10 minutos.
   limpiarVencidos();
-  const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0].trim() ||
-    h.get("x-real-ip") ||
-    "desconocida";
+  const ip = ipDelRequest(await headers());
   if (!permitir(`feedback:${ip}`, 5, 10 * 60_000)) {
     return { ok: false, error: "Demasiados envíos. Probá de nuevo en un rato." };
   }

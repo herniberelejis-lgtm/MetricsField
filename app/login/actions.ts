@@ -5,17 +5,13 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { crearCookiePassword, SESION_MAX_MS } from "@/lib/auth";
 import { registrarAuditoria } from "@/lib/db";
-import { permitir, limpiarVencidos } from "@/lib/ratelimit";
+import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
 export async function accionLogin(fd: FormData): Promise<void> {
   // Rate limit: la contraseña compartida protege todo el panel — sin esto
   // se puede probar por fuerza bruta sin límite.
   limpiarVencidos();
-  const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0].trim() ||
-    h.get("x-real-ip") ||
-    "desconocida";
+  const ip = ipDelRequest(await headers());
   if (!permitir(`login:${ip}`, 10, 15 * 60_000)) {
     redirect("/login?error=limite");
   }
@@ -32,7 +28,7 @@ export async function accionLogin(fd: FormData): Promise<void> {
   }
 
   const jar = await cookies();
-  jar.set("admin_session", crearCookiePassword(), {
+  jar.set("admin_session", await crearCookiePassword(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
