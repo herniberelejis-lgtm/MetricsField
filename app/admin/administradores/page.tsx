@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { getAdmins } from "@/lib/db";
 import { emailAdminActual } from "@/lib/auth";
 import { accionAgregarAdmin, accionEliminarAdmin } from "@/app/actions";
 import { Card, PageHeader } from "@/components/ui";
 
+export const metadata: Metadata = { title: "Administradores" };
 export const dynamic = "force-dynamic";
 
 export default async function AdministradoresPage() {

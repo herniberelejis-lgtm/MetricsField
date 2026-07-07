@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente } from "@/lib/db";
@@ -25,6 +26,15 @@ import {
 } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const c = await getCliente((await params).id);
+  return { title: c?.nombre ?? "Cliente" };
+}
 
 export default async function ClienteDetallePage({
   params,

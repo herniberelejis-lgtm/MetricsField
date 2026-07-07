@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getClientes } from "@/lib/db";
 import { metricaActual, citasIA, ingresoNFC } from "@/lib/types";
@@ -11,6 +12,7 @@ import {
   Stars,
 } from "@/components/ui";
 
+export const metadata: Metadata = { title: "Clientes" };
 export const dynamic = "force-dynamic";
 
 export default async function ClientesPage() {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente } from "@/lib/db";
@@ -7,6 +8,15 @@ import { recomendacionDelMes } from "@/lib/recomendacion";
 import { Stars } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const c = await getCliente((await params).id);
+  return { title: c ? `Reporte · ${c.nombre}` : "Reporte" };
+}
 
 function deltaTexto(actual: number, anterior: number, invertir = false): string {
   const d = delta(actual, anterior);

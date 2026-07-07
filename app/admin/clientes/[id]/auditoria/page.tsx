@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente, getChecklist, getAudits, getCompetidores } from "@/lib/db";
@@ -7,6 +8,15 @@ import { Card, PageHeader } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const c = await getCliente((await params).id);
+  return { title: c ? `Auditoría GEO · ${c.nombre}` : "Auditoría GEO" };
+}
 
 const PLATAFORMAS = ["ChatGPT", "Claude", "Perplexity", "Gemini", "Otra"] as const;
 

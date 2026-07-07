@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente, getFeedback, getResenas } from "@/lib/db";
@@ -12,6 +13,15 @@ import { generarRespuestaSugerida } from "@/lib/respuestas";
 import { waUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const c = await getCliente((await params).id);
+  return { title: c ? `CRM · ${c.nombre}` : "CRM" };
+}
 
 const ESTADOS_RESENA = ["nueva", "respondida", "escalada", "resuelta"] as const;
 const ESTADOS_FEEDBACK = ["nuevo", "en_proceso", "resuelto"] as const;

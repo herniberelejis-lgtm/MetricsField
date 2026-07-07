@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { getAuditoria } from "@/lib/db";
 import { Card, PageHeader } from "@/components/ui";
 
+export const metadata: Metadata = { title: "Actividad" };
 export const dynamic = "force-dynamic";
 
 const ETIQUETAS_ACCION: Record<string, string> = {

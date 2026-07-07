@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { accionCrearCliente } from "@/app/actions";
 import { ClienteForm } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 
+export const metadata: Metadata = { title: "Nuevo cliente" };
 export const dynamic = "force-dynamic";
 
 export default function NuevoClientePage() {

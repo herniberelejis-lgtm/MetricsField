@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getProspectos } from "@/lib/db";
 import {
   accionActualizarProspecto,
@@ -10,6 +11,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import type { EstadoProspecto } from "@/lib/types";
 
+export const metadata: Metadata = { title: "Prospectos" };
 export const dynamic = "force-dynamic";
 
 const ESTADOS: { v: EstadoProspecto; l: string }[] = [

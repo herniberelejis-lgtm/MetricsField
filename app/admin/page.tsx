@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getClientes } from "@/lib/db";
 import {
@@ -17,6 +18,8 @@ import {
   Stars,
   Sparkline,
 } from "@/components/ui";
+
+export const metadata: Metadata = { title: "Panel" };
 
 function sum(nums: number[]): number {
   return nums.reduce((a, b) => a + b, 0);

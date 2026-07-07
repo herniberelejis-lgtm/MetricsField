@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getInventarioHardware, getClientes } from "@/lib/db";
 import {
@@ -8,6 +9,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 
+export const metadata: Metadata = { title: "Hardware" };
 export const dynamic = "force-dynamic";
 
 const TIPOS: { value: string; label: string }[] = [

@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getClientes } from "@/lib/db";
 import { metricaActual } from "@/lib/types";
 import { Card, PageHeader, PlanBadge } from "@/components/ui";
 import { fmtMes } from "@/lib/format";
 
+export const metadata: Metadata = { title: "Reportes" };
 export const dynamic = "force-dynamic";
 
 export default async function ReportesPage() {

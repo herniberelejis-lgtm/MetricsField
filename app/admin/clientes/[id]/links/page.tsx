@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente, getLinks, getTapsPorDia } from "@/lib/db";
@@ -12,6 +13,15 @@ import TapsChart from "@/components/TapsChart";
 import { fmtNum } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const c = await getCliente((await params).id);
+  return { title: c ? `Links NFC/QR · ${c.nombre}` : "Links NFC/QR" };
+}
 
 const DESTINOS: { value: string; label: string }[] = [
   { value: "resena", label: "Reseña de Google (star-gate)" },

@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { Card, PageHeader } from "@/components/ui";
 
+export const metadata: Metadata = { title: "Tutoriales" };
 export const dynamic = "force-dynamic";
 
 // Manuales de uso interno del equipo. Estructura preparada para ir

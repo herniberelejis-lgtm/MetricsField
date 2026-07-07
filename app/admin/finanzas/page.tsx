@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getClientes, getCobrosConComercio } from "@/lib/db";
 import type { Cobro } from "@/lib/types";
 import { fmtARS, fmtMes } from "@/lib/format";
@@ -8,6 +9,7 @@ import {
   accionEliminarCobro,
 } from "./actions";
 
+export const metadata: Metadata = { title: "Finanzas" };
 export const dynamic = "force-dynamic";
 
 const HOY = new Date().toISOString().slice(0, 10);
