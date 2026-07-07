@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   sincronizarGoogleTodos,
@@ -10,6 +11,13 @@ import {
 // comercios con Google Place ID cargado. Vercel Cron llama esta ruta con
 // un header Authorization: Bearer <CRON_SECRET> — lo verificamos para que
 // nadie más pueda disparar el sync desde afuera.
+
+// Sin esto la función se cortaba con el timeout default a mitad de la
+// lista y los últimos comercios quedaban sin sincronizar en silencio.
+// 60s es el techo del plan Hobby; en Pro se puede subir a 300.
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
@@ -19,8 +27,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Falta configurar CRON_SECRET" }, { status: 503 });
     }
   } else {
-    const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
+    const esperado = Buffer.from(`Bearer ${secret}`);
+    const recibido = Buffer.from(req.headers.get("authorization") ?? "");
+    const ok = recibido.length === esperado.length && crypto.timingSafeEqual(recibido, esperado);
+    if (!ok) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
   }

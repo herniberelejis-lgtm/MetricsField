@@ -118,6 +118,14 @@ export async function getCliente(id: string): Promise<Cliente | undefined> {
   return ensambleCliente(rows[0]);
 }
 
+/** Chequeo liviano de existencia — para las escrituras públicas (feedback)
+ * que reciben el id del cliente final y no deben cargar el comercio entero. */
+export async function existeComercio(id: string): Promise<boolean> {
+  if (!id) return false;
+  const rows = await sql`SELECT 1 FROM comercios WHERE id = ${id}`;
+  return rows.length > 0;
+}
+
 export async function getClientePorCodigo(codigo: string): Promise<Cliente | undefined> {
   if (!codigo) return undefined;
   const rows = await sql`SELECT * FROM comercios WHERE codigo_acceso = ${codigo}`;
@@ -270,13 +278,23 @@ export async function sincronizarGoogle(id: string): Promise<boolean> {
   return true;
 }
 
+// Tamaño de lote de los syncs masivos del cron: secuencial era demasiado
+// lento (moría por timeout con la lista creciendo) y todo junto castigaría
+// la cuota de las APIs de Google. Un fallo en un comercio no corta el resto.
+const LOTE_SYNC = 5;
+
 /** Sincroniza todos los comercios que tengan un place_id cargado — usado
  * por el cron diario. Devuelve cuántos se actualizaron correctamente. */
 export async function sincronizarGoogleTodos(): Promise<{ total: number; actualizados: number }> {
   const rows = await sql`SELECT id FROM comercios WHERE google_place_id != ''`;
   let actualizados = 0;
-  for (const row of rows) {
-    if (await sincronizarGoogle(row.id as string)) actualizados += 1;
+  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
+    const resultados = await Promise.allSettled(
+      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarGoogle(row.id as string)),
+    );
+    for (const r of resultados) {
+      if (r.status === "fulfilled" && r.value) actualizados += 1;
+    }
   }
   return { total: rows.length, actualizados };
 }
@@ -383,8 +401,13 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
 export async function sincronizarRendimientoTodos(): Promise<{ total: number; actualizados: number }> {
   const rows = await sql`SELECT id FROM comercios WHERE google_refresh_token != ''`;
   let actualizados = 0;
-  for (const row of rows) {
-    if (await sincronizarRendimiento(row.id as string)) actualizados += 1;
+  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
+    const resultados = await Promise.allSettled(
+      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarRendimiento(row.id as string)),
+    );
+    for (const r of resultados) {
+      if (r.status === "fulfilled" && r.value) actualizados += 1;
+    }
   }
   return { total: rows.length, actualizados };
 }
@@ -460,10 +483,16 @@ export async function sincronizarResenasGoogleTodos(): Promise<{
   const rows = await sql`SELECT id FROM comercios WHERE google_refresh_token != ''`;
   let nuevas = 0;
   let autoRespondidas = 0;
-  for (const row of rows) {
-    const r = await sincronizarResenasGoogle(row.id as string);
-    nuevas += r.nuevas;
-    autoRespondidas += r.autoRespondidas;
+  for (let i = 0; i < rows.length; i += LOTE_SYNC) {
+    const resultados = await Promise.allSettled(
+      rows.slice(i, i + LOTE_SYNC).map((row) => sincronizarResenasGoogle(row.id as string)),
+    );
+    for (const r of resultados) {
+      if (r.status === "fulfilled") {
+        nuevas += r.value.nuevas;
+        autoRespondidas += r.value.autoRespondidas;
+      }
+    }
   }
   return { total: rows.length, nuevas, autoRespondidas };
 }

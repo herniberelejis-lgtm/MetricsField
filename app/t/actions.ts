@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { crearFeedback } from "@/lib/db";
+import { crearFeedback, existeComercio } from "@/lib/db";
 import { permitir, limpiarVencidos } from "@/lib/ratelimit";
 
 // Server action pública (sin login): la usa cualquiera que toque un cartel
@@ -30,6 +30,13 @@ export async function enviarFeedback(
     "desconocida";
   if (!permitir(`feedback:${ip}`, 5, 10 * 60_000)) {
     return { ok: false, error: "Demasiados envíos. Probá de nuevo en un rato." };
+  }
+
+  // El comercioId viene del cliente: verificar que exista antes de insertar
+  // (un id inexistente rompía contra la FK con un 500; uno inventado no debe
+  // poder inyectar feedback falso a cualquier comercio).
+  if (!(await existeComercio(comercioId))) {
+    return { ok: false, error: "Comercio inválido." };
   }
 
   await crearFeedback(comercioId, {
