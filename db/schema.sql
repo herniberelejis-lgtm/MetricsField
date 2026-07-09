@@ -97,6 +97,10 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
   usar_filtro  BOOLEAN NOT NULL DEFAULT TRUE,           -- solo aplica si destino='resena': false = va directo a Google, sin star-gate
+  autogestionado BOOLEAN NOT NULL DEFAULT FALSE,        -- true = el propio comprador la activó (canal Mercado Libre, sin comercio_id)
+  nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre a mostrar en el star-gate
+  pin_hash     TEXT,                                    -- solo para piezas autogestionadas: PIN de edición (scrypt, ver lib/pin.ts)
+  pin_salt     TEXT,
   creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_links_nfc_comercio ON links_nfc(comercio_id);

@@ -35,7 +35,8 @@ const LABEL_TIPO: Record<string, string> = {
 export default async function HardwarePage() {
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 
-  const libres = inventario.filter((p) => !p.comercioId);
+  const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
+  const autogestionadas = inventario.filter((p) => !p.comercioId && p.autogestionado);
   const asignadas = inventario.filter((p) => p.comercioId);
   const lotes = [...new Set(inventario.map((p) => p.lote).filter(Boolean))];
 
@@ -43,7 +44,7 @@ export default async function HardwarePage() {
     <div>
       <PageHeader
         title="Hardware"
-        subtitle={`${inventario.length} piezas generadas · ${libres.length} libres · ${asignadas.length} asignadas`}
+        subtitle={`${inventario.length} piezas generadas · ${libres.length} libres · ${autogestionadas.length} autogestionadas · ${asignadas.length} asignadas`}
       />
 
       <Card className="mb-6">
@@ -175,6 +176,45 @@ export default async function HardwarePage() {
                         </button>
                       </form>
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
+      )}
+
+      {autogestionadas.length > 0 && (
+        <>
+          <h2 className="mb-3 text-sm font-semibold text-slate-900">
+            Autogestionadas ({autogestionadas.length})
+          </h2>
+          <p className="mb-3 -mt-2 text-xs text-slate-500">
+            Canal Mercado Libre: el propio comprador las activó desde{" "}
+            <code className="rounded bg-slate-100 px-1">/t/&lt;código&gt;</code>. Sin cliente en el
+            CRM ni portal — el destino lo edita él mismo con su PIN.
+          </p>
+          <Card className="mb-8 overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3 font-medium">Código</th>
+                  <th className="px-4 py-3 font-medium">Negocio</th>
+                  <th className="px-4 py-3 font-medium">Destino actual</th>
+                  <th className="px-4 py-3 font-medium">Taps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {autogestionadas.map((p) => (
+                  <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
+                      {p.id}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{p.nombreNegocio || "—"}</td>
+                    <td className="max-w-xs truncate px-4 py-3 text-xs text-slate-500">
+                      {p.urlDestino ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
                   </tr>
                 ))}
               </tbody>

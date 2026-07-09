@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { getDatosTap, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import TapStarGate from "@/components/tap/TapStarGate";
+import ActivarCartel from "@/components/tap/ActivarCartel";
+import RedireccionSuave from "@/components/tap/RedireccionSuave";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +60,17 @@ export default async function TapPage({
     redirect(link.urlDestino);
   }
 
-  if (!comercio) notFound();
+  // Sin comercio de agencia: o es una pieza del canal Mercado Libre ya
+  // activada por su comprador (va directo, sin star-gate — ver por qué en
+  // lib/db.ts), o es una pieza libre que nadie activó todavía y este es el
+  // primer toque: le mostramos el formulario para que se autoconfigure.
+  if (!comercio) {
+    if (link.autogestionado) {
+      if (!link.urlDestino) notFound();
+      return <RedireccionSuave url={link.urlDestino} slug={slug} />;
+    }
+    return <ActivarCartel slug={slug} />;
+  }
 
   // Algunos clientes no quieren el filtro de estrellas — van derecho a la
   // reseña de Google para todo el mundo, sin desviar las malas a feedback

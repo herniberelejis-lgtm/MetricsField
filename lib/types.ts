@@ -142,6 +142,14 @@ export interface LinkNFC {
    * clientes prefieren no usar el filtro — es su elección, no la nuestra.
    * El tap se sigue contando igual en cualquiera de los dos casos. */
   usarFiltro: boolean;
+  /** true = el propio comprador la activó desde /t/<id> (canal Mercado
+   * Libre: hardware suelto, sin agencia ni portal) — comercioId sigue NULL
+   * para siempre en estas piezas. false para todo lo demás: inventario
+   * libre sin activar, o piezas del modelo de agencia con comercioId. */
+  autogestionado: boolean;
+  /** Solo con autogestionado=true: nombre que se muestra en el star-gate,
+   * a falta de un comercio real. Vacío en cualquier otro caso. */
+  nombreNegocio: string;
   creadoEn: string;
   taps: number; // total histórico, calculado
 }

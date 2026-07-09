@@ -6,6 +6,7 @@ import { accessTokenDesdeRefresh } from "./google-oauth";
 import { listarUbicaciones, rendimientoDelMes } from "./gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "./google-reviews";
 import { generarRespuestaSugerida } from "./respuestas";
+import { hashearPin, pinCoincide } from "./pin";
 import type {
   AuditGEOResultado,
   BenchmarkMes,
@@ -173,13 +174,17 @@ export async function getClientePorCodigo(codigo: string): Promise<Cliente | und
  * ventas ni conteo de taps — esta es la ruta más caliente del producto
  * (cada tap de un cliente final pasa por acá). */
 export interface DatosTap {
-  link: Pick<LinkNFC, "id" | "destino" | "urlDestino" | "activo" | "usarFiltro">;
+  link: Pick<
+    LinkNFC,
+    "id" | "destino" | "urlDestino" | "activo" | "usarFiltro" | "autogestionado" | "nombreNegocio"
+  >;
   comercio: { id: string; nombre: string; rubro: Rubro; googleReviewUrl: string } | null;
 }
 
 export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   const rows = await sql`
     SELECT l.id, l.destino, l.url_destino, l.activo, l.usar_filtro,
+           l.autogestionado, l.nombre_negocio,
            co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url
     FROM links_nfc l
     LEFT JOIN comercios co ON co.id = l.comercio_id
@@ -193,8 +198,10 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
       destino: r.destino as DestinoLink,
       urlDestino: (r.url_destino as string | null) ?? null,
       activo: Boolean(r.activo),
-      // la columna es NOT NULL DEFAULT TRUE y siempre viene en el SELECT
+      // las columnas son NOT NULL y siempre vienen en el SELECT
       usarFiltro: Boolean(r.usar_filtro),
+      autogestionado: Boolean(r.autogestionado),
+      nombreNegocio: (r.nombre_negocio as string) ?? "",
     },
     comercio: r.comercio_id
       ? {
@@ -635,6 +642,8 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     urlDestino: (r.url_destino as string | null) ?? null,
     activo: Boolean(r.activo),
     usarFiltro: r.usar_filtro === undefined ? true : Boolean(r.usar_filtro),
+    autogestionado: Boolean(r.autogestionado),
+    nombreNegocio: (r.nombre_negocio as string) ?? "",
     creadoEn: String(r.creado_en),
     taps: Number(r.taps ?? 0),
   };
@@ -727,6 +736,76 @@ export async function actualizarLink(
 
 export async function eliminarLink(linkId: string): Promise<void> {
   await sql`DELETE FROM links_nfc WHERE id = ${linkId}`;
+}
+
+// ---------- Autogestión de hardware (canal Mercado Libre) ----------
+// Piezas del inventario libre (comercio_id NULL) que su propio comprador
+// activa desde /t/<id> — sin admin, sin fila en `comercios`. El PIN de
+// edición vive hasheado acá (scrypt, lib/pin.ts) y nunca sale de estas dos
+// funciones: mapLink no lo expone, así que ninguna pantalla puede filtrarlo
+// por accidente.
+//
+// Sin star-gate ni feedback privado: esas dos cosas dependen de un
+// `comercio_id` real (la FK de `feedback`, y quién lee ese feedback después
+// desde un portal que acá no existe). Ofrecer "desviamos tus malas reseñas"
+// sin que nadie del otro lado lea nunca ese buzón sería peor que no
+// ofrecerlo — así que estas piezas van siempre directo a Google, para
+// cualquiera que las toque. Coherente con vender solo el hardware.
+
+export async function activarAutogestion(
+  slug: string,
+  datos: { nombreNegocio: string; urlDestino: string; pin: string },
+): Promise<LinkNFC> {
+  const { hash, salt } = hashearPin(datos.pin);
+  // Condición en el WHERE, no un chequeo previo: si dos pestañas activan la
+  // misma pieza a la vez, solo una gana — la otra recibe este error en vez
+  // de pisar el PIN que ya eligió la primera.
+  const rows = await sql`
+    UPDATE links_nfc SET
+      autogestionado = TRUE,
+      nombre_negocio = ${datos.nombreNegocio},
+      url_destino = ${datos.urlDestino},
+      usar_filtro = FALSE,
+      pin_hash = ${hash},
+      pin_salt = ${salt}
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = FALSE
+    RETURNING id
+  `;
+  if (rows.length === 0) {
+    throw new Error("Esta pieza ya fue activada, o no está disponible para autogestión.");
+  }
+  const l = await getLink(slug);
+  if (!l) throw new Error(`Pieza no encontrada: ${slug}`);
+  return l;
+}
+
+export async function editarAutogestion(
+  slug: string,
+  pin: string,
+  datos: { nombreNegocio: string; urlDestino: string },
+): Promise<LinkNFC> {
+  const rows = await sql`
+    SELECT pin_hash, pin_salt FROM links_nfc
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE
+  `;
+  if (rows.length === 0) throw new Error("Pieza no encontrada o todavía no fue activada.");
+  const pinHash = rows[0].pin_hash as string | null;
+  const pinSalt = rows[0].pin_salt as string | null;
+  if (!pinHash || !pinSalt || !pinCoincide(pin, pinHash, pinSalt)) {
+    throw new Error("PIN incorrecto.");
+  }
+
+  const actualizado = await sql`
+    UPDATE links_nfc SET
+      nombre_negocio = ${datos.nombreNegocio},
+      url_destino = ${datos.urlDestino}
+    WHERE id = ${slug}
+    RETURNING id
+  `;
+  if (actualizado.length === 0) throw new Error(`Pieza no encontrada: ${slug}`);
+  const l = await getLink(slug);
+  if (!l) throw new Error(`Pieza no encontrada: ${slug}`);
+  return l;
 }
 
 // ---------- Inventario de hardware (piezas pre-generadas en lote) ----------
