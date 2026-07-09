@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import {
   getClientePorCodigo,
   getTapsPorDiaPorSoporte,
@@ -67,6 +69,15 @@ export default async function PortalPage({
 }) {
   const { codigo } = await params;
   const { google } = await searchParams;
+
+  // Límite por IP antes de tocar la base: el código de acceso es la única
+  // credencial del portal (sin usuario/contraseña), así que frenar la
+  // enumeración acá es la defensa que importa. Mismo resultado (404) que un
+  // código inválido, para no confirmarle a quien enumera si pegó cerca.
+  limpiarVencidos();
+  const ip = ipDelRequest(await headers());
+  if (!permitir(`portal-codigo:${ip}`, 20, 10 * 60_000)) notFound();
+
   const c = await getClientePorCodigo(codigo);
   if (!c || c.estado === "baja") notFound();
 

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getDatosTap, registrarTap } from "@/lib/db";
+import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import TapStarGate from "@/components/tap/TapStarGate";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,14 @@ export default async function TapPage({
   const userAgent = h.get("user-agent") ?? "";
   const esPrefetch =
     h.get("purpose") === "prefetch" || h.get("next-router-prefetch") === "1";
-  if (!esPrefetch && !UA_BOT.test(userAgent)) {
+  // Límite generoso por IP+cartel: deja pasar tráfico real de un local
+  // concurrido, pero frena un loop de curl (con UA falseado, que ya esquiva
+  // el filtro de bots de arriba) inflando los taps que después le mostramos
+  // al comercio y sobre los que se factura valor.
+  limpiarVencidos();
+  const ip = ipDelRequest(h);
+  const dentroDelLimite = permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
+  if (!esPrefetch && !UA_BOT.test(userAgent) && dentroDelLimite) {
     await registrarTap(slug, userAgent || null);
   }
 

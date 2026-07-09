@@ -435,20 +435,47 @@ export async function accionEliminarAdmin(fd: FormData): Promise<void> {
 
 const CAPTURA_MAX_BYTES = 4 * 1024 * 1024; // 4MB por imagen — suficiente para una captura de pantalla
 
+/** El `type` que declara el navegador es el nombre que le puso el cliente,
+ * no una garantía — cualquier archivo puede mentir ahí. Esto mira los
+ * primeros bytes reales del archivo (firma de formato) y devuelve el MIME
+ * correcto solo si coincide con uno de los formatos de imagen esperados. */
+function mimeImagenReal(buf: Buffer): string | null {
+  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return "image/png";
+  }
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    buf.length >= 12 &&
+    buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buf.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  if (buf.length >= 6 && ["GIF87a", "GIF89a"].includes(buf.subarray(0, 6).toString("ascii"))) {
+    return "image/gif";
+  }
+  return null;
+}
+
 export async function accionAgregarCapturas(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
   const archivos = fd.getAll("capturas").filter((f): f is File => f instanceof File && f.size > 0);
   const dataUrls: string[] = [];
   for (const archivo of archivos) {
-    if (!archivo.type.startsWith("image/")) {
-      throw new Error(`"${archivo.name}" no es una imagen.`);
-    }
     if (archivo.size > CAPTURA_MAX_BYTES) {
       throw new Error(`"${archivo.name}" pesa demasiado (máx 4MB).`);
     }
     const buf = Buffer.from(await archivo.arrayBuffer());
-    dataUrls.push(`data:${archivo.type};base64,${buf.toString("base64")}`);
+    // Se valida el contenido real (magic bytes), no el `type` que declaró
+    // el navegador — así no entra un archivo disfrazado de imagen.
+    const mime = mimeImagenReal(buf);
+    if (!mime) {
+      throw new Error(`"${archivo.name}" no es una imagen (PNG, JPEG, WebP o GIF).`);
+    }
+    dataUrls.push(`data:${mime};base64,${buf.toString("base64")}`);
   }
   if (dataUrls.length > 0) await db.agregarCapturas(id, dataUrls);
   revalidatePath("/admin/prospectos");
