@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
 import { SERIES, INK, niceTicks } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
+import { accionObtenerTapsPorHora } from "@/app/portal/actions";
 
 // Taps por día, separados por soporte (NFC vs QR) — mismo eje, misma unidad
 // (cantidad de taps), así que van juntos en un solo gráfico con 2 series de
@@ -15,16 +16,39 @@ const COLOR_QR = SERIES[1]; // aqua
 
 export default function TapsPorSoporteChart({
   labels,
+  fechas,
   nfc,
   qr,
   mostrarQr,
+  codigo,
 }: {
   labels: string[];
+  /** Fecha completa (YYYY-MM-DD) de cada punto, en el mismo orden que
+   * `labels` — se manda al server action para pedir el desglose por hora. */
+  fechas: string[];
   nfc: number[];
   qr: number[];
   mostrarQr: boolean;
+  codigo: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  const [diaAbierto, setDiaAbierto] = useState<number | null>(null);
+  const [horas, setHoras] = useState<{ hora: number; taps: number }[] | null>(null);
+  const [pendiente, startTransition] = useTransition();
+
+  function alternarDia(i: number) {
+    if (diaAbierto === i) {
+      setDiaAbierto(null);
+      setHoras(null);
+      return;
+    }
+    setDiaAbierto(i);
+    setHoras(null);
+    startTransition(async () => {
+      const r = await accionObtenerTapsPorHora(codigo, fechas[i]);
+      setHoras(r);
+    });
+  }
 
   const W = 640;
   const H = 230;
@@ -131,19 +155,20 @@ export default function TapsPorSoporteChart({
               y={M.top}
               width={band}
               height={plotH}
-              fill="transparent"
+              fill={diaAbierto === i ? INK.grid : "transparent"}
               tabIndex={0}
               role="button"
               aria-label={
                 mostrarQr
-                  ? `${label}: ${fmtNum(nfc[i])} NFC, ${fmtNum(qr[i])} QR`
-                  : `${label}: ${fmtNum(nfc[i])} taps`
+                  ? `${label}: ${fmtNum(nfc[i])} NFC, ${fmtNum(qr[i])} QR — tocar para ver por hora`
+                  : `${label}: ${fmtNum(nfc[i])} taps — tocar para ver por hora`
               }
               onPointerEnter={() => setHover(i)}
               onPointerLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
               onBlur={() => setHover(null)}
-              style={{ outline: "none" }}
+              onClick={() => alternarDia(i)}
+              style={{ outline: "none", cursor: "pointer" }}
             />
           ))}
         </svg>
@@ -164,6 +189,38 @@ export default function TapsPorSoporteChart({
           />
         )}
       </div>
+
+      <p className="mt-1 text-center text-[11px] text-slate-400">Tocá un día para ver a qué hora te tocaron el cartel.</p>
+
+      {diaAbierto !== null && (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+          <p className="mb-2 text-xs font-medium text-slate-600">{labels[diaAbierto]} · por hora</p>
+          {pendiente || !horas ? (
+            <p className="text-xs text-slate-400">Cargando…</p>
+          ) : horas.every((h) => h.taps === 0) ? (
+            <p className="text-xs text-slate-400">No hubo taps ese día.</p>
+          ) : (
+            <div className="space-y-1">
+              {horas
+                .filter((h) => h.taps > 0)
+                .map((h) => (
+                  <div key={h.hora} className="flex items-center gap-2">
+                    <span className="w-11 shrink-0 text-right text-[11px] tabular-nums text-slate-500">
+                      {String(h.hora).padStart(2, "0")}:00
+                    </span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full bg-brand"
+                        style={{ width: `${Math.max(6, (h.taps / Math.max(...horas.map((x) => x.taps))) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-5 shrink-0 text-[11px] font-medium tabular-nums text-slate-700">{h.taps}</span>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
     </ChartCard>
   );
 }

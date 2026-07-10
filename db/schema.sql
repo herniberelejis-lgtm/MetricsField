@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS comercios (
   google_conectado_en  TIMESTAMPTZ,                    -- cuándo autorizó su cuenta de Google — sirve para el aviso de reconexión semanal (app en modo Testing)
   auto_responder_positivas BOOLEAN NOT NULL DEFAULT TRUE, -- responder solas las reseñas positivas (requiere Reviews API aprobada — ver GOOGLE_REVIEWS_API_ENABLED)
   auto_responder_umbral    INTEGER NOT NULL DEFAULT 4 CHECK (auto_responder_umbral IN (4, 5)), -- a partir de cuántas estrellas se responde sola
-  resenas_sync_en          TIMESTAMPTZ                 -- última sincronización de reseñas vía Google Reviews API
+  resenas_sync_en          TIMESTAMPTZ,                -- última sincronización de reseñas vía Google Reviews API
+  email_notificaciones     TEXT NOT NULL DEFAULT ''    -- a dónde mandar alerta de reseña/queja mala y el resumen mensual; vacío = no se manda nada
 );
 
 -- Ajustes de la agencia (clave/valor). Uso general para configuración suelta.
@@ -145,7 +146,8 @@ CREATE TABLE IF NOT EXISTS resenas (
   notas                 TEXT NOT NULL DEFAULT '',
   fecha                 DATE NOT NULL DEFAULT CURRENT_DATE,
   origen_google_id           TEXT,                     -- resource name en Google ("accounts/…/locations/…/reviews/…"), NULL si se cargó a mano
-  publicada_automaticamente  BOOLEAN NOT NULL DEFAULT FALSE -- true si la respondió sola el sync (reseña positiva + automatización activa)
+  publicada_automaticamente  BOOLEAN NOT NULL DEFAULT FALSE, -- true si la respondió sola el sync (reseña positiva + automatización activa)
+  creado_en                  TIMESTAMPTZ               -- hora exacta si se conoce (Google o cargada a mano) — NULL en reseñas viejas, solo había DATE
 );
 
 -- Único solo entre las reseñas que vienen de Google — evita duplicar si el

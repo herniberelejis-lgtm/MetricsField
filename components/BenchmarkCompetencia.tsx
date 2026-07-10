@@ -4,20 +4,48 @@ import { useState } from "react";
 import type { BenchmarkMes } from "@/lib/types";
 import { fmtMes, fmtNum } from "@/lib/format";
 
+/** Crecimiento del mes más reciente vs el anterior — calculado en el
+ * servidor (ver app/portal/[codigo]/page.tsx) sobre los mismos datos de
+ * `meses`, comparando reseñas nuevas propias contra las de los
+ * competidores que se pudieron emparejar por nombre entre ambos meses. */
+export interface CrecimientoVsCompetencia {
+  mes: string;
+  propio: number; // reseñas nuevas este mes (delta del total)
+  propioPct: number | null;
+  competenciaPct: number | null; // null si no hay competidores comparables entre los dos meses
+}
+
 // Benchmarking mensual: enfrenta las métricas del propio comercio con la
 // foto de cada competidor "al corte" del mes elegido. Los datos vienen ya
 // congelados desde competidores_snapshots (ver getBenchmarkMensual); acá
 // solo se elige el mes y se arma la tabla.
-export default function BenchmarkCompetencia({ meses }: { meses: BenchmarkMes[] }) {
+export default function BenchmarkCompetencia({
+  meses,
+  crecimiento,
+}: {
+  meses: BenchmarkMes[];
+  crecimiento?: CrecimientoVsCompetencia | null;
+}) {
   const [sel, setSel] = useState(0);
   if (meses.length === 0) return null;
   const mes = meses[Math.min(sel, meses.length - 1)];
 
   const fmtRating = (v: number | null) => (v === null ? "—" : v.toFixed(1));
   const fmtRes = (v: number | null) => (v === null ? "—" : fmtNum(v));
+  const fmtPct = (v: number | null) => (v === null ? null : `${v >= 0 ? "+" : ""}${v.toFixed(0)}%`);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      {crecimiento && (crecimiento.propioPct !== null || crecimiento.competenciaPct !== null) && (
+        <div className="mb-4 rounded-lg bg-brand/5 px-3.5 py-2.5 text-sm">
+          <span className="font-medium text-slate-800">
+            {fmtMes(crecimiento.mes)}: {crecimiento.propio >= 0 ? "creciste" : "bajaste"} {fmtPct(crecimiento.propioPct) ?? `${crecimiento.propio >= 0 ? "+" : ""}${crecimiento.propio} reseñas`}
+          </span>
+          {crecimiento.competenciaPct !== null && (
+            <span className="text-slate-500"> · tu competencia {fmtPct(crecimiento.competenciaPct)}</span>
+          )}
+        </div>
+      )}
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">

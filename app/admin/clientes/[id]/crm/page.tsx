@@ -184,6 +184,9 @@ export default async function CRMPage({
               />
             </Field>
           </div>
+          <Field label="Hora" hint="Opcional — si no la sabés, dejala vacía.">
+            <input name="hora" type="time" className={inputCls} />
+          </Field>
           <SubmitButton>Cargar reseña</SubmitButton>
         </form>
       </Card>

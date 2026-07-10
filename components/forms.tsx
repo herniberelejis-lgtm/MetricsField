@@ -152,6 +152,19 @@ export function ClienteForm({
       </div>
 
       <Field
+        label="Email de notificaciones"
+        hint="A dónde le avisamos por mail cuando le entra una reseña mala o una queja privada. Vacío = no se manda nada."
+      >
+        <input
+          name="emailNotificaciones"
+          type="email"
+          defaultValue={cliente?.emailNotificaciones}
+          placeholder="dueño@sunegocio.com"
+          className={inputCls}
+        />
+      </Field>
+
+      <Field
         label="Link de reseñas de Google"
         hint="El mismo link que programás en la tarjeta NFC del cliente."
       >

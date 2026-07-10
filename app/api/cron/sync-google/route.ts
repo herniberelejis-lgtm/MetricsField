@@ -5,6 +5,7 @@ import {
   sincronizarRendimientoTodos,
   sincronizarResenasGoogleTodos,
   snapshotCompetenciaMensual,
+  enviarResumenesMensuales,
 } from "@/lib/db";
 
 // Job diario (ver vercel.json) que actualiza rating/reseñas de todos los
@@ -43,5 +44,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // Congela la foto de competencia del mes en curso con los ratings recién
   // sincronizados — así el benchmarking histórico se arma solo.
   const competencia = await snapshotCompetenciaMensual();
-  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competencia });
+
+  // Resumen mensual: solo el día 1, para no mandarlo todos los días. Si el
+  // cron falla justo ese día no hay reintento hasta el próximo mes — es un
+  // resumen, no una alerta urgente (esas van por evento en lib/alertas.ts,
+  // no dependen de esta fecha).
+  const resumenes =
+    new Date().getUTCDate() === 1 ? await enviarResumenesMensuales() : { total: 0, enviados: 0 };
+
+  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competencia, resumenes });
 }

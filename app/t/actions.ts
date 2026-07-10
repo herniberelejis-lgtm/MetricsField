@@ -2,9 +2,10 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { crearFeedback, existeComercio, activarAutogestion, editarAutogestion } from "@/lib/db";
+import { crearFeedback, existeComercio, getCliente, activarAutogestion, editarAutogestion } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
+import { alertarFeedback } from "@/lib/alertas";
 
 // Server action pública (sin login): la usa cualquiera que toque un cartel
 // y elija 1-3 estrellas. Con rate limit por IP para frenar spam.
@@ -42,6 +43,10 @@ export async function enviarFeedback(
     texto: textoLimpio,
     contacto: String(contacto ?? "").trim().slice(0, 200) || null,
   });
+
+  const cliente = await getCliente(comercioId);
+  if (cliente) await alertarFeedback(cliente, { estrellas: e, texto: textoLimpio });
+
   return { ok: true };
 }
 

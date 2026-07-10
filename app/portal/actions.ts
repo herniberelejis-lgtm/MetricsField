@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getClientePorCodigo, getResenas, actualizarResena, actualizarAutomatizacionResenas } from "@/lib/db";
+import {
+  getClientePorCodigo,
+  getResenas,
+  actualizarResena,
+  actualizarAutomatizacionResenas,
+  getTapsPorHora,
+  type TapsPorHora,
+} from "@/lib/db";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial. Toda acción vuelve a resolver el
@@ -52,4 +59,14 @@ export async function accionActualizarAutomatizacionResenasPortal(fd: FormData):
 
   await actualizarAutomatizacionResenas(cliente.id, { autoResponderPositivas, autoResponderUmbral });
   revalidatePath(`/portal/${codigo}`);
+}
+
+/** Desglose hora a hora de un día — para expandir el gráfico de "Taps por
+ * día". Se llama directo desde el cliente (no un <form>), así que valida el
+ * formato de la fecha a mano en vez de confiar en el tipo del parámetro. */
+export async function accionObtenerTapsPorHora(codigo: string, fecha: string): Promise<TapsPorHora[]> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return [];
+  const cliente = await getClientePorCodigo(codigo);
+  if (!cliente) return [];
+  return getTapsPorHora(cliente.id, fecha);
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as db from "@/lib/db";
 import { requireAdmin, emailAdminActual } from "@/lib/auth";
+import { alertarResenaMala } from "@/lib/alertas";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -77,6 +78,7 @@ export async function accionActualizarCliente(fd: FormData): Promise<void> {
     fee: num(fd, "fee"),
     tonoMarca: (str(fd, "tonoMarca") || "cercano") as "cercano" | "formal",
     googlePlaceId: str(fd, "googlePlaceId"),
+    emailNotificaciones: str(fd, "emailNotificaciones"),
   });
   await auditar("editar_cliente", id);
   revalidatePath("/", "layout");
@@ -281,13 +283,23 @@ export async function accionActualizarFeedback(fd: FormData): Promise<void> {
 export async function accionCrearResena(fd: FormData): Promise<void> {
   await requireAdmin();
   const comercioId = str(fd, "comercioId");
-  await db.crearResena(comercioId, {
-    autor: str(fd, "autor") || "Anónimo",
-    estrellas: Number(fd.get("estrellas")) as 1 | 2 | 3 | 4 | 5,
-    texto: str(fd, "texto"),
+  const fecha = str(fd, "fecha") || new Date().toISOString().slice(0, 10);
+  const hora = str(fd, "hora"); // "HH:MM", opcional — vacío = no se sabe la hora exacta
+  const estrellas = Number(fd.get("estrellas")) as 1 | 2 | 3 | 4 | 5;
+  const autor = str(fd, "autor") || "Anónimo";
+  const texto = str(fd, "texto");
+  const resena = await db.crearResena(comercioId, {
+    autor,
+    estrellas,
+    texto,
     plataforma: (str(fd, "plataforma") || "google") as "google" | "otra",
-    fecha: str(fd, "fecha") || new Date().toISOString().slice(0, 10),
+    fecha,
+    creadoEn: hora ? `${fecha}T${hora}:00` : undefined,
   });
+  if (estrellas <= 3) {
+    const cliente = await db.getCliente(comercioId);
+    if (cliente) await alertarResenaMala(cliente, { autor: resena.autor, estrellas: resena.estrellas, texto: resena.texto });
+  }
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/crm`);
 }

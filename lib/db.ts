@@ -7,6 +7,7 @@ import { listarUbicaciones, rendimientoDelMes } from "./gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "./google-reviews";
 import { generarRespuestaSugerida } from "./respuestas";
 import { hashearPin, pinCoincide } from "./pin";
+import { alertarResenaMala, enviarResumenMensual } from "./alertas";
 import type {
   AuditGEOResultado,
   BenchmarkMes,
@@ -102,6 +103,7 @@ function mapClienteBase(
     autoResponderPositivas: Boolean(row.auto_responder_positivas),
     autoResponderUmbral: (Number(row.auto_responder_umbral) as 4 | 5) || 4,
     resenasSyncEn: row.resenas_sync_en ? new Date(row.resenas_sync_en as string).toISOString() : null,
+    emailNotificaciones: (row.email_notificaciones as string) ?? "",
   };
 }
 
@@ -248,6 +250,7 @@ export async function crearCliente(
     | "autoResponderPositivas"
     | "autoResponderUmbral"
     | "resenasSyncEn"
+    | "emailNotificaciones"
   >,
 ): Promise<Cliente> {
   let id = slugify(datos.nombre) || "comercio";
@@ -298,7 +301,8 @@ export async function actualizarCliente(
       fee = ${datos.fee === undefined ? sql`fee` : datos.fee},
       tono_marca = ${datos.tonoMarca === undefined ? sql`tono_marca` : datos.tonoMarca},
       google_place_id = ${datos.googlePlaceId === undefined ? sql`google_place_id` : datos.googlePlaceId},
-      google_location = ${datos.googleLocation === undefined ? sql`google_location` : datos.googleLocation}
+      google_location = ${datos.googleLocation === undefined ? sql`google_location` : datos.googleLocation},
+      email_notificaciones = ${datos.emailNotificaciones === undefined ? sql`email_notificaciones` : datos.emailNotificaciones}
     WHERE id = ${id}
     RETURNING id
   `;
@@ -532,6 +536,7 @@ export async function sincronizarResenasGoogle(
         texto: rg.texto,
         plataforma: "google",
         fecha: rg.fecha.slice(0, 10),
+        creadoEn: rg.fecha,
       },
       rg.name,
     );
@@ -550,6 +555,11 @@ export async function sincronizarResenasGoogle(
         });
         autoRespondidas += 1;
       }
+    } else if (rg.estrellas <= 3) {
+      // No se respondió sola (es mala, o la automatización está apagada) —
+      // avisarle al dueño ya, no esperar a que abra el portal por las
+      // suyas.
+      await alertarResenaMala(cliente, { autor: rg.autor, estrellas: rg.estrellas, texto: rg.texto });
     }
   }
 
@@ -962,6 +972,26 @@ export async function getTapsPorDiaPorSoporte(comercioId: string, dias = 14): Pr
   return rows.map((r) => ({ fecha: r.fecha as string, nfc: Number(r.nfc), qr: Number(r.qr) }));
 }
 
+export interface TapsPorHora {
+  hora: number; // 0-23, hora local del comercio en el momento del tap
+  taps: number;
+}
+
+/** Desglose hora a hora de un día puntual — para expandir el panel de
+ * "Taps por día" del portal. Siempre devuelve las 24 horas (con 0 en las
+ * que no hubo nada), así el gráfico no salta huecos. */
+export async function getTapsPorHora(comercioId: string, fecha: string): Promise<TapsPorHora[]> {
+  const rows = await sql`
+    SELECT EXTRACT(HOUR FROM t.creado_en)::int AS hora, COUNT(*)::int AS taps
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    WHERE l.comercio_id = ${comercioId} AND t.creado_en::date = ${fecha}::date
+    GROUP BY 1
+  `;
+  const porHora = new Map(rows.map((r) => [Number(r.hora), Number(r.taps)]));
+  return Array.from({ length: 24 }, (_, hora) => ({ hora, taps: porHora.get(hora) ?? 0 }));
+}
+
 /** Total de taps del mes en curso — para el portal del cliente. */
 export async function getTapsDelMesActual(comercioId: string): Promise<number> {
   const rows = await sql`
@@ -1043,6 +1073,7 @@ function mapResena(r: Record<string, unknown>): ResenaCRM {
     fecha: fechaISO(r.fecha),
     origenGoogleId: (r.origen_google_id as string | null) ?? null,
     publicadaAutomaticamente: Boolean(r.publicada_automaticamente),
+    creadoEn: r.creado_en ? new Date(r.creado_en as string).toISOString() : null,
   };
 }
 
@@ -1061,12 +1092,15 @@ export async function crearResena(
     texto: string;
     plataforma: "google" | "otra";
     fecha: string;
+    /** Hora exacta si se conoce — default ahora mismo (carga manual sin
+     * hora propia) o el createTime real de Google si viene del sync. */
+    creadoEn?: string;
   },
   origenGoogleId: string | null = null,
 ): Promise<ResenaCRM> {
   const rows = await sql`
-    INSERT INTO resenas (comercio_id, autor, estrellas, texto, plataforma, fecha, origen_google_id)
-    VALUES (${comercioId}, ${datos.autor}, ${datos.estrellas}, ${datos.texto}, ${datos.plataforma}, ${datos.fecha}, ${origenGoogleId})
+    INSERT INTO resenas (comercio_id, autor, estrellas, texto, plataforma, fecha, origen_google_id, creado_en)
+    VALUES (${comercioId}, ${datos.autor}, ${datos.estrellas}, ${datos.texto}, ${datos.plataforma}, ${datos.fecha}, ${origenGoogleId}, ${datos.creadoEn ?? new Date().toISOString()})
     RETURNING *
   `;
   return mapResena(rows[0]);
@@ -1513,4 +1547,23 @@ export async function getAuditoria(limite = 200): Promise<EntradaAuditoria[]> {
     detalle: r.detalle as string,
     creadoEn: String(r.creado_en),
   }));
+}
+
+// ---------- Resumen mensual por email ----------
+
+/** Manda el resumen mensual a cada comercio activo que cargó un email de
+ * notificaciones. Se llama una vez al mes desde el cron diario (chequeando
+ * el día del mes ahí, no acá) — si el cron falla justo ese día, no hay
+ * reintento automático hasta el mes que viene; aceptable para un resumen,
+ * no para una alerta urgente (esas van por evento, no por fecha). */
+export async function enviarResumenesMensuales(): Promise<{ total: number; enviados: number }> {
+  const rows = await sql`
+    SELECT id FROM comercios WHERE estado = 'activo' AND email_notificaciones != ''
+  `;
+  let enviados = 0;
+  for (const row of rows) {
+    const cliente = await getCliente(row.id as string);
+    if (cliente && (await enviarResumenMensual(cliente))) enviados += 1;
+  }
+  return { total: rows.length, enviados };
 }

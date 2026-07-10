@@ -90,6 +90,9 @@ export interface Cliente {
   /** Última vez que se trajeron reseñas nuevas desde la Reviews API — null
    * si nunca sincronizó (hoy siempre, hasta que Google apruebe el acceso). */
   resenasSyncEn: string | null;
+  /** A dónde mandar la alerta de reseña/queja mala y el resumen mensual.
+   * Vacío = no se manda nada — nunca se asume un email por default. */
+  emailNotificaciones: string;
 }
 
 /** Tono usado por el generador de respuestas sugeridas (lib/respuestas.ts). */
@@ -189,6 +192,9 @@ export interface ResenaCRM {
   /** true si la respondió el sync automático (positiva + automatización
    * activa), sin que nadie la haya aprobado a mano. */
   publicadaAutomaticamente: boolean;
+  /** Hora exacta si se conoce (ISO) — null en reseñas cargadas antes de
+   * que existiera esta columna, que solo tenían la fecha (sin hora). */
+  creadoEn: string | null;
 }
 
 export type PlataformaIA = "ChatGPT" | "Claude" | "Perplexity" | "Gemini" | "Otra";

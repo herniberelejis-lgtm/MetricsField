@@ -24,7 +24,7 @@ import { terminosFrecuentes } from "@/lib/keywords";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
-import BenchmarkCompetencia from "@/components/BenchmarkCompetencia";
+import BenchmarkCompetencia, { type CrecimientoVsCompetencia } from "@/components/BenchmarkCompetencia";
 import GestionResenas from "@/components/GestionResenas";
 import AutomatizacionResenas from "@/components/AutomatizacionResenas";
 import ResumenResenas, { type ResumenResenasData } from "@/components/ResumenResenas";
@@ -169,6 +169,35 @@ export default async function PortalPage({
     );
 
     return { distribucion, total, promedio, tendencia, temasRecurrentes };
+  })();
+
+  // Crecimiento del mes vs el anterior, propio y de la competencia — el
+  // número pelado ("tenés 40 reseñas") dice menos que el ritmo ("crecés más
+  // rápido que tu competencia"). `benchmark` viene ordenado del mes más
+  // reciente al más viejo (ver getBenchmarkMensual).
+  const crecimientoVsCompetencia: CrecimientoVsCompetencia | null = (() => {
+    if (benchmark.length < 2) return null;
+    const actual = benchmark[0];
+    const anterior = benchmark[1];
+    if (actual.propioResenas === null || anterior.propioResenas === null) return null;
+
+    const propio = actual.propioResenas - anterior.propioResenas;
+    const propioPct = anterior.propioResenas > 0 ? (propio / anterior.propioResenas) * 100 : null;
+
+    const resenasAnteriorPorNombre = new Map(anterior.competidores.map((c) => [c.nombre, c.totalResenas]));
+    let sumaActual = 0;
+    let sumaAnterior = 0;
+    let pares = 0;
+    for (const c of actual.competidores) {
+      const prev = resenasAnteriorPorNombre.get(c.nombre);
+      if (c.totalResenas === null || prev === null || prev === undefined) continue;
+      sumaActual += c.totalResenas;
+      sumaAnterior += prev;
+      pares += 1;
+    }
+    const competenciaPct = pares > 0 && sumaAnterior > 0 ? ((sumaActual - sumaAnterior) / sumaAnterior) * 100 : null;
+
+    return { mes: actual.mes, propio, propioPct, competenciaPct };
   })();
 
   const diasConTaps = [...new Set(tapsPorDiaSoporte.map((d) => d.fecha))].sort();
@@ -534,9 +563,11 @@ export default async function PortalPage({
           <div className="mt-4">
             <TapsPorSoporteChart
               labels={labelsTaps}
+              fechas={diasConTaps}
               nfc={nfcPorDia}
               qr={qrPorDia}
               mostrarQr={tieneSoporteQr}
+              codigo={c.codigoAcceso}
             />
           </div>
         )}
@@ -748,7 +779,7 @@ export default async function PortalPage({
             />
             {benchmark.length > 0 && (
               <div className="mt-4">
-                <BenchmarkCompetencia meses={benchmark} />
+                <BenchmarkCompetencia meses={benchmark} crecimiento={crecimientoVsCompetencia} />
               </div>
             )}
           </>

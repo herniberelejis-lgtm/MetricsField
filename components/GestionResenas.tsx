@@ -25,6 +25,14 @@ function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
 }
 
+/** Fecha + hora cuando se conoce la hora exacta (creadoEn) — si no, solo la
+ * fecha, sin inventar una hora que no tenemos. */
+function fechaConHora(resena: ResenaCRM): string {
+  if (!resena.creadoEn) return fechaCorta(resena.fecha);
+  const d = new Date(resena.creadoEn);
+  return `${d.toLocaleDateString("es-AR")}, ${d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 function iniciales(nombre: string): string {
   return (nombre || "?").trim().slice(0, 1).toUpperCase();
 }
@@ -97,7 +105,7 @@ function TarjetaResena({
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{resena.autor}</div>
-            <div className="text-xs text-slate-400">{fechaCorta(resena.fecha)}</div>
+            <div className="text-xs text-slate-400">{fechaConHora(resena)}</div>
           </div>
         </div>
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
