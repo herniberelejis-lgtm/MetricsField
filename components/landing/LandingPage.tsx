@@ -786,6 +786,12 @@ function Footer() {
     <footer className="border-t border-[var(--hairline)] py-10 text-[13px] text-[var(--muted-foreground)]">
       <div className="container-x flex flex-col md:flex-row items-center justify-between gap-3">
         <span>© {new Date().getFullYear()} MetricsField · Córdoba, Argentina</span>
+        {/* Links legales: Google exige que privacidad y términos sean
+            alcanzables desde la home para verificar la app OAuth. */}
+        <span className="flex items-center gap-4">
+          <a href="/privacidad" className="hover:underline underline-offset-2">Privacidad</a>
+          <a href="/terminos" className="hover:underline underline-offset-2">Términos</a>
+        </span>
         <span>NFC · SEO · GEO — hecho para pymes que quieren aparecer.</span>
       </div>
     </footer>
