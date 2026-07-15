@@ -16,12 +16,15 @@ del equipo, **este es el más actualizado**.
 Taply es un sistema de gestión de reputación online para comercios locales de
 Córdoba, Argentina. Dos partes:
 
-1. **Hardware**: un standee (cartel) con NFC — el cliente final apoya el
-   celular (o escanea, próximamente también con QR) y se abre una pantalla de
-   reseñas de ese comercio puntual.
+1. **Hardware**: un standee (cartel) con NFC y/o QR — el cliente final apoya
+   el celular o escanea, y se abre una pantalla de reseñas de ese comercio
+   puntual. Las piezas se generan en lote con código fijo (`/admin/hardware`)
+   antes de saber a qué cliente van, y se asignan al vender.
 2. **Software**: un panel donde el dueño del comercio ve, todos los días,
-   cuánta gente tocó el cartel, qué reseñas dejó en Google, y qué reclamos
-   privados llegaron antes de hacerse públicos.
+   cuánta gente tocó el cartel (por día y por hora), qué reseñas dejó en
+   Google, y qué reclamos privados llegaron antes de hacerse públicos. Además
+   recibe alertas por email cuando entra una reseña mala o una queja privada,
+   y un resumen mensual por email.
 
 ### El "star-gate" (base legal del producto — no tocar sin pensarlo dos veces)
 El cliente final elige de 1 a 5 estrellas:
@@ -40,6 +43,12 @@ El cliente final elige de 1 a 5 estrellas:
 - **En camino** (todavía no vendidos, están en desarrollo de hardware):
   chip QR+NFC para pegar en las mesas, tarjetas NFC para que los mozos pidan
   la reseña en el momento, y una versión del standee con QR además de NFC.
+- **Canal Mercado Libre (autogestión)**: el software ya soporta vender una
+  pieza de hardware suelta, sin abono ni panel — el comprador la escanea por
+  primera vez, carga su link de reseña de Google y un PIN propio desde
+  `/t/<código>`, y la edita después en `/t/<código>/editar`. No crea cliente
+  en el CRM. El filtro de estrellas por link también es opcional (checkbox
+  "sin filtro"), para clientes de agencia que no quieren el desvío.
 
 ---
 
@@ -155,19 +164,38 @@ docs/               → este archivo (el manual operativo y los prompts
 ## 5 · Estado actual — qué funciona hoy
 
 - Alta/edición/baja de clientes (con confirmación por nombre para borrar).
-- Portal del cliente completo: taps en vivo, feedback privado, reseñas y
-  rating (automático), checklist SEO, evolución mensual, reportes.
+- Portal del cliente completo: banner de prioridades ("Necesita tu
+  atención"), gestión de reseñas (aprobar/editar/regenerar respuestas
+  sugeridas, resumen de tendencia y quejas recurrentes), taps en vivo con
+  gráfico NFC/QR y drill-down por hora, feedback privado, checklist SEO,
+  evolución mensual con drill-down de temas, benchmarking vs competencia con
+  comparación de crecimiento automática.
 - **Rating y reseñas de Google, automático**: sincroniza solo todos los días
   vía Google Places API (necesita `GOOGLE_PLACES_API_KEY` + Place ID cargado
   por cliente).
-- **Login del equipo con Google + auditoría**: recién construido, en proceso
-  de configuración final del lado de Google Cloud (ver sección 6).
+- **Alertas por email al dueño** (reseña de ≤3★ o queja privada nueva) y
+  **resumen mensual por email** (día 1 de cada mes, desde el cron diario).
+  Necesitan `SMTP_*` cargadas en Vercel y `email_notificaciones` cargado por
+  cliente — sin eso no mandan nada, sin romper.
+- **Inventario de hardware** (`/admin/hardware`): generar piezas QR/NFC en
+  lote con código fijo, descargar los QR en .zip para el proveedor, asignar
+  al vender. Al borrar un cliente las piezas vuelven al pool.
+- **Autogestión (canal Mercado Libre)**: pieza libre que el comprador activa
+  solo desde `/t/<código>` con su link de Google + PIN (ver sección 1).
+- **Login del equipo con Google + auditoría**: funcionando (allowlist en
+  `/admin/administradores`, registro en `/admin/actividad`).
 - **Conexión de Business Profile por cliente**: el código y el flujo están
   listos, pero todavía no trae datos reales (ver sección 6 — falta la
   aprobación de Google y, para sacarla del modo Prueba, un dominio propio).
-- CRM de reseñas, checklist SEO, Audit GEO manual (se releva a mano en
-  ChatGPT/Claude/Perplexity), monitoreo de competencia manual, cron diario,
-  alertas por wa.me, reportes mensuales imprimibles.
+- **Respuesta automática a reseñas positivas**: construida de punta a punta
+  (`lib/google-reviews.ts`) pero gateada por `GOOGLE_REVIEWS_API_ENABLED`
+  (apagada) hasta que Google apruebe el acceso a su Reviews API.
+- CRM de reseñas (con hora exacta opcional), checklist SEO, Audit GEO manual,
+  monitoreo de competencia manual, cron diario, alertas por wa.me, reportes
+  mensuales imprimibles, módulo de Finanzas (cobros), sección Tutoriales.
+- Seguridad: auditoría zero-trust aplicada (sesiones con vencimiento firmado,
+  rate limits en login/portal/taps/feedback, headers de seguridad, magic
+  bytes en uploads). Ver `docs/AUDITORIA-ZERO-TRUST-2026-07.md`.
 - **Ya NO existe** "Posición en Maps" como feature — se sacó del producto
   entero porque no se puede automatizar ni entregar de forma honesta al
   cliente. Si ven referencias a esto en documentos viejos, están obsoletas.
@@ -178,23 +206,24 @@ docs/               → este archivo (el manual operativo y los prompts
 
 En orden de lo más cerca a lo más lejos:
 
-1. **Terminar la configuración de Google Cloud** (en curso): proyecto `Taply`
-   creado, consent screen en modo Prueba, scopes agregados, usuarios de
-   prueba cargados (el equipo + clientes que vayan probando). Falta terminar
-   de crear las credenciales OAuth y cargarlas en Vercel.
-2. **Pedir acceso a las 3 APIs de Business Profile** (formulario de Google:
-   https://developers.google.com/my-business/content/prereqs) — sin esto,
-   el cliente puede conectar su cuenta pero no llega ningún dato de
-   visitas/llamadas todavía. Es aprobación de Google, no depende de nosotros.
-3. **Dominio propio + verificación de la app OAuth**: mientras no haya un
-   dominio propio verificado (Search Console) y Google verifique la app, el
-   sistema queda en modo Prueba: máximo 100 usuarios de prueba y cada cliente
-   conectado tiene que reautorizar cada ~7 días (por eso el aviso en su
-   portal). El plan es comprar un `.com.ar` (nic.ar, gratis para residentes
-   argentinos) + Zoho Mail para el email con dominio propio.
+1. **Nombre definitivo + dominio + Google Workspace** (en curso, trabado en
+   la elección del nombre): de esto cuelga todo lo de Google — la guía paso a
+   paso completa quedó como checklist interactiva (pedírsela a Hernán).
+2. **Verificación de la app OAuth + acceso a las Business Profile APIs**:
+   dos trámites separados con Google. Mientras tanto el sistema queda en modo
+   Prueba (máx 100 usuarios, reautorizar cada ~7 días). El código de reseñas
+   automáticas ya está listo — el día de la aprobación solo hay que poner
+   `GOOGLE_REVIEWS_API_ENABLED=true` en Vercel.
+3. **Cargar `SMTP_*` en Vercel** para que las alertas por email y el resumen
+   mensual salgan de verdad (funcionan con cualquier casilla, no hace falta
+   esperar el dominio propio).
 4. **Hardware nuevo**: chip QR+NFC para mesas, tarjetas NFC para mozos,
-   standee con QR+NFC — todavía en diseño/fabricación, no vendidos.
-5. **Automatizar lo que hoy es manual**: Audit GEO (citas en IA) y monitoreo
+   standee con QR+NFC — el software ya los soporta (tipo nfc/qr/ambos por
+   pieza), falta la fabricación.
+5. **Canal Mercado Libre**: el flujo de autogestión ya está hecho; falta
+   decidir el modelo de cobro para ofrecer también el software a esos
+   compradores (cobro manual por WhatsApp vs integrar Mercado Pago).
+6. **Automatizar lo que hoy es manual**: Audit GEO (citas en IA) y monitoreo
    de competencia se relevan a mano — automatizarlos depende de tener
    presupuesto para una API de LLM (el enchufe para Anthropic ya existe en el
    código, sin usar).

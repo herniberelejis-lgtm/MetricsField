@@ -932,9 +932,15 @@ export interface TapsPorDia {
   taps: number;
 }
 
+// Los timestamps se guardan en UTC (TIMESTAMPTZ) pero los comercios y sus
+// clientes viven en Argentina (UTC-3): agrupar por t.creado_en::date pelado
+// usa la fecha UTC, y un tap de las 21:00-23:59 locales caía en el día
+// SIGUIENTE del gráfico. Todo lo que agrupa por día/hora convierte antes.
+const TZ_COMERCIO = "America/Argentina/Cordoba";
+
 export async function getTapsPorDia(comercioId: string, dias = 14): Promise<TapsPorDia[]> {
   const rows = await sql`
-    SELECT to_char(t.creado_en::date, 'YYYY-MM-DD') AS fecha, COUNT(*)::int AS taps
+    SELECT to_char((t.creado_en AT TIME ZONE ${TZ_COMERCIO})::date, 'YYYY-MM-DD') AS fecha, COUNT(*)::int AS taps
     FROM taps t
     JOIN links_nfc l ON l.id = t.link_id
     WHERE l.comercio_id = ${comercioId}
@@ -959,7 +965,7 @@ export interface TapsPorDiaSoporte {
 export async function getTapsPorDiaPorSoporte(comercioId: string, dias = 14): Promise<TapsPorDiaSoporte[]> {
   const rows = await sql`
     SELECT
-      to_char(t.creado_en::date, 'YYYY-MM-DD') AS fecha,
+      to_char((t.creado_en AT TIME ZONE ${TZ_COMERCIO})::date, 'YYYY-MM-DD') AS fecha,
       COUNT(*) FILTER (WHERE l.tipo = 'nfc')::int AS nfc,
       COUNT(*) FILTER (WHERE l.tipo IN ('qr', 'ambos'))::int AS qr
     FROM taps t
@@ -982,26 +988,15 @@ export interface TapsPorHora {
  * que no hubo nada), así el gráfico no salta huecos. */
 export async function getTapsPorHora(comercioId: string, fecha: string): Promise<TapsPorHora[]> {
   const rows = await sql`
-    SELECT EXTRACT(HOUR FROM t.creado_en)::int AS hora, COUNT(*)::int AS taps
+    SELECT EXTRACT(HOUR FROM t.creado_en AT TIME ZONE ${TZ_COMERCIO})::int AS hora, COUNT(*)::int AS taps
     FROM taps t
     JOIN links_nfc l ON l.id = t.link_id
-    WHERE l.comercio_id = ${comercioId} AND t.creado_en::date = ${fecha}::date
+    WHERE l.comercio_id = ${comercioId}
+      AND (t.creado_en AT TIME ZONE ${TZ_COMERCIO})::date = ${fecha}::date
     GROUP BY 1
   `;
   const porHora = new Map(rows.map((r) => [Number(r.hora), Number(r.taps)]));
   return Array.from({ length: 24 }, (_, hora) => ({ hora, taps: porHora.get(hora) ?? 0 }));
-}
-
-/** Total de taps del mes en curso — para el portal del cliente. */
-export async function getTapsDelMesActual(comercioId: string): Promise<number> {
-  const rows = await sql`
-    SELECT COUNT(*)::int AS taps
-    FROM taps t
-    JOIN links_nfc l ON l.id = t.link_id
-    WHERE l.comercio_id = ${comercioId}
-      AND date_trunc('month', t.creado_en) = date_trunc('month', now())
-  `;
-  return Number(rows[0]?.taps ?? 0);
 }
 
 // ---------- Feedback privado ----------

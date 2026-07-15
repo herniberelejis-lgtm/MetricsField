@@ -19,7 +19,21 @@ import {
 import { fmtMes, fmtNum, delta } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
 import { waUrl } from "@/lib/whatsapp";
-import { Card, Kpi, Stars, Sparkline, PlanBadge, SectionHeading, btnPrimary, btnSecondary } from "@/components/ui";
+import {
+  Card,
+  Kpi,
+  Stars,
+  Sparkline,
+  PlanBadge,
+  SectionHeading,
+  btnPrimary,
+  btnSecondary,
+  IconChat,
+  IconClock,
+  IconWave,
+  IconCheck,
+  IconX,
+} from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
@@ -279,7 +293,7 @@ export default async function PortalPage({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
               >
-                <span aria-hidden>💬</span> Hablar con tu agencia
+                <IconChat size={14} /> Hablar con tu agencia
               </a>
             )}
           </div>
@@ -483,10 +497,13 @@ export default async function PortalPage({
             </a>
           </div>
           {gbpPorVencer && (
-            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              ⏳ Todavía estamos terminando de verificar la app con Google —
-              mientras tanto, este permiso vence cada 7 días. Tocá
-              "Reconectar" una vez por semana para que no se corte.
+            <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <IconClock size={14} className="mt-0.5 shrink-0" />
+              <span>
+                Todavía estamos terminando de verificar la app con Google —
+                mientras tanto, este permiso vence cada 7 días. Tocá
+                "Reconectar" una vez por semana para que no se corte.
+              </span>
             </p>
           )}
         </Card>
@@ -509,8 +526,8 @@ export default async function PortalPage({
                   veces que alguien tocó o escaneó tu cartel desde que se instaló
                 </p>
               </div>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand/10 text-lg" aria-hidden>
-                📶
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-fg" aria-hidden>
+                <IconWave size={22} />
               </span>
             </div>
             {tieneSoporteQr && (
@@ -713,9 +730,16 @@ export default async function PortalPage({
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {ultimosAudits.map((a) => (
-                    <li key={a.id} className="text-sm text-slate-600">
-                      {a.aparece ? "✅" : "❌"} &ldquo;{a.pregunta}&rdquo;
-                      <span className="text-xs text-slate-400"> · {a.plataforma}</span>
+                    <li key={a.id} className="flex items-start gap-2 text-sm text-slate-600">
+                      {a.aparece ? (
+                        <IconCheck size={15} className="mt-0.5 shrink-0 text-emerald-600" />
+                      ) : (
+                        <IconX size={15} className="mt-0.5 shrink-0 text-rose-500" />
+                      )}
+                      <span>
+                        &ldquo;{a.pregunta}&rdquo;
+                        <span className="text-xs text-slate-400"> · {a.plataforma}</span>
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -785,9 +809,13 @@ export default async function PortalPage({
           </>
         )}
 
-        <footer className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-400">
-          Portal privado de {c.nombre} · gestionado por Taply,
-          Córdoba. No compartas este link.
+        <footer className="mt-10 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-5 text-xs text-slate-400">
+          <span>
+            Portal privado de <span className="font-medium text-slate-500">{c.nombre}</span> · No compartas este link.
+          </span>
+          <span className="font-semibold uppercase tracking-wider text-slate-300">
+            Taply · Córdoba
+          </span>
         </footer>
       </main>
     </div>

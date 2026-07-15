@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { ResenaCRM } from "@/lib/types";
 import { accionActualizarAutomatizacionResenasPortal } from "@/app/portal/actions";
+import { IconCheck, IconClock, IconZap } from "@/components/ui";
 
 // Automatización de reseñas positivas: la mitad del trabajo de "gestión de
 // reseñas" que el dueño NO tiene que hacer. Ya está construida de punta a
@@ -51,16 +52,20 @@ export default function AutomatizacionResenas({
       <p className="text-sm font-medium text-slate-700">Respuestas automáticas a reseñas positivas</p>
 
       {apiHabilitada ? (
-        <p className="mt-1 text-xs text-emerald-600">
-          ✓ Activo: en cuanto llega una reseña de {umbralLocal}★ o más, se responde sola.
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-600">
+          <IconCheck size={13} className="shrink-0" />
+          Activo: en cuanto llega una reseña de {umbralLocal}★ o más, se responde sola.
         </p>
       ) : (
-        <p className="mt-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          ⏳ Esta función ya está lista, pero en pausa: todavía estamos esperando que
-          Google apruebe el acceso a la API que permite publicar respuestas
-          automáticamente (es una revisión aparte que pidió Taply, no depende de vos).
-          Guardá tu preferencia igual — en cuanto la aprobación llegue, arranca
-          respetándola sin que tengas que hacer nada.
+        <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          <IconClock size={14} className="mt-0.5 shrink-0" />
+          <span>
+            Esta función ya está lista, pero en pausa: todavía estamos esperando que
+            Google apruebe el acceso a la API que permite publicar respuestas
+            automáticamente (es una revisión aparte que pidió Taply, no depende de vos).
+            Guardá tu preferencia igual — en cuanto la aprobación llegue, arranca
+            respetándola sin que tengas que hacer nada.
+          </span>
         </p>
       )}
 
@@ -91,7 +96,9 @@ export default function AutomatizacionResenas({
           <option value={5}>solo 5★</option>
         </select>
         {(pendiente || guardado) && (
-          <span className="text-xs text-slate-400">{pendiente ? "Guardando…" : "Guardado ✓"}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+            {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-emerald-600" /></>}
+          </span>
         )}
       </div>
 
@@ -112,8 +119,8 @@ export default function AutomatizacionResenas({
                   <span className="font-medium text-slate-700">{r.autor}</span>
                   <span className="text-amber-400">{"★".repeat(r.estrellas)}</span>
                   <span>{fechaCorta(r.fecha)}</span>
-                  <span className="ml-auto rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
-                    🤖 respondida sola
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                    <IconZap size={11} /> respondida sola
                   </span>
                 </div>
                 {r.respuestaSugerida && (

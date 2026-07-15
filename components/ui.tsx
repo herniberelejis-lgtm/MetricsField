@@ -1,6 +1,91 @@
 import type { ReactNode } from "react";
 import type { EstadoCliente, Plan } from "@/lib/types";
 
+/* Íconos SVG inline (trazos estilo Lucide, 24x24, stroke 2) — sin librería
+ * externa. Los emojis como íconos se ven distintos en cada teléfono y no
+ * toman el color del tema; estos sí. Usar SIEMPRE estos para iconografía
+ * de UI (los emojis quedan solo para contenido escrito por personas). */
+function IconBase({ children, size = 16, className = "" }: { children: ReactNode; size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function IconWave({ size, className }: { size?: number; className?: string }) {
+  // Ondas de señal (tap NFC)
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M2 12a10 10 0 0 1 20 0" />
+      <path d="M6 12a6 6 0 0 1 12 0" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
+export function IconChat({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-9 8.36 8.5 8.5 0 0 1-3.9-.94L3 20l1.08-4.1A8.5 8.5 0 1 1 21 11.5z" />
+    </IconBase>
+  );
+}
+
+export function IconClock({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </IconBase>
+  );
+}
+
+export function IconCheck({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M4 12.5l5 5L20 6.5" />
+    </IconBase>
+  );
+}
+
+export function IconX({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </IconBase>
+  );
+}
+
+export function IconZap({ size, className }: { size?: number; className?: string }) {
+  // Rayo: automatización / respuesta instantánea
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" />
+    </IconBase>
+  );
+}
+
+export function IconShield({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </IconBase>
+  );
+}
+
 // Botones consistentes para todo lo que sea un CTA de verdad (no cada
 // pantalla inventando su propio padding/radio) — foco visible siempre,
 // para teclado y lectores de pantalla.

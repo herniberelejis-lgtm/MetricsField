@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import type { ResenaCRM, TonoMarca } from "@/lib/types";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
 import { accionAprobarResenaPortal, accionDescartarResenaPortal } from "@/app/portal/actions";
-import { btnSuccess, btnSecondary, btnGhost } from "@/components/ui";
+import { btnSuccess, btnSecondary, btnGhost, IconCheck } from "@/components/ui";
 
 // Gestión de reseñas desde el portal del cliente: el dueño ve sus reseñas
 // pendientes, edita/regenera la respuesta sugerida (gratis, sin IA paga —
@@ -139,7 +139,7 @@ function TarjetaResena({
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button type="button" disabled={pendiente} onClick={aprobar} className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}>
-          ✓ Aprobar respuesta
+          <IconCheck size={13} /> Aprobar respuesta
         </button>
         <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
           {copiado ? "¡Copiada!" : "Copiar texto"}

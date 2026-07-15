@@ -294,7 +294,9 @@ export async function accionCrearResena(fd: FormData): Promise<void> {
     texto,
     plataforma: (str(fd, "plataforma") || "google") as "google" | "otra",
     fecha,
-    creadoEn: hora ? `${fecha}T${hora}:00` : undefined,
+    // Offset explícito de Argentina: sin él, Postgres interpreta la hora
+    // como UTC y una reseña anotada a las 15:30 se mostraba a las 12:30.
+    creadoEn: hora ? `${fecha}T${hora}:00-03:00` : undefined,
   });
   if (estrellas <= 3) {
     const cliente = await db.getCliente(comercioId);
