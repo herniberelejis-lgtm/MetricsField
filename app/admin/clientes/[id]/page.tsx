@@ -290,7 +290,7 @@ export default async function ClienteDetallePage({
               </p>
               {gbpPorVencer && (
                 <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  Mientras Matrix Field no esté verificada por Google, este permiso
+                  Mientras MetricsField no esté verificada por Google, este permiso
                   vence a los 7 días. Pedile al cliente que vuelva a tocar
                   "Conectar" desde su portal esta semana.
                 </p>

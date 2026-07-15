@@ -101,7 +101,7 @@ export default async function CRMPage({
                     <a
                       href={waUrl(
                         c.contacto,
-                        `Hola! Llegó un feedback de ${f.estrellas}★ en Matrix Field para ${c.nombre}: "${f.texto}"`,
+                        `Hola! Llegó un feedback de ${f.estrellas}★ en MetricsField para ${c.nombre}: "${f.texto}"`,
                       )}
                       target="_blank"
                       className="shrink-0 rounded-full bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"

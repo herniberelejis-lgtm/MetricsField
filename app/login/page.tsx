@@ -29,7 +29,7 @@ export default async function LoginPage({
       <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div className="text-sm font-semibold tracking-tight text-slate-900">
-            Matrix Field
+            MetricsField
           </div>
           <div className="mt-0.5 text-xs text-slate-500">
             Panel de la agencia · acceso restringido

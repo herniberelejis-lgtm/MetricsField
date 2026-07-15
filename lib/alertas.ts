@@ -19,7 +19,7 @@ function layout(titulo: string, cuerpo: string, cliente: Cliente): string {
   const linkPortal = url ? `${url}/portal/${cliente.codigoAcceso}#resenas` : null;
   return `
     <div style="${ESTILO}max-width:480px;margin:0 auto;padding:24px;">
-      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;">Matrix Field</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;">MetricsField</div>
       <h1 style="font-size:17px;margin:8px 0 12px;">${titulo}</h1>
       ${cuerpo}
       ${
@@ -94,7 +94,7 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
   `;
   return enviarEmail({
     to: cliente.emailNotificaciones,
-    asunto: `Tu mes en Matrix Field — ${cliente.nombre} (${fmtMes(m.mes)})`,
+    asunto: `Tu mes en MetricsField — ${cliente.nombre} (${fmtMes(m.mes)})`,
     html: layout(`Tu resumen de ${fmtMes(m.mes)}`, cuerpo, cliente),
   });
 }

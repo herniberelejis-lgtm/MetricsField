@@ -10,7 +10,7 @@ en español salvo que el usuario pida otra cosa.
 
 ## Qué es
 
-Matrix Field (ex "Taply") — plataforma de gestión de reputación online para comercios locales de
+MetricsField (ex "Taply") — plataforma de gestión de reputación online para comercios locales de
 Córdoba, Argentina. Un cartel NFC abre una página de "star-gate" que dirige al
 cliente final a dejar una reseña en Google; detrás hay un panel para el equipo y
 un portal de solo lectura para cada comercio. Producción: `main` →

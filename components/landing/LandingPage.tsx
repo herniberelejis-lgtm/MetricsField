@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { motion, useScroll, useTransform, useSpring, type Variants } from "motion/react";
 
-// Landing pública de Matrix Field (ex Taply) — portada desde el proyecto de diseño (Lovable).
+// Landing pública de MetricsField (ex Taply) — portada desde el proyecto de diseño (Lovable).
 // Las imágenes "lifestyle" (mesa, salón, vidriera, tap, pack) son fotos
 // reales; los 3 chips del hero y las 4 fotos de producto todavía no tienen
 // foto real subida al repo, así que usan una placa con el ícono de marca —
@@ -62,7 +62,7 @@ function Nav() {
       <div className="container-x flex h-14 items-center justify-between">
         <a href="#top" className="flex items-center gap-2 font-semibold tracking-tight text-[15px]">
           <span className="inline-block w-6 h-6 rounded-md bg-[var(--ink)] text-white grid place-items-center text-[11px]">◉</span>
-          Matrix Field
+          MetricsField
         </a>
         <nav className="hidden md:flex items-center gap-8 text-[13px] text-[var(--ink-soft)]">
           <a href="#producto" className="hover:text-[var(--ink)] transition">Producto</a>
@@ -164,7 +164,7 @@ function Hero() {
               <div className="relative aspect-[4/5] md:aspect-auto overflow-hidden">
                 <motion.img
                   src="/landing/tap-phone.jpg"
-                  alt="Cliente escaneando tarjeta NFC de Matrix Field para dejar reseña en Google"
+                  alt="Cliente escaneando tarjeta NFC de MetricsField para dejar reseña en Google"
                   className="w-full h-full object-cover"
                   initial={{ scale: 1.15 }}
                   animate={{ scale: 1 }}
@@ -482,7 +482,7 @@ function ComboShowcase() {
         <div className="relative overflow-hidden order-1 md:order-2 aspect-[4/5] md:aspect-auto">
           <motion.img
             src="/landing/pack-completo.jpg"
-            alt="Pack completo Matrix Field — cards, stickers y standee"
+            alt="Pack completo MetricsField — cards, stickers y standee"
             loading="lazy"
             className="w-full h-full object-cover"
             style={{ y }}
@@ -710,7 +710,7 @@ function Contact() {
     const detail = String(fd.get("detail") || "");
     const selectedPlan = String(fd.get("plan") || plan);
     const msg =
-      `Hola Matrix Field! Quiero reservar una demo.\n\n` +
+      `Hola MetricsField! Quiero reservar una demo.\n\n` +
       `• Plan de interés: ${selectedPlan}\n` +
       `• Nombre: ${name}\n` +
       `• Negocio: ${business}\n` +
@@ -785,7 +785,7 @@ function Footer() {
   return (
     <footer className="border-t border-[var(--hairline)] py-10 text-[13px] text-[var(--muted-foreground)]">
       <div className="container-x flex flex-col md:flex-row items-center justify-between gap-3">
-        <span>© {new Date().getFullYear()} Matrix Field · Córdoba, Argentina</span>
+        <span>© {new Date().getFullYear()} MetricsField · Córdoba, Argentina</span>
         <span>NFC · SEO · GEO — hecho para pymes que quieren aparecer.</span>
       </div>
     </footer>
@@ -793,7 +793,7 @@ function Footer() {
 }
 
 function WhatsAppFloat() {
-  const msg = "Hola Matrix Field! Quiero comunicarme para más info sobre las tarjetas NFC + SEO/GEO.";
+  const msg = "Hola MetricsField! Quiero comunicarme para más info sobre las tarjetas NFC + SEO/GEO.";
   return (
     <a
       href={whatsappUrl(msg)}

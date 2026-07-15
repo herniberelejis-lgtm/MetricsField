@@ -41,7 +41,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   );
 
   const buffer = await zip.generateAsync({ type: "nodebuffer" });
-  const nombreArchivo = `matrixfield-qr${lote ? `-${lote}` : ""}.zip`;
+  const nombreArchivo = `metricsfield-qr${lote ? `-${lote}` : ""}.zip`;
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

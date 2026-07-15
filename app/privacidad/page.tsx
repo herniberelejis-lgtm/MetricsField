@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de privacidad — Matrix Field",
-  description: "Cómo Matrix Field usa los datos de Google Business Profile de sus clientes.",
+  title: "Política de privacidad — MetricsField",
+  description: "Cómo MetricsField usa los datos de Google Business Profile de sus clientes.",
 };
 
 export default function PrivacidadPage() {
@@ -13,9 +13,9 @@ export default function PrivacidadPage() {
 
       <div className="mt-8 space-y-6 text-[15px] leading-relaxed">
         <section>
-          <h2 className="text-base font-semibold text-slate-900">Qué es Matrix Field</h2>
+          <h2 className="text-base font-semibold text-slate-900">Qué es MetricsField</h2>
           <p className="mt-2">
-            Matrix Field es un panel de gestión de reputación online para comercios
+            MetricsField es un panel de gestión de reputación online para comercios
             locales de Córdoba, Argentina. Ayudamos a nuestros clientes a
             conseguir reseñas en Google y a hacer seguimiento del
             rendimiento de su ficha de Google Business Profile.
@@ -51,7 +51,7 @@ export default function PrivacidadPage() {
           </h2>
           <p className="mt-2">
             Los datos se muestran únicamente al comercio dueño de la ficha, en
-            su panel privado dentro de Matrix Field, y a nuestro equipo interno para
+            su panel privado dentro de MetricsField, y a nuestro equipo interno para
             poder prestarle el servicio de gestión contratado. No vendemos ni
             compartimos estos datos con terceros.
           </p>
@@ -62,7 +62,7 @@ export default function PrivacidadPage() {
             Cómo revocar el acceso
           </h2>
           <p className="mt-2">
-            Cualquier comercio puede revocar el acceso de Matrix Field a su cuenta de
+            Cualquier comercio puede revocar el acceso de MetricsField a su cuenta de
             Google en cualquier momento desde{" "}
             <a
               href="https://myaccount.google.com/permissions"

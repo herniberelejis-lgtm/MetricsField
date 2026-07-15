@@ -11,6 +11,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/portal", "/t"],
     },
-    host: "https://geo-seo-analytics.vercel.app",
+    host: "https://metricsfield.com",
   };
 }

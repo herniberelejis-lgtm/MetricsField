@@ -68,7 +68,7 @@ export default async function ReporteClientePage({
             </div>
           </div>
           <div className="text-right text-xs text-slate-400">
-            <div>Matrix Field</div>
+            <div>MetricsField</div>
             <div>Córdoba</div>
           </div>
         </header>

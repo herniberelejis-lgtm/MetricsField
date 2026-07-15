@@ -62,7 +62,7 @@ export default function AutomatizacionResenas({
           <span>
             Esta función ya está lista, pero en pausa: todavía estamos esperando que
             Google apruebe el acceso a la API que permite publicar respuestas
-            automáticamente (es una revisión aparte que pidió Matrix Field, no depende de vos).
+            automáticamente (es una revisión aparte que pidió MetricsField, no depende de vos).
             Guardá tu preferencia igual — en cuanto la aprobación llegue, arranca
             respetándola sin que tengas que hacer nada.
           </span>
