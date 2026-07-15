@@ -83,7 +83,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
       >
         <div className="text-center">
           <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: BRAND }}>
-            Matrix Field
+            MetricsField
           </div>
           <p className="mt-1 text-[17px] font-medium" style={{ color: INK }}>
             Activá tu cartel

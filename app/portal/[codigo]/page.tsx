@@ -274,7 +274,7 @@ export default async function PortalPage({
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-5">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-fg">
-              Matrix Field · Portal de cliente
+              MetricsField · Portal de cliente
             </div>
             <h1 className="mt-0.5 truncate text-xl font-semibold tracking-tight text-slate-900">
               {c.nombre}
@@ -379,7 +379,7 @@ export default async function PortalPage({
         )}
 
         {/* Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida
-            para sus reseñas de Google, sin depender del equipo de Matrix Field.
+            para sus reseñas de Google, sin depender del equipo de MetricsField.
             Va primero entre las secciones de contenido: es la única con
             impacto directo y público en la reputación del negocio. */}
         {resenas.length > 0 && (
@@ -814,7 +814,7 @@ export default async function PortalPage({
             Portal privado de <span className="font-medium text-slate-500">{c.nombre}</span> · No compartas este link.
           </span>
           <span className="font-semibold uppercase tracking-wider text-slate-300">
-            Matrix Field · Córdoba
+            MetricsField · Córdoba
           </span>
         </footer>
       </main>
