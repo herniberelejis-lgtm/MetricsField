@@ -107,8 +107,8 @@ export default function TerminosPage() {
             comunican por los canales habituales del servicio. Estos términos
             se rigen por las leyes de la República Argentina, con jurisdicción
             en los tribunales ordinarios de la ciudad de Córdoba. Consultas:{" "}
-            <a href="mailto:hola@metricsfield.com" className="text-brand-fg underline underline-offset-2">
-              hola@metricsfield.com
+            <a href="mailto:info@metricsfield.com" className="text-brand-fg underline underline-offset-2">
+              info@metricsfield.com
             </a>
             .
           </p>

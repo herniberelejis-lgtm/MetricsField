@@ -135,8 +135,8 @@ export default function PrivacidadPage() {
           <p className="mt-2">
             Para consultas sobre esta política o para solicitar la
             eliminación de tus datos, escribinos a{" "}
-            <a href="mailto:hola@metricsfield.com" className="text-brand-fg underline underline-offset-2">
-              hola@metricsfield.com
+            <a href="mailto:info@metricsfield.com" className="text-brand-fg underline underline-offset-2">
+              info@metricsfield.com
             </a>
             .
           </p>
