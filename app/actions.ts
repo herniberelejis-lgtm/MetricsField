@@ -195,7 +195,7 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
-    usarFiltro: fd.get("sinFiltro") !== "1",
+    usarFiltro: fd.get("activarFiltro") === "1",
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);
@@ -213,7 +213,7 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
     activo: fd.get("activo") === "1",
-    usarFiltro: fd.get("sinFiltro") !== "1",
+    usarFiltro: fd.get("activarFiltro") === "1",
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);
@@ -257,7 +257,7 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
     tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
-    usarFiltro: fd.get("sinFiltro") !== "1",
+    usarFiltro: fd.get("activarFiltro") === "1",
   });
   await auditar("asignar_pieza_hardware", `${id} → ${comercioId}`);
   revalidatePath("/", "layout");
