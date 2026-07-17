@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom'
   url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
-  usar_filtro  BOOLEAN NOT NULL DEFAULT TRUE,           -- solo aplica si destino='resena': false = va directo a Google, sin star-gate
+  usar_filtro  BOOLEAN NOT NULL DEFAULT FALSE,          -- solo aplica si destino='resena': true = activa el star-gate (desvío privado 1-3★), false = directo a Google para todos. Off por defecto — ver migración 008.
   autogestionado BOOLEAN NOT NULL DEFAULT FALSE,        -- true = el propio comprador la activó (canal Mercado Libre, sin comercio_id)
   nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre a mostrar en el star-gate
   pin_hash     TEXT,                                    -- solo para piezas autogestionadas: PIN de edición (scrypt, ver lib/pin.ts)

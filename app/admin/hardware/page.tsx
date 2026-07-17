@@ -163,10 +163,10 @@ export default async function HardwarePage() {
                         </select>
                         <label
                           className="flex items-center gap-1 text-[11px] text-slate-500"
-                          title="Solo aplica si el destino es 'Reseña de Google': va directo a Google para todos, sin star-gate."
+                          title="Solo aplica si el destino es 'Reseña de Google': activa el star-gate (1-3★ ofrece feedback privado). Por default va directo a Google para todos."
                         >
-                          <input type="checkbox" name="sinFiltro" value="1" className="rounded" />
-                          Sin filtro
+                          <input type="checkbox" name="activarFiltro" value="1" className="rounded" />
+                          Activar filtro
                         </label>
                         <button
                           type="submit"

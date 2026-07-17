@@ -72,10 +72,11 @@ export default async function TapPage({
     return <ActivarCartel slug={slug} />;
   }
 
-  // Algunos clientes no quieren el filtro de estrellas — van derecho a la
-  // reseña de Google para todo el mundo, sin desviar las malas a feedback
-  // privado. Es una elección por link (lib/db.ts: usar_filtro), no algo que
-  // decida Taply; el tap ya quedó contado arriba en cualquiera de los casos.
+  // Por default todo link va derecho a la reseña de Google para todo el
+  // mundo, sin star-gate. El filtro de estrellas (1-3★ ofrece feedback
+  // privado antes de Google) es opt-in por link (lib/db.ts: usar_filtro,
+  // checkbox "Activar filtro" en el panel) — apagado por defecto desde la
+  // migración 008. El tap ya quedó contado arriba en cualquiera de los casos.
   if (!link.usarFiltro) {
     if (!comercio.googleReviewUrl) notFound();
     redirect(comercio.googleReviewUrl);

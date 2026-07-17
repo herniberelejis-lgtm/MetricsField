@@ -174,14 +174,14 @@ export default async function LinksPage({
             />
           </Field>
           <label className="flex items-start gap-2 text-sm text-slate-600">
-            <input type="checkbox" name="sinFiltro" value="1" className="mt-0.5 rounded" />
+            <input type="checkbox" name="activarFiltro" value="1" className="mt-0.5 rounded" />
             <span>
-              Sin filtro de estrellas — va directo a la reseña de Google para todos.
+              Activar filtro de estrellas (star-gate) — 1-3★ ofrece feedback privado antes de Google.
               <br />
               <span className="text-xs text-slate-400">
-                Solo aplica si el destino es "Reseña de Google". Por default el cartel
-                muestra primero el star-gate (1-3★ ofrece feedback privado en vez de
-                Google) — marcá esto si el cliente prefiere no usar ese filtro.
+                Solo aplica si el destino es "Reseña de Google". Por default el cartel va
+                directo a la reseña de Google para todos — marcá esto solo si un cliente
+                puntual lo pide.
               </span>
             </span>
           </label>
@@ -322,13 +322,13 @@ export default async function LinksPage({
                     <label className="flex items-start gap-2 text-sm text-slate-600">
                       <input
                         type="checkbox"
-                        name="sinFiltro"
+                        name="activarFiltro"
                         value="1"
-                        defaultChecked={!l.usarFiltro}
+                        defaultChecked={l.usarFiltro}
                         className="mt-0.5 rounded"
                       />
                       <span>
-                        Sin filtro de estrellas — va directo a la reseña de Google para todos.
+                        Activar filtro de estrellas (star-gate) — 1-3★ ofrece feedback privado antes de Google.
                         <span className="block text-xs text-slate-400">
                           Solo aplica si el destino es "Reseña de Google".
                         </span>

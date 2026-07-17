@@ -651,7 +651,7 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     destino: r.destino as DestinoLink,
     urlDestino: (r.url_destino as string | null) ?? null,
     activo: Boolean(r.activo),
-    usarFiltro: r.usar_filtro === undefined ? true : Boolean(r.usar_filtro),
+    usarFiltro: r.usar_filtro === undefined ? false : Boolean(r.usar_filtro),
     autogestionado: Boolean(r.autogestionado),
     nombreNegocio: (r.nombre_negocio as string) ?? "",
     creadoEn: String(r.creado_en),
@@ -707,7 +707,7 @@ export async function crearLink(
   }
   await sql`
     INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, usar_filtro)
-    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${datos.urlDestino ?? null}, ${datos.usarFiltro ?? true})
+    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${datos.urlDestino ?? null}, ${datos.usarFiltro ?? false})
   `;
   const l = await getLink(id);
   if (!l) throw new Error("No se pudo crear el link.");
@@ -911,7 +911,7 @@ export async function asignarPiezaACliente(
       tipo = COALESCE(${datos.tipo ?? null}, tipo),
       destino = ${datos.destino},
       url_destino = ${datos.urlDestino ?? null},
-      usar_filtro = ${datos.usarFiltro ?? true}
+      usar_filtro = ${datos.usarFiltro ?? false}
     WHERE id = ${id} AND comercio_id IS NULL
     RETURNING *
   `;
