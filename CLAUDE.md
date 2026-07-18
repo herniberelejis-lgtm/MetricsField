@@ -11,11 +11,14 @@ en español salvo que el usuario pida otra cosa.
 ## Qué es
 
 MetricsField (ex "Taply") — plataforma de gestión de reputación online para comercios locales de
-Córdoba, Argentina. Un cartel NFC abre una página de "star-gate" que dirige al
-cliente final a dejar una reseña en Google; detrás hay un panel para el equipo y
-un portal de solo lectura para cada comercio. Producción: `main` →
-`https://geo-seo-analytics.vercel.app`. El doc de contexto más actualizado del
-proyecto es `docs/CONTEXTO-Y-PROGRESO.md`.
+Córdoba, Argentina. Un cartel NFC dirige al cliente final a dejar una reseña en
+Google; opcionalmente, por link, puede pasar antes por un "star-gate" que
+desvía las calificaciones de 1-3★ a un formulario privado (apagado por
+defecto — ver `usar_filtro` en `links_nfc`). Detrás hay un panel para el
+equipo y un portal de solo lectura para cada comercio. Producción: `main` →
+Vercel, dominio `https://app.metricsfield.com` (el dominio raíz
+`metricsfield.com` es la landing, en un repo aparte). El doc de contexto más
+actualizado del proyecto es `docs/CONTEXTO-Y-PROGRESO.md`.
 
 ## Comandos
 
@@ -46,9 +49,12 @@ Base de datos local/producción: se cargan a mano con
   pérdida de datos real por esto.
 - **Nunca pushear directo a `main`.** `main` es producción; todo cambio va por una
   rama de sesión (genera preview propia en Vercel) y se fusiona con PR.
-- **Star-gate (base legal del producto):** el link público a Google **siempre**
-  queda visible para todos, incluso a quien puntúa 1-3★. Esconderlo es "review
-  gating", viola políticas de Google y puede penalizar la ficha del comercio.
+- **Star-gate (base legal del producto):** es opt-in por link (`usar_filtro`,
+  apagado por defecto). Cuando SÍ está activado, el link público a Google
+  **siempre** queda visible para todos, incluso a quien puntúa 1-3★.
+  Esconderlo es "review gating", viola políticas de Google y puede penalizar
+  la ficha del comercio — esa parte no es negociable ni siquiera con el
+  filtro activado.
 - **"Posición en Maps" fue eliminada del producto** — no se puede automatizar de
   forma honesta. Referencias en docs viejos están obsoletas; no reintroducir.
 
