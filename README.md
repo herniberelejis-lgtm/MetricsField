@@ -129,7 +129,6 @@ app/
   login/, api/logout/             Autenticación del panel
   actions.ts                      Server actions (todas las mutaciones)
 components/
-  landing/LandingPage.tsx         La landing completa
   tap/TapStarGate.tsx             Pantalla que ve el cliente final
   charts/                         Primitivas SVG propias (sin librerías)
   forms.tsx, ui.tsx                Formularios y piezas de UI compartidas
@@ -174,8 +173,5 @@ privado, **Reseñas** (CRM), **Audits GEO**, **Checklist SEO** y
   de feedback): hoy no hay límite por IP. Para el volumen de un cartel físico
   no es crítico, pero es lo primero a sumar si el sitio empieza a recibir
   tráfico externo o ataques de spam.
-- **Fotos de producto reales**: los 4 productos NFC y los 3 chips del hero de
-  la landing usan una placa con ícono de marca (no había fotos reales
-  incluidas en el export). Subí fotos a `public/landing/products/` y
-  reemplazá los `<IconTile>`/placeholders en `components/landing/LandingPage.tsx`
-  cuando las tengas.
+- **Landing pública**: vive aparte, fuera de este repo (`metricsfield.com`).
+  Este software es solo el panel — la raíz (`/`) redirige directo a `/admin`.
