@@ -8,7 +8,6 @@ import { alertarResenaMala } from "@/lib/alertas";
 import type {
   DestinoLink,
   EstadoCliente,
-  EstadoFeedback,
   EstadoProspecto,
   EstadoResena,
   FormatoNFC,
@@ -195,7 +194,6 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
-    usarFiltro: fd.get("activarFiltro") === "1",
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);
@@ -213,7 +211,6 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
     activo: fd.get("activo") === "1",
-    usarFiltro: fd.get("activarFiltro") === "1",
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);
@@ -257,25 +254,10 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
     tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
-    usarFiltro: fd.get("activarFiltro") === "1",
   });
   await auditar("asignar_pieza_hardware", `${id} → ${comercioId}`);
   revalidatePath("/", "layout");
   redirect("/admin/hardware");
-}
-
-// ---------- CRM: feedback privado ----------
-
-export async function accionActualizarFeedback(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const id = Number(fd.get("id"));
-  const comercioId = str(fd, "comercioId");
-  await db.actualizarFeedback(id, {
-    estado: str(fd, "estado") as EstadoFeedback,
-    notasInternas: str(fd, "notasInternas"),
-  });
-  revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/crm`);
 }
 
 // ---------- CRM: reseñas ----------

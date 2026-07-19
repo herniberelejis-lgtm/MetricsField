@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS comercios (
   auto_responder_positivas BOOLEAN NOT NULL DEFAULT TRUE, -- responder solas las reseñas positivas (requiere Reviews API aprobada — ver GOOGLE_REVIEWS_API_ENABLED)
   auto_responder_umbral    INTEGER NOT NULL DEFAULT 4 CHECK (auto_responder_umbral IN (4, 5)), -- a partir de cuántas estrellas se responde sola
   resenas_sync_en          TIMESTAMPTZ,                -- última sincronización de reseñas vía Google Reviews API
-  email_notificaciones     TEXT NOT NULL DEFAULT ''    -- a dónde mandar alerta de reseña/queja mala y el resumen mensual; vacío = no se manda nada
+  email_notificaciones     TEXT NOT NULL DEFAULT ''    -- a dónde mandar la alerta de reseña mala y el resumen mensual; vacío = no se manda nada
 );
 
 -- Ajustes de la agencia (clave/valor). Uso general para configuración suelta.
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom'
   url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
-  usar_filtro  BOOLEAN NOT NULL DEFAULT FALSE,          -- solo aplica si destino='resena': true = activa el star-gate (desvío privado 1-3★), false = directo a Google para todos. Off por defecto — ver migración 008.
+  usar_filtro  BOOLEAN NOT NULL DEFAULT FALSE,          -- columna histórica: el código ya no la lee — todo destino 'resena' va directo a Google. No borrar sin migración coordinada.
   autogestionado BOOLEAN NOT NULL DEFAULT FALSE,        -- true = el propio comprador la activó (canal Mercado Libre, sin comercio_id)
-  nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre a mostrar en el star-gate
+  nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre elegido por el comprador
   pin_hash     TEXT,                                    -- solo para piezas autogestionadas: PIN de edición (scrypt, ver lib/pin.ts)
   pin_salt     TEXT,
   creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -115,8 +115,10 @@ CREATE TABLE IF NOT EXISTS taps (
 );
 CREATE INDEX IF NOT EXISTS idx_taps_link_fecha ON taps(link_id, creado_en);
 
--- Feedback privado (1-3 estrellas, star-gate legal: nunca reemplaza la
--- opción pública, solo se ofrece antes).
+-- Tabla histórica: pertenecía al "star-gate" (desvío de 1-3★ a un
+-- formulario privado), eliminado del producto. El código ya no lee ni
+-- escribe acá — se conserva solo por los datos ya guardados. No borrar
+-- sin decisión explícita del dueño (implica DROP con pérdida de datos).
 CREATE TABLE IF NOT EXISTS feedback (
   id               SERIAL PRIMARY KEY,
   comercio_id      TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,

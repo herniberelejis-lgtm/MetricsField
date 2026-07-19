@@ -17,10 +17,8 @@ import type {
   Competidor,
   DestinoLink,
   EstadoCliente,
-  EstadoFeedback,
   EstadoProspecto,
   EstadoResena,
-  Feedback,
   FormatoNFC,
   LinkNFC,
   MetricaMensual,
@@ -156,14 +154,6 @@ export async function getCliente(id: string): Promise<Cliente | undefined> {
   return ensambleCliente(rows[0]);
 }
 
-/** Chequeo liviano de existencia — para las escrituras públicas (feedback)
- * que reciben el id del cliente final y no deben cargar el comercio entero. */
-export async function existeComercio(id: string): Promise<boolean> {
-  if (!id) return false;
-  const rows = await sql`SELECT 1 FROM comercios WHERE id = ${id}`;
-  return rows.length > 0;
-}
-
 export async function getClientePorCodigo(codigo: string): Promise<Cliente | undefined> {
   if (!codigo) return undefined;
   const rows = await sql`SELECT * FROM comercios WHERE codigo_acceso = ${codigo}`;
@@ -172,7 +162,7 @@ export async function getClientePorCodigo(codigo: string): Promise<Cliente | und
 }
 
 /** Lo mínimo que necesita /t/[slug] en UNA consulta: el link y, si está
- * asignado, lo poco del comercio que usa el star-gate. Nada de histórico,
+ * asignado, lo poco del comercio que usa la página del tap. Nada de histórico,
  * ventas ni conteo de taps — esta es la ruta más caliente del producto
  * (cada tap de un cliente final pasa por acá). */
 export interface DatosTap {
@@ -755,12 +745,9 @@ export async function eliminarLink(linkId: string): Promise<void> {
 // funciones: mapLink no lo expone, así que ninguna pantalla puede filtrarlo
 // por accidente.
 //
-// Sin star-gate ni feedback privado: esas dos cosas dependen de un
-// `comercio_id` real (la FK de `feedback`, y quién lee ese feedback después
-// desde un portal que acá no existe). Ofrecer "desviamos tus malas reseñas"
-// sin que nadie del otro lado lea nunca ese buzón sería peor que no
-// ofrecerlo — así que estas piezas van siempre directo a Google, para
-// cualquiera que las toque. Coherente con vender solo el hardware.
+// Estas piezas van siempre directo al link cargado por su comprador,
+// para cualquiera que las toque — coherente con vender solo el hardware,
+// sin portal ni panel detrás.
 
 export async function activarAutogestion(
   slug: string,
@@ -997,57 +984,6 @@ export async function getTapsPorHora(comercioId: string, fecha: string): Promise
   `;
   const porHora = new Map(rows.map((r) => [Number(r.hora), Number(r.taps)]));
   return Array.from({ length: 24 }, (_, hora) => ({ hora, taps: porHora.get(hora) ?? 0 }));
-}
-
-// ---------- Feedback privado ----------
-
-function mapFeedback(r: Record<string, unknown>): Feedback {
-  return {
-    id: Number(r.id),
-    comercioId: r.comercio_id as string,
-    estrellas: Number(r.estrellas) as 1 | 2 | 3,
-    texto: r.texto as string,
-    contacto: (r.contacto as string | null) ?? null,
-    estado: r.estado as EstadoFeedback,
-    notasInternas: r.notas_internas as string,
-    creadoEn: String(r.creado_en),
-    actualizadoEn: String(r.actualizado_en),
-  };
-}
-
-export async function getFeedback(comercioId: string): Promise<Feedback[]> {
-  const rows = await sql`
-    SELECT * FROM feedback WHERE comercio_id = ${comercioId} ORDER BY creado_en DESC
-  `;
-  return rows.map(mapFeedback);
-}
-
-export async function crearFeedback(
-  comercioId: string,
-  datos: { estrellas: 1 | 2 | 3; texto: string; contacto?: string | null },
-): Promise<Feedback> {
-  const rows = await sql`
-    INSERT INTO feedback (comercio_id, estrellas, texto, contacto)
-    VALUES (${comercioId}, ${datos.estrellas}, ${datos.texto}, ${datos.contacto ?? null})
-    RETURNING *
-  `;
-  return mapFeedback(rows[0]);
-}
-
-export async function actualizarFeedback(
-  id: number,
-  datos: Partial<{ estado: EstadoFeedback; notasInternas: string }>,
-): Promise<Feedback> {
-  const rows = await sql`
-    UPDATE feedback SET
-      estado = COALESCE(${datos.estado ?? null}, estado),
-      notas_internas = COALESCE(${datos.notasInternas ?? null}, notas_internas),
-      actualizado_en = now()
-    WHERE id = ${id}
-    RETURNING *
-  `;
-  if (rows.length === 0) throw new Error(`Feedback no encontrado: ${id}`);
-  return mapFeedback(rows[0]);
 }
 
 // ---------- CRM de reseñas ----------
