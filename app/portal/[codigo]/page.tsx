@@ -5,7 +5,6 @@ import {
   getClientePorCodigo,
   getTapsPorDiaPorSoporte,
   getLinks,
-  getFeedback,
   getChecklist,
   getAudits,
   getResenas,
@@ -47,18 +46,6 @@ import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
 export const dynamic = "force-dynamic";
 
 const AGENCIA_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
-
-const COLOR_ESTADO_FEEDBACK: Record<string, string> = {
-  nuevo: "bg-rose-50 text-rose-700",
-  en_proceso: "bg-amber-50 text-amber-700",
-  resuelto: "bg-slate-100 text-slate-600",
-};
-
-const LABEL_ESTADO_FEEDBACK: Record<string, string> = {
-  nuevo: "nueva",
-  en_proceso: "en proceso",
-  resuelto: "resuelta",
-};
 
 function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
@@ -102,11 +89,10 @@ export default async function PortalPage({
   const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
-  const [tapsPorDiaSoporte, links, feedback, checklist, audits, resenas, benchmark] =
+  const [tapsPorDiaSoporte, links, checklist, audits, resenas, benchmark] =
     await Promise.all([
       getTapsPorDiaPorSoporte(c.id, 14),
       getLinks(c.id),
-      getFeedback(c.id),
       getChecklist(c.id),
       getAudits(c.id),
       getResenas(c.id),
@@ -118,8 +104,6 @@ export default async function PortalPage({
   const esPremium = c.plan === "Premium";
   const recomendacion = m ? recomendacionDelMes(c, m, prev) : null;
 
-  const feedbackPendiente = feedback.filter((f) => f.estado !== "resuelto");
-  const feedbackResueltos = feedback.filter((f) => f.estado === "resuelto").length;
   const checklistHechos = checklist.filter((i) => i.hecho).length;
   const checklistPct = checklist.length
     ? Math.round((checklistHechos / checklist.length) * 100)
@@ -127,15 +111,14 @@ export default async function PortalPage({
   const ultimosAudits = audits.slice(0, 3);
 
   // Drill-down por mes calculado en el servidor: por cada mes del histórico,
-  // los temas recurrentes de las reseñas y el feedback con texto de ese mes.
-  // El texto crudo (feedback privado incluido) nunca se manda al cliente:
-  // solo viaja el agregado.
+  // los temas recurrentes de las reseñas con texto de ese mes. El texto
+  // crudo nunca se manda al cliente: solo viaja el agregado.
   const detalleMensual: Record<string, DetalleMes> = {};
   for (const h of c.historico) {
-    const textos = [
-      ...resenas.filter((r) => r.fecha.startsWith(h.mes)).map((r) => r.texto),
-      ...feedback.filter((f) => f.creadoEn.startsWith(h.mes)).map((f) => f.texto),
-    ].filter((t) => t && t.trim().length > 0);
+    const textos = resenas
+      .filter((r) => r.fecha.startsWith(h.mes))
+      .map((r) => r.texto)
+      .filter((t) => t && t.trim().length > 0);
     detalleMensual[h.mes] = {
       terminos: terminosFrecuentes(textos),
       nResenasTexto: textos.length,
@@ -238,13 +221,6 @@ export default async function PortalPage({
       texto: `${resenasPendientes.length} reseña${resenasPendientes.length === 1 ? "" : "s"} esperando tu respuesta`,
       href: "#resenas",
       tono: "urgente",
-    });
-  }
-  if (feedbackPendiente.length > 0) {
-    prioridades.push({
-      texto: `${feedbackPendiente.length} queja${feedbackPendiente.length === 1 ? "" : "s"} privada${feedbackPendiente.length === 1 ? "" : "s"} sin resolver`,
-      href: "#feedback",
-      tono: "atencion",
     });
   }
   if (gbpPorVencer) {
@@ -414,44 +390,6 @@ export default async function PortalPage({
           </Card>
         )}
 
-        {/* Feedback privado: el contenido real, no solo el número */}
-        {feedback.length > 0 && (
-          <Card className="mb-4 scroll-mt-4" id="feedback">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-700">
-                Feedback privado de tus clientes
-              </p>
-              {feedbackPendiente.length > 0 && (
-                <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
-                  {feedbackPendiente.length} sin resolver
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Esto nunca se publica en Google — te llega solo a vos, para que lo resuelvas antes de que se haga público.
-            </p>
-            <div className="mt-3 divide-y divide-slate-100">
-              {feedback.slice(0, 6).map((f) => (
-                <div key={f.id} className="py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-amber-400">{"★".repeat(f.estrellas)}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${COLOR_ESTADO_FEEDBACK[f.estado]}`}>
-                      {LABEL_ESTADO_FEEDBACK[f.estado]}
-                    </span>
-                    <span className="text-xs text-slate-400">{fechaCorta(f.creadoEn)}</span>
-                  </div>
-                  <p className="mt-1.5 text-sm text-slate-700">{f.texto}</p>
-                </div>
-              ))}
-            </div>
-            {feedback.length > 6 && (
-              <p className="mt-2 text-xs text-slate-400">
-                Y {feedback.length - 6} más — pedile a tu agencia el detalle completo.
-              </p>
-            )}
-          </Card>
-        )}
-
         {/* Conexión con Google Business Profile: la autoriza el dueño de la
             ficha (este cliente), no la agencia — así las visitas y llamadas
             se traen solas sin que nadie tenga que cargar nada a mano. */}
@@ -515,7 +453,7 @@ export default async function PortalPage({
           subtitle="Esto se actualiza solo, apenas pasa — nadie tiene que cargar nada."
         />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card className="md:col-span-2">
+          <Card className="md:col-span-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
@@ -542,19 +480,6 @@ export default async function PortalPage({
                 </span>
               </div>
             )}
-          </Card>
-          <Card>
-            <p className="text-sm font-medium text-slate-700">
-              Reputación protegida
-            </p>
-            <p className="mt-2 text-4xl font-semibold tracking-tight text-slate-900 tabular-nums">
-              {feedbackResueltos}
-            </p>
-            <p className="mt-1.5 text-xs text-slate-500">
-              {feedback.length > 0
-                ? `de ${feedback.length} queja${feedback.length === 1 ? "" : "s"} resuelta${feedbackResueltos === 1 ? "" : "s"} antes de llegar a Google`
-                : "todavía no llegó ningún feedback privado"}
-            </p>
           </Card>
           {c.googleSyncEn && (
             <Card className="md:col-span-3">
@@ -623,12 +548,11 @@ export default async function PortalPage({
           </Card>
         )}
 
-        {diasConTaps.length === 0 && feedback.length === 0 && (
+        {diasConTaps.length === 0 && (
           <Card className="mt-4">
             <p className="text-sm text-slate-600">
               Todavía no hay actividad del cartel. En cuanto alguien lo
-              toque por primera vez, vas a ver acá el total de taps y
-              cualquier feedback que deje.
+              toque por primera vez, vas a ver acá el total de taps.
             </p>
           </Card>
         )}

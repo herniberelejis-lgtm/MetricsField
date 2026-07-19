@@ -5,7 +5,7 @@ import { generarQrPng, urlPublicaDeTap } from "@/lib/qr";
 
 // QR real del link NFC de un cliente: codifica /t/<slug> tal cual, así el
 // standee impreso con este QR abre exactamente la misma página que abre el
-// tap por NFC — mismo star-gate, mismo conteo de taps (source=web hoy; si
+// tap por NFC — misma página de destino, mismo conteo de taps (source=web hoy; si
 // se quiere diferenciar "vino por QR" hay que agregar un ?s=qr al final acá
 // y sumarlo a getTapsPorDia/registrarTap más adelante).
 export async function GET(req: NextRequest): Promise<NextResponse> {

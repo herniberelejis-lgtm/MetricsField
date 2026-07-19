@@ -107,7 +107,7 @@ export default async function ClienteDetallePage({
             href={`/admin/clientes/${c.id}/crm`}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
           >
-            Feedback privado
+            CRM de reseñas
           </Link>
           <Link
             href={`/admin/clientes/${c.id}/auditoria`}

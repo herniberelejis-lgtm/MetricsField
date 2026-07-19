@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getDatosTap, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
-import TapStarGate from "@/components/tap/TapStarGate";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
 
@@ -61,7 +60,7 @@ export default async function TapPage({
   }
 
   // Sin comercio de agencia: o es una pieza del canal Mercado Libre ya
-  // activada por su comprador (va directo, sin star-gate — ver por qué en
+  // activada por su comprador (redirige a su link cargado — ver detalle en
   // lib/db.ts), o es una pieza libre que nadie activó todavía y este es el
   // primer toque: le mostramos el formulario para que se autoconfigure.
   if (!comercio) {
@@ -72,22 +71,9 @@ export default async function TapPage({
     return <ActivarCartel slug={slug} />;
   }
 
-  // Por default todo link va derecho a la reseña de Google para todo el
-  // mundo, sin star-gate. El filtro de estrellas (1-3★ ofrece feedback
-  // privado antes de Google) es opt-in por link (lib/db.ts: usar_filtro,
-  // checkbox "Activar filtro" en el panel) — apagado por defecto desde la
-  // migración 008. El tap ya quedó contado arriba en cualquiera de los casos.
-  if (!link.usarFiltro) {
-    if (!comercio.googleReviewUrl) notFound();
-    redirect(comercio.googleReviewUrl);
-  }
-
-  return (
-    <TapStarGate
-      comercioId={comercio.id}
-      nombre={comercio.nombre}
-      rubro={comercio.rubro}
-      googleReviewUrl={comercio.googleReviewUrl}
-    />
-  );
+  // Todo cartel con destino "resena" va derecho a la reseña pública de
+  // Google, para todo el mundo — sin pantallas intermedias. El tap ya quedó
+  // contado arriba.
+  if (!comercio.googleReviewUrl) notFound();
+  redirect(comercio.googleReviewUrl);
 }

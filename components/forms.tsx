@@ -153,7 +153,7 @@ export function ClienteForm({
 
       <Field
         label="Email de notificaciones"
-        hint="A dónde le avisamos por mail cuando le entra una reseña mala o una queja privada. Vacío = no se manda nada."
+        hint="A dónde le avisamos por mail cuando le entra una reseña mala. Vacío = no se manda nada."
       >
         <input
           name="emailNotificaciones"

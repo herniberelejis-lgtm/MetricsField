@@ -4,9 +4,9 @@ import { fmtMes, fmtNum, delta } from "./format";
 import { enviarEmail } from "./email";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
-// necesita su atención ya — hoy: una reseña de 3★ o menos, o una queja
-// privada nueva. Sin email cargado en emailNotificaciones, no se manda
-// nada — nunca se asume una dirección.
+// necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
+// cargado en emailNotificaciones, no se manda nada — nunca se asume una
+// dirección.
 
 function baseUrl(): string {
   return (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
@@ -49,23 +49,6 @@ export async function alertarResenaMala(
     to: cliente.emailNotificaciones,
     asunto: `Nueva reseña de ${resena.estrellas}★ en ${cliente.nombre}`,
     html: layout("Nueva reseña que necesita tu respuesta", cuerpo, cliente),
-  });
-}
-
-export async function alertarFeedback(
-  cliente: Cliente,
-  feedback: { estrellas: number; texto: string },
-): Promise<void> {
-  if (!cliente.emailNotificaciones) return;
-  const cuerpo = `
-    <p style="font-size:14px;">Alguien dejó una queja privada en vez de publicarla en Google (${estrellasHtml(feedback.estrellas)}):</p>
-    <p style="font-size:14px;background:#f8f9fa;border-radius:10px;padding:12px 14px;">${feedback.texto}</p>
-    <p style="font-size:13px;color:#5f6b7a;">Es tu chance de resolverlo antes de que se haga público — nadie más lo vio todavía.</p>
-  `;
-  await enviarEmail({
-    to: cliente.emailNotificaciones,
-    asunto: `Queja privada nueva en ${cliente.nombre}`,
-    html: layout("Feedback privado sin resolver", cuerpo, cliente),
   });
 }
 

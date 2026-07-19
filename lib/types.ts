@@ -139,36 +139,20 @@ export interface LinkNFC {
   destino: DestinoLink;
   urlDestino: string | null;
   activo: boolean;
-  /** Solo importa cuando destino='resena': true (default) = pasa por el
-   * star-gate de estrellas; false = va derecho a googleReviewUrl para
-   * todo el mundo, sin desviar las malas a feedback privado. Algunos
-   * clientes prefieren no usar el filtro — es su elección, no la nuestra.
-   * El tap se sigue contando igual en cualquiera de los dos casos. */
+  /** Columna histórica (`usar_filtro`) — el código ya no la usa: todo
+   * destino 'resena' va derecho a googleReviewUrl para todo el mundo.
+   * Se mantiene mapeada solo para no divergir del schema real. */
   usarFiltro: boolean;
   /** true = el propio comprador la activó desde /t/<id> (canal Mercado
    * Libre: hardware suelto, sin agencia ni portal) — comercioId sigue NULL
    * para siempre en estas piezas. false para todo lo demás: inventario
    * libre sin activar, o piezas del modelo de agencia con comercioId. */
   autogestionado: boolean;
-  /** Solo con autogestionado=true: nombre que se muestra en el star-gate,
-   * a falta de un comercio real. Vacío en cualquier otro caso. */
+  /** Solo con autogestionado=true: nombre elegido por el comprador al
+   * activar su pieza. Vacío en cualquier otro caso. */
   nombreNegocio: string;
   creadoEn: string;
   taps: number; // total histórico, calculado
-}
-
-export type EstadoFeedback = "nuevo" | "en_proceso" | "resuelto";
-
-export interface Feedback {
-  id: number;
-  comercioId: string;
-  estrellas: 1 | 2 | 3;
-  texto: string;
-  contacto: string | null;
-  estado: EstadoFeedback;
-  notasInternas: string;
-  creadoEn: string;
-  actualizadoEn: string;
 }
 
 export type EstadoResena = "nueva" | "respondida" | "escalada" | "resuelta";

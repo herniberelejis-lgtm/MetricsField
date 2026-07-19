@@ -21,8 +21,8 @@ export default function TerminosPage() {
             hardware físico con tecnología NFC y/o códigos QR que dirige a sus
             clientes a dejar una reseña pública en Google; y (b) una
             plataforma de software con un panel privado donde el comercio ve
-            la actividad de su cartel, sus reseñas, el feedback privado de sus
-            clientes y métricas de su ficha de Google Business Profile. Al
+            la actividad de su cartel, sus reseñas y métricas de su ficha de
+            Google Business Profile. Al
             contratar o usar cualquiera de los dos, aceptás estos términos.
           </p>
         </section>
@@ -43,12 +43,11 @@ export default function TerminosPage() {
           <h2 className="text-base font-semibold text-slate-900">3. Reseñas: qué hacemos y qué no</h2>
           <p className="mt-2">
             MetricsField facilita que los clientes reales de un comercio dejen
-            reseñas genuinas. No escribimos, compramos ni fabricamos reseñas,
-            y el acceso a dejar una reseña pública en Google está siempre
-            disponible para cualquier cliente, sin importar su calificación —
-            el formulario de feedback privado es una opción adicional, nunca
-            un reemplazo. El comercio se compromete a no usar el servicio
-            para prácticas contrarias a las políticas de contenido de Google.
+            reseñas genuinas. No escribimos, compramos ni fabricamos reseñas:
+            el cartel dirige a todos los clientes por igual, sin importar su
+            calificación, al mismo formulario público de reseñas de Google.
+            El comercio se compromete a no usar el servicio para prácticas
+            contrarias a las políticas de contenido de Google.
           </p>
         </section>
 
