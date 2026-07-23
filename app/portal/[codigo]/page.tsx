@@ -219,6 +219,12 @@ export default async function PortalPage({
   const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
   const dCitas = delta(citasIA(m), citasIA(prev));
 
+  // "fecha" en resenas es DATE (sin hora, ver db/schema.sql) — comparamos
+  // contra la fecha de hoy en el mismo formato que ya usa fechaISO() en
+  // lib/db.ts, para que "hoy" siempre coincida con lo que guardó el sync.
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  const resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
+
   // Hero de calificación: preferimos el snapshot mensual (misma fuente que
   // el histórico, así el delta compara peras con peras); si todavía no se
   // cargó ningún mes, mostramos el dato en vivo de Google Places como piso.
@@ -375,12 +381,18 @@ export default async function PortalPage({
         {/* Resumen de un vistazo: los mismos números que ya se calculan más
             abajo, arriba y en grande — para abrir el portal y entender el
             estado del negocio sin tener que leer nada todavía. */}
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <StatChip
             icon={<IconWave size={18} className="text-blue-600" />}
             value={fmtNum(totalTapsHistorico)}
             label="Taps del cartel"
             chipClass="bg-blue-50"
+          />
+          <StatChip
+            icon={<IconStarChip size={17} className="text-rose-600" />}
+            value={fmtNum(resenasHoy)}
+            label="Reseñas hoy"
+            chipClass="bg-rose-50"
           />
           <StatChip
             icon={<IconStarChip size={17} className="text-emerald-600" />}
