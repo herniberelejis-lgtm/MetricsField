@@ -102,3 +102,14 @@ Obligatoria en producción: `ADMIN_PASSWORD` (sin ella el panel se bloquea),
 `DATABASE_URL`. Opcionales: `NEXT_PUBLIC_WHATSAPP_NUMBER`, `GOOGLE_PLACES_API_KEY`,
 `CRON_SECRET`, `GOOGLE_OAUTH_CLIENT_ID`/`GOOGLE_OAUTH_CLIENT_SECRET`. Detalle
 completo en `.env.example`.
+
+## DNS de producción
+
+`app.metricsfield.com` apunta a Vercel vía **CNAME** (`app` →
+`5ffa34d97352b7b0.vercel-dns-017.com.`, TTL 300) — no un `A` fijo, para que
+Vercel pueda rotar sus IPs de borde sin romper el dominio. Se administra en
+el mismo proveedor de DNS que aloja la landing de `metricsfield.com` (fuera
+de este repo), no en Vercel DNS. Si ese CNAME desaparece, todo cartel
+NFC/QR (`/t/<slug>`) y el link del portal dejan de resolver para el
+cliente final — antes de tocar esa zona DNS por cualquier otro motivo
+(mail, otro subdominio, etc.), confirmar que este registro sigue estando.

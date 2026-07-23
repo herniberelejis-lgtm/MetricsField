@@ -40,8 +40,16 @@ import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual
 import BenchmarkCompetencia, { type CrecimientoVsCompetencia } from "@/components/BenchmarkCompetencia";
 import GestionResenas from "@/components/GestionResenas";
 import AutomatizacionResenas from "@/components/AutomatizacionResenas";
-import ResumenResenas, { type ResumenResenasData } from "@/components/ResumenResenas";
+import ResumenResenas, { calcularResumenResenas } from "@/components/ResumenResenas";
 import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
+import {
+  StatChip,
+  CalificacionGoogleCard,
+  ResenasRecientesCard,
+  IconStarChip,
+  IconVisitas,
+  IconCrecimiento,
+} from "@/components/portal/PortalResumen";
 
 export const dynamic = "force-dynamic";
 
@@ -130,43 +138,9 @@ export default async function PortalPage({
 
   // Resumen de "cómo van las reseñas": distribución por estrellas, si la
   // tendencia reciente mejora o empeora, y qué se repite en las quejas —
-  // sobre TODAS las reseñas, no solo las pendientes de responder.
-  const resumenResenas: ResumenResenasData = (() => {
-    const distribucion = ([5, 4, 3, 2, 1] as const).map((estrellas) => ({
-      estrellas,
-      cantidad: resenas.filter((r) => r.estrellas === estrellas).length,
-    }));
-    const total = resenas.length;
-    const promedio = total > 0 ? resenas.reduce((acc, r) => acc + r.estrellas, 0) / total : null;
-
-    let tendencia: ResumenResenasData["tendencia"] = null;
-    if (total >= 4) {
-      // resenas viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo
-      const mitad = Math.floor(total / 2);
-      const recientes = resenas.slice(0, mitad);
-      const anteriores = resenas.slice(mitad, mitad * 2);
-      const promedioDe = (arr: typeof resenas) =>
-        arr.reduce((acc, r) => acc + r.estrellas, 0) / arr.length;
-      const diferencia = promedioDe(recientes) - promedioDe(anteriores);
-      const dir = diferencia > 0.15 ? "up" : diferencia < -0.15 ? "down" : "flat";
-      tendencia = {
-        dir,
-        texto:
-          dir === "up"
-            ? "mejorando en las últimas reseñas"
-            : dir === "down"
-              ? "bajando en las últimas reseñas"
-              : "estable",
-      };
-    }
-
-    const temasRecurrentes = terminosFrecuentes(
-      resenas.filter((r) => r.estrellas <= 3).map((r) => r.texto),
-      { max: 6, minimo: 2 },
-    );
-
-    return { distribucion, total, promedio, tendencia, temasRecurrentes };
-  })();
+  // sobre TODAS las reseñas, no solo las pendientes de responder. resenas
+  // viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo.
+  const resumenResenas = calcularResumenResenas(resenas);
 
   // Crecimiento del mes vs el anterior, propio y de la competencia — el
   // número pelado ("tenés 40 reseñas") dice menos que el ritmo ("crecés más
@@ -210,6 +184,22 @@ export default async function PortalPage({
 
   const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
   const dCitas = delta(citasIA(m), citasIA(prev));
+
+  // "fecha" en resenas es DATE (sin hora, ver db/schema.sql) — comparamos
+  // contra la fecha de hoy en el mismo formato que ya usa fechaISO() en
+  // lib/db.ts, para que "hoy" siempre coincida con lo que guardó el sync.
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  const resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
+
+  // Hero de calificación: preferimos el snapshot mensual (misma fuente que
+  // el histórico, así el delta compara peras con peras); si todavía no se
+  // cargó ningún mes, mostramos el dato en vivo de Google Places como piso.
+  const ratingHero = m ? m.ratingPromedio : c.ratingGoogle;
+  const resenasHero = m ? m.resenasTotal : (c.resenasGoogle ?? 0);
+  const primerHistorico = c.historico[0] ?? null;
+  const hayDeltaHero = Boolean(m && primerHistorico && c.historico.length >= 2);
+  const deltaRatingHero = hayDeltaHero ? m!.ratingPromedio - primerHistorico!.ratingPromedio : null;
+  const deltaResenasHero = hayDeltaHero ? m!.resenasTotal - primerHistorico!.resenasTotal : null;
 
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
@@ -352,6 +342,56 @@ export default async function PortalPage({
               ))}
             </div>
           </Card>
+        )}
+
+        {/* Resumen de un vistazo: los mismos números que ya se calculan más
+            abajo, arriba y en grande — para abrir el portal y entender el
+            estado del negocio sin tener que leer nada todavía. */}
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <StatChip
+            icon={<IconWave size={18} className="text-blue-600" />}
+            value={fmtNum(totalTapsHistorico)}
+            label="Taps del cartel"
+            chipClass="bg-blue-50"
+          />
+          <StatChip
+            icon={<IconStarChip size={17} className="text-rose-600" />}
+            value={fmtNum(resenasHoy)}
+            label="Reseñas hoy"
+            chipClass="bg-rose-50"
+          />
+          <StatChip
+            icon={<IconStarChip size={17} className="text-emerald-600" />}
+            value={fmtNum(m?.resenasNuevas ?? 0)}
+            label="Reseñas este mes"
+            chipClass="bg-emerald-50"
+          />
+          <StatChip
+            icon={<IconVisitas size={18} className="text-violet-600" />}
+            value={fmtNum(m?.visitasPerfil ?? 0)}
+            label="Visitas al perfil"
+            chipClass="bg-violet-50"
+          />
+          <StatChip
+            icon={<IconCrecimiento size={18} className="text-amber-600" />}
+            value={fmtNum(resenasHero)}
+            label="Reseñas totales"
+            chipClass="bg-amber-50"
+          />
+        </div>
+
+        {(ratingHero !== null || resenas.length > 0) && (
+          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CalificacionGoogleCard
+              rating={ratingHero}
+              totalResenas={resenasHero}
+              deltaRating={deltaRatingHero}
+              deltaResenas={deltaResenasHero}
+              nombre={c.nombre}
+              subtitulo={`${c.rubro} · ${c.zona}`}
+            />
+            <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+          </div>
         )}
 
         {/* Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida

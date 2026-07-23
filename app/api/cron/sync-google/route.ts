@@ -4,6 +4,7 @@ import {
   sincronizarGoogleTodos,
   sincronizarRendimientoTodos,
   sincronizarResenasGoogleTodos,
+  sincronizarCompetidoresTodos,
   snapshotCompetenciaMensual,
   enviarResumenesMensuales,
 } from "@/lib/db";
@@ -41,6 +42,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // No hace nada (0 en todos los conteos) mientras GOOGLE_REVIEWS_API_ENABLED
   // no esté prendido — ver lib/google-reviews.ts.
   const resenasDetalle = await sincronizarResenasGoogleTodos();
+  // Actualiza el rating/reseñas de cada competidor con place_id cargado
+  // ANTES de congelar la foto del mes — si no, snapshotCompetenciaMensual
+  // fotografía lo último tipeado a mano en vez de un dato fresco.
+  const competidores = await sincronizarCompetidoresTodos();
   // Congela la foto de competencia del mes en curso con los ratings recién
   // sincronizados — así el benchmarking histórico se arma solo.
   const competencia = await snapshotCompetenciaMensual();
@@ -52,5 +57,5 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const resumenes =
     new Date().getUTCDate() === 1 ? await enviarResumenesMensuales() : { total: 0, enviados: 0 };
 
-  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competencia, resumenes });
+  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competidores, competencia, resumenes });
 }

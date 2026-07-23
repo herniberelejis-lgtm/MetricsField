@@ -13,7 +13,6 @@ import type {
   FormatoNFC,
   MetricaMensual,
   Plan,
-  PlataformaIA,
   Rubro,
   TipoSoporte,
   Zona,
@@ -303,45 +302,22 @@ export async function accionActualizarResena(fd: FormData): Promise<void> {
   redirect(`/admin/clientes/${comercioId}/crm`);
 }
 
-// ---------- Checklist SEO ----------
-
-export async function accionToggleChecklist(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const comercioId = str(fd, "comercioId");
-  const itemKey = str(fd, "itemKey");
-  const hecho = fd.get("hecho") === "1";
-  await db.toggleChecklistItem(comercioId, itemKey, hecho);
-  revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/auditoria`);
-}
-
-// ---------- Audit GEO ----------
-
-export async function accionRegistrarAudit(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const comercioId = str(fd, "comercioId");
-  await db.crearAudit(comercioId, {
-    pregunta: str(fd, "pregunta"),
-    plataforma: str(fd, "plataforma") as PlataformaIA,
-    aparece: fd.get("aparece") === "1",
-    competidoresMencionados: str(fd, "competidoresMencionados"),
-  });
-  revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/auditoria`);
-}
-
 // ---------- Competencia ----------
 
 export async function accionCrearCompetidor(fd: FormData): Promise<void> {
   await requireAdmin();
   const comercioId = str(fd, "comercioId");
-  await db.crearCompetidor(comercioId, {
+  const competidor = await db.crearCompetidor(comercioId, {
     nombre: str(fd, "nombre"),
     rating: fd.get("rating") ? num(fd, "rating") : null,
     totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
+    googlePlaceId: str(fd, "googlePlaceId") || null,
   });
+  // Si vino con place_id, traemos el rating/reseñas reales de una — así no
+  // hay que esperar al cron de mañana para ver el primer dato automático.
+  if (competidor.googlePlaceId) await db.sincronizarCompetidor(competidor.id);
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/auditoria`);
+  redirect(`/admin/clientes/${comercioId}/competencia`);
 }
 
 export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
@@ -351,9 +327,24 @@ export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
   await db.actualizarCompetidor(id, {
     rating: fd.get("rating") ? num(fd, "rating") : null,
     totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
+    googlePlaceId: str(fd, "googlePlaceId") || null,
   });
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/auditoria`);
+  redirect(`/admin/clientes/${comercioId}/competencia`);
+}
+
+export async function accionSincronizarCompetidor(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = Number(fd.get("id"));
+  const comercioId = str(fd, "comercioId");
+  const ok = await db.sincronizarCompetidor(id);
+  if (!ok) {
+    throw new Error(
+      "No se pudo sincronizar — revisá que el competidor tenga Google Place ID cargado y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.",
+    );
+  }
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${comercioId}/competencia`);
 }
 
 export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
@@ -363,7 +354,7 @@ export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
   await db.eliminarCompetidor(id);
   await auditar("eliminar_competidor", `${id} (${comercioId})`);
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/auditoria`);
+  redirect(`/admin/clientes/${comercioId}/competencia`);
 }
 
 // ---------- Prospectos ----------

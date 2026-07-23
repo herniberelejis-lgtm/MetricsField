@@ -43,15 +43,14 @@ const GUIAS: Guia[] = [
     ],
   },
   {
-    slug: "auditorias-seo",
-    titulo: "Auditorías SEO",
+    slug: "competencia",
+    titulo: "Monitoreo de competencia",
     resumen:
-      "Cómo relevar y cargar el checklist SEO local y el Audit GEO de un comercio.",
+      "Cargar y actualizar el rating de los competidores locales de un comercio.",
     pasos: [
-      "Checklist SEO local: qué mira cada ítem",
-      "Audit GEO: pegar la pregunta en ChatGPT/Claude/Perplexity",
-      "Registrar si aparece y qué competidores menciona",
-      "Cómo leerlo con el cliente en la reunión mensual",
+      "Agregar un competidor con su rating y total de reseñas",
+      "Actualizarlo cada semana a mano (no hay sync automático)",
+      "Se ve comparado contra el propio comercio en /admin/clientes/[id]/competencia",
     ],
   },
 ];

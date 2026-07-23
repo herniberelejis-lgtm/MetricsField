@@ -1,18 +1,57 @@
-import type { TerminoFrecuente } from "@/lib/keywords";
+import { terminosFrecuentes, type TerminoFrecuente } from "@/lib/keywords";
+import type { ResenaCRM } from "@/lib/types";
 
-// Resumen calculado en el servidor (ver app/portal/[codigo]/page.tsx) a
-// partir de TODAS las reseñas del comercio — no solo las pendientes. Da una
-// foto rápida de "cómo van las reseñas" sin tener que leerlas una por una:
-// distribución por estrellas, si la tendencia reciente mejora o empeora, y
-// qué se repite en las quejas (mismo extractor de términos que ya se usa en
-// el drill-down mensual — sin IA paga, frecuencia de palabras sobre texto
-// real).
+// Resumen calculado en el servidor a partir de TODAS las reseñas del
+// comercio — no solo las pendientes. Da una foto rápida de "cómo van las
+// reseñas" sin tener que leerlas una por una: distribución por estrellas, si
+// la tendencia reciente mejora o empeora, y qué se repite en las quejas
+// (mismo extractor de términos que ya se usa en el drill-down mensual — sin
+// IA paga, frecuencia de palabras sobre texto real). Lo usan tanto el portal
+// del cliente como la ficha del cliente en /admin.
 export interface ResumenResenasData {
   distribucion: { estrellas: 1 | 2 | 3 | 4 | 5; cantidad: number }[]; // 5★ primero
   total: number;
   promedio: number | null;
   tendencia: { dir: "up" | "down" | "flat"; texto: string } | null;
   temasRecurrentes: TerminoFrecuente[];
+}
+
+/** `resenas` debe venir ordenado por fecha DESC (como devuelve getResenas)
+ * — la tendencia compara la mitad más nueva contra la mitad más vieja. */
+export function calcularResumenResenas(resenas: ResenaCRM[]): ResumenResenasData {
+  const distribucion = ([5, 4, 3, 2, 1] as const).map((estrellas) => ({
+    estrellas,
+    cantidad: resenas.filter((r) => r.estrellas === estrellas).length,
+  }));
+  const total = resenas.length;
+  const promedio = total > 0 ? resenas.reduce((acc, r) => acc + r.estrellas, 0) / total : null;
+
+  let tendencia: ResumenResenasData["tendencia"] = null;
+  if (total >= 4) {
+    const mitad = Math.floor(total / 2);
+    const recientes = resenas.slice(0, mitad);
+    const anteriores = resenas.slice(mitad, mitad * 2);
+    const promedioDe = (arr: typeof resenas) =>
+      arr.reduce((acc, r) => acc + r.estrellas, 0) / arr.length;
+    const diferencia = promedioDe(recientes) - promedioDe(anteriores);
+    const dir = diferencia > 0.15 ? "up" : diferencia < -0.15 ? "down" : "flat";
+    tendencia = {
+      dir,
+      texto:
+        dir === "up"
+          ? "mejorando en las últimas reseñas"
+          : dir === "down"
+            ? "bajando en las últimas reseñas"
+            : "estable",
+    };
+  }
+
+  const temasRecurrentes = terminosFrecuentes(
+    resenas.filter((r) => r.estrellas <= 3).map((r) => r.texto),
+    { max: 6, minimo: 2 },
+  );
+
+  return { distribucion, total, promedio, tendencia, temasRecurrentes };
 }
 
 const COLOR_TENDENCIA: Record<"up" | "down" | "flat", string> = {

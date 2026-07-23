@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCliente } from "@/lib/db";
+import { getCliente, getResenas } from "@/lib/db";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
@@ -24,6 +24,8 @@ import {
   Stars,
   Sparkline,
 } from "@/components/ui";
+import ResumenResenas, { calcularResumenResenas } from "@/components/ResumenResenas";
+import AccionesClienteMenu from "@/components/AccionesClienteMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +44,9 @@ export default async function ClienteDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const c = await getCliente(id);
+  const [c, resenas] = await Promise.all([getCliente(id), getResenas(id)]);
   if (!c) notFound();
+  const resumenResenas = calcularResumenResenas(resenas);
 
   const gbpConfigurable = oauthConfigurado();
   const gbpConectado = Boolean(c.googleConectadoEn);
@@ -82,47 +85,17 @@ export default async function ClienteDetallePage({
         }
       />
 
-      {/* Acciones */}
+      {/* Acciones: "Cargar métricas" queda a la vista porque se usa todos
+          los meses; el resto vive en el menú para no competir por atención. */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/admin/clientes/${c.id}/metricas`}
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-          >
-            + Cargar métricas
-          </Link>
-          <Link
-            href={`/admin/clientes/${c.id}/editar`}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-          >
-            Editar suscripción
-          </Link>
-          <Link
-            href={`/admin/clientes/${c.id}/links`}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-          >
-            Gestionar hardware
-          </Link>
-          <Link
-            href={`/admin/clientes/${c.id}/crm`}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-          >
-            CRM de reseñas
-          </Link>
-          <Link
-            href={`/admin/clientes/${c.id}/auditoria`}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
-          >
-            Auditoría Google My Business
-          </Link>
-        </div>
-
         <Link
-          href={`/admin/reportes/${c.id}`}
-          className="rounded-lg border border-brand/30 bg-brand/5 px-3 py-1.5 text-sm font-medium text-brand-fg hover:bg-brand/10"
+          href={`/admin/clientes/${c.id}/metricas`}
+          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
         >
-          📄 Generar reporte mensual
+          + Cargar métricas
         </Link>
+
+        <AccionesClienteMenu id={c.id} reporteHref={`/admin/reportes/${c.id}`} />
       </div>
 
       {/* Acceso del cliente a su portal */}
@@ -187,7 +160,7 @@ export default async function ClienteDetallePage({
           </div>
           <div className="mt-1 text-sm text-slate-800">“{c.busquedaClave}”</div>
           <p className="mt-2 text-xs text-slate-500">
-            Usada para armar las preguntas del Audit GEO.
+            Cómo lo busca la gente en Google (rubro + zona).
           </p>
         </Card>
         <Card>
@@ -339,6 +312,17 @@ export default async function ClienteDetallePage({
           hint={esPremium ? "ChatGPT+Copilot+Perplexity" : "vía Google Maps"}
         />
       </div>
+
+      {/* Reseñas: resumen de buenas y malas de un vistazo — reemplaza al
+          viejo botón "CRM de reseñas" como pestaña aparte. Para responder
+          una reseña puntual o cargar una a mano, ese detalle sigue en /crm. */}
+      <h2 className="mb-3 mt-8 flex items-center justify-between text-sm font-semibold text-slate-900">
+        Reseñas
+        <Link href={`/admin/clientes/${c.id}/crm`} className="text-xs font-medium text-brand-fg hover:underline">
+          Gestionar todas las reseñas →
+        </Link>
+      </h2>
+      <ResumenResenas data={resumenResenas} />
 
       {/* Evolución */}
       <h2 className="mb-3 mt-8 text-sm font-semibold text-slate-900">
