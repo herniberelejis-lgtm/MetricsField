@@ -42,6 +42,14 @@ import GestionResenas from "@/components/GestionResenas";
 import AutomatizacionResenas from "@/components/AutomatizacionResenas";
 import ResumenResenas, { type ResumenResenasData } from "@/components/ResumenResenas";
 import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
+import {
+  StatChip,
+  CalificacionGoogleCard,
+  ResenasRecientesCard,
+  IconStarChip,
+  IconVisitas,
+  IconCrecimiento,
+} from "@/components/portal/PortalResumen";
 
 export const dynamic = "force-dynamic";
 
@@ -211,6 +219,16 @@ export default async function PortalPage({
   const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
   const dCitas = delta(citasIA(m), citasIA(prev));
 
+  // Hero de calificación: preferimos el snapshot mensual (misma fuente que
+  // el histórico, así el delta compara peras con peras); si todavía no se
+  // cargó ningún mes, mostramos el dato en vivo de Google Places como piso.
+  const ratingHero = m ? m.ratingPromedio : c.ratingGoogle;
+  const resenasHero = m ? m.resenasTotal : (c.resenasGoogle ?? 0);
+  const primerHistorico = c.historico[0] ?? null;
+  const hayDeltaHero = Boolean(m && primerHistorico && c.historico.length >= 2);
+  const deltaRatingHero = hayDeltaHero ? m!.ratingPromedio - primerHistorico!.ratingPromedio : null;
+  const deltaResenasHero = hayDeltaHero ? m!.resenasTotal - primerHistorico!.resenasTotal : null;
+
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
   // lo único que hay que "hacer", así que va primero pase lo que pase.
@@ -352,6 +370,50 @@ export default async function PortalPage({
               ))}
             </div>
           </Card>
+        )}
+
+        {/* Resumen de un vistazo: los mismos números que ya se calculan más
+            abajo, arriba y en grande — para abrir el portal y entender el
+            estado del negocio sin tener que leer nada todavía. */}
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatChip
+            icon={<IconWave size={18} className="text-blue-600" />}
+            value={fmtNum(totalTapsHistorico)}
+            label="Taps del cartel"
+            chipClass="bg-blue-50"
+          />
+          <StatChip
+            icon={<IconStarChip size={17} className="text-emerald-600" />}
+            value={fmtNum(m?.resenasNuevas ?? 0)}
+            label="Reseñas este mes"
+            chipClass="bg-emerald-50"
+          />
+          <StatChip
+            icon={<IconVisitas size={18} className="text-violet-600" />}
+            value={fmtNum(m?.visitasPerfil ?? 0)}
+            label="Visitas al perfil"
+            chipClass="bg-violet-50"
+          />
+          <StatChip
+            icon={<IconCrecimiento size={18} className="text-amber-600" />}
+            value={fmtNum(resenasHero)}
+            label="Reseñas totales"
+            chipClass="bg-amber-50"
+          />
+        </div>
+
+        {(ratingHero !== null || resenas.length > 0) && (
+          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CalificacionGoogleCard
+              rating={ratingHero}
+              totalResenas={resenasHero}
+              deltaRating={deltaRatingHero}
+              deltaResenas={deltaResenasHero}
+              nombre={c.nombre}
+              subtitulo={`${c.rubro} · ${c.zona}`}
+            />
+            <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+          </div>
         )}
 
         {/* Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida
