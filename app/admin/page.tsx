@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getClientes } from "@/lib/db";
+import { getCuentas } from "@/lib/db";
 import {
   metricaActual,
   metricaAnterior,
@@ -28,7 +28,7 @@ function sum(nums: number[]): number {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const clientes = await getClientes();
+  const clientes = await getCuentas();
   const activos = clientes.filter((c) => c.estado === "activo");
 
   const mrr = sum(activos.map((c) => c.fee));

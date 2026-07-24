@@ -61,6 +61,24 @@ export async function accionCrearCliente(fd: FormData): Promise<void> {
   redirect(`/admin/clientes/${cliente.id}`);
 }
 
+export async function accionCrearSucursal(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const cuentaId = str(fd, "cuentaId");
+  const nombre = str(fd, "nombre");
+  if (!nombre) throw new Error("El nombre del local es obligatorio.");
+  const sucursal = await db.crearSucursal(cuentaId, {
+    nombre,
+    rubro: str(fd, "rubro") as Rubro,
+    zona: str(fd, "zona") as Zona,
+    googlePlaceId: str(fd, "googlePlaceId"),
+    googleReviewUrl: str(fd, "googleReviewUrl"),
+    busquedaClave: str(fd, "busquedaClave"),
+  });
+  await auditar("crear_sucursal", `${sucursal.nombre} (${sucursal.id}) de ${cuentaId}`);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${cuentaId}`);
+}
+
 export async function accionActualizarCliente(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
