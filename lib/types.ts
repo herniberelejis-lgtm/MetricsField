@@ -93,6 +93,13 @@ export interface Cliente {
   /** A dónde mandar la alerta de reseña/queja mala y el resumen mensual.
    * Vacío = no se manda nada — nunca se asume un email por default. */
   emailNotificaciones: string;
+  /** Multi-sucursal: null = esta fila es una cuenta (un solo local, el caso
+   * de siempre). No-null = esta fila es una sucursal que cuelga de la
+   * cuenta con ese id. Los campos de cuenta (codigoAcceso, plan, fee,
+   * contacto, tonoMarca, emailNotificaciones, autoResponder*) de una
+   * sucursal se ignoran — siempre se leen de la raíz vía resolverCuenta()
+   * en lib/db.ts. */
+  comercioPadreId: string | null;
 }
 
 /** Tono usado por el generador de respuestas sugeridas (lib/respuestas.ts). */

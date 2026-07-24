@@ -41,11 +41,13 @@ function TarjetaResena({
   resena,
   tonoMarca,
   codigo,
+  comercioId,
   onResuelta,
 }: {
   resena: ResenaCRM;
   tonoMarca: TonoMarca;
   codigo: string;
+  comercioId: string;
   onResuelta: (id: number) => void;
 }) {
   const [intento, setIntento] = useState(0);
@@ -72,6 +74,7 @@ function TarjetaResena({
   function aprobar() {
     const fd = new FormData();
     fd.set("codigo", codigo);
+    fd.set("comercioId", comercioId);
     fd.set("id", String(resena.id));
     fd.set("respuesta", respuesta);
     startTransition(async () => {
@@ -84,6 +87,7 @@ function TarjetaResena({
   function descartar() {
     const fd = new FormData();
     fd.set("codigo", codigo);
+    fd.set("comercioId", comercioId);
     fd.set("id", String(resena.id));
     startTransition(async () => {
       await accionDescartarResenaPortal(fd);
@@ -165,10 +169,12 @@ export default function GestionResenas({
   resenasIniciales,
   tonoMarca,
   codigo,
+  comercioId,
 }: {
   resenasIniciales: ResenaCRM[];
   tonoMarca: TonoMarca;
   codigo: string;
+  comercioId: string;
 }) {
   const [pendientes, setPendientes] = useState(resenasIniciales);
 
@@ -192,6 +198,7 @@ export default function GestionResenas({
             resena={r}
             tonoMarca={tonoMarca}
             codigo={codigo}
+            comercioId={comercioId}
             onResuelta={(id) => setPendientes((prev) => prev.filter((x) => x.id !== id))}
           />
         ))}

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import {
   getClientePorCodigo,
+  getSucursales,
   getTapsPorDiaPorSoporte,
   getLinks,
   getChecklist,
@@ -85,10 +86,10 @@ export default async function PortalPage({
   searchParams,
 }: {
   params: Promise<{ codigo: string }>;
-  searchParams: Promise<{ google?: string }>;
+  searchParams: Promise<{ google?: string; sucursal?: string }>;
 }) {
   const { codigo } = await params;
-  const { google } = await searchParams;
+  const { google, sucursal: sucursalParam } = await searchParams;
 
   // Límite por IP antes de tocar la base: el código de acceso es la única
   // credencial del portal (sin usuario/contraseña), así que frenar la
@@ -101,25 +102,39 @@ export default async function PortalPage({
   const c = await getClientePorCodigo(codigo);
   if (!c || c.estado === "baja") notFound();
 
-  const gbpConectado = Boolean(c.googleConectadoEn);
-  const diasConectado = c.googleConectadoEn
-    ? Math.floor((Date.now() - new Date(c.googleConectadoEn).getTime()) / (1000 * 60 * 60 * 24))
+  // Multi-sucursal: `c` es siempre la CUENTA (identidad del portal, código
+  // de acceso, plan, facturación) — y también, ella misma, el local
+  // original (así nació antes de tener sucursales: su propio Google Place
+  // ID, historial, reseñas). Las sucursales son locales nuevos que cuelgan
+  // de esa cuenta. `ubicaciones` junta ambas cosas para el selector; sin
+  // `?sucursal=` en la URL, `activo` es siempre la cuenta (comportamiento
+  // de siempre, sin sorpresas) — recién cambia si el cliente elige
+  // explícitamente otro local.
+  const sucursales = await getSucursales(c.id);
+  const ubicaciones = [c, ...sucursales];
+  const activo = sucursalParam
+    ? (ubicaciones.find((u) => u.id === sucursalParam) ?? c)
+    : c;
+
+  const gbpConectado = Boolean(activo.googleConectadoEn);
+  const diasConectado = activo.googleConectadoEn
+    ? Math.floor((Date.now() - new Date(activo.googleConectadoEn).getTime()) / (1000 * 60 * 60 * 24))
     : null;
   const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
   const [tapsPorDiaSoporte, links, checklist, audits, resenas, benchmark] =
     await Promise.all([
-      getTapsPorDiaPorSoporte(c.id, 14),
-      getLinks(c.id),
-      getChecklist(c.id),
-      getAudits(c.id),
-      getResenas(c.id),
-      getBenchmarkMensual(c.id),
+      getTapsPorDiaPorSoporte(activo.id, 14),
+      getLinks(activo.id),
+      getChecklist(activo.id),
+      getAudits(activo.id),
+      getResenas(activo.id),
+      getBenchmarkMensual(activo.id),
     ]);
 
-  const m = metricaActual(c);
-  const prev = metricaAnterior(c);
+  const m = metricaActual(activo);
+  const prev = metricaAnterior(activo);
   const esPremium = c.plan === "Premium";
   const recomendacion = m ? recomendacionDelMes(c, m, prev) : null;
 
@@ -133,7 +148,7 @@ export default async function PortalPage({
   // los temas recurrentes de las reseñas con texto de ese mes. El texto
   // crudo nunca se manda al cliente: solo viaja el agregado.
   const detalleMensual: Record<string, DetalleMes> = {};
-  for (const h of c.historico) {
+  for (const h of activo.historico) {
     const textos = resenas
       .filter((r) => r.fecha.startsWith(h.mes))
       .map((r) => r.texto)
@@ -205,10 +220,10 @@ export default async function PortalPage({
   // Hero de calificación: preferimos el snapshot mensual (misma fuente que
   // el histórico, así el delta compara peras con peras); si todavía no se
   // cargó ningún mes, mostramos el dato en vivo de Google Places como piso.
-  const ratingHero = m ? m.ratingPromedio : c.ratingGoogle;
-  const resenasHero = m ? m.resenasTotal : (c.resenasGoogle ?? 0);
-  const primerHistorico = c.historico[0] ?? null;
-  const hayDeltaHero = Boolean(m && primerHistorico && c.historico.length >= 2);
+  const ratingHero = m ? m.ratingPromedio : activo.ratingGoogle;
+  const resenasHero = m ? m.resenasTotal : (activo.resenasGoogle ?? 0);
+  const primerHistorico = activo.historico[0] ?? null;
+  const hayDeltaHero = Boolean(m && primerHistorico && activo.historico.length >= 2);
   const deltaRatingHero = hayDeltaHero ? m!.ratingPromedio - primerHistorico!.ratingPromedio : null;
   const deltaResenasHero = hayDeltaHero ? m!.resenasTotal - primerHistorico!.resenasTotal : null;
 
@@ -275,11 +290,16 @@ export default async function PortalPage({
       id: "sucursales",
       label: "Mis Sucursales",
       icon: <IconBuilding size={18} />,
-      badge: (
-        <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
-          Pronto
-        </span>
-      ),
+      badge:
+        sucursales.length === 0 ? (
+          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
+            Pronto
+          </span>
+        ) : (
+          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
+            {sucursales.length}
+          </span>
+        ),
     },
     { type: "leaf", id: "dispositivos", label: "Mis Dispositivos", icon: <IconDevice size={18} /> },
     { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconActivity size={18} /> },
@@ -379,8 +399,8 @@ export default async function PortalPage({
             totalResenas={resenasHero}
             deltaRating={deltaRatingHero}
             deltaResenas={deltaResenasHero}
-            nombre={c.nombre}
-            subtitulo={`${c.rubro} · ${c.zona}`}
+            nombre={activo.nombre}
+            subtitulo={`${activo.rubro} · ${activo.zona}`}
           />
           <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
         </div>
@@ -404,34 +424,85 @@ export default async function PortalPage({
         <div className="mt-3">
           <AutomatizacionResenas
             codigo={c.codigoAcceso}
-            activa={c.autoResponderPositivas}
-            umbral={c.autoResponderUmbral}
+            comercioId={activo.id}
+            activa={activo.autoResponderPositivas}
+            umbral={activo.autoResponderUmbral}
             apiHabilitada={resenasApiHabilitada()}
             resenasAutomaticas={resenasAutomaticas}
           />
         </div>
         <div className="mt-3">
-          <GestionResenas resenasIniciales={resenasPendientes} tonoMarca={c.tonoMarca} codigo={c.codigoAcceso} />
+          <GestionResenas
+            resenasIniciales={resenasPendientes}
+            tonoMarca={c.tonoMarca}
+            codigo={c.codigoAcceso}
+            comercioId={activo.id}
+          />
         </div>
       </Card>
     );
   }
 
-  panels.sucursales = (
-    <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-16 text-center">
-      <div className="mx-auto grid h-14 w-14 shrink-0 place-items-center rounded-full border border-slate-200 bg-white">
-        <IconBuilding size={22} className="text-slate-400" />
+  panels.sucursales =
+    sucursales.length === 0 ? (
+      <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-16 text-center">
+        <div className="mx-auto grid h-14 w-14 shrink-0 place-items-center rounded-full border border-slate-200 bg-white">
+          <IconBuilding size={22} className="text-slate-400" />
+        </div>
+        <h3 className="mt-4 text-base font-semibold text-slate-800">Todavía no está activo</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+          Cuando tengas más de un local, vas a poder elegir entre ellos desde acá y ver el
+          rating y las reseñas de cada uno por separado. Hoy tu cuenta gestiona un solo local.
+        </p>
+        <span className="mt-3.5 inline-block rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">
+          Próximamente
+        </span>
       </div>
-      <h3 className="mt-4 text-base font-semibold text-slate-800">Todavía no está activo</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-        Cuando tengas más de un local, vas a poder elegir entre ellos desde acá y ver el
-        rating y las reseñas de cada uno por separado. Hoy tu cuenta gestiona un solo local.
-      </p>
-      <span className="mt-3.5 inline-block rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">
-        Próximamente
-      </span>
-    </div>
-  );
+    ) : (
+      <>
+        <p className="mb-4 text-sm text-slate-500">
+          Elegí un local para ver su rating, reseñas y dispositivos por separado.
+        </p>
+        <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          {ubicaciones.map((s) => {
+            const activa = s.id === activo.id;
+            const sm = metricaActual(s);
+            return (
+              <a
+                key={s.id}
+                href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
+                className={`flex items-center justify-between gap-3 px-4 py-3.5 text-sm transition ${
+                  activa ? "bg-brand/5" : "hover:bg-slate-50"
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`truncate font-medium ${activa ? "text-brand-fg" : "text-slate-800"}`}>
+                      {s.nombre}
+                    </span>
+                    {activa && (
+                      <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand-fg">
+                        viendo ahora
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500">{s.zona}</div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {sm ? (
+                    <span className="text-xs font-semibold tabular-nums text-slate-700">
+                      {sm.ratingPromedio.toFixed(1)}★
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">sin datos</span>
+                  )}
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </>
+    );
 
   panels.dispositivos =
     linksConTaps.length === 0 ? (
@@ -546,6 +617,7 @@ export default async function PortalPage({
           qr={qrPorDia}
           mostrarQr={tieneSoporteQr}
           codigo={c.codigoAcceso}
+          comercioId={activo.id}
         />
       ) : (
         <Card>
@@ -591,7 +663,7 @@ export default async function PortalPage({
             </div>
           </div>
           <a
-            href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}`}
+            href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`}
             className={`shrink-0 ${gbpConectado ? btnSecondary : btnPrimary}`}
           >
             {gbpConectado ? "Reconectar" : "Conectar con Google"}
@@ -608,15 +680,15 @@ export default async function PortalPage({
         )}
       </Card>
 
-      {c.googleSyncEn && (
+      {activo.googleSyncEn && (
         <Card className="mb-4">
           <p className="text-sm font-medium text-slate-700">Tu ficha de Google ahora mismo</p>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold tracking-tight text-slate-900">{c.ratingGoogle?.toFixed(1)}★</span>
-            <span className="text-sm text-slate-500">{fmtNum(c.resenasGoogle ?? 0)} reseñas totales</span>
+            <span className="text-3xl font-semibold tracking-tight text-slate-900">{activo.ratingGoogle?.toFixed(1)}★</span>
+            <span className="text-sm text-slate-500">{fmtNum(activo.resenasGoogle ?? 0)} reseñas totales</span>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            actualizado automáticamente {new Date(c.googleSyncEn).toLocaleDateString("es-AR")}
+            actualizado automáticamente {new Date(activo.googleSyncEn).toLocaleDateString("es-AR")}
           </p>
         </Card>
       )}
@@ -725,13 +797,13 @@ export default async function PortalPage({
                 <span className="text-sm font-medium text-slate-700">Reseñas acumuladas</span>
                 <Stars rating={m.ratingPromedio} />
               </div>
-              <Sparkline values={c.historico.map((h) => h.resenasTotal)} width={280} height={60} />
+              <Sparkline values={activo.historico.map((h) => h.resenasTotal)} width={280} height={60} />
             </Card>
             <Card>
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
               </div>
-              <Sparkline values={c.historico.map((h) => h.visitasPerfil)} width={280} height={60} />
+              <Sparkline values={activo.historico.map((h) => h.visitasPerfil)} width={280} height={60} />
             </Card>
           </div>
         </>
@@ -790,20 +862,20 @@ export default async function PortalPage({
         </div>
       )}
 
-      {c.historico.length > 0 && (
+      {activo.historico.length > 0 && (
         <>
           <SectionHeading title="Evolución mes a mes" />
-          {c.historico.length >= 2 && (
+          {activo.historico.length >= 2 && (
             <div className="mb-4">
               <TendenciaResenasChart
-                labels={c.historico.map((h) => fmtMes(h.mes))}
-                totales={c.historico.map((h) => h.resenasTotal)}
-                ratings={c.historico.map((h) => h.ratingPromedio)}
+                labels={activo.historico.map((h) => fmtMes(h.mes))}
+                totales={activo.historico.map((h) => h.resenasTotal)}
+                ratings={activo.historico.map((h) => h.ratingPromedio)}
               />
             </div>
           )}
           <p className="mb-2 text-xs text-slate-500">Tocá un mes para ver el detalle de ese período.</p>
-          <EvolucionMensual historico={c.historico} esPremium={esPremium} detalle={detalleMensual} />
+          <EvolucionMensual historico={activo.historico} esPremium={esPremium} detalle={detalleMensual} />
         </>
       )}
     </>
@@ -835,7 +907,7 @@ export default async function PortalPage({
   return (
     <PortalShell
       clienteNombre={c.nombre}
-      clienteSub={`${c.rubro} · ${c.zona}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
+      clienteSub={`${activo.rubro} · ${activo.zona}${sucursales.length > 0 ? ` · ${activo.nombre}` : ""}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
       planBadge={<PlanBadge plan={c.plan} />}
       googlePill={
         <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500">
