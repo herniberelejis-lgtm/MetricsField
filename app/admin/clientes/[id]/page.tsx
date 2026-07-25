@@ -116,7 +116,7 @@ export default async function ClienteDetallePage({
           + Cargar métricas
         </Link>
 
-        <AccionesClienteMenu id={c.id} reporteHref={`/admin/reportes/${c.id}`} />
+        <AccionesClienteMenu id={c.id} />
       </div>
 
       {/* Acceso del cliente a su portal — vive en la cuenta raíz; una
