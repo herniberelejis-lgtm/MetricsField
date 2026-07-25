@@ -379,6 +379,60 @@ export default async function PortalPage({
         </Card>
       )}
 
+      {/* Con más de un local: primero el panorama completo de la cadena,
+          antes de bajar al detalle de "activo" — así no hay que ir a Mis
+          Sucursales solo para saber que existen. */}
+      {ubicaciones.length > 1 && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Tus sucursales
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {ubicaciones.map((s) => {
+              const activa = s.id === activo.id;
+              const sm = metricaActual(s);
+              const rating = sm ? sm.ratingPromedio : s.ratingGoogle;
+              const totalResenas = sm ? sm.resenasTotal : s.resenasGoogle;
+              return (
+                <a
+                  key={s.id}
+                  href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
+                  className={`min-w-[190px] shrink-0 rounded-xl border p-3 transition ${
+                    activa
+                      ? "border-brand bg-brand/5"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`truncate text-sm font-medium ${activa ? "text-brand-fg" : "text-slate-800"}`}
+                    >
+                      {s.nombre}
+                    </span>
+                    {activa && (
+                      <span className="shrink-0 rounded-full bg-brand/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-fg">
+                        ahora
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-slate-500">{s.zona}</div>
+                  <div className="mt-2 flex items-center gap-3 text-xs">
+                    {rating !== null ? (
+                      <span className="font-semibold tabular-nums text-slate-700">{rating.toFixed(1)}★</span>
+                    ) : (
+                      <span className="text-slate-400">sin datos</span>
+                    )}
+                    {totalResenas !== null && (
+                      <span className="tabular-nums text-slate-500">{fmtNum(totalResenas)} reseñas</span>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* De un vistazo: para abrir el portal y entender el estado del
           negocio sin tener que entrar a ninguna otra sección todavía. */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
