@@ -8,7 +8,6 @@ import { alertarResenaMala } from "@/lib/alertas";
 import type {
   DestinoLink,
   EstadoCliente,
-  EstadoProspecto,
   EstadoResena,
   FormatoNFC,
   MetricaMensual,
@@ -20,7 +19,7 @@ import type {
 
 // Server actions: reciben los formularios, validan lo mínimo indispensable
 // y delegan en lib/db. Después de cada mutación se revalida todo el árbol
-// para que panel, analytics y reportes muestren los números nuevos.
+// para que el panel muestre los números nuevos.
 
 function str(fd: FormData, key: string): string {
   return String(fd.get(key) ?? "").trim();
@@ -377,47 +376,6 @@ export async function accionEliminarCompetidor(fd: FormData): Promise<void> {
   redirect(`/admin/clientes/${comercioId}/competencia`);
 }
 
-// ---------- Prospectos ----------
-// Locales a los que se les está vendiendo — todavía no son clientes. Cuando
-// uno confirma, se marca "vendido" acá y se da de alta aparte en Clientes.
-
-export async function accionCrearProspecto(): Promise<void> {
-  await requireAdmin();
-  await db.crearProspecto();
-  revalidatePath("/admin/prospectos");
-  redirect("/admin/prospectos");
-}
-
-export async function accionActualizarProspecto(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const id = str(fd, "id");
-  await db.actualizarProspecto(id, {
-    local: str(fd, "local"),
-    zona: str(fd, "zona"),
-    contacto: str(fd, "contacto"),
-    redes: str(fd, "redes"),
-    web: str(fd, "web"),
-    resenas: str(fd, "resenas"),
-    producto: str(fd, "producto"),
-    precio: str(fd, "precio"),
-    estado: str(fd, "estado") as EstadoProspecto,
-    segFecha: str(fd, "segFecha"),
-    segTexto: str(fd, "segTexto"),
-    notas: str(fd, "notas"),
-  });
-  revalidatePath("/admin/prospectos");
-  redirect("/admin/prospectos");
-}
-
-export async function accionEliminarProspecto(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const id = str(fd, "id");
-  await db.eliminarProspecto(id);
-  await auditar("eliminar_prospecto", id);
-  revalidatePath("/admin/prospectos");
-  redirect("/admin/prospectos");
-}
-
 // ---------- Administradores (login por Google del equipo) ----------
 
 export async function accionAgregarAdmin(fd: FormData): Promise<void> {
@@ -440,60 +398,3 @@ export async function accionEliminarAdmin(fd: FormData): Promise<void> {
   redirect("/admin/administradores");
 }
 
-const CAPTURA_MAX_BYTES = 4 * 1024 * 1024; // 4MB por imagen — suficiente para una captura de pantalla
-
-/** El `type` que declara el navegador es el nombre que le puso el cliente,
- * no una garantía — cualquier archivo puede mentir ahí. Esto mira los
- * primeros bytes reales del archivo (firma de formato) y devuelve el MIME
- * correcto solo si coincide con uno de los formatos de imagen esperados. */
-function mimeImagenReal(buf: Buffer): string | null {
-  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
-    return "image/png";
-  }
-  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
-    return "image/jpeg";
-  }
-  if (
-    buf.length >= 12 &&
-    buf.subarray(0, 4).toString("ascii") === "RIFF" &&
-    buf.subarray(8, 12).toString("ascii") === "WEBP"
-  ) {
-    return "image/webp";
-  }
-  if (buf.length >= 6 && ["GIF87a", "GIF89a"].includes(buf.subarray(0, 6).toString("ascii"))) {
-    return "image/gif";
-  }
-  return null;
-}
-
-export async function accionAgregarCapturas(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const id = str(fd, "id");
-  const archivos = fd.getAll("capturas").filter((f): f is File => f instanceof File && f.size > 0);
-  const dataUrls: string[] = [];
-  for (const archivo of archivos) {
-    if (archivo.size > CAPTURA_MAX_BYTES) {
-      throw new Error(`"${archivo.name}" pesa demasiado (máx 4MB).`);
-    }
-    const buf = Buffer.from(await archivo.arrayBuffer());
-    // Se valida el contenido real (magic bytes), no el `type` que declaró
-    // el navegador — así no entra un archivo disfrazado de imagen.
-    const mime = mimeImagenReal(buf);
-    if (!mime) {
-      throw new Error(`"${archivo.name}" no es una imagen (PNG, JPEG, WebP o GIF).`);
-    }
-    dataUrls.push(`data:${mime};base64,${buf.toString("base64")}`);
-  }
-  if (dataUrls.length > 0) await db.agregarCapturas(id, dataUrls);
-  revalidatePath("/admin/prospectos");
-  redirect("/admin/prospectos");
-}
-
-export async function accionEliminarCaptura(fd: FormData): Promise<void> {
-  await requireAdmin();
-  const id = str(fd, "id");
-  const index = Number(fd.get("index"));
-  await db.eliminarCaptura(id, index);
-  revalidatePath("/admin/prospectos");
-  redirect("/admin/prospectos");
-}

@@ -36,7 +36,7 @@ import {
   IconX,
 } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
-import { mencionesPorEmpleado } from "@/lib/empleados";
+import { metricasPorEmpleado } from "@/lib/empleados";
 import MencionesEmpleados from "@/components/MencionesEmpleados";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
@@ -62,6 +62,7 @@ import PortalShell, {
   IconActivity,
   IconSearch,
   IconHelp,
+  IconUsers,
   type PortalNavEntry,
 } from "@/components/portal/PortalShell";
 
@@ -170,12 +171,13 @@ export default async function PortalPage({
   // viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo.
   const resumenResenas = calcularResumenResenas(resenas);
 
-  // Cómo evalúan a cada empleado: busca menciones del nombre de cada
-  // tarjeta NFC personal (links.nombreEmpleado) en el texto de las
-  // reseñas de este local. No es atribución exacta (ver lib/empleados.ts).
-  const mencionesEmpleados = mencionesPorEmpleado(
+  // Personal: taps reales de cada tarjeta NFC personal (links.nombreEmpleado)
+  // + menciones de su nombre en el texto de las reseñas de este local. Los
+  // taps son exactos; las menciones son un proxy, no atribución exacta
+  // (ver lib/empleados.ts).
+  const personalEmpleados = metricasPorEmpleado(
     resenas,
-    links.map((l) => l.nombreEmpleado),
+    links.map((l) => ({ nombreEmpleado: l.nombreEmpleado, taps: l.taps })),
   );
 
   // Crecimiento del mes vs el anterior, propio y de la competencia — el
@@ -320,6 +322,9 @@ export default async function PortalPage({
     },
     { type: "leaf", id: "dispositivos", label: "Mis Dispositivos", icon: <IconDevice size={18} /> },
     { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconActivity size={18} /> },
+    ...(personalEmpleados.length > 0
+      ? [{ type: "leaf" as const, id: "personal", label: "Personal", icon: <IconUsers size={18} /> }]
+      : []),
     {
       type: "group",
       id: "google",
@@ -438,11 +443,6 @@ export default async function PortalPage({
         <div className="mt-3">
           <ResumenResenas data={resumenResenas} />
         </div>
-        {mencionesEmpleados.length > 0 && (
-          <div className="mt-3">
-            <MencionesEmpleados menciones={mencionesEmpleados} />
-          </div>
-        )}
         <div className="mt-3">
           <AutomatizacionResenas
             codigo={c.codigoAcceso}
@@ -511,9 +511,9 @@ export default async function PortalPage({
                   <div className="text-xs text-slate-500">{s.zona}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {sm ? (
+                  {sm || s.ratingGoogle !== null ? (
                     <span className="text-xs font-semibold tabular-nums text-slate-700">
-                      {sm.ratingPromedio.toFixed(1)}★
+                      {(sm ? sm.ratingPromedio : s.ratingGoogle!).toFixed(1)}★
                     </span>
                   ) : (
                     <span className="text-xs text-slate-400">sin datos</span>
@@ -651,6 +651,18 @@ export default async function PortalPage({
       )}
     </>
   );
+
+  if (personalEmpleados.length > 0) {
+    panels.personal = (
+      <>
+        <p className="mb-4 text-sm text-slate-500">
+          Cada mozo o empleado con tarjeta NFC propia, con sus taps (dato exacto) y las reseñas
+          que lo nombran (señal, no atribución exacta — ver detalle abajo).
+        </p>
+        <MencionesEmpleados menciones={personalEmpleados} />
+      </>
+    );
+  }
 
   panels.rating = (
     <>

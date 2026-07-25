@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCuentas } from "@/lib/db";
 import {
-  metricaActual,
-  metricaAnterior,
-  citasIA,
-  ingresoNFC,
-  type Cliente,
-} from "@/lib/types";
-import { fmtARS, fmtNum, delta } from "@/lib/format";
+  getCuentas,
+  getResenasResumenPortfolio,
+  getTapsResumenPortfolio,
+  getVisitasPerfilPortfolio,
+} from "@/lib/db";
+import { metricaActual, type Cliente } from "@/lib/types";
+import { fmtARS, fmtNum } from "@/lib/format";
 import {
   Card,
   Kpi,
@@ -20,88 +19,114 @@ import {
 } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Panel" };
+export const dynamic = "force-dynamic";
+
+// Panel único: antes "Panel" y "Analytics" repetían buena parte de los
+// mismos números (reseñas, visitas) con dos fuentes de verdad distintas.
+// Ahora hay una sola: las métricas clave de la cartera, con un selector de
+// período que controla todo lo que tiene sentido mirar en rangos de
+// tiempo. MRR y clientes activos son estado actual (no dependen del
+// período); reseñas/taps/vistas sí.
+type PeriodoKey = "hoy" | "semana" | "mes" | "anio" | "todo";
+const PERIODOS: { key: PeriodoKey; label: string; dias: number | null }[] = [
+  { key: "hoy", label: "Hoy", dias: 0 },
+  { key: "semana", label: "7 días", dias: 7 },
+  { key: "mes", label: "Último mes", dias: 30 },
+  { key: "anio", label: "Último año", dias: 365 },
+  { key: "todo", label: "Todo", dias: null },
+];
 
 function sum(nums: number[]): number {
   return nums.reduce((a, b) => a + b, 0);
 }
 
-export const dynamic = "force-dynamic";
+function fechaISO(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
-export default async function DashboardPage() {
-  const clientes = await getCuentas();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string }>;
+}) {
+  const { periodo: periodoParam } = await searchParams;
+  const periodo = PERIODOS.find((p) => p.key === periodoParam) ?? PERIODOS[2];
+
+  const hoy = new Date();
+  const hasta = fechaISO(hoy);
+  const desde =
+    periodo.dias === null
+      ? "2000-01-01"
+      : fechaISO(new Date(hoy.getTime() - periodo.dias * 86_400_000));
+  // Vistas al perfil solo existe como dato mensual (metricas_mensuales, carga
+  // a mano) — no hay granularidad diaria. Un período de menos de un mes cae
+  // igual en el mes que lo contiene; se avisa en el hint del KPI.
+  const mesDesde = desde.slice(0, 7);
+  const mesHasta = hasta.slice(0, 7);
+
+  const [clientes, resenasResumen, tapsResumen, visitas] = await Promise.all([
+    getCuentas(),
+    getResenasResumenPortfolio(desde, hasta),
+    getTapsResumenPortfolio(desde, hasta),
+    getVisitasPerfilPortfolio(mesDesde, mesHasta),
+  ]);
+
   const activos = clientes.filter((c) => c.estado === "activo");
-
   const mrr = sum(activos.map((c) => c.fee));
-  const nfcTotal = sum(clientes.map(ingresoNFC));
-
-  const resenasEsteMes = sum(
-    activos.map((c) => metricaActual(c)?.resenasNuevas ?? 0),
-  );
-  const resenasMesPrevio = sum(
-    activos.map((c) => metricaAnterior(c)?.resenasNuevas ?? 0),
-  );
-  const dResenas = delta(resenasEsteMes, resenasMesPrevio);
-
-  const citasEsteMes = sum(activos.map((c) => citasIA(metricaActual(c))));
-  const citasMesPrevio = sum(activos.map((c) => citasIA(metricaAnterior(c))));
-  const dCitas = delta(citasEsteMes, citasMesPrevio);
-
-  const premium = activos.filter((c) => c.plan === "Premium").length;
+  const tapsTotal = tapsResumen.nfc + tapsResumen.qr;
+  const visitasPorCliente = new Map(visitas.porCliente.map((v) => [v.comercioId, v.visitas]));
+  const maxEstrellas = Math.max(...Object.values(resenasResumen.porEstrellas), 1);
 
   return (
     <div>
       <PageHeader
-        title="Panel general"
-        subtitle="Resumen de la cartera de clientes · Jun 2026"
+        title="Panel"
+        subtitle="Métricas clave de la cartera"
+        actions={
+          <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
+            {PERIODOS.map((p) => (
+              <Link
+                key={p.key}
+                href={`/admin?periodo=${p.key}`}
+                aria-current={p.key === periodo.key ? "true" : undefined}
+                className={
+                  p.key === periodo.key
+                    ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                    : "rounded-full px-3 py-1 text-xs text-slate-600 hover:bg-slate-100"
+                }
+              >
+                {p.label}
+              </Link>
+            ))}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Kpi label="Ingreso recurrente (MRR)" value={fmtARS(mrr)} hint="abonos activos, hoy" />
+        <Kpi label="Clientes activos" value={fmtNum(activos.length)} hint="de la cartera, hoy" />
         <Kpi
-          label="Clientes activos"
-          value={fmtNum(activos.length)}
-          hint={`${premium} Premium`}
+          label="Reseñas totales"
+          value={fmtNum(resenasResumen.total)}
+          hint={periodo.label.toLowerCase()}
         />
         <Kpi
-          label="Ingreso recurrente (MRR)"
-          value={fmtARS(mrr)}
-          hint="abonos mensuales"
-        />
-        <Kpi
-          label="Reseñas nuevas (mes)"
-          value={fmtNum(resenasEsteMes)}
-          delta={{
-            dir: dResenas.dir,
-            text:
-              dResenas.pct !== null
-                ? `${dResenas.valor >= 0 ? "+" : ""}${dResenas.pct.toFixed(0)}% vs mes previo`
-                : `${dResenas.valor >= 0 ? "+" : ""}${dResenas.valor}`,
-            good: dResenas.dir === "up",
-          }}
-        />
-        <Kpi
-          label="Citaciones en IA (mes)"
-          value={fmtNum(citasEsteMes)}
-          delta={{
-            dir: dCitas.dir,
-            text:
-              dCitas.pct !== null
-                ? `${dCitas.valor >= 0 ? "+" : ""}${dCitas.pct.toFixed(0)}% vs mes previo`
-                : `${dCitas.valor >= 0 ? "+" : ""}${dCitas.valor}`,
-            good: dCitas.dir === "up",
-          }}
+          label="Reseñas negativas"
+          value={fmtNum(resenasResumen.negativas)}
+          hint="3★ o menos"
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Kpi
-          label="Ingreso por NFC (histórico)"
-          value={fmtARS(nfcTotal)}
-          hint="producto físico"
+          label="Taps del cartel (NFC + QR)"
+          value={fmtNum(tapsTotal)}
+          hint={`${fmtNum(tapsResumen.nfc)} NFC · ${fmtNum(tapsResumen.qr)} QR`}
         />
         <Kpi
-          label="Prospectos"
-          value={fmtNum(clientes.filter((c) => c.estado === "prospecto").length)}
-          hint="a convertir a recurrente"
+          label="Vistas al perfil"
+          value={fmtNum(visitas.total)}
+          hint="dato mensual, no diario"
         />
         <Kpi
           label="Rating promedio cartera"
@@ -109,13 +134,42 @@ export default async function DashboardPage() {
             sum(activos.map((c) => metricaActual(c)?.ratingPromedio ?? 0)) /
             (activos.length || 1)
           ).toFixed(2)}
-          hint="estrellas Google"
+          hint="estrellas Google, hoy"
         />
       </div>
 
       <h2 className="mb-3 mt-8 text-sm font-semibold text-slate-900">
-        Clientes
+        Reseñas por cantidad de estrellas · {periodo.label.toLowerCase()}
       </h2>
+      <Card>
+        {resenasResumen.total === 0 ? (
+          <p className="text-sm text-slate-500">No hay reseñas cargadas en este período.</p>
+        ) : (
+          <div className="space-y-2.5">
+            {([5, 4, 3, 2, 1] as const).map((n) => {
+              const cantidad = resenasResumen.porEstrellas[n];
+              return (
+                <div key={n} className="flex items-center gap-3">
+                  <span className="w-8 shrink-0 text-xs text-slate-500">{n}★</span>
+                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full ${n <= 3 ? "bg-rose-500" : "bg-emerald-600"}`}
+                      style={{ width: cantidad ? `${Math.max(4, (cantidad / maxEstrellas) * 100)}%` : "0%" }}
+                    />
+                  </div>
+                  <span className="w-8 shrink-0 text-right text-xs font-medium tabular-nums text-slate-700">
+                    {cantidad}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Detalle por cliente: nada de arriba se filtra por plan — acá se
+          puede discriminar el dato de cada uno individualmente. */}
+      <h2 className="mb-3 mt-8 text-sm font-semibold text-slate-900">Detalle por cliente</h2>
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead>
@@ -123,15 +177,14 @@ export default async function DashboardPage() {
               <th className="px-4 py-3 font-medium">Negocio</th>
               <th className="px-4 py-3 font-medium">Plan</th>
               <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Alta</th>
               <th className="px-4 py-3 font-medium">Rating</th>
-              <th className="px-4 py-3 font-medium">Visitas</th>
-              <th className="px-4 py-3 font-medium">Reseñas (5m)</th>
+              <th className="px-4 py-3 font-medium">Vistas al perfil</th>
+              <th className="px-4 py-3 font-medium">Reseñas (histórico)</th>
             </tr>
           </thead>
           <tbody>
             {clientes.map((c) => (
-              <Row key={c.id} c={c} />
+              <Row key={c.id} c={c} visitas={visitasPorCliente.get(c.id) ?? 0} />
             ))}
           </tbody>
         </table>
@@ -140,7 +193,7 @@ export default async function DashboardPage() {
   );
 }
 
-function Row({ c }: { c: Cliente }) {
+function Row({ c, visitas }: { c: Cliente; visitas: number }) {
   const m = metricaActual(c);
   return (
     <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
@@ -161,18 +214,11 @@ function Row({ c }: { c: Cliente }) {
       <td className="px-4 py-3">
         <EstadoBadge estado={c.estado} />
       </td>
-      <td className="px-4 py-3 whitespace-nowrap text-slate-600 tabular-nums">
-        {new Date(c.fechaAlta).toLocaleDateString("es-AR")}
-      </td>
       <td className="px-4 py-3">
         {m ? <Stars rating={m.ratingPromedio} /> : "—"}
       </td>
-      <td className="px-4 py-3">
-        {m ? (
-          <span className="font-medium text-slate-700">{m.visitasPerfil}</span>
-        ) : (
-          "—"
-        )}
+      <td className="px-4 py-3 font-medium tabular-nums text-slate-700">
+        {c.estado === "activo" ? fmtNum(visitas) : "—"}
       </td>
       <td className="px-4 py-3">
         <Sparkline values={c.historico.map((h) => h.resenasTotal)} />

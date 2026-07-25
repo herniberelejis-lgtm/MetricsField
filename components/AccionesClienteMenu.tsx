@@ -7,13 +7,7 @@ import { useEffect, useRef, useState } from "react";
 // sueltos compitiendo por atención arriba de la página. Cargar métricas es
 // la única que queda a la vista (es la que se usa todos los meses) — el
 // resto vive acá adentro.
-export default function AccionesClienteMenu({
-  id,
-  reporteHref,
-}: {
-  id: string;
-  reporteHref: string;
-}) {
+export default function AccionesClienteMenu({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,9 +43,6 @@ export default function AccionesClienteMenu({
           </Link>
           <Link href={`/admin/clientes/${id}/competencia`} className="block rounded-md px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
             Competencia
-          </Link>
-          <Link href={reporteHref} className="block rounded-md px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-            Generar reporte mensual
           </Link>
         </div>
       )}

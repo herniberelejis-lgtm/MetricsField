@@ -13,18 +13,15 @@ import type {
   BenchmarkMes,
   ChecklistItemSEO,
   Cliente,
-  Cobro,
   Competidor,
   DestinoLink,
   EstadoCliente,
-  EstadoProspecto,
   EstadoResena,
   FormatoNFC,
   LinkNFC,
   MetricaMensual,
   Plan,
   PlataformaIA,
-  Prospecto,
   ResenaCRM,
   Rubro,
   TipoSoporte,
@@ -153,8 +150,8 @@ export async function getClientes(): Promise<Cliente[]> {
  * cualquier pantalla que sume plata (fee/MRR) o cuente "clientes": si se
  * usara getClientes() ahí, un cliente con 3 sucursales se contaría 3 veces
  * y su fee (copiado a cada sucursal) se sumaría 3 veces. Las pantallas que
- * miran métricas por local (hardware, reportes, analytics) siguen usando
- * getClientes() sin cambios — ahí sí interesa cada local por separado. */
+ * miran métricas por local (hardware) siguen usando getClientes() sin
+ * cambios — ahí sí interesa cada local por separado. */
 export async function getCuentas(): Promise<Cliente[]> {
   const todos = await getClientes();
   return todos.filter((c) => !c.comercioPadreId);
@@ -1100,6 +1097,59 @@ export async function getTapsPorHora(comercioId: string, fecha: string): Promise
   return Array.from({ length: 24 }, (_, hora) => ({ hora, taps: porHora.get(hora) ?? 0 }));
 }
 
+export interface TapsResumenPeriodo {
+  nfc: number;
+  qr: number; // incluye tipo 'ambos' — ver nota en getTapsPorDiaPorSoporte
+}
+
+/** Taps de toda la cartera (solo comercios activos) en un rango de
+ * fechas — para el panel unificado de admin. */
+export async function getTapsResumenPortfolio(desde: string, hasta: string): Promise<TapsResumenPeriodo> {
+  const rows = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE l.tipo = 'nfc')::int AS nfc,
+      COUNT(*) FILTER (WHERE l.tipo IN ('qr', 'ambos'))::int AS qr
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    JOIN comercios c ON c.id = l.comercio_id
+    WHERE c.estado = 'activo'
+      AND (t.creado_en AT TIME ZONE ${TZ_COMERCIO})::date BETWEEN ${desde}::date AND ${hasta}::date
+  `;
+  return { nfc: Number(rows[0]?.nfc ?? 0), qr: Number(rows[0]?.qr ?? 0) };
+}
+
+export interface VisitasPerfilPortfolio {
+  total: number;
+  porCliente: { comercioId: string; nombre: string; visitas: number }[];
+}
+
+/** Visitas al perfil de Google de toda la cartera (solo comercios
+ * activos), sumadas mes a mes entre `mesDesde` y `mesHasta` ('YYYY-MM') —
+ * es el dato más fino que hay (metricas_mensuales es mensual, no diario),
+ * así que un período de menos de un mes cae igual en el mes que lo
+ * contiene. Devuelve el desglose por cliente para poder discriminar. */
+export async function getVisitasPerfilPortfolio(
+  mesDesde: string,
+  mesHasta: string,
+): Promise<VisitasPerfilPortfolio> {
+  const rows = await sql`
+    SELECT c.id AS comercio_id, c.nombre, COALESCE(SUM(m.visitas_perfil), 0)::int AS visitas
+    FROM comercios c
+    LEFT JOIN metricas_mensuales m
+      ON m.comercio_id = c.id AND m.mes BETWEEN ${mesDesde} AND ${mesHasta}
+    WHERE c.estado = 'activo'
+    GROUP BY c.id, c.nombre
+    ORDER BY visitas DESC, c.nombre ASC
+  `;
+  const porCliente = rows.map((r) => ({
+    comercioId: r.comercio_id as string,
+    nombre: r.nombre as string,
+    visitas: Number(r.visitas),
+  }));
+  const total = porCliente.reduce((acc, r) => acc + r.visitas, 0);
+  return { total, porCliente };
+}
+
 // ---------- CRM de reseñas ----------
 
 function mapResena(r: Record<string, unknown>): ResenaCRM {
@@ -1175,6 +1225,35 @@ export async function actualizarResena(
   `;
   if (rows.length === 0) throw new Error(`Reseña no encontrada: ${id}`);
   return mapResena(rows[0]);
+}
+
+export interface ResenasResumenPeriodo {
+  total: number;
+  negativas: number; // ≤ 3★
+  porEstrellas: Record<1 | 2 | 3 | 4 | 5, number>;
+}
+
+/** Reseñas de toda la cartera (solo comercios activos, cuenta o sucursal)
+ * en un rango de fechas — para el panel unificado de admin. */
+export async function getResenasResumenPortfolio(desde: string, hasta: string): Promise<ResenasResumenPeriodo> {
+  const rows = await sql`
+    SELECT r.estrellas, COUNT(*)::int AS n
+    FROM resenas r
+    JOIN comercios c ON c.id = r.comercio_id
+    WHERE c.estado = 'activo' AND r.fecha BETWEEN ${desde}::date AND ${hasta}::date
+    GROUP BY r.estrellas
+  `;
+  const porEstrellas = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>;
+  let total = 0;
+  let negativas = 0;
+  for (const r of rows) {
+    const estrellas = Number(r.estrellas) as 1 | 2 | 3 | 4 | 5;
+    const n = Number(r.n);
+    porEstrellas[estrellas] = n;
+    total += n;
+    if (estrellas <= 3) negativas += n;
+  }
+  return { total, negativas, porEstrellas };
 }
 
 // ---------- Checklist SEO ----------
@@ -1375,156 +1454,6 @@ export async function getBenchmarkMensual(comercioId: string): Promise<Benchmark
   }
 
   return [...porMes.values()];
-}
-
-// ---------- Finanzas (cobros) ----------
-
-function mapCobro(r: Record<string, unknown>): Cobro {
-  return {
-    id: Number(r.id),
-    comercioId: r.comercio_id as string,
-    periodo: r.periodo as string,
-    concepto: r.concepto as string,
-    monto: Number(r.monto),
-    estado: r.estado as Cobro["estado"],
-    metodo: r.metodo as string,
-    venceEl: r.vence_el === null ? null : fechaISO(r.vence_el),
-    pagadoEl: r.pagado_el === null ? null : fechaISO(r.pagado_el),
-    nota: r.nota as string,
-    creadoEn: String(r.creado_en),
-  };
-}
-
-/** Todos los cobros con el nombre del comercio, para el historial de cobranza. */
-export async function getCobrosConComercio(): Promise<(Cobro & { comercioNombre: string })[]> {
-  const rows = await sql`
-    SELECT c.*, m.nombre AS comercio_nombre
-    FROM cobros c
-    JOIN comercios m ON m.id = c.comercio_id
-    ORDER BY c.periodo DESC, c.creado_en DESC
-  `;
-  return rows.map((r) => ({ ...mapCobro(r), comercioNombre: r.comercio_nombre as string }));
-}
-
-export async function getCobrosDeComercio(comercioId: string): Promise<Cobro[]> {
-  const rows = await sql`
-    SELECT * FROM cobros WHERE comercio_id = ${comercioId} ORDER BY periodo DESC, creado_en DESC
-  `;
-  return rows.map(mapCobro);
-}
-
-export async function crearCobro(datos: {
-  comercioId: string;
-  periodo: string;
-  concepto?: string;
-  monto: number;
-  metodo?: string;
-  venceEl?: string | null;
-  estado?: Cobro["estado"];
-  pagadoEl?: string | null;
-  nota?: string;
-}): Promise<Cobro> {
-  const rows = await sql`
-    INSERT INTO cobros (comercio_id, periodo, concepto, monto, estado, metodo, vence_el, pagado_el, nota)
-    VALUES (
-      ${datos.comercioId}, ${datos.periodo}, ${datos.concepto ?? "abono"}, ${datos.monto},
-      ${datos.estado ?? "pendiente"}, ${datos.metodo ?? ""}, ${datos.venceEl ?? null},
-      ${datos.pagadoEl ?? null}, ${datos.nota ?? ""}
-    )
-    RETURNING *
-  `;
-  return mapCobro(rows[0]);
-}
-
-/** Marca un cobro como pagado (o lo revierte a pendiente si pagado=false). */
-export async function marcarCobroPagado(id: number, pagado: boolean): Promise<void> {
-  await sql`
-    UPDATE cobros SET
-      estado = ${pagado ? "pagado" : "pendiente"},
-      pagado_el = ${pagado ? sql`CURRENT_DATE` : sql`NULL`}
-    WHERE id = ${id}
-  `;
-}
-
-export async function eliminarCobro(id: number): Promise<void> {
-  await sql`DELETE FROM cobros WHERE id = ${id}`;
-}
-
-// ---------- Prospectos ----------
-
-function mapProspecto(r: Record<string, unknown>): Prospecto {
-  return {
-    id: r.id as string,
-    local: r.local as string,
-    zona: r.zona as string,
-    contacto: r.contacto as string,
-    redes: r.redes as string,
-    web: r.web as string,
-    resenas: r.resenas as string,
-    producto: r.producto as string,
-    precio: r.precio as string,
-    estado: r.estado as EstadoProspecto,
-    segFecha: r.seg_fecha as string,
-    segTexto: r.seg_texto as string,
-    notas: r.notas as string,
-    capturas: (r.capturas as string[]) ?? [],
-    creadoEn: fechaISO(r.creado_en),
-  };
-}
-
-export async function getProspectos(): Promise<Prospecto[]> {
-  const rows = await sql`SELECT * FROM prospectos ORDER BY creado_en DESC`;
-  return rows.map(mapProspecto);
-}
-
-export async function crearProspecto(local = ""): Promise<Prospecto> {
-  const id = `prospecto-${crypto.randomBytes(4).toString("hex")}`;
-  await sql`INSERT INTO prospectos (id, local) VALUES (${id}, ${local})`;
-  const rows = await sql`SELECT * FROM prospectos WHERE id = ${id}`;
-  return mapProspecto(rows[0]);
-}
-
-export async function actualizarProspecto(
-  id: string,
-  datos: Partial<Omit<Prospecto, "id" | "capturas" | "creadoEn">>,
-): Promise<void> {
-  const rows = await sql`SELECT * FROM prospectos WHERE id = ${id}`;
-  if (rows.length === 0) throw new Error(`Prospecto no encontrado: ${id}`);
-  const n = { ...mapProspecto(rows[0]), ...datos };
-  await sql`
-    UPDATE prospectos SET
-      local = ${n.local}, zona = ${n.zona}, contacto = ${n.contacto},
-      redes = ${n.redes}, web = ${n.web}, resenas = ${n.resenas},
-      producto = ${n.producto}, precio = ${n.precio}, estado = ${n.estado},
-      seg_fecha = ${n.segFecha}, seg_texto = ${n.segTexto}, notas = ${n.notas}
-    WHERE id = ${id}
-  `;
-}
-
-export async function eliminarProspecto(id: string): Promise<void> {
-  await sql`DELETE FROM prospectos WHERE id = ${id}`;
-}
-
-export async function agregarCapturas(id: string, nuevas: string[]): Promise<void> {
-  // Concatenación jsonb atómica en SQL: el viejo leer-modificar-escribir
-  // perdía capturas si dos subidas llegaban a la vez.
-  if (nuevas.length === 0) return;
-  await sql`
-    UPDATE prospectos SET capturas = capturas || ${sql.json(nuevas)}
-    WHERE id = ${id}
-  `;
-}
-
-export async function eliminarCaptura(id: string, index: number): Promise<void> {
-  // jsonb - int borra por posición de forma atómica (el cast evita que
-  // Postgres resuelva al operador jsonb - text). Negativos contarían desde
-  // el final — no es lo que la UI manda, se rechazan.
-  const i = Math.trunc(index);
-  if (!Number.isFinite(i) || i < 0) return;
-  await sql`
-    UPDATE prospectos SET capturas = capturas - ${i}::int
-    WHERE id = ${id}
-  `;
 }
 
 // ---------- Administradores (login por Google, allowlist del equipo) ----------

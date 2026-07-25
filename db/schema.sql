@@ -220,42 +220,7 @@ CREATE TABLE IF NOT EXISTS competidores_snapshots (
 );
 CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(comercio_id, mes);
 
--- Cobros del abono mensual (y otros conceptos) de cada comercio. La cobranza
--- se opera a mano desde /admin/finanzas: se registra el cobro del período y
--- se marca pagado cuando entra. El estado "vencido" se deriva en la vista
--- (pendiente + vence_el pasado), no se guarda como transición.
-CREATE TABLE IF NOT EXISTS cobros (
-  id           SERIAL PRIMARY KEY,
-  comercio_id  TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  periodo      TEXT NOT NULL,                       -- 'YYYY-MM' que cubre el cobro
-  concepto     TEXT NOT NULL DEFAULT 'abono',        -- 'abono' | 'nfc' | 'otro'
-  monto        NUMERIC NOT NULL DEFAULT 0,
-  estado       TEXT NOT NULL DEFAULT 'pendiente',    -- 'pendiente' | 'pagado'
-  metodo       TEXT NOT NULL DEFAULT '',             -- transferencia, efectivo, MP…
-  vence_el     DATE,
-  pagado_el    DATE,
-  nota         TEXT NOT NULL DEFAULT '',
-  creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_cobros_comercio ON cobros(comercio_id, periodo);
-
--- Prospectos: locales a los que se les está vendiendo, todavía no son
--- clientes (eso pasa recién cuando se dan de alta en `comercios`). Tabla
--- separada a propósito, es prospección, no operación de un cliente activo.
-CREATE TABLE IF NOT EXISTS prospectos (
-  id          TEXT PRIMARY KEY,
-  local       TEXT NOT NULL DEFAULT '',
-  zona        TEXT NOT NULL DEFAULT '',
-  contacto    TEXT NOT NULL DEFAULT '',
-  redes       TEXT NOT NULL DEFAULT '',
-  web         TEXT NOT NULL DEFAULT '',
-  resenas     TEXT NOT NULL DEFAULT '',
-  producto    TEXT NOT NULL DEFAULT '',
-  precio      TEXT NOT NULL DEFAULT '',
-  estado      TEXT NOT NULL DEFAULT 'a-contactar',
-  seg_fecha   TEXT NOT NULL DEFAULT '',
-  seg_texto   TEXT NOT NULL DEFAULT '',
-  notas       TEXT NOT NULL DEFAULT '',
-  capturas    JSONB NOT NULL DEFAULT '[]',
-  creado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- Las tablas `cobros` (cobranza/finanzas) y `prospectos` (pipeline de
+-- venta) se eliminaron del producto — panel simplificado a las métricas
+-- clave de la cartera. Ver db/22-eliminar-finanzas-prospectos.sql para el
+-- DROP TABLE, a correr a mano en Neon (no se auto-aplica).
