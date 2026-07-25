@@ -7,6 +7,25 @@ import RedireccionSuave from "@/components/tap/RedireccionSuave";
 
 export const dynamic = "force-dynamic";
 
+/** Deja una URL lista para ir al header HTTP `Location` (redirect()) sin
+ * tirar abajo la página. Un salto de línea o cualquier carácter de control
+ * pegado sin querer al copiar el link (pasa seguido con Google Reviews)
+ * hace que Node tire "Invalid character in header content" sin capturar —
+ * en la ruta más caliente del producto, cada tap real de un cliente. Se
+ * sanea acá SIEMPRE, además de al guardar (lib/db.ts), porque un dato ya
+ * guardado sucio no debe poder tumbar esta página nunca. */
+function urlSegura(url: string): string | null {
+  // eslint-disable-next-line no-control-regex
+  const limpia = url.replace(/[\x00-\x1f\x7f]/g, "").trim();
+  if (!limpia) return null;
+  try {
+    new URL(limpia);
+    return limpia;
+  } catch {
+    return null;
+  }
+}
+
 // Crawlers y generadores de preview (WhatsApp, Google, etc.) abren esta URL
 // sin que nadie haya tocado el cartel — no deben inflar los taps del cliente.
 // Solo patrones de fetchers: "whatsapp/" es el bot de previews (el navegador
@@ -55,8 +74,9 @@ export default async function TapPage({
   }
 
   if (link.destino !== "resena") {
-    if (!link.urlDestino) notFound();
-    redirect(link.urlDestino);
+    const url = link.urlDestino ? urlSegura(link.urlDestino) : null;
+    if (!url) notFound();
+    redirect(url);
   }
 
   // Sin comercio de agencia: o es una pieza del canal Mercado Libre ya
@@ -65,8 +85,9 @@ export default async function TapPage({
   // primer toque: le mostramos el formulario para que se autoconfigure.
   if (!comercio) {
     if (link.autogestionado) {
-      if (!link.urlDestino) notFound();
-      return <RedireccionSuave url={link.urlDestino} slug={slug} />;
+      const url = link.urlDestino ? urlSegura(link.urlDestino) : null;
+      if (!url) notFound();
+      return <RedireccionSuave url={url} slug={slug} />;
     }
     return <ActivarCartel slug={slug} />;
   }
@@ -74,6 +95,7 @@ export default async function TapPage({
   // Todo cartel con destino "resena" va derecho a la reseña pública de
   // Google, para todo el mundo — sin pantallas intermedias. El tap ya quedó
   // contado arriba.
-  if (!comercio.googleReviewUrl) notFound();
-  redirect(comercio.googleReviewUrl);
+  const urlResena = urlSegura(comercio.googleReviewUrl);
+  if (!urlResena) notFound();
+  redirect(urlResena);
 }

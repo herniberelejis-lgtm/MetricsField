@@ -158,6 +158,12 @@ export interface LinkNFC {
   /** Solo con autogestionado=true: nombre elegido por el comprador al
    * activar su pieza. Vacío en cualquier otro caso. */
   nombreNegocio: string;
+  /** Tarjeta NFC personal de un empleado (ej. "Juan Pérez") — vacío si es
+   * una tarjeta de mostrador/mesa, no personal. Se usa para buscar
+   * menciones de ese nombre en el texto de las reseñas (lib/empleados.ts);
+   * Google no permite atribuir una reseña puntual a un tap puntual, así
+   * que esto es una señal de menciones, no una atribución exacta. */
+  nombreEmpleado: string;
   creadoEn: string;
   taps: number; // total histórico, calculado
 }

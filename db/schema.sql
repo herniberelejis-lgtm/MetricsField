@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre elegido por el comprador
   pin_hash     TEXT,                                    -- solo para piezas autogestionadas: PIN de edición (scrypt, ver lib/pin.ts)
   pin_salt     TEXT,
+  nombre_empleado TEXT NOT NULL DEFAULT '',              -- tarjeta personal de un empleado (ej. "Juan Pérez"); vacío = tarjeta de mostrador/mesa. Se usa para buscar menciones en el texto de las reseñas — ver lib/empleados.ts
   creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_links_nfc_comercio ON links_nfc(comercio_id);

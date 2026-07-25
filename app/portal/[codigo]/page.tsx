@@ -36,6 +36,8 @@ import {
   IconX,
 } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
+import { mencionesPorEmpleado } from "@/lib/empleados";
+import MencionesEmpleados from "@/components/MencionesEmpleados";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
@@ -168,6 +170,14 @@ export default async function PortalPage({
   // viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo.
   const resumenResenas = calcularResumenResenas(resenas);
 
+  // Cómo evalúan a cada empleado: busca menciones del nombre de cada
+  // tarjeta NFC personal (links.nombreEmpleado) en el texto de las
+  // reseñas de este local. No es atribución exacta (ver lib/empleados.ts).
+  const mencionesEmpleados = mencionesPorEmpleado(
+    resenas,
+    links.map((l) => l.nombreEmpleado),
+  );
+
   // Crecimiento del mes vs el anterior, propio y de la competencia — el
   // número pelado ("tenés 40 reseñas") dice menos que el ritmo ("crecés más
   // rápido que tu competencia"). `benchmark` viene ordenado del mes más
@@ -216,6 +226,13 @@ export default async function PortalPage({
   // lib/db.ts, para que "hoy" siempre coincida con lo que guardó el sync.
   const hoyISO = new Date().toISOString().slice(0, 10);
   const resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
+
+  // Promedio de reseñas nuevas por mes, sobre todo el histórico cargado —
+  // para "Evolución mes a mes", así el número no depende de mirar mes por
+  // mes a mano.
+  const promedioResenasMensual = activo.historico.length > 0
+    ? activo.historico.reduce((acc, h) => acc + h.resenasNuevas, 0) / activo.historico.length
+    : 0;
 
   // Hero de calificación: preferimos el snapshot mensual (misma fuente que
   // el histórico, así el delta compara peras con peras); si todavía no se
@@ -421,6 +438,11 @@ export default async function PortalPage({
         <div className="mt-3">
           <ResumenResenas data={resumenResenas} />
         </div>
+        {mencionesEmpleados.length > 0 && (
+          <div className="mt-3">
+            <MencionesEmpleados menciones={mencionesEmpleados} />
+          </div>
+        )}
         <div className="mt-3">
           <AutomatizacionResenas
             codigo={c.codigoAcceso}
@@ -864,7 +886,10 @@ export default async function PortalPage({
 
       {activo.historico.length > 0 && (
         <>
-          <SectionHeading title="Evolución mes a mes" />
+          <SectionHeading
+            title="Evolución mes a mes"
+            subtitle={`Promedio: ${promedioResenasMensual.toFixed(1)} reseñas nuevas por mes`}
+          />
           {activo.historico.length >= 2 && (
             <div className="mb-4">
               <TendenciaResenasChart
