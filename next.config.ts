@@ -20,6 +20,23 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: cabecerasSeguridad }];
   },
+  // El dominio que asigna Vercel solo (geo-seo-analytics.vercel.app) sirve
+  // el mismo sitio que app.metricsfield.com — sin este redirect, Google ve
+  // contenido duplicado en dos dominios. No se puede sacar ese dominio del
+  // proyecto (Vercel lo necesita como fallback), así que se redirige en vez
+  // de borrarlo. Solo el dominio exacto de producción — no toca los
+  // *.vercel.app de cada preview de rama, que tienen que seguir sirviendo
+  // su propio contenido para poder probarlas.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "geo-seo-analytics.vercel.app" }],
+        destination: "https://app.metricsfield.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
