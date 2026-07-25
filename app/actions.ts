@@ -211,6 +211,7 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
+    nombreEmpleado: str(fd, "nombreEmpleado"),
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);
@@ -228,6 +229,7 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
     destino,
     urlDestino: destino === "resena" ? null : urlDestino,
     activo: fd.get("activo") === "1",
+    nombreEmpleado: str(fd, "nombreEmpleado"),
   });
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/links`);

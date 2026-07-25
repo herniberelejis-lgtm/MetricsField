@@ -238,6 +238,19 @@ export function generarCodigo(): string {
   return crypto.randomBytes(8).toString("hex");
 }
 
+/** Saca saltos de línea y caracteres de control de una URL cargada a mano
+ * (googleReviewUrl, urlDestino) antes de guardarla — un enter de más al
+ * copiar el link (pasa seguido con Google Reviews) queda guardado en la
+ * columna y después revienta `redirect()` en /t/[slug] con "Invalid
+ * character in header content" al ponerlo en el header Location. La
+ * defensa real vive en /t/[slug]/page.tsx (corre en cada tap, cubre datos
+ * ya guardados de antes); esto es para no volver a guardar algo sucio. */
+function limpiarUrl<T extends string | null | undefined>(url: T): T {
+  if (!url) return url;
+  // eslint-disable-next-line no-control-regex
+  return url.replace(/[\x00-\x1f\x7f]/g, "").trim() as T;
+}
+
 function slugify(nombre: string): string {
   return nombre
     .normalize("NFD")
@@ -286,7 +299,7 @@ export async function crearCliente(
   await sql.begin(async (tx) => {
     await tx`
       INSERT INTO comercios (id, codigo_acceso, nombre, rubro, zona, plan, estado, contacto, google_review_url, busqueda_clave, fee, tono_marca, fecha_alta, google_place_id, comercio_padre_id)
-      VALUES (${id}, ${codigoAcceso}, ${datos.nombre}, ${datos.rubro}, ${datos.zona}, ${datos.plan}, ${datos.estado}, ${datos.contacto}, ${datos.googleReviewUrl}, ${datos.busquedaClave}, ${datos.fee}, ${datos.tonoMarca ?? "cercano"}, ${datos.fechaAlta}, ${datos.googlePlaceId ?? ""}, ${comercioPadreId})
+      VALUES (${id}, ${codigoAcceso}, ${datos.nombre}, ${datos.rubro}, ${datos.zona}, ${datos.plan}, ${datos.estado}, ${datos.contacto}, ${limpiarUrl(datos.googleReviewUrl)}, ${datos.busquedaClave}, ${datos.fee}, ${datos.tonoMarca ?? "cercano"}, ${datos.fechaAlta}, ${datos.googlePlaceId ?? ""}, ${comercioPadreId})
     `;
     // link de mostrador por defecto, para que el gestor de links no arranque vacío
     await tx`
@@ -383,7 +396,7 @@ export async function actualizarCliente(
       plan = ${datos.plan === undefined ? sql`plan` : datos.plan},
       estado = ${datos.estado === undefined ? sql`estado` : datos.estado},
       contacto = ${datos.contacto === undefined ? sql`contacto` : datos.contacto},
-      google_review_url = ${datos.googleReviewUrl === undefined ? sql`google_review_url` : datos.googleReviewUrl},
+      google_review_url = ${datos.googleReviewUrl === undefined ? sql`google_review_url` : limpiarUrl(datos.googleReviewUrl)},
       busqueda_clave = ${datos.busquedaClave === undefined ? sql`busqueda_clave` : datos.busquedaClave},
       fee = ${datos.fee === undefined ? sql`fee` : datos.fee},
       tono_marca = ${datos.tonoMarca === undefined ? sql`tono_marca` : datos.tonoMarca},
@@ -741,6 +754,7 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     usarFiltro: r.usar_filtro === undefined ? false : Boolean(r.usar_filtro),
     autogestionado: Boolean(r.autogestionado),
     nombreNegocio: (r.nombre_negocio as string) ?? "",
+    nombreEmpleado: (r.nombre_empleado as string) ?? "",
     creadoEn: String(r.creado_en),
     taps: Number(r.taps ?? 0),
   };
@@ -784,6 +798,7 @@ export async function crearLink(
     destino: DestinoLink;
     urlDestino?: string | null;
     usarFiltro?: boolean;
+    nombreEmpleado?: string;
   },
 ): Promise<LinkNFC> {
   let id = slugLink(datos.etiqueta);
@@ -793,8 +808,8 @@ export async function crearLink(
     id = `${slugLink(datos.etiqueta)}-${crypto.randomBytes(2).toString("hex")}`;
   }
   await sql`
-    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, usar_filtro)
-    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${datos.urlDestino ?? null}, ${datos.usarFiltro ?? false})
+    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, usar_filtro, nombre_empleado)
+    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${limpiarUrl(datos.urlDestino) ?? null}, ${datos.usarFiltro ?? false}, ${datos.nombreEmpleado ?? ""})
   `;
   const l = await getLink(id);
   if (!l) throw new Error("No se pudo crear el link.");
@@ -810,6 +825,7 @@ export async function actualizarLink(
     urlDestino: string | null;
     activo: boolean;
     usarFiltro: boolean;
+    nombreEmpleado: string;
   }>,
 ): Promise<LinkNFC> {
   // Mismo criterio que actualizarCliente: UPDATE atómico, sin leer-mezclar-
@@ -819,9 +835,10 @@ export async function actualizarLink(
       etiqueta = ${datos.etiqueta === undefined ? sql`etiqueta` : datos.etiqueta},
       tipo = ${datos.tipo === undefined ? sql`tipo` : datos.tipo},
       destino = ${datos.destino === undefined ? sql`destino` : datos.destino},
-      url_destino = ${datos.urlDestino === undefined ? sql`url_destino` : datos.urlDestino},
+      url_destino = ${datos.urlDestino === undefined ? sql`url_destino` : limpiarUrl(datos.urlDestino)},
       activo = ${datos.activo === undefined ? sql`activo` : datos.activo},
-      usar_filtro = ${datos.usarFiltro === undefined ? sql`usar_filtro` : datos.usarFiltro}
+      usar_filtro = ${datos.usarFiltro === undefined ? sql`usar_filtro` : datos.usarFiltro},
+      nombre_empleado = ${datos.nombreEmpleado === undefined ? sql`nombre_empleado` : datos.nombreEmpleado}
     WHERE id = ${linkId}
     RETURNING id
   `;
@@ -994,7 +1011,7 @@ export async function asignarPiezaACliente(
       etiqueta = ${datos.etiqueta},
       tipo = COALESCE(${datos.tipo ?? null}, tipo),
       destino = ${datos.destino},
-      url_destino = ${datos.urlDestino ?? null},
+      url_destino = ${limpiarUrl(datos.urlDestino) ?? null},
       usar_filtro = ${datos.usarFiltro ?? false}
     WHERE id = ${id} AND comercio_id IS NULL
     RETURNING *

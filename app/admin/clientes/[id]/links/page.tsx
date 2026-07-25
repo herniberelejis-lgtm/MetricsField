@@ -173,6 +173,16 @@ export default async function LinksPage({
               className={inputCls}
             />
           </Field>
+          <Field
+            label="Nombre del empleado (opcional)"
+            hint="Si es la tarjeta personal de un mozo/empleado, cargá su nombre acá — el portal busca menciones suyas en el texto de las reseñas."
+          >
+            <input
+              name="nombreEmpleado"
+              placeholder="Juan Pérez"
+              className={inputCls}
+            />
+          </Field>
           <SubmitButton>Crear link</SubmitButton>
         </form>
       </Card>
@@ -192,6 +202,11 @@ export default async function LinksPage({
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${COLOR_TIPO[l.tipo]}`}>
                         {LABEL_TIPO[l.tipo]}
                       </span>
+                      {l.nombreEmpleado && (
+                        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+                          Tarjeta de {l.nombreEmpleado}
+                        </span>
+                      )}
                       {!l.activo && (
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">
                           desactivado
@@ -289,6 +304,17 @@ export default async function LinksPage({
                         name="urlDestino"
                         type="url"
                         defaultValue={l.urlDestino ?? ""}
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field
+                      label="Nombre del empleado (opcional)"
+                      hint="Tarjeta personal de un mozo/empleado — se usa para buscar menciones suyas en las reseñas."
+                    >
+                      <input
+                        name="nombreEmpleado"
+                        defaultValue={l.nombreEmpleado}
+                        placeholder="Juan Pérez"
                         className={inputCls}
                       />
                     </Field>
