@@ -16,6 +16,7 @@ import {
   citasIA,
   metricaActual,
   metricaAnterior,
+  type Cliente,
 } from "@/lib/types";
 import { fmtMes, fmtNum, delta } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
@@ -72,6 +73,30 @@ const AGENCIA_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
 function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
+}
+
+// Hero de calificación de un local: preferimos el snapshot mensual (misma
+// fuente que el histórico, así el delta compara peras con peras); si
+// todavía no se cargó ningún mes, mostramos el dato en vivo de Google
+// Places como piso. Se usa tanto para el local activo como para cada
+// tarjeta de la fila "Tus sucursales".
+function heroDeCalificacion(s: Cliente): {
+  rating: number | null;
+  totalResenas: number;
+  deltaRating: number | null;
+  deltaResenas: number | null;
+} {
+  const m = metricaActual(s);
+  const rating = m ? m.ratingPromedio : s.ratingGoogle;
+  const totalResenas = m ? m.resenasTotal : (s.resenasGoogle ?? 0);
+  const primerHistorico = s.historico[0] ?? null;
+  const hayDelta = Boolean(m && primerHistorico && s.historico.length >= 2);
+  return {
+    rating,
+    totalResenas,
+    deltaRating: hayDelta ? m!.ratingPromedio - primerHistorico!.ratingPromedio : null,
+    deltaResenas: hayDelta ? m!.resenasTotal - primerHistorico!.resenasTotal : null,
+  };
 }
 
 // Portal del cliente: acceso por código privado, solo lectura, solo SUS
@@ -236,15 +261,12 @@ export default async function PortalPage({
     ? activo.historico.reduce((acc, h) => acc + h.resenasNuevas, 0) / activo.historico.length
     : 0;
 
-  // Hero de calificación: preferimos el snapshot mensual (misma fuente que
-  // el histórico, así el delta compara peras con peras); si todavía no se
-  // cargó ningún mes, mostramos el dato en vivo de Google Places como piso.
-  const ratingHero = m ? m.ratingPromedio : activo.ratingGoogle;
-  const resenasHero = m ? m.resenasTotal : (activo.resenasGoogle ?? 0);
-  const primerHistorico = activo.historico[0] ?? null;
-  const hayDeltaHero = Boolean(m && primerHistorico && activo.historico.length >= 2);
-  const deltaRatingHero = hayDeltaHero ? m!.ratingPromedio - primerHistorico!.ratingPromedio : null;
-  const deltaResenasHero = hayDeltaHero ? m!.resenasTotal - primerHistorico!.resenasTotal : null;
+  const {
+    rating: ratingHero,
+    totalResenas: resenasHero,
+    deltaRating: deltaRatingHero,
+    deltaResenas: deltaResenasHero,
+  } = heroDeCalificacion(activo);
 
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
@@ -380,52 +402,42 @@ export default async function PortalPage({
       )}
 
       {/* Con más de un local: primero el panorama completo de la cadena,
-          antes de bajar al detalle de "activo" — así no hay que ir a Mis
-          Sucursales solo para saber que existen. */}
+          en el mismo formato de tarjeta que el detalle de abajo, antes de
+          bajar al de "activo" — así no hay que ir a Mis Sucursales solo
+          para saber que existen. */}
       {ubicaciones.length > 1 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Tus sucursales
+            Rendimiento · {ubicaciones.length} locales
           </p>
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ubicaciones.map((s) => {
               const activa = s.id === activo.id;
-              const sm = metricaActual(s);
-              const rating = sm ? sm.ratingPromedio : s.ratingGoogle;
-              const totalResenas = sm ? sm.resenasTotal : s.resenasGoogle;
+              const hero = heroDeCalificacion(s);
               return (
                 <a
                   key={s.id}
                   href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
-                  className={`min-w-[190px] shrink-0 rounded-xl border p-3 transition ${
-                    activa
-                      ? "border-brand bg-brand/5"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                  className={`block rounded-xl transition ${
+                    activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`truncate text-sm font-medium ${activa ? "text-brand-fg" : "text-slate-800"}`}
-                    >
-                      {s.nombre}
-                    </span>
-                    {activa && (
-                      <span className="shrink-0 rounded-full bg-brand/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-fg">
-                        ahora
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500">{s.zona}</div>
-                  <div className="mt-2 flex items-center gap-3 text-xs">
-                    {rating !== null ? (
-                      <span className="font-semibold tabular-nums text-slate-700">{rating.toFixed(1)}★</span>
-                    ) : (
-                      <span className="text-slate-400">sin datos</span>
-                    )}
-                    {totalResenas !== null && (
-                      <span className="tabular-nums text-slate-500">{fmtNum(totalResenas)} reseñas</span>
-                    )}
-                  </div>
+                  {hero.rating !== null ? (
+                    <CalificacionGoogleCard
+                      rating={hero.rating}
+                      totalResenas={hero.totalResenas}
+                      deltaRating={hero.deltaRating}
+                      deltaResenas={hero.deltaResenas}
+                      nombre={s.nombre}
+                      subtitulo={`${s.zona}${activa ? " · viendo ahora" : ""}`}
+                    />
+                  ) : (
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
+                      <p className="text-xs text-slate-500">{s.zona}</p>
+                      <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
+                    </div>
+                  )}
                 </a>
               );
             })}
@@ -468,18 +480,25 @@ export default async function PortalPage({
         />
       </div>
 
-      {(ratingHero !== null || resenas.length > 0) && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <CalificacionGoogleCard
-            rating={ratingHero}
-            totalResenas={resenasHero}
-            deltaRating={deltaRatingHero}
-            deltaResenas={deltaResenasHero}
-            nombre={activo.nombre}
-            subtitulo={`${activo.rubro} · ${activo.zona}`}
-          />
-          <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
-        </div>
+      {/* Con más de un local, la tarjeta de calificación del activo ya
+          está arriba (en la grilla de "Rendimiento") — acá solo repetirla
+          sería ruido. Con uno solo, es la única forma de verla. */}
+      {ubicaciones.length > 1 ? (
+        resenas.length > 0 && <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+      ) : (
+        (ratingHero !== null || resenas.length > 0) && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CalificacionGoogleCard
+              rating={ratingHero}
+              totalResenas={resenasHero}
+              deltaRating={deltaRatingHero}
+              deltaResenas={deltaResenasHero}
+              nombre={activo.nombre}
+              subtitulo={`${activo.rubro} · ${activo.zona}`}
+            />
+            <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+          </div>
+        )
       )}
     </>
   );
