@@ -35,15 +35,28 @@ function estrellasHtml(n: number): string {
   return `<span style="color:#f4b400;">${"★".repeat(n)}</span><span style="color:#dadce0;">${"★".repeat(5 - n)}</span>`;
 }
 
+// El autor y el texto de una reseña los escribe cualquiera en Google — hoy
+// se cargan a mano (confiable), pero apenas se conecte la Reviews API van
+// a venir de reseñadores reales sin ningún control. Escapar acá para que
+// ese día no habilite HTML/enlaces armados dentro del mail al dueño.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function alertarResenaMala(
   cliente: Cliente,
   resena: { autor: string; estrellas: number; texto: string },
 ): Promise<void> {
   if (!cliente.emailNotificaciones) return;
   const cuerpo = `
-    <p style="font-size:14px;">Te llegó una reseña de <strong>${resena.autor}</strong> en Google:</p>
+    <p style="font-size:14px;">Te llegó una reseña de <strong>${escapeHtml(resena.autor)}</strong> en Google:</p>
     <p style="font-size:16px;">${estrellasHtml(resena.estrellas)}</p>
-    <p style="font-size:14px;background:#f8f9fa;border-radius:10px;padding:12px 14px;">${resena.texto || "(sin comentario)"}</p>
+    <p style="font-size:14px;background:#f8f9fa;border-radius:10px;padding:12px 14px;">${escapeHtml(resena.texto) || "(sin comentario)"}</p>
   `;
   await enviarEmail({
     to: cliente.emailNotificaciones,
