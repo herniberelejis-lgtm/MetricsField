@@ -21,6 +21,7 @@ export default function TapsPorSoporteChart({
   qr,
   mostrarQr,
   codigo,
+  comercioId,
 }: {
   labels: string[];
   /** Fecha completa (YYYY-MM-DD) de cada punto, en el mismo orden que
@@ -30,6 +31,7 @@ export default function TapsPorSoporteChart({
   qr: number[];
   mostrarQr: boolean;
   codigo: string;
+  comercioId: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const [diaAbierto, setDiaAbierto] = useState<number | null>(null);
@@ -45,7 +47,7 @@ export default function TapsPorSoporteChart({
     setDiaAbierto(i);
     setHoras(null);
     startTransition(async () => {
-      const r = await accionObtenerTapsPorHora(codigo, fechas[i]);
+      const r = await accionObtenerTapsPorHora(codigo, comercioId, fechas[i]);
       setHoras(r);
     });
   }

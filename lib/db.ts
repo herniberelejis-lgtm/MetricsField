@@ -102,6 +102,7 @@ function mapClienteBase(
     autoResponderUmbral: (Number(row.auto_responder_umbral) as 4 | 5) || 4,
     resenasSyncEn: row.resenas_sync_en ? new Date(row.resenas_sync_en as string).toISOString() : null,
     emailNotificaciones: (row.email_notificaciones as string) ?? "",
+    comercioPadreId: (row.comercio_padre_id as string | null) ?? null,
   };
 }
 
@@ -146,6 +147,28 @@ export async function getClientes(): Promise<Cliente[]> {
       ventasPor.get(row.id as string) ?? [],
     ),
   );
+}
+
+/** Igual que getClientes(), pero solo cuentas (sin comercio_padre_id) — para
+ * cualquier pantalla que sume plata (fee/MRR) o cuente "clientes": si se
+ * usara getClientes() ahí, un cliente con 3 sucursales se contaría 3 veces
+ * y su fee (copiado a cada sucursal) se sumaría 3 veces. Las pantallas que
+ * miran métricas por local (hardware, reportes, analytics) siguen usando
+ * getClientes() sin cambios — ahí sí interesa cada local por separado. */
+export async function getCuentas(): Promise<Cliente[]> {
+  const todos = await getClientes();
+  return todos.filter((c) => !c.comercioPadreId);
+}
+
+/** Cantidad de sucursales por cuenta, para el badge del listado. */
+export async function contarSucursalesPorCuenta(): Promise<Map<string, number>> {
+  const rows = await sql`
+    SELECT comercio_padre_id, COUNT(*)::int AS n
+    FROM comercios
+    WHERE comercio_padre_id IS NOT NULL
+    GROUP BY comercio_padre_id
+  `;
+  return new Map(rows.map((r) => [r.comercio_padre_id as string, r.n as number]));
 }
 
 export async function getCliente(id: string): Promise<Cliente | undefined> {
@@ -241,7 +264,8 @@ export async function crearCliente(
     | "autoResponderUmbral"
     | "resenasSyncEn"
     | "emailNotificaciones"
-  >,
+    | "comercioPadreId"
+  > & { comercioPadreId?: string | null },
 ): Promise<Cliente> {
   let id = slugify(datos.nombre) || "comercio";
   // asegurar unicidad del id/slug
@@ -250,14 +274,19 @@ export async function crearCliente(
     if (existe.length === 0) break;
     id = `${slugify(datos.nombre)}-${crypto.randomBytes(2).toString("hex")}`;
   }
+  // Toda fila necesita su propio código único (columna UNIQUE NOT NULL),
+  // pero si es una sucursal (comercioPadreId presente) ese código nunca se
+  // comparte con nadie: el portal se accede siempre con el código de la
+  // cuenta raíz — ver resolverCuenta().
   const codigoAcceso = generarCodigo();
+  const comercioPadreId = datos.comercioPadreId ?? null;
   // Transacción: el comercio y su link de mostrador por defecto nacen
   // juntos o no nace ninguno — sin esto, un fallo en el segundo INSERT
   // dejaba un comercio sin link, estado que la UI asume imposible.
   await sql.begin(async (tx) => {
     await tx`
-      INSERT INTO comercios (id, codigo_acceso, nombre, rubro, zona, plan, estado, contacto, google_review_url, busqueda_clave, fee, tono_marca, fecha_alta, google_place_id)
-      VALUES (${id}, ${codigoAcceso}, ${datos.nombre}, ${datos.rubro}, ${datos.zona}, ${datos.plan}, ${datos.estado}, ${datos.contacto}, ${datos.googleReviewUrl}, ${datos.busquedaClave}, ${datos.fee}, ${datos.tonoMarca ?? "cercano"}, ${datos.fechaAlta}, ${datos.googlePlaceId ?? ""})
+      INSERT INTO comercios (id, codigo_acceso, nombre, rubro, zona, plan, estado, contacto, google_review_url, busqueda_clave, fee, tono_marca, fecha_alta, google_place_id, comercio_padre_id)
+      VALUES (${id}, ${codigoAcceso}, ${datos.nombre}, ${datos.rubro}, ${datos.zona}, ${datos.plan}, ${datos.estado}, ${datos.contacto}, ${datos.googleReviewUrl}, ${datos.busquedaClave}, ${datos.fee}, ${datos.tonoMarca ?? "cercano"}, ${datos.fechaAlta}, ${datos.googlePlaceId ?? ""}, ${comercioPadreId})
     `;
     // link de mostrador por defecto, para que el gestor de links no arranque vacío
     await tx`
@@ -268,6 +297,74 @@ export async function crearCliente(
   const c = await getCliente(id);
   if (!c) throw new Error("No se pudo crear el comercio.");
   return c;
+}
+
+/** Sucursales (locales físicos) que cuelgan de una cuenta, en el mismo
+ * formato que getClientes — 3 consultas totales, no N+1. Vacío si `cuentaId`
+ * no tiene sucursales (el caso de la inmensa mayoría de los clientes). */
+export async function getSucursales(cuentaId: string): Promise<Cliente[]> {
+  const [comercios, metricas, ventas] = await Promise.all([
+    sql`SELECT * FROM comercios WHERE comercio_padre_id = ${cuentaId} ORDER BY fecha_alta ASC`,
+    sql`SELECT m.* FROM metricas_mensuales m JOIN comercios c ON c.id = m.comercio_id WHERE c.comercio_padre_id = ${cuentaId} ORDER BY m.mes ASC`,
+    sql`SELECT v.* FROM ventas_nfc v JOIN comercios c ON c.id = v.comercio_id WHERE c.comercio_padre_id = ${cuentaId} ORDER BY v.fecha ASC`,
+  ]);
+  const metricasPor = new Map<string, MetricaMensual[]>();
+  for (const r of metricas) {
+    const lista = metricasPor.get(r.comercio_id as string);
+    if (lista) lista.push(mapMetrica(r));
+    else metricasPor.set(r.comercio_id as string, [mapMetrica(r)]);
+  }
+  const ventasPor = new Map<string, VentaNFC[]>();
+  for (const r of ventas) {
+    const lista = ventasPor.get(r.comercio_id as string);
+    if (lista) lista.push(mapVenta(r));
+    else ventasPor.set(r.comercio_id as string, [mapVenta(r)]);
+  }
+  return comercios.map((row) =>
+    mapClienteBase(row, metricasPor.get(row.id as string) ?? [], ventasPor.get(row.id as string) ?? []),
+  );
+}
+
+/** Da de alta una sucursal nueva colgada de `cuentaId`. Hereda de la cuenta
+ * los campos que son de cuenta (plan, estado, fee, contacto, tono de marca,
+ * email de notificaciones) — copiados a la fila por completitud del schema,
+ * pero nunca se leen desde ahí: siempre se resuelven contra la raíz (ver
+ * resolverCuenta). Lo único propio de la sucursal es nombre/rubro/zona/
+ * ficha de Google — cada local tiene la suya. */
+export async function crearSucursal(
+  cuentaId: string,
+  datos: { nombre: string; rubro: Rubro; zona: Zona; googlePlaceId?: string; googleReviewUrl?: string; busquedaClave?: string },
+): Promise<Cliente> {
+  const cuenta = await getCliente(cuentaId);
+  if (!cuenta) throw new Error(`Cuenta no encontrada: ${cuentaId}`);
+  if (cuenta.comercioPadreId) throw new Error("Una sucursal no puede tener sucursales propias.");
+  return crearCliente({
+    nombre: datos.nombre,
+    rubro: datos.rubro,
+    zona: datos.zona,
+    googlePlaceId: datos.googlePlaceId ?? "",
+    googleReviewUrl: datos.googleReviewUrl ?? "",
+    busquedaClave: datos.busquedaClave ?? "",
+    plan: cuenta.plan,
+    estado: cuenta.estado,
+    contacto: cuenta.contacto,
+    fee: cuenta.fee,
+    tonoMarca: cuenta.tonoMarca,
+    fechaAlta: new Date().toISOString().slice(0, 10),
+    comercioPadreId: cuentaId,
+  });
+}
+
+/** Resuelve la fila "cuenta" de un comercio: si `c` ya es una cuenta (sin
+ * padre) se devuelve tal cual; si es una sucursal, se busca y devuelve la
+ * raíz. Usar para leer SIEMPRE los campos de cuenta (codigoAcceso, plan,
+ * fee, contacto, tonoMarca, emailNotificaciones, autoResponder*, WhatsApp)
+ * — nunca leerlos directo de un comercio que podría ser una sucursal. */
+export async function resolverCuenta(c: Cliente): Promise<Cliente> {
+  if (!c.comercioPadreId) return c;
+  const raiz = await getCliente(c.comercioPadreId);
+  if (!raiz) throw new Error(`Cuenta raíz no encontrada para sucursal ${c.id}`);
+  return raiz;
 }
 
 export async function actualizarCliente(

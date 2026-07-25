@@ -145,6 +145,7 @@ export default async function HardwarePage() {
                           {clientes.map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.nombre}
+                              {c.comercioPadreId ? " (sucursal)" : ""}
                             </option>
                           ))}
                         </select>

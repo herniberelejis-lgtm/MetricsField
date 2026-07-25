@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCliente, getResenas } from "@/lib/db";
+import { getCliente, getResenas, getSucursales } from "@/lib/db";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
@@ -48,6 +48,15 @@ export default async function ClienteDetallePage({
   if (!c) notFound();
   const resumenResenas = calcularResumenResenas(resenas);
 
+  // Multi-sucursal: si esta fila es una cuenta, traemos sus sucursales para
+  // listarlas acá. Si es una sucursal, traemos la cuenta raíz para el
+  // breadcrumb y para no mostrarle código/facturación propios (viven en la
+  // raíz — ver resolverCuenta en lib/db.ts).
+  const [sucursales, cuentaRaiz] = await Promise.all([
+    c.comercioPadreId ? Promise.resolve([]) : getSucursales(c.id),
+    c.comercioPadreId ? getCliente(c.comercioPadreId) : Promise.resolve(undefined),
+  ]);
+
   const gbpConfigurable = oauthConfigurado();
   const gbpConectado = Boolean(c.googleConectadoEn);
   const diasConectado = c.googleConectadoEn
@@ -69,10 +78,22 @@ export default async function ClienteDetallePage({
   return (
     <div>
       <div className="mb-4 text-sm">
-        <Link href="/admin/clientes" className="text-slate-500 hover:text-brand-fg">
-          ← Clientes
-        </Link>
+        {cuentaRaiz ? (
+          <Link href={`/admin/clientes/${cuentaRaiz.id}`} className="text-slate-500 hover:text-brand-fg">
+            ← {cuentaRaiz.nombre}
+          </Link>
+        ) : (
+          <Link href="/admin/clientes" className="text-slate-500 hover:text-brand-fg">
+            ← Clientes
+          </Link>
+        )}
       </div>
+
+      {cuentaRaiz && (
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+          Sucursal de {cuentaRaiz.nombre}
+        </div>
+      )}
 
       <PageHeader
         title={c.nombre}
@@ -98,45 +119,95 @@ export default async function ClienteDetallePage({
         <AccionesClienteMenu id={c.id} reporteHref={`/admin/reportes/${c.id}`} />
       </div>
 
-      {/* Acceso del cliente a su portal */}
-      <div className="mb-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-brand-fg">
-              Portal del cliente
+      {/* Acceso del cliente a su portal — vive en la cuenta raíz; una
+          sucursal no tiene portal propio. */}
+      {!c.comercioPadreId && (
+        <div className="mb-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-brand-fg">
+                Portal del cliente
+              </div>
+              <div className="mt-1 text-sm text-slate-700">
+                Código de acceso:{" "}
+                <code className="rounded bg-white px-2 py-0.5 font-mono text-sm font-semibold text-slate-900">
+                  {c.codigoAcceso}
+                </code>
+                <span className="ml-3 text-slate-500">
+                  Link:{" "}
+                  <Link
+                    href={`/portal/${c.codigoAcceso}`}
+                    className="font-medium text-brand-fg hover:underline"
+                    target="_blank"
+                  >
+                    /portal/{c.codigoAcceso}
+                  </Link>
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Compartile este link por WhatsApp: ve solo sus datos, su evolución
+                y las recomendaciones del mes.
+              </p>
             </div>
-            <div className="mt-1 text-sm text-slate-700">
-              Código de acceso:{" "}
-              <code className="rounded bg-white px-2 py-0.5 font-mono text-sm font-semibold text-slate-900">
-                {c.codigoAcceso}
-              </code>
-              <span className="ml-3 text-slate-500">
-                Link:{" "}
-                <Link
-                  href={`/portal/${c.codigoAcceso}`}
-                  className="font-medium text-brand-fg hover:underline"
-                  target="_blank"
-                >
-                  /portal/{c.codigoAcceso}
-                </Link>
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Compartile este link por WhatsApp: ve solo sus datos, su evolución
-              y las recomendaciones del mes.
-            </p>
+            <form action={accionRegenerarCodigo}>
+              <input type="hidden" name="id" value={c.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:border-slate-400"
+              >
+                Regenerar código
+              </button>
+            </form>
           </div>
-          <form action={accionRegenerarCodigo}>
-            <input type="hidden" name="id" value={c.id} />
-            <button
-              type="submit"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:border-slate-400"
-            >
-              Regenerar código
-            </button>
-          </form>
         </div>
-      </div>
+      )}
+
+      {/* Sucursales de esta cuenta */}
+      {!c.comercioPadreId && (
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Sucursales
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                {sucursales.length === 0
+                  ? "Todavía gestiona un solo local. Agregá una sucursal si abre otro."
+                  : `${sucursales.length} local${sucursales.length === 1 ? "" : "es"}, cada uno con su propia ficha de Google.`}
+              </p>
+            </div>
+            <Link
+              href={`/admin/clientes/${c.id}/sucursales/nueva`}
+              className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+            >
+              + Agregar sucursal
+            </Link>
+          </div>
+          {sucursales.length > 0 && (
+            <div className="mt-3 divide-y divide-slate-100 border-t border-slate-100">
+              {sucursales.map((s) => {
+                const sm = metricaActual(s);
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/admin/clientes/${s.id}`}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm hover:bg-slate-50"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-slate-800">{s.nombre}</div>
+                      <div className="text-xs text-slate-500">{s.zona}</div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      {sm ? <Stars rating={sm.ratingPromedio} /> : <span className="text-xs text-slate-400">sin datos</span>}
+                      <EstadoBadge estado={s.estado} />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Ficha */}
       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -165,14 +236,20 @@ export default async function ClienteDetallePage({
         </Card>
         <Card>
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            Facturación
+            {c.comercioPadreId ? "Producto NFC vendido" : "Facturación"}
           </div>
-          <div className="mt-1 text-sm text-slate-800">
-            Abono mensual {fmtARS(c.fee)}
-          </div>
-          <div className="mt-2 text-xs text-slate-500">
-            Producto NFC vendido: {fmtARS(ingresoNFC(c))}
-          </div>
+          {c.comercioPadreId ? (
+            <div className="mt-1 text-sm text-slate-800">{fmtARS(ingresoNFC(c))}</div>
+          ) : (
+            <>
+              <div className="mt-1 text-sm text-slate-800">
+                Abono mensual {fmtARS(c.fee)}
+              </div>
+              <div className="mt-2 text-xs text-slate-500">
+                Producto NFC vendido: {fmtARS(ingresoNFC(c))}
+              </div>
+            </>
+          )}
         </Card>
       </div>
 

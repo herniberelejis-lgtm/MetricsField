@@ -26,8 +26,17 @@ CREATE TABLE IF NOT EXISTS comercios (
   auto_responder_positivas BOOLEAN NOT NULL DEFAULT TRUE, -- responder solas las reseñas positivas (requiere Reviews API aprobada — ver GOOGLE_REVIEWS_API_ENABLED)
   auto_responder_umbral    INTEGER NOT NULL DEFAULT 4 CHECK (auto_responder_umbral IN (4, 5)), -- a partir de cuántas estrellas se responde sola
   resenas_sync_en          TIMESTAMPTZ,                -- última sincronización de reseñas vía Google Reviews API
-  email_notificaciones     TEXT NOT NULL DEFAULT ''    -- a dónde mandar la alerta de reseña mala y el resumen mensual; vacío = no se manda nada
+  email_notificaciones     TEXT NOT NULL DEFAULT '',   -- a dónde mandar la alerta de reseña mala y el resumen mensual; vacío = no se manda nada
+  -- Multi-sucursal: NULL = esta fila es una cuenta (comportamiento de
+  -- siempre, un solo local). No NULL = esta fila es una sucursal que
+  -- cuelga de la cuenta apuntada — codigo_acceso/plan/fee/contacto/
+  -- tono_marca/email_notificaciones/auto_responder_* de una sucursal se
+  -- ignoran: siempre se leen de la fila raíz vía resolverCuenta() en
+  -- lib/db.ts. Todo lo demás (Google Place ID, rating, links, reseñas,
+  -- checklist, competidores) vive por fila = por local, sin cambios.
+  comercio_padre_id        TEXT REFERENCES comercios(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_comercios_padre ON comercios(comercio_padre_id);
 
 -- Ajustes de la agencia (clave/valor). Uso general para configuración suelta.
 CREATE TABLE IF NOT EXISTS ajustes (

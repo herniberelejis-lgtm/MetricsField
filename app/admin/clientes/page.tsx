@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getClientes } from "@/lib/db";
+import { getCuentas, contarSucursalesPorCuenta } from "@/lib/db";
 import { metricaActual, citasIA, ingresoNFC } from "@/lib/types";
 import { fmtARS } from "@/lib/format";
 import ClienteCardMenu from "@/components/ClienteCardMenu";
@@ -16,7 +16,10 @@ export const metadata: Metadata = { title: "Clientes" };
 export const dynamic = "force-dynamic";
 
 export default async function ClientesPage() {
-  const clientes = await getClientes();
+  const [clientes, sucursalesPorCuenta] = await Promise.all([
+    getCuentas(),
+    contarSucursalesPorCuenta(),
+  ]);
   const ordenados = [...clientes].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   return (
@@ -37,13 +40,21 @@ export default async function ClientesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ordenados.map((c) => {
           const m = metricaActual(c);
+          const nSucursales = sucursalesPorCuenta.get(c.id) ?? 0;
           return (
             <Card key={c.id} className="h-full transition-shadow hover:shadow-md">
               <div className="flex items-start justify-between gap-2">
                 <Link href={`/admin/clientes/${c.id}`} className="min-w-0 flex-1">
-                  <div className="truncate font-semibold text-slate-900">{c.nombre}</div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="truncate font-semibold text-slate-900">{c.nombre}</div>
+                    {nSucursales > 0 && (
+                      <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                        {nSucursales} sucursal{nSucursales === 1 ? "" : "es"}
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-0.5 truncate text-xs text-slate-500">
-                    {c.rubro} · {c.zona}
+                    {nSucursales > 0 ? c.rubro : `${c.rubro} · ${c.zona}`}
                   </div>
                 </Link>
                 <div className="flex items-center gap-1">

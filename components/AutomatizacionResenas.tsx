@@ -19,12 +19,14 @@ function fechaCorta(v: string): string {
 
 export default function AutomatizacionResenas({
   codigo,
+  comercioId,
   activa,
   umbral,
   apiHabilitada,
   resenasAutomaticas,
 }: {
   codigo: string;
+  comercioId: string;
   activa: boolean;
   umbral: 4 | 5;
   apiHabilitada: boolean;
@@ -38,6 +40,7 @@ export default function AutomatizacionResenas({
   function guardar(siguienteActiva: boolean, siguienteUmbral: 4 | 5) {
     const fd = new FormData();
     fd.set("codigo", codigo);
+    fd.set("comercioId", comercioId);
     if (siguienteActiva) fd.set("autoResponderPositivas", "on");
     fd.set("autoResponderUmbral", String(siguienteUmbral));
     startTransition(async () => {

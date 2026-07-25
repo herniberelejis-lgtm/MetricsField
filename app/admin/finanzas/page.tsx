@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getClientes, getCobrosConComercio } from "@/lib/db";
+import { getCuentas, getCobrosConComercio } from "@/lib/db";
 import type { Cobro } from "@/lib/types";
 import { fmtARS, fmtMes } from "@/lib/format";
 import { Card, Kpi, PageHeader, PlanBadge } from "@/components/ui";
@@ -49,7 +49,7 @@ function fechaCorta(v: string | null): string {
 
 export default async function FinanzasPage() {
   const [clientes, cobros] = await Promise.all([
-    getClientes(),
+    getCuentas(),
     getCobrosConComercio(),
   ]);
   const activos = clientes.filter((c) => c.estado === "activo");

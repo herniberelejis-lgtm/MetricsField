@@ -225,3 +225,81 @@ export function ClienteForm({
     </form>
   );
 }
+
+/** Alta de una sucursal — más chico que ClienteForm a propósito: plan, fee,
+ * contacto, tono de marca y código de acceso son de la cuenta y se heredan
+ * solos (ver crearSucursal en lib/db.ts). Cada sucursal es un local físico
+ * con su propia ficha de Google, así que solo pide lo que le es propio. */
+export function SucursalForm({
+  action,
+  cuentaId,
+}: {
+  action: (fd: FormData) => Promise<void>;
+  cuentaId: string;
+}) {
+  return (
+    <form action={action} className="space-y-4">
+      <input type="hidden" name="cuentaId" value={cuentaId} />
+
+      <Field label="Nombre del local">
+        <input
+          name="nombre"
+          required
+          placeholder="Barbería El Corte — Nueva Córdoba"
+          className={inputCls}
+        />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Rubro">
+          <select name="rubro" className={inputCls}>
+            {RUBROS.map((r) => (
+              <option key={r}>{r}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Zona">
+          <select name="zona" className={inputCls}>
+            {ZONAS.map((z) => (
+              <option key={z}>{z}</option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <Field
+        label="Link de reseñas de Google"
+        hint="El de ESTE local — cada sucursal tiene su propia ficha de Google."
+      >
+        <input
+          name="googleReviewUrl"
+          type="url"
+          placeholder="https://g.page/r/…/review"
+          className={inputCls}
+        />
+      </Field>
+
+      <Field
+        label="Google Place ID"
+        hint="Opcional. Con esto cargado, el rating y las reseñas de este local se actualizan solos todos los días."
+      >
+        <GooglePlaceIdField />
+      </Field>
+
+      <Field
+        label="Búsqueda clave"
+        hint="Cómo lo buscaría un cliente de este local — rubro + zona."
+      >
+        <input
+          name="busquedaClave"
+          placeholder="barbería en Nueva Córdoba"
+          className={inputCls}
+        />
+      </Field>
+
+      <div className="pt-2">
+        <SubmitButton>Crear sucursal</SubmitButton>
+      </div>
+    </form>
+  );
+}
