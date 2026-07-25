@@ -85,6 +85,16 @@ export function IconHelp(p: { size?: number; className?: string }) {
     </IconBase>
   );
 }
+export function IconUsers(p: { size?: number; className?: string }) {
+  return (
+    <IconBase {...p}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20c.7-3.6 3.3-5.5 6.5-5.5s5.8 1.9 6.5 5.5" />
+      <path d="M16 8.2a3.2 3.2 0 1 1 2.4 5.3" />
+      <path d="M15.5 14.6c2.6.3 4.5 2.1 5 5.4" />
+    </IconBase>
+  );
+}
 function IconChevron(p: { size?: number; className?: string }) {
   return (
     <IconBase {...p}>
