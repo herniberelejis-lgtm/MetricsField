@@ -76,6 +76,15 @@ function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
 }
 
+// Link para elegir un local: siempre manda a la sección "Mis Sucursales"
+// (hash incluido) — esta es una page.tsx server component, así que cada
+// click es una navegación de página completa; sin el hash, PortalShell
+// arrancaría de nuevo en Resumen en vez de quedarse en el detalle.
+function hrefSucursal(codigoAcceso: string, cuentaId: string, s: { id: string }): string {
+  const base = s.id === cuentaId ? `/portal/${codigoAcceso}` : `/portal/${codigoAcceso}?sucursal=${s.id}`;
+  return `${base}#sucursales`;
+}
+
 // Hero de calificación de un local: preferimos el snapshot mensual (misma
 // fuente que el histórico, así el delta compara peras con peras); si
 // todavía no se cargó ningún mes, mostramos el dato en vivo de Google
@@ -471,7 +480,8 @@ export default async function PortalPage({
             return (
               <a
                 key={s.id}
-                href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
+                href={hrefSucursal(c.codigoAcceso, c.id, s)}
+                title={`Ver el detalle de ${s.nombre}`}
                 className={`block rounded-xl transition ${
                   activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
                 }`}
@@ -566,46 +576,142 @@ export default async function PortalPage({
       </div>
     ) : (
       <>
-        <p className="mb-4 text-sm text-slate-500">
-          Elegí un local para ver su rating, reseñas y dispositivos por separado.
-        </p>
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {/* Selector compacto: todos los locales, el elegido resaltado —
+            cambiarlo recarga la página con ese local como "activo" en
+            todo el portal, así que el detalle de abajo es siempre suyo. */}
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {ubicaciones.map((s) => {
             const activa = s.id === activo.id;
-            const sm = metricaActual(s);
             return (
               <a
                 key={s.id}
-                href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
-                className={`flex items-center justify-between gap-3 px-4 py-3.5 text-sm transition ${
-                  activa ? "bg-brand/5" : "hover:bg-slate-50"
+                href={hrefSucursal(c.codigoAcceso, c.id, s)}
+                className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
+                  activa
+                    ? "bg-brand text-white"
+                    : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`truncate font-medium ${activa ? "text-brand-fg" : "text-slate-800"}`}>
-                      {s.nombre}
-                    </span>
-                    {activa && (
-                      <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand-fg">
-                        viendo ahora
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-500">{s.zona}</div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {sm || s.ratingGoogle !== null ? (
-                    <span className="text-xs font-semibold tabular-nums text-slate-700">
-                      {(sm ? sm.ratingPromedio : s.ratingGoogle!).toFixed(1)}★
-                    </span>
-                  ) : (
-                    <span className="text-xs text-slate-400">sin datos</span>
-                  )}
-                </div>
+                {s.nombre}
               </a>
             );
           })}
+        </div>
+
+        <div className="space-y-4">
+          {ratingHero !== null && (
+            <CalificacionGoogleCard
+              rating={ratingHero}
+              totalResenas={resenasHero}
+              deltaRating={deltaRatingHero}
+              deltaResenas={deltaResenasHero}
+              nombre={activo.nombre}
+              subtitulo={`${activo.rubro} · ${activo.zona}`}
+            />
+          )}
+
+          {/* Desglose por dispositivo NFC/QR de este local — mozo, mesa,
+              mostrador, lo que se haya cargado como etiqueta. Los taps son
+              el único dato 100% atribuible por dispositivo: Google no
+              informa de qué tarjeta vino cada reseña (por eso el rating y
+              las reseñas de acá son del local completo, no por mesa). Para
+              el personal con tarjeta propia sí hay una señal extra más
+              abajo, vía menciones de su nombre en el texto. */}
+          <Card>
+            <p className="text-sm font-medium text-slate-700">Dispositivos de {activo.nombre}</p>
+            {linksConTaps.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">
+                Todavía no tenés dispositivos asignados a este local.
+              </p>
+            ) : (
+              <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[480px] border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 text-left text-[10.5px] font-bold uppercase tracking-wide text-slate-500">
+                      <th className="px-4 py-2.5">Dispositivo</th>
+                      {tieneSoporteQr && <th className="px-4 py-2.5">Tipo</th>}
+                      <th className="px-4 py-2.5">Taps totales</th>
+                      <th className="px-4 py-2.5">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {linksConTaps.map((l) => (
+                      <tr key={l.id} className="border-t border-slate-100">
+                        <td className="px-4 py-3 text-slate-700">{l.etiqueta || "Sin etiqueta"}</td>
+                        {tieneSoporteQr && (
+                          <td className="px-4 py-3 text-slate-600">
+                            {l.tipo === "ambos" ? "NFC + QR" : l.tipo.toUpperCase()}
+                          </td>
+                        )}
+                        <td className="px-4 py-3 tabular-nums text-slate-700">{fmtNum(l.taps)}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                              l.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            ● {l.activo ? "en vivo" : "inactivo"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          {/* Evolución de reseñas del local, mes a mes. */}
+          <Card>
+            <p className="mb-3 text-sm font-medium text-slate-700">Evolución de {activo.nombre}</p>
+            <EvolucionMensual historico={activo.historico} esPremium={esPremium} detalle={detalleMensual} />
+          </Card>
+
+          {/* Personal con tarjeta NFC propia en este local, si tiene. */}
+          {personalEmpleados.length > 0 && (
+            <Card>
+              <p className="text-sm font-medium text-slate-700">Personal de {activo.nombre}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Taps de su tarjeta (dato exacto) y reseñas que lo nombran en el texto (señal, no
+                atribución exacta).
+              </p>
+              <div className="mt-3">
+                <MencionesEmpleados menciones={personalEmpleados} />
+              </div>
+            </Card>
+          )}
+
+          {/* Gestión de reseñas de este local: boceto de respuesta listo
+              para editar y publicar en pocos clics. */}
+          <Card>
+            <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Las positivas se responden solas (si activaste la automatización); las que
+              necesitan tu criterio quedan acá con un borrador de respuesta para que edites,
+              apruebes y copies a Google vos mismo.
+            </p>
+            <div className="mt-3">
+              <ResumenResenas data={resumenResenas} />
+            </div>
+            <div className="mt-3">
+              <AutomatizacionResenas
+                codigo={c.codigoAcceso}
+                comercioId={activo.id}
+                activa={activo.autoResponderPositivas}
+                umbral={activo.autoResponderUmbral}
+                apiHabilitada={resenasApiHabilitada()}
+                resenasAutomaticas={resenasAutomaticas}
+              />
+            </div>
+            <div className="mt-3">
+              <GestionResenas
+                resenasIniciales={resenasPendientes}
+                tonoMarca={c.tonoMarca}
+                codigo={c.codigoAcceso}
+                comercioId={activo.id}
+              />
+            </div>
+          </Card>
         </div>
       </>
     );
