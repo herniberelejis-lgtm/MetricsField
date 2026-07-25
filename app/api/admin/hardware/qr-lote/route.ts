@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import JSZip from "jszip";
-import { tieneSesionAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getInventarioHardware } from "@/lib/db";
 import { generarQrPng, urlPublicaDeTap } from "@/lib/qr";
 
@@ -10,8 +10,10 @@ import { generarQrPng, urlPublicaDeTap } from "@/lib/qr";
 // hay que mandarle al proveedor. ?estado=todas trae también las ya
 // asignadas (por si hace falta reimprimir alguna puntual).
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  if (!(await tieneSesionAdmin())) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "No autorizado" }, { status: 401 });
   }
 
   const lote = req.nextUrl.searchParams.get("lote");

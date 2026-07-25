@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { tieneSesionAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getLink } from "@/lib/db";
 import { generarQrPng, urlPublicaDeTap } from "@/lib/qr";
 
@@ -9,8 +9,10 @@ import { generarQrPng, urlPublicaDeTap } from "@/lib/qr";
 // se quiere diferenciar "vino por QR" hay que agregar un ?s=qr al final acá
 // y sumarlo a getTapsPorDia/registrarTap más adelante).
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  if (!(await tieneSesionAdmin())) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "No autorizado" }, { status: 401 });
   }
 
   const linkId = req.nextUrl.searchParams.get("linkId");
