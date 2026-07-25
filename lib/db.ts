@@ -1179,6 +1179,18 @@ export async function getResenas(comercioId: string): Promise<ResenaCRM[]> {
   return rows.map(mapResena);
 }
 
+// Reseñas de TODA la cuenta (cuenta + sucursales) en una sola consulta —
+// para totalizar "hoy"/"nuevas hoy" a nivel cartera sin hacer una query por
+// sucursal. El resto de los totales (mes/año) sale de `historico`, que ya
+// viaja en memoria por sucursal y no necesita esta consulta.
+export async function getResenasDeCuenta(comercioIds: string[]): Promise<ResenaCRM[]> {
+  if (comercioIds.length === 0) return [];
+  const rows = await sql`
+    SELECT * FROM resenas WHERE comercio_id = ANY(${comercioIds}) ORDER BY fecha DESC, id DESC
+  `;
+  return rows.map(mapResena);
+}
+
 export async function crearResena(
   comercioId: string,
   datos: {
