@@ -55,6 +55,7 @@ import {
   IconVisitas,
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
+import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
 import PortalShell, {
   IconGrid,
   IconStarNav,
@@ -401,50 +402,6 @@ export default async function PortalPage({
         </Card>
       )}
 
-      {/* Con más de un local: primero el panorama completo de la cadena,
-          en el mismo formato de tarjeta que el detalle de abajo, antes de
-          bajar al de "activo" — así no hay que ir a Mis Sucursales solo
-          para saber que existen. */}
-      {ubicaciones.length > 1 && (
-        <div className="mb-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Rendimiento · {ubicaciones.length} locales
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ubicaciones.map((s) => {
-              const activa = s.id === activo.id;
-              const hero = heroDeCalificacion(s);
-              return (
-                <a
-                  key={s.id}
-                  href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
-                  className={`block rounded-xl transition ${
-                    activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
-                  }`}
-                >
-                  {hero.rating !== null ? (
-                    <CalificacionGoogleCard
-                      rating={hero.rating}
-                      totalResenas={hero.totalResenas}
-                      deltaRating={hero.deltaRating}
-                      deltaResenas={hero.deltaResenas}
-                      nombre={s.nombre}
-                      subtitulo={`${s.zona}${activa ? " · viendo ahora" : ""}`}
-                    />
-                  ) : (
-                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                      <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
-                      <p className="text-xs text-slate-500">{s.zona}</p>
-                      <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
-                    </div>
-                  )}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* De un vistazo: para abrir el portal y entender el estado del
           negocio sin tener que entrar a ninguna otra sección todavía. */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -480,26 +437,80 @@ export default async function PortalPage({
         />
       </div>
 
-      {/* Con más de un local, la tarjeta de calificación del activo ya
-          está arriba (en la grilla de "Rendimiento") — acá solo repetirla
-          sería ruido. Con uno solo, es la única forma de verla. */}
-      {ubicaciones.length > 1 ? (
-        resenas.length > 0 && <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
-      ) : (
-        (ratingHero !== null || resenas.length > 0) && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CalificacionGoogleCard
-              rating={ratingHero}
-              totalResenas={resenasHero}
-              deltaRating={deltaRatingHero}
-              deltaResenas={deltaResenasHero}
-              nombre={activo.nombre}
-              subtitulo={`${activo.rubro} · ${activo.zona}`}
-            />
-            <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+      {/* Rendimiento: una tarjeta por local, siempre (aunque sea uno solo)
+          — mismo formato en toda la cartera. La grilla escala de 1 a 8+
+          locales sin romperse: 1 columna en mobile, hasta 4 en desktop
+          ancho, así nunca quedan tarjetas angostas ni de más. */}
+      <div className="mb-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Rendimiento · {ubicaciones.length} local{ubicaciones.length === 1 ? "" : "es"}
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {ubicaciones.map((s) => {
+            const activa = s.id === activo.id;
+            const hayVarios = ubicaciones.length > 1;
+            const hero = heroDeCalificacion(s);
+            const tarjeta =
+              hero.rating !== null ? (
+                <CalificacionGoogleCard
+                  rating={hero.rating}
+                  totalResenas={hero.totalResenas}
+                  deltaRating={hero.deltaRating}
+                  deltaResenas={hero.deltaResenas}
+                  nombre={s.nombre}
+                  subtitulo={`${s.zona}${activa && hayVarios ? " · viendo ahora" : ""}`}
+                />
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
+                  <p className="text-xs text-slate-500">{s.zona}</p>
+                  <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
+                </div>
+              );
+            if (!hayVarios) return <div key={s.id}>{tarjeta}</div>;
+            return (
+              <a
+                key={s.id}
+                href={s.id === c.id ? `/portal/${c.codigoAcceso}` : `/portal/${c.codigoAcceso}?sucursal=${s.id}`}
+                className={`block rounded-xl transition ${
+                  activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
+                }`}
+              >
+                {tarjeta}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Actividad del local activo: escaneos recientes + últimas reseñas,
+          uno al lado del otro en desktop, apilados en mobile. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {diasConTaps.length > 0 ? (
+          <TapsPorSoporteChart
+            labels={labelsTaps}
+            fechas={diasConTaps}
+            nfc={nfcPorDia}
+            qr={qrPorDia}
+            mostrarQr={tieneSoporteQr}
+            codigo={c.codigoAcceso}
+            comercioId={activo.id}
+          />
+        ) : (
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-semibold text-slate-800">Escaneos</p>
+            <p className="mt-2 text-sm text-slate-500">Todavía no hay actividad del cartel.</p>
           </div>
-        )
-      )}
+        )}
+        <ResenasRecientesCard resenas={resenas.slice(0, 3)} />
+      </div>
+
+      <div className="mt-4">
+        <SugerenciasRepetidas
+          temas={resumenResenas.temasRecurrentes}
+          apiHabilitada={resenasApiHabilitada()}
+        />
+      </div>
     </>
   );
 

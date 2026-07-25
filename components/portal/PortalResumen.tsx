@@ -184,34 +184,37 @@ function tiempoRelativo(fechaISO: string): string {
  * vista "para mirar y listo", sin acciones: responder sigue siendo en
  * Gestión de reseñas. */
 export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
-  if (resenas.length === 0) return null;
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-semibold text-slate-800">Reseñas recientes</p>
-      <div className="mt-3.5 space-y-4">
-        {resenas.map((r, i) => (
-          <div key={r.id} className="flex gap-3">
-            <span
-              className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${COLORES_AVATAR[i % COLORES_AVATAR.length]}`}
-            >
-              {inicial(r.autor)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="truncate text-sm font-medium text-slate-800">{r.autor}</span>
-                <span className="shrink-0 text-[11px] text-slate-400">{tiempoRelativo(r.fecha)}</span>
-              </div>
-              <span className="text-xs text-amber-400" aria-hidden>
-                {"★".repeat(r.estrellas)}
-                <span className="text-slate-200">{"★".repeat(5 - r.estrellas)}</span>
+      {resenas.length === 0 ? (
+        <p className="mt-2 text-sm text-slate-500">Todavía no hay reseñas cargadas de este local.</p>
+      ) : (
+        <div className="mt-3.5 space-y-4">
+          {resenas.map((r, i) => (
+            <div key={r.id} className="flex gap-3">
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${COLORES_AVATAR[i % COLORES_AVATAR.length]}`}
+              >
+                {inicial(r.autor)}
               </span>
-              {r.texto.trim() && (
-                <p className="mt-1 line-clamp-2 text-xs text-slate-600">&ldquo;{r.texto}&rdquo;</p>
-              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                  <span className="truncate text-sm font-medium text-slate-800">{r.autor}</span>
+                  <span className="shrink-0 text-[11px] text-slate-400">{tiempoRelativo(r.fecha)}</span>
+                </div>
+                <span className="text-xs text-amber-400" aria-hidden>
+                  {"★".repeat(r.estrellas)}
+                  <span className="text-slate-200">{"★".repeat(5 - r.estrellas)}</span>
+                </span>
+                {r.texto.trim() && (
+                  <p className="mt-1 line-clamp-2 text-xs text-slate-600">&ldquo;{r.texto}&rdquo;</p>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
