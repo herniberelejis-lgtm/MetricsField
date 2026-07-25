@@ -511,9 +511,9 @@ export default async function PortalPage({
                   <div className="text-xs text-slate-500">{s.zona}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {sm ? (
+                  {sm || s.ratingGoogle !== null ? (
                     <span className="text-xs font-semibold tabular-nums text-slate-700">
-                      {sm.ratingPromedio.toFixed(1)}★
+                      {(sm ? sm.ratingPromedio : s.ratingGoogle!).toFixed(1)}★
                     </span>
                   ) : (
                     <span className="text-xs text-slate-400">sin datos</span>
