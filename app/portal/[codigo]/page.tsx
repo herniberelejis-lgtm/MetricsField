@@ -56,6 +56,7 @@ import {
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
 import PortalShell, {
   IconGrid,
   IconStarNav,
@@ -347,8 +348,10 @@ export default async function PortalPage({
             Pronto
           </span>
         ) : (
+          // Total de locales (cuenta + sucursales), no solo las sucursales
+          // hijas — mismo número que "Rendimiento · N locales" en Resumen.
           <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
-            {sucursales.length}
+            {ubicaciones.length}
           </span>
         ),
     },
@@ -598,9 +601,8 @@ export default async function PortalPage({
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {ubicaciones.map((s) => {
             const activa = s.id === activo.id;
-            return (
+            const chip = (
               <a
-                key={s.id}
                 href={hrefSucursal(c.codigoAcceso, c.id, s)}
                 className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
                   activa
@@ -610,6 +612,16 @@ export default async function PortalPage({
               >
                 {s.nombre}
               </a>
+            );
+            // En mobile la tira es más ancha que la pantalla — sin esto, si
+            // el local elegido está lejos del principio, entrás y no lo ves
+            // resaltado sin scrollear la tira vos mismo.
+            return activa ? (
+              <ScrollActiveIntoView key={s.id}>{chip}</ScrollActiveIntoView>
+            ) : (
+              <div key={s.id} className="contents">
+                {chip}
+              </div>
             );
           })}
         </div>
