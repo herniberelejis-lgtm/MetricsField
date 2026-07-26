@@ -87,7 +87,20 @@ export async function requireAdmin(): Promise<void> {
     throw new Error("No autorizado. Iniciá sesión en el panel.");
   }
   const email = await emailAdminActual();
-  if (email && !(await esAdminPermitido(email))) {
+  if (!email) return;
+
+  // Si esAdminPermitido() falla por algo ajeno a la allowlist (ej. la DB no
+  // responde), no queremos que ese error interno se propague tal cual —
+  // algunos callers (rutas API) devuelven message al cliente en el 401, y
+  // ahí no debería filtrarse el motivo real de una falla de infraestructura.
+  let permitido: boolean;
+  try {
+    permitido = await esAdminPermitido(email);
+  } catch (e) {
+    console.error("requireAdmin: error verificando allowlist de admin:", e);
+    throw new Error("No se pudo verificar tu acceso. Probá de nuevo en un momento.");
+  }
+  if (!permitido) {
     throw new Error("Tu acceso al panel fue revocado.");
   }
 }
