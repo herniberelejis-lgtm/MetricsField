@@ -412,49 +412,65 @@ export default async function PortalPage({
       )}
 
       {/* De un vistazo: para abrir el portal y entender el estado del
-          negocio sin tener que entrar a ninguna otra sección todavía. */}
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <StatChip
-          icon={<IconWave size={18} className="text-blue-600" />}
-          value={fmtNum(totalTapsHistorico)}
-          label="Taps del cartel"
-          chipClass="bg-blue-50"
-        />
-        <StatChip
-          icon={<IconStarChip size={17} className="text-rose-600" />}
-          value={fmtNum(resenasHoy)}
-          label="Reseñas hoy"
-          chipClass="bg-rose-50"
-        />
-        <StatChip
-          icon={<IconStarChip size={17} className="text-emerald-600" />}
-          value={fmtNum(m?.resenasNuevas ?? 0)}
-          label="Reseñas este mes"
-          chipClass="bg-emerald-50"
-        />
-        <StatChip
-          icon={<IconVisitas size={18} className="text-violet-600" />}
-          value={fmtNum(m?.visitasPerfil ?? 0)}
-          label="Visitas al perfil"
-          chipClass="bg-violet-50"
-        />
-        <StatChip
-          icon={<IconCrecimiento size={18} className="text-amber-600" />}
-          value={fmtNum(resenasHero)}
-          label="Reseñas totales"
-          chipClass="bg-amber-50"
-        />
+          negocio sin tener que entrar a ninguna otra sección todavía.
+          Flexbox con wrap (no grid de columnas fijas) para que la última
+          fila reparta el espacio sobrante en vez de dejar un chip angosto
+          solo — pasaba en mobile con grid-cols-2 y 5 chips (2+2+1). */}
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="min-w-[150px] max-w-[220px] flex-1">
+          <StatChip
+            icon={<IconWave size={18} className="text-blue-600" />}
+            value={fmtNum(totalTapsHistorico)}
+            label="Taps del cartel"
+            chipClass="bg-blue-50"
+          />
+        </div>
+        <div className="min-w-[150px] max-w-[220px] flex-1">
+          <StatChip
+            icon={<IconStarChip size={17} className="text-rose-600" />}
+            value={fmtNum(resenasHoy)}
+            label="Reseñas hoy"
+            chipClass="bg-rose-50"
+          />
+        </div>
+        <div className="min-w-[150px] max-w-[220px] flex-1">
+          <StatChip
+            icon={<IconStarChip size={17} className="text-emerald-600" />}
+            value={fmtNum(m?.resenasNuevas ?? 0)}
+            label="Reseñas este mes"
+            chipClass="bg-emerald-50"
+          />
+        </div>
+        <div className="min-w-[150px] max-w-[220px] flex-1">
+          <StatChip
+            icon={<IconVisitas size={18} className="text-violet-600" />}
+            value={fmtNum(m?.visitasPerfil ?? 0)}
+            label="Visitas al perfil"
+            chipClass="bg-violet-50"
+          />
+        </div>
+        <div className="min-w-[150px] max-w-[220px] flex-1">
+          <StatChip
+            icon={<IconCrecimiento size={18} className="text-amber-600" />}
+            value={fmtNum(resenasHero)}
+            label="Reseñas totales"
+            chipClass="bg-amber-50"
+          />
+        </div>
       </div>
 
       {/* Rendimiento: una tarjeta por local, siempre (aunque sea uno solo)
-          — mismo formato en toda la cartera. La grilla escala de 1 a 8+
-          locales sin romperse: 1 columna en mobile, hasta 4 en desktop
-          ancho, así nunca quedan tarjetas angostas ni de más. */}
+          — mismo formato en toda la cartera. Flexbox con wrap, no grid: a
+          diferencia de un grid de columnas fijas, acá cada fila reparte el
+          espacio sobrante entre lo que tiene — así una última fila con
+          menos tarjetas que columnas nunca queda con una tarjeta angosta
+          flotando sola en medio de espacio vacío (pasaba con 5 locales a
+          xl:grid-cols-4: 4 en la primera fila + 1 sola al 25% de ancho). */}
       <div className="mb-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           Rendimiento · {ubicaciones.length} local{ubicaciones.length === 1 ? "" : "es"}
         </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="flex flex-wrap gap-4">
           {ubicaciones.map((s) => {
             const activa = s.id === activo.id;
             const hayVarios = ubicaciones.length > 1;
@@ -476,13 +492,13 @@ export default async function PortalPage({
                   <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
                 </div>
               );
-            if (!hayVarios) return <div key={s.id}>{tarjeta}</div>;
+            if (!hayVarios) return <div key={s.id} className="min-w-[240px] max-w-sm flex-1">{tarjeta}</div>;
             return (
               <a
                 key={s.id}
                 href={hrefSucursal(c.codigoAcceso, c.id, s)}
                 title={`Ver el detalle de ${s.nombre}`}
-                className={`block rounded-xl transition ${
+                className={`block min-w-[240px] max-w-sm flex-1 rounded-xl transition ${
                   activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
                 }`}
               >
