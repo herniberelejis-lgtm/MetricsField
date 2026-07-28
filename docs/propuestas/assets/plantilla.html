@@ -1,0 +1,1207 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField Reviews · Propuesta Corporativa Pizzería Popular</title>
+<style>
+__FONT_CSS__
+
+/* ============================================================
+   MetricsField — Sistema visual segun Manual de Marca v1.1
+   Paleta monocromatica. Secundarios solo funcionales.
+   Sin sombras, sin degradados, sin efectos 3D.
+   ============================================================ */
+:root{
+  --negro:#000000;
+  --blanco:#FFFFFF;
+  --gris-f7:#F7F7F7;
+  --gris-ea:#EAEAEA;
+  --gris-profundo:#1A1A1A;
+  --azul-niebla:#C8D8E8;   /* metricas y datos primarios */
+  --verde-suave:#C8DDD0;   /* indicadores positivos */
+  --rojo-suave:#E8C8C8;    /* indicadores negativos */
+  --texto:#000000;
+  --texto-medio:#4A4A4A;
+  --texto-tenue:#7A7A7A;
+  --linea:#EAEAEA;
+  --linea-fuerte:#000000;
+  --medida:1100px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--blanco);
+  color:var(--texto);
+  font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-weight:400;
+  font-size:16px;
+  line-height:1.65;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+
+/* ---------- Retícula ---------- */
+.env{max-width:var(--medida);margin:0 auto;padding:0 32px}
+section{padding:88px 0;border-top:1px solid var(--linea)}
+section:first-of-type{border-top:0}
+
+/* ---------- Jerarquía tipográfica (Manual pág. 17) ---------- */
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:.02em;line-height:1.15}
+h1{font-size:clamp(34px,6vw,64px);letter-spacing:.06em;text-transform:uppercase}
+h2{font-size:clamp(26px,3.4vw,38px);font-weight:500;letter-spacing:.03em;margin-bottom:8px}
+h3{font-size:clamp(17px,1.9vw,21px);font-weight:600;letter-spacing:.02em;margin:44px 0 14px}
+h4{font-size:14px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;margin:32px 0 10px}
+p{margin:0 0 18px}
+strong{font-weight:600}
+a{color:inherit}
+
+.kicker{
+  font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--texto-tenue);margin-bottom:18px
+}
+.num-sec{
+  display:inline-block;font-size:11px;font-weight:600;letter-spacing:.2em;
+  border:1px solid var(--negro);padding:5px 11px;margin-bottom:20px
+}
+.bajada{font-size:clamp(16px,1.9vw,19px);color:var(--texto-medio);max-width:74ch;margin-bottom:34px}
+.lead{font-size:18px;line-height:1.7;max-width:76ch}
+.nota{font-size:13.5px;color:var(--texto-medio);line-height:1.6}
+
+/* ---------- Portada (version negro — pieza de alto impacto, Manual pág. 8) ---------- */
+.portada{
+  background:var(--negro);color:var(--blanco);
+  min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;
+  padding:56px 0;border:0
+}
+.portada .env{width:100%}
+.portada h1{color:var(--blanco)}
+.logo-portada{width:280px;max-width:60vw}
+.portada-linea{height:1px;background:#3A3A3A;margin:38px 0}
+.portada-sub{
+  font-size:clamp(15px,2vw,20px);font-weight:400;letter-spacing:.05em;
+  color:#C9C9C9;max-width:66ch;margin-top:26px;line-height:1.55
+}
+.bajada-marca{
+  font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:#8A8A8A;margin-top:14px
+}
+.meta-portada{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:26px;margin-top:44px}
+.meta-portada div{border-top:1px solid #3A3A3A;padding-top:14px}
+.meta-portada dt{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8A8A8A;margin-bottom:7px}
+.meta-portada dd{margin:0;font-size:14.5px;font-weight:500;color:var(--blanco);line-height:1.45}
+
+/* ---------- Barra superior ---------- */
+.barra{
+  position:sticky;top:0;z-index:50;background:var(--blanco);
+  border-bottom:1px solid var(--linea)
+}
+.barra .env{display:flex;align-items:center;justify-content:space-between;height:62px;gap:20px}
+.barra img{width:26px}
+.barra-marca{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+.barra-ref{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--texto-tenue);text-align:right}
+
+/* ---------- Índice ---------- */
+.indice{list-style:none;padding:0;margin:0;columns:2;column-gap:56px}
+.indice li{break-inside:avoid;border-bottom:1px solid var(--linea);padding:13px 0}
+.indice a{text-decoration:none;display:flex;gap:16px;align-items:baseline;font-size:14.5px}
+.indice a:hover{color:var(--texto-tenue)}
+.indice span{font-weight:600;font-size:11px;letter-spacing:.14em;color:var(--texto-tenue);min-width:22px}
+
+/* ---------- Tablas (Manual: datos jerarquizados, sin ruido) ---------- */
+.tabla-env{overflow-x:auto;margin:26px 0 8px;border-top:2px solid var(--negro)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+thead th{
+  text-align:left;font-weight:600;font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  padding:14px 16px 13px;border-bottom:1px solid var(--negro);vertical-align:bottom;white-space:nowrap
+}
+tbody td{padding:15px 16px;border-bottom:1px solid var(--linea);vertical-align:top;line-height:1.55}
+tbody tr:last-child td{border-bottom:1px solid var(--negro)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.destacado{font-weight:600}
+tr.total td{background:var(--gris-f7);font-weight:600;border-bottom:2px solid var(--negro)}
+tr.precio td{background:var(--negro);color:var(--blanco);font-weight:600;border-bottom:0}
+.marca-dato{background:var(--azul-niebla)}
+.marca-ok{background:var(--verde-suave)}
+.marca-alerta{background:var(--rojo-suave)}
+.pastilla{display:inline-block;padding:3px 9px;font-size:11.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+
+/* ---------- Bloques de cifra ---------- */
+.cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1px;background:var(--linea);border:1px solid var(--linea);margin:32px 0}
+.cifra{background:var(--blanco);padding:26px 24px}
+.cifra b{display:block;font-size:clamp(28px,4.2vw,42px);font-weight:600;letter-spacing:-.01em;line-height:1.05;font-variant-numeric:tabular-nums}
+.cifra span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--texto-tenue);margin-top:11px;line-height:1.5}
+.cifra em{display:block;font-style:normal;font-size:13px;color:var(--texto-medio);margin-top:8px;line-height:1.5}
+.cifra.inv{background:var(--negro);color:var(--blanco)}
+.cifra.inv span{color:#9A9A9A}
+.cifra.inv em{color:#C9C9C9}
+
+/* ---------- Fotografía (Manual pág. 22: contextos reales y limpios) ---------- */
+figure{margin:0}
+.foto{border:1px solid var(--linea);background:var(--gris-f7)}
+.foto img{width:100%;height:100%;object-fit:cover;display:block}
+figcaption{
+  font-size:12.5px;color:var(--texto-medio);line-height:1.6;
+  padding:14px 2px 0;border-top:1px solid var(--linea);margin-top:14px
+}
+figcaption b{display:block;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--negro);margin-bottom:6px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin:34px 0}
+.duo .foto{aspect-ratio:4/3}
+.banda{background:var(--gris-f7);border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:0}
+.banda-grid{display:grid;grid-template-columns:1.05fr .95fr;align-items:stretch;gap:0}
+.banda-grid .foto{border:0;border-right:1px solid var(--linea);aspect-ratio:auto;min-height:420px}
+.banda-txt{padding:60px 52px;display:flex;flex-direction:column;justify-content:center}
+.banda-txt p:last-child{margin-bottom:0}
+
+.hard{display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;align-items:start;margin:34px 0}
+.hard .foto{aspect-ratio:1/1}
+
+/* ---------- Listas ---------- */
+ul.lista{list-style:none;padding:0;margin:20px 0}
+ul.lista li{padding:11px 0 11px 26px;border-bottom:1px solid var(--linea);position:relative;font-size:15px;line-height:1.6}
+ul.lista li:before{content:"";position:absolute;left:0;top:20px;width:11px;height:1px;background:var(--negro)}
+ul.simple{margin:16px 0 22px;padding-left:20px}
+ul.simple li{margin-bottom:9px;line-height:1.6}
+
+/* ---------- Cadena / flujo ---------- */
+.cadena{border:1px solid var(--linea);padding:30px 28px;margin:30px 0;background:var(--gris-f7)}
+.cadena ol{list-style:none;margin:0;padding:0;counter-reset:c}
+.cadena li{counter-increment:c;padding:12px 0 12px 46px;position:relative;font-size:14.5px;line-height:1.55;border-bottom:1px solid var(--gris-ea)}
+.cadena li:last-child{border-bottom:0;padding-bottom:0}
+.cadena li:before{
+  content:counter(c);position:absolute;left:0;top:11px;width:26px;height:26px;
+  border:1px solid var(--negro);display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600
+}
+.codigo{
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  font-size:13px;letter-spacing:.05em;background:var(--negro);color:var(--blanco);padding:3px 9px
+}
+
+/* ---------- Ecuación / fórmulas ---------- */
+.formula{
+  border:1px solid var(--linea);border-left:3px solid var(--negro);
+  padding:28px 30px;margin:26px 0;background:var(--blanco)
+}
+.formula-tit{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--texto-tenue);margin-bottom:18px}
+.eq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;font-size:clamp(14px,1.7vw,17px);text-align:center;line-height:1.4}
+.eq .op{font-weight:400;color:var(--texto-medio)}
+.frac{display:inline-flex;flex-direction:column;align-items:center;gap:7px}
+.frac .arr{padding:0 12px 7px;border-bottom:1.5px solid var(--negro)}
+.frac .aba{padding:7px 12px 0}
+.eq-res{font-weight:600;font-size:clamp(17px,2.4vw,24px);font-variant-numeric:tabular-nums}
+.paso{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--texto-tenue);margin:22px 0 10px;text-align:center}
+
+/* ---------- Ecuación de valor ---------- */
+.valor-eq{background:var(--negro);color:var(--blanco);padding:52px 40px;margin:32px 0;text-align:center}
+.valor-eq .eq{color:var(--blanco)}
+.valor-eq .frac .arr{border-bottom-color:var(--blanco)}
+.valor-eq .op{color:#9A9A9A}
+.valor-eq .rot{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#8A8A8A;margin-bottom:26px}
+
+/* ---------- Cita / destaque ---------- */
+.destaque{border-left:3px solid var(--negro);padding:6px 0 6px 26px;margin:30px 0;font-size:17px;line-height:1.65}
+.destaque strong{font-weight:600}
+.aviso{border:1px solid var(--negro);padding:26px 28px;margin:30px 0;background:var(--gris-f7)}
+.aviso h4{margin-top:0}
+.aviso p:last-child{margin-bottom:0}
+
+/* ---------- Garantía ---------- */
+.garantia{background:var(--negro);color:var(--blanco);padding:60px 52px;margin:34px 0}
+.garantia .kicker{color:#8A8A8A}
+.garantia h3{color:var(--blanco);font-size:clamp(19px,2.6vw,27px);font-weight:500;line-height:1.45;margin:0 0 24px;max-width:60ch}
+.garantia h3:first-of-type{margin-top:0}
+.garantia .sello{
+  display:inline-block;border:1px solid var(--blanco);padding:16px 26px;
+  font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-top:12px
+}
+
+/* ---------- Nombre MAGIC ---------- */
+.magic{border:2px solid var(--negro);padding:44px 40px;margin:34px 0}
+.magic .kicker{margin-bottom:14px}
+.magic .titulo{font-size:clamp(20px,2.9vw,30px);font-weight:600;letter-spacing:.02em;line-height:1.3;margin-bottom:18px}
+.magic .sub{font-size:clamp(15px,1.9vw,18px);font-weight:400;color:var(--texto-medio);line-height:1.55}
+
+/* ---------- Cierre ---------- */
+.cierre{background:var(--negro);color:var(--blanco);padding:96px 0;border:0}
+.cierre h2{color:var(--blanco)}
+.cierre .bajada{color:#C9C9C9}
+.cierre .logo-cierre{width:210px;margin-bottom:44px}
+.cierre ul.lista li{border-bottom-color:#3A3A3A;color:#E4E4E4}
+.cierre ul.lista li:before{background:var(--blanco)}
+.pie{font-size:12px;color:#8A8A8A;line-height:1.7;border-top:1px solid #3A3A3A;padding-top:26px;margin-top:52px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){
+  .env{padding:0 22px}
+  section{padding:60px 0}
+  .indice{columns:1}
+  .duo,.hard{grid-template-columns:1fr;gap:26px}
+  .banda-grid{grid-template-columns:1fr}
+  .banda-grid .foto{border-right:0;border-bottom:1px solid var(--linea);min-height:300px}
+  .banda-txt{padding:44px 22px}
+  .garantia,.magic,.valor-eq{padding:36px 24px}
+  .portada{min-height:auto;padding:44px 0 56px}
+}
+
+/* ---------- Impresión ---------- */
+@media print{
+  @page{margin:14mm}
+  body{font-size:10.5pt;line-height:1.5}
+  .barra{display:none}
+  section{padding:0;border-top:0;break-after:page}
+  section:last-of-type{break-after:auto}
+  .portada{min-height:auto;padding:40mm 0;break-after:page}
+  .portada,.cierre,.garantia,.valor-eq,.cifra.inv,tr.precio td{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+  }
+  .tabla-env{overflow:visible}
+  table{min-width:0;font-size:9pt}
+  h3,figure,.cifras,.formula,.tabla-env,.aviso{break-inside:avoid}
+  a{text-decoration:none}
+}
+</style>
+
+<!-- ============================ PORTADA ============================ -->
+<header class="portada">
+  <div class="env">
+    <img class="logo-portada" src="__LOGO_BLANCO__" alt="MetricsField">
+    <div class="bajada-marca">Inteligencia de datos</div>
+  </div>
+  <div class="env">
+    <div class="portada-linea"></div>
+    <div class="kicker" style="color:#8A8A8A">Propuesta corporativa · Confidencial</div>
+    <h1>Programa Nacional de Dominación de Reputación y Auditoría de Servicio</h1>
+    <p class="portada-sub">
+      Sistema llave en mano de auditoría de servicio y reputación local para la red de
+      franquicias de Pizzería Popular. Audita a cada mozo, cajero y repartidor por número
+      de legajo, y consolida las 120 sucursales en un único panel de administración central.
+    </p>
+    <div class="meta-portada">
+      <div><dt>Destinatarios</dt><dd>Dirección de Operaciones<br>Dirección de Franquicias<br>Administración Central</dd></div>
+      <div><dt>Alcance</dt><dd>120+ sucursales<br>6 países</dd></div>
+      <div><dt>Vertical</dt><dd>MetricsField Reviews</dd></div>
+      <div><dt>Plazo de medición</dt><dd>90 días</dd></div>
+    </div>
+  </div>
+  <div class="env">
+    <div class="portada-linea"></div>
+    <div class="bajada-marca" style="letter-spacing:.28em">Del contacto al dato. Del dato a la decisión.</div>
+  </div>
+</header>
+
+<!-- ============================ BARRA ============================ -->
+<div class="barra">
+  <div class="env">
+    <div class="barra-marca"><img src="__ISO_NEGRO__" alt=""><span>MetricsField Reviews</span></div>
+    <div class="barra-ref">Pizzería Popular · Propuesta corporativa</div>
+  </div>
+</div>
+
+<!-- ============================ 01 RESUMEN ============================ -->
+<section id="s1"><div class="env">
+  <div class="num-sec">01</div>
+  <h2>Resumen ejecutivo</h2>
+  <p class="bajada">Para el Comité de Dirección.</p>
+
+  <p class="lead">
+    Pizzería Popular resolvió el problema más difícil de una cadena gastronómica:
+    <strong>la escala del producto</strong>. 120 sucursales en 6 países con calidad consistente
+    es un logro operativo que pocas marcas de la región alcanzaron.
+  </p>
+  <p class="lead">
+    Lo que la escala del producto no resuelve por sí sola es <strong>la escala de la evidencia
+    pública de ese producto</strong>. La calidad de servicio se ejecuta en 120 salones y en miles
+    de puertas de domicilio por semana, pero se audita con herramientas que llegan tarde,
+    agregadas y sin nombre propio: un mystery shopper esporádico, una planilla de reclamos y un
+    promedio de estrellas que se mueve un decimal cada seis meses sin decir <strong>quién</strong>
+    lo movió.
+  </p>
+  <p class="lead">
+    Este sistema convierte cada uno de esos contactos en un dato auditable, atribuido a un legajo
+    y consolidado en un panel único de administración central — y simultáneamente en un activo de
+    posicionamiento local para cada sucursal.
+  </p>
+
+  <h3>Las tres capas del sistema</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:16%">Capa</th><th style="width:38%">Componente</th><th>Función</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Física</td><td>Expositor acrílico de mesa + tarjeta PVC de bolsillo</td><td>Captura la reseña en el instante de máxima satisfacción</td></tr>
+        <tr><td class="destacado">Identidad</td><td>ID único corporativo por dispositivo, vinculado a legajo</td><td>Atribuye cada reseña y cada queja a una persona y una sucursal</td></tr>
+        <tr><td class="destacado">Inteligencia</td><td>Plataforma SaaS corporativa</td><td>Audita, compara, alerta y reencamina desde la central, sin tocar el hardware</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cifras">
+    <div class="cifra"><b>$180.000</b><span>Inversión por sucursal</span><em>Pago único de por vida. Sin costos fijos mensuales.</em></div>
+    <div class="cifra"><b>8×</b><span>Retorno de un solo cliente</span><em>Un único cliente recurrente devuelve ocho veces la inversión total de su sucursal.</em></div>
+    <div class="cifra"><b>90</b><span>Días de medición</span><em>Plazo de verificación de la garantía contra línea de base.</em></div>
+    <div class="cifra inv"><b>0</b><span>Riesgo asumido</span><em>Reembolso del 100% con retención total del hardware entregado.</em></div>
+  </div>
+</div></section>
+
+<!-- ============================ ÍNDICE ============================ -->
+<section id="indice"><div class="env">
+  <div class="num-sec">Índice</div>
+  <h2>Contenido de la propuesta</h2>
+  <p class="bajada">Trece secciones. Diagnóstico, sistema, modelo financiero y condiciones.</p>
+  <ul class="indice">
+    <li><a href="#s1"><span>01</span> Resumen ejecutivo</a></li>
+    <li><a href="#s2"><span>02</span> Diagnóstico: el costo de supervisar 120 locales</a></li>
+    <li><a href="#s3"><span>03</span> Arquitectura del hardware dual</a></li>
+    <li><a href="#s4"><span>04</span> Dashboard administrativo corporativo</a></li>
+    <li><a href="#s5"><span>05</span> Deconstrucción de valor</a></li>
+    <li><a href="#s6"><span>06</span> Estructura financiera: LTV y ROI</a></li>
+    <li><a href="#s7"><span>07</span> Stack del Pack Corporativo Premium</a></li>
+    <li><a href="#s8"><span>08</span> Resolución anticipada de obstáculos</a></li>
+    <li><a href="#s9"><span>09</span> Garantía asimétrica de riesgo cero</a></li>
+    <li><a href="#s10"><span>10</span> Nombre del programa · Fórmula M-A-G-I-C</a></li>
+    <li><a href="#s11"><span>11</span> Plan de implementación a 90 días</a></li>
+    <li><a href="#s12"><span>12</span> Síntesis de la decisión</a></li>
+    <li><a href="#s13"><span>13</span> Próximo paso</a></li>
+  </ul>
+</div></section>
+
+<!-- ============================ 02 DIAGNÓSTICO ============================ -->
+<section id="s2"><div class="env">
+  <div class="num-sec">02</div>
+  <h2>El costo oculto de supervisar 120 locales</h2>
+  <p class="bajada">El problema que la Dirección de Franquicias ya conoce, cuantificado.</p>
+
+  <h3>Los cuatro puntos ciegos de una red franquiciada</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:22%">Punto ciego</th><th style="width:40%">Manifestación operativa</th><th>Costo real</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Servicio no atribuible</td><td>La sucursal baja de 4,6 a 4,2 estrellas y nadie puede identificar el turno, el mozo o el repartidor responsable</td><td>La corrección es genérica: se capacita a los 15 del local en vez de a los 2 que fallan</td></tr>
+        <tr><td class="destacado">Reclamo público como primer aviso</td><td>La central se entera del problema cuando ya está publicado e indexado</td><td>El daño de marca precede a la acción correctiva</td></tr>
+        <tr><td class="destacado">Asimetría entre franquiciados</td><td>Una sucursal genera 40 reseñas por mes y otra 3, sin explicación estructural</td><td>La marca compite consigo misma con calidad percibida desigual</td></tr>
+        <tr><td class="destacado">Hardware estático</td><td>Cada cambio de link o de ficha exige reimprimir y redistribuir piezas a 120 locales</td><td>Costo logístico recurrente y semanas de desfasaje entre sucursales</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>El eslabón perdido: el momento post-satisfacción</h3>
+  <p>
+    La industria intentó resolver esto con encuestas por correo, SMS de seguimiento y formularios
+    impresos en el ticket. Todas comparten la misma falla de diseño: <strong>piden la opinión cuando
+    la emoción ya se disipó</strong>.
+  </p>
+  <p>
+    Una encuesta que llega 24 o 48 horas después compite con la bandeja de entrada y con el olvido.
+    La tasa de respuesta cae y — más grave para la Dirección de Operaciones — <strong>los que
+    responden son mayoritariamente los insatisfechos</strong>, porque la insatisfacción tiene una
+    vida media emocional mucho más larga que la satisfacción.
+  </p>
+  <div class="destaque">
+    El resultado es un sesgo estructural: <strong>la red mide su servicio con una muestra
+    contaminada hacia lo negativo.</strong> Este sistema opera en el único punto donde ese sesgo
+    no existe — el instante de máxima satisfacción física.
+  </div>
+</div></section>
+
+<!-- ============================ BANDA FOTO SALÓN ============================ -->
+<section class="banda" style="padding:0">
+  <div class="banda-grid">
+    <figure class="foto"><img src="__FOTO_2__" alt="Placas NFC de reseña y de menú sobre la mesa de un salón"></figure>
+    <div class="banda-txt">
+      <div class="kicker">El punto de contacto</div>
+      <h2 style="margin-bottom:20px">El dispositivo ya está en la mesa.<br>Lo que faltaba era el protocolo.</h2>
+      <p>
+        Un dispositivo de proximidad sobre la mesa no genera reseñas por sí solo. Lo que las genera
+        es <strong>una invitación formal ejecutada en el momento correcto</strong>, por una persona
+        identificada, sobre un dispositivo que registra quién la ejecutó.
+      </p>
+      <p style="margin-bottom:0">
+        Esa combinación — hardware de proximidad, protocolo de servicio e identidad por legajo — es
+        lo que convierte una acción de marketing local en un sistema de control de gestión para una
+        red de 120 unidades.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 03 HARDWARE ============================ -->
+<section id="s3"><div class="env">
+  <div class="num-sec">03</div>
+  <h2>Arquitectura del hardware dual</h2>
+  <p class="bajada">
+    No es un cartel con un código. Es un protocolo de dos dispositivos que cubre los dos canales
+    de venta de Pizzería Popular — salón y delivery — cada uno con su propia ventana de captura.
+  </p>
+
+  <h3>3.1 · Expositor de mesa acrílico premium «Thanks for Visiting»</h3>
+  <div class="hard">
+    <figure>
+      <div class="foto"><img src="__FOTO_1__" alt="Expositor acrílico de mesa con NFC y QR junto a un teléfono en la pantalla de reseña de Google"></div>
+      <figcaption><b>Dispositivo 01</b>Expositor vertical de acrílico premium con antena NFC integrada y QR dinámico impreso. Exhibición permanente en el salón.</figcaption>
+    </figure>
+    <div>
+      <p>
+        <strong>Canal que cubre:</strong> consumo en salón.
+        <strong>Ejecución del cliente final:</strong> un tap NFC o un escaneo de QR. Menos de un
+        segundo. Sin descargar nada, sin tipear nada, sin crear una cuenta.
+      </p>
+      <h4>Protocolo de uso — punto crítico</h4>
+      <p>
+        El expositor <strong>no se activa mientras el cliente espera la comida</strong>. Ese es el
+        momento de mayor ansiedad de toda la experiencia gastronómica: el comensal tiene hambre,
+        evalúa la demora y su disposición emocional es neutra o negativa. Pedir una valoración en
+        esa ventana degrada la calidad del dato e incomoda al cliente.
+      </p>
+      <p>
+        El dispositivo se activa <strong>al cierre</strong>: el comensal terminó su pizza napolitana,
+        está plenamente satisfecho, y el mozo se acerca con la cuenta. En ese instante —y solo en
+        ese— se lo invita a apoyar el celular sobre el expositor.
+      </p>
+    </div>
+  </div>
+
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:34%">Etapa de la experiencia</th><th style="width:36%">Estado emocional del cliente</th><th>¿Se activa el dispositivo?</th></tr></thead>
+      <tbody>
+        <tr><td>Ingreso y toma del pedido</td><td>Expectativa</td><td>No</td></tr>
+        <tr><td>Espera de la comida</td><td class="destacado">Ansiedad · evaluación de demora</td><td><span class="pastilla marca-alerta">Nunca</span></td></tr>
+        <tr><td>Consumo</td><td>Disfrute — cliente ocupado</td><td>No</td></tr>
+        <tr><td class="destacado">Cierre y entrega de la cuenta</td><td class="destacado">Satisfacción plena y gratitud</td><td><span class="pastilla marca-ok">Sí — ventana de captura</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.2 · Tarjeta de PVC portátil de bolsillo</h3>
+  <div class="hard">
+    <figure>
+      <div class="foto"><img src="__FOTO_3__" alt="Mozo acercando la tarjeta NFC de reseña al teléfono de una clienta en la mesa"></div>
+      <figcaption><b>Dispositivo 02</b>Tarjeta de PVC mate de alta durabilidad, formato billetera. La porta cada mozo y cada repartidor.</figcaption>
+    </figure>
+    <div>
+      <p>
+        <strong>Canal que cubre:</strong> delivery a domicilio y cobro en mesa. Este es el componente
+        que resuelve <strong>el punto ciego más grande de toda cadena de pizzas: el delivery</strong>.
+        En el canal de reparto no hay salón, no hay mesa y no hay cartel — y por lo tanto, hasta hoy,
+        no había captura de reseña en el momento.
+      </p>
+      <h4>Protocolo de uso</h4>
+      <ul class="lista">
+        <li><strong>Delivery.</strong> El repartidor entrega la caja en la puerta del domicilio. El cliente recibe su producto caliente y en tiempo, y expresa su agradecimiento. En ese instante el repartidor extiende la tarjeta y ofrece el tap.</li>
+        <li><strong>Salón.</strong> El mozo cobra en mesa. Al devolver el vuelto o el comprobante, ofrece el tap sobre su tarjeta personal.</li>
+      </ul>
+      <p style="margin-bottom:0">
+        <strong>El valor estratégico:</strong> la tarjeta es personal e intransferible, ligada al
+        legajo de quien la porta. Cuando un cliente hace tap sobre la tarjeta del repartidor N.º 42,
+        la reseña queda atribuida al repartidor N.º 42. No al local. No al turno.
+        <strong>A la persona.</strong>
+      </p>
+    </div>
+  </div>
+
+  <figure style="margin:44px 0 0">
+    <div class="foto" style="aspect-ratio:21/9"><img src="__FOTO_4__" alt="Mesa tendida con discos NFC de reseña y de menú"></div>
+    <figcaption><b>Despliegue en salón</b>Los dispositivos se integran al montaje habitual de la mesa sin competir con la puesta ni interferir con el servicio. Fondo neutro, instrucción breve, llamada a la acción única.</figcaption>
+  </figure>
+
+  <h3>3.3 · Mecanismo de tracking por ID único corporativo</h3>
+  <p>
+    Cada pieza física del sistema —cada expositor y cada tarjeta— sale de fábrica con un código de
+    identificación único impreso en su superficie, con formato corporativo:
+    <span class="codigo">Acd1000001999</span>
+  </p>
+  <p>
+    Ese identificador no es un número de inventario. Es la <strong>llave primaria de todo el sistema
+    de auditoría</strong>.
+  </p>
+
+  <div class="cadena">
+    <div class="kicker" style="margin-bottom:14px">Cadena de vinculación</div>
+    <ol>
+      <li>ID físico impreso en el dispositivo — <span class="codigo">Acd1000001999</span></li>
+      <li>Registro en la plataforma administrativa MetricsField</li>
+      <li>Legajo o ID de empleado en el sistema de Pizzería Popular</li>
+      <li>Sucursal · franquiciado · país</li>
+      <li>Cada tap, cada reseña y cada queja quedan atribuidos nominalmente</li>
+    </ol>
+  </div>
+
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:32%">Pregunta de gestión</th><th style="width:30%">Antes</th><th>Con ID único corporativo</th></tr></thead>
+      <tbody>
+        <tr><td>¿Quién genera las mejores experiencias?</td><td>Percepción del encargado</td><td class="destacado">Ranking nominal por legajo, medible</td></tr>
+        <tr><td>¿Dónde se origina esta queja?</td><td>Investigación manual</td><td class="destacado">Legajo, sucursal, fecha y hora exacta</td></tr>
+        <tr><td>¿El staff está usando el sistema?</td><td>Imposible de verificar</td><td class="destacado">Alerta automática de ID inactivo</td></tr>
+        <tr><td>¿A quién bonifico este mes?</td><td>Criterio subjetivo del franquiciado</td><td class="destacado">Dato auditable y comparable entre países</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ============================ 04 DASHBOARD ============================ -->
+<section id="s4"><div class="env">
+  <div class="num-sec">04</div>
+  <h2>El dashboard administrativo corporativo</h2>
+  <p class="bajada">El hardware es el sensor. El software es el activo.</p>
+  <p class="lead">
+    Este es el componente que convierte la propuesta de «una acción de marketing local» en
+    <strong>un sistema de control de gestión para una red franquiciada de 120 unidades</strong>.
+    Todo lo que sigue está diseñado para el dolor específico de supervisar a distancia lo que no se
+    puede visitar todos los días.
+  </p>
+
+  <h3>4.1 · Auditoría de rendimiento por empleado</h3>
+  <p>El módulo que convierte la calidad de atención en una métrica de Recursos Humanos.</p>
+  <ul class="lista">
+    <li><strong>Ranking de generación de 5 estrellas por legajo</strong>, filtrable por sucursal, país, turno y período.</li>
+    <li><strong>Acumulación de quejas internas por legajo</strong>, con detección de patrones: reincidencia, concentración horaria y concentración por tipo de reclamo.</li>
+    <li><strong>Tasa de conversión personal.</strong> Cuántas invitaciones al tap terminan en reseña. Un mozo con muchos taps y pocas reseñas revela un problema de guion; un mozo sin taps revela un problema de adopción.</li>
+    <li><strong>Comparativa entre pares.</strong> El repartidor N.º 42 de Nueva Córdoba contra la media de su sucursal, de su ciudad y de la red completa.</li>
+  </ul>
+
+  <h4>Aplicación directa · gamificación del trabajo operativo</h4>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:26%">Mecanismo</th><th style="width:38%">Implementación</th><th>Efecto sobre el negocio</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Bono mensual por desempeño</td><td>Top 3 de mozos y repartidores por reseñas de 5 estrellas generadas</td><td>El staff se convierte en el motor del posicionamiento</td></tr>
+        <tr><td class="destacado">Ranking inter-sucursal</td><td>Tabla comparativa entre franquicias del mismo país</td><td>Competencia sana entre franquiciados</td></tr>
+        <tr><td class="destacado">Escalafón de carrera</td><td>Historial de calificaciones como insumo de promoción</td><td>Retención del talento con mejor trato al cliente</td></tr>
+        <tr><td class="destacado">Detección temprana</td><td>Alerta por acumulación de quejas en un legajo</td><td>Capacitación quirúrgica en vez de genérica</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    El sistema no solo mide al empleado. <strong>Le da al empleado una razón económica para atender
+    mejor.</strong> Ese es el cambio de comportamiento que ninguna capacitación trimestral sostiene.
+  </div>
+
+  <h3>4.2 · Evolución y tendencias de reseñas por sucursal</h3>
+  <p>El módulo que le da a la Dirección de Franquicias un tablero de red.</p>
+  <ul class="lista">
+    <li><strong>Curva histórica de acumulación</strong> de valoraciones por sucursal, con granularidad diaria, semanal y mensual.</li>
+    <li><strong>Velocidad de acumulación</strong> —reseñas nuevas por semana—, el indicador adelantado más confiable de posicionamiento local, muy por encima del promedio de estrellas, que es un indicador retrasado y de alta inercia.</li>
+    <li><strong>Comparativa multi-sucursal</strong> en un mismo gráfico: Nueva Córdoba contra Cerro de las Rosas contra las sucursales de España, normalizada por volumen de tickets para que la comparación sea justa entre locales de distinto tamaño.</li>
+    <li><strong>Detección de estancamiento.</strong> Una sucursal cuya velocidad cae dos semanas seguidas dispara alerta antes de que el promedio de estrellas se mueva.</li>
+    <li><strong>Benchmark de red.</strong> Cada franquiciado ve su posición contra la media — el dato más persuasivo que existe para movilizar a un rezagado.</li>
+  </ul>
+
+  <h4>Ejemplo de lectura de tablero</h4>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th>Sucursal</th><th class="n">Reseñas / semana</th><th class="n">Δ vs. mes anterior</th><th class="n">Calificación</th><th class="n">Adopción de staff</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Nueva Córdoba</td><td class="n">38</td><td class="n">+22%</td><td class="n">4,8</td><td class="n">94%</td><td><span class="pastilla marca-ok">Referente de red</span></td></tr>
+        <tr><td class="destacado">Cerro de las Rosas</td><td class="n">31</td><td class="n">+15%</td><td class="n">4,7</td><td class="n">88%</td><td><span class="pastilla marca-ok">Sólido</span></td></tr>
+        <tr><td class="destacado">Madrid Centro</td><td class="n">12</td><td class="n">−8%</td><td class="n">4,4</td><td class="n">41%</td><td><span class="pastilla marca-dato">Auditoría requerida</span></td></tr>
+        <tr><td class="destacado">Sucursal X</td><td class="n">3</td><td class="n">−40%</td><td class="n">4,1</td><td class="n">9%</td><td><span class="pastilla marca-alerta">Intervención inmediata</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="nota">
+    En una red de 120 unidades, este tablero responde en diez segundos la pregunta que hoy demanda
+    semanas de relevamiento: ¿en qué tres sucursales tengo que meterme esta semana?
+  </p>
+
+  <h3>4.3 · Smart Feedback Management · protección de marca en red franquiciada</h3>
+  <p>El módulo de contención de daño reputacional. El sistema califica antes de publicar y bifurca el flujo según el resultado:</p>
+  <ul class="lista">
+    <li><strong>5 estrellas.</strong> El cliente es dirigido a la ficha de Google de <em>esa sucursal específica</em>, para consolidar la reseña pública donde impacta en el posicionamiento local.</li>
+    <li><strong>1 a 4 estrellas.</strong> El sistema abre un formulario privado de resolución de conflictos: la pizza llegó fría, el mozo tardó, el pedido de delivery llegó incompleto, la mesa no estaba limpia.</li>
+  </ul>
+  <p>
+    Y acá está el valor corporativo real: esa queja no queda en la sucursal.
+    <strong>Llega instantáneamente a la Administración Central</strong>, con legajo del empleado
+    involucrado, sucursal y franquiciado, fecha, hora y canal, texto literal del cliente y datos de
+    contacto para la recuperación.
+  </p>
+
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:30%">Beneficio</th><th>Impacto en la red</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Auditoría interna del franquiciado</td><td>La central evalúa el desempeño operativo real de cada franquicia con evidencia documental, no con reportes autoinformados</td></tr>
+        <tr><td class="destacado">Ventana de recuperación</td><td>Se contacta al cliente insatisfecho y se resuelve antes de que la insatisfacción escale</td></tr>
+        <tr><td class="destacado">Protección de marca</td><td>El problema se detecta y corrige internamente, antes de dañar públicamente a la marca en toda la red</td></tr>
+        <tr><td class="destacado">Trazabilidad de patrones</td><td>Si tres sucursales reportan «pizza fría en delivery», el problema es de proceso logístico, no de personas</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="aviso">
+    <h4>Nota de cumplimiento · lectura obligatoria para Legales</h4>
+    <p>
+      Este módulo se implementa manteniendo <strong>el acceso al link público de Google siempre
+      visible y disponible para todo cliente, cualquiera sea su calificación</strong>. La bifurcación
+      funciona como <em>oferta adicional</em> de un canal privado de resolución, nunca como
+      sustitución u ocultamiento del canal público.
+    </p>
+    <p style="margin-bottom:0">
+      Ocultar el acceso público a los clientes insatisfechos constituye <em>review gating</em>,
+      práctica expresamente prohibida por las políticas de contenido de Google Business Profile, con
+      riesgo de eliminación de reseñas o penalización de la ficha. MetricsField configura el módulo
+      bajo este criterio por defecto en toda la red, y el punto se documenta formalmente en el anexo
+      técnico del contrato.
+    </p>
+  </div>
+
+  <h3>4.4 · Redirección flexible sin costo de impresión</h3>
+  <p>
+    Todo dispositivo apunta a un destino <strong>dinámico</strong>, controlado desde la central. El
+    ID impreso es permanente; el destino al que resuelve, no.
+  </p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:28%">Escenario operativo</th><th style="width:36%">Solución tradicional</th><th>Con redirección flexible</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">La sucursal cambia de ficha de Google</td><td>Reimprimir y redistribuir todas las piezas del local</td><td>Un clic. Efecto inmediato.</td></tr>
+        <tr><td class="destacado">Rotación de personal</td><td>Emitir e imprimir tarjeta nueva</td><td>Reasignar el ID al nuevo legajo desde el panel</td></tr>
+        <tr><td class="destacado">Campaña nacional temporal</td><td>Imprimir piezas de campaña para 120 locales</td><td>Reencaminar 3.000 dispositivos en una operación</td></tr>
+        <tr><td class="destacado">Apertura o cambio de franquiciado</td><td>Todo el hardware queda obsoleto</td><td>El hardware se reasigna íntegro</td></tr>
+        <tr><td class="destacado">Prueba A/B de destino</td><td>Inviable</td><td>Se testea por sucursal y se despliega el ganador</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    Costo de cada uno de estos cambios: <strong>cero</strong>. Sin reimprimir, sin logística y sin
+    desfasaje entre sucursales. En una red de 120 locales, este único módulo elimina de forma
+    permanente una línea de gasto recurrente y una carga operativa completa.
+  </div>
+</div></section>
+
+<!-- ============================ 05 VALOR ============================ -->
+<section id="s5"><div class="env">
+  <div class="num-sec">05</div>
+  <h2>Deconstrucción de valor</h2>
+  <p class="bajada">
+    El valor de una oferta no es una opinión: es el resultado de una ecuación de cuatro variables.
+    Dos se maximizan, dos se minimizan.
+  </p>
+
+  <div class="valor-eq">
+    <div class="rot">Ecuación de valor</div>
+    <div class="eq">
+      <span>Valor</span><span class="op">=</span>
+      <span class="frac">
+        <span class="arr">Resultado soñado&nbsp; × &nbsp;Probabilidad percibida de logro</span>
+        <span class="aba">Retraso temporal&nbsp; × &nbsp;Esfuerzo y sacrificio</span>
+      </span>
+    </div>
+  </div>
+
+  <h3>Numerador · lo que se maximiza</h3>
+
+  <h4>Variable 1 — Resultado soñado</h4>
+  <p>No se vende «más reseñas». Se vende el estado final que la Dirección de Operaciones quiere alcanzar:</p>
+  <ul class="lista">
+    <li><strong>Dominación del Map Pack de Google en cada sucursal del país.</strong> Los tres resultados del bloque de mapas concentran la mayoría de los clics de búsqueda local. Cuando alguien busca «pizza cerca mío» en cualquier barrio con presencia de Pizzería Popular, la sucursal correspondiente ocupa ese bloque.</li>
+    <li><strong>Presencia consolidada en respuestas de IA generativa.</strong> Los motores conversacionales que hoy responden «¿dónde como buena pizza en Córdoba?» se alimentan de volumen, frescura y consistencia de reseñas locales. La marca que acumula evidencia estructurada de forma sostenida es la que esos sistemas citan.</li>
+    <li><strong>Captura predecible del tráfico local de búsquedas.</strong> El flujo de clientes nuevos deja de depender del azar y pasa a ser una variable gestionable, con un input controlable —taps ejecutados por el staff— y un output medible —reseñas nuevas por semana—.</li>
+    <li><strong>Control administrativo total y estandarización del servicio.</strong> El objetivo final no es reputacional: es de gobierno corporativo. Que el estándar de atención sea idéntico y verificable en Nueva Córdoba, en Cerro de las Rosas y en Madrid.</li>
+  </ul>
+
+  <h4>Variable 2 — Probabilidad percibida de logro</h4>
+  <p>
+    <strong>Certeza operativa del 100%</strong>, sustentada en la simplicidad física de la tecnología.
+    El sistema no depende de que el cliente se acuerde, se registre, descargue o busque. Depende de
+    <strong>un solo gesto físico: apoyar el teléfono</strong> — el mismo con el que ya paga el café
+    todos los días. No hay curva de aprendizaje que superar.
+  </p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:34%">Factor de certeza</th><th>Fundamento</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Gesto universal</td><td>El tap NFC ya es un hábito instalado por el pago contactless</td></tr>
+        <tr><td class="destacado">Sin dependencia de memoria</td><td>La acción ocurre en el local o en la puerta, no días después</td></tr>
+        <tr><td class="destacado">Sin conectividad compleja</td><td>Funciona con el celular estándar de cualquier comensal</td></tr>
+        <tr><td class="destacado">Doble vía de acceso</td><td>NFC para dispositivos compatibles, QR dinámico como respaldo universal</td></tr>
+        <tr><td class="destacado">Invitación formal presencial</td><td class="destacado">El 83% de los clientes formalmente invitados al finalizar la experiencia deja la reseña de inmediato</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="nota">
+    Ese último punto es el corazón del sistema: la diferencia entre un cartel pasivo y una invitación
+    formal en el momento de máxima satisfacción es la diferencia entre una tasa de conversión marginal
+    y una tasa de conversión dominante.
+  </p>
+
+  <h3>Denominador · lo que se minimiza</h3>
+
+  <h4>Variable 3 — Retraso temporal</h4>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:32%">Método</th><th style="width:34%">Latencia entre experiencia y reseña</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>Email de seguimiento</td><td class="n">24 – 72 horas</td><td>Bandeja saturada, apertura marginal</td></tr>
+        <tr><td>SMS post-visita</td><td class="n">4 – 24 horas</td><td>Percibido como spam</td></tr>
+        <tr><td>Encuesta impresa en ticket</td><td class="n">Indeterminada</td><td>El ticket se descarta</td></tr>
+        <tr><td class="destacado">Tap NFC MetricsField</td><td class="n destacado">0,3 segundos</td><td class="destacado">Consolidación instantánea</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    La reseña se consolida <strong>en el momento exacto de la entrega y de la máxima
+    satisfacción</strong> —con la pizza todavía en la mesa o en la mano del cliente en la puerta de
+    su casa—, no días después mediante correos de seguimiento que nadie abre.
+  </p>
+  <p>
+    Esto tiene una consecuencia adicional sobre la calidad del dato: la reseña capturada en el pico
+    emocional es <strong>más extensa, más específica y más elogiosa</strong> que la capturada en frío.
+    Y las reseñas extensas y específicas son, justamente, las que más peso tienen en el
+    posicionamiento local.
+  </p>
+
+  <h4>Variable 4 — Esfuerzo y sacrificio</h4>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:24%">Actor</th><th>Esfuerzo requerido</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="destacado">Cliente final</td>
+          <td>Cero. Sin descargar aplicaciones, sin crear cuentas, sin buscar el local en Google, sin tipear el nombre de la sucursal, sin recordar nada después.</td>
+        </tr>
+        <tr>
+          <td class="destacado">Administración Central</td>
+          <td>Cero fricción de supervisión. La auditoría es completamente automatizada: los datos llegan solos al panel corporativo. Sin planillas manuales, sin consolidación entre países, sin pedir reportes a 120 franquiciados, sin visitas de control adicionales y sin personal dedicado a monitoreo reputacional.</td>
+        </tr>
+        <tr>
+          <td class="destacado">Staff de sucursal</td>
+          <td>Sin capacitación técnica —el protocolo se explica en menos de dos minutos— y sin tareas administrativas nuevas: el gesto se integra a la entrega de la cuenta o del pedido, que ya se hace. Con incentivo económico directo: el sistema le paga al empleado por hacerlo bien.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Resultado de la ecuación</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:30%">Variable</th><th style="width:20%">Dirección</th><th>Estado en este sistema</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Resultado soñado</td><td><span class="pastilla marca-ok">↑ Maximizado</span></td><td>Dominación del Map Pack y control corporativo total de la red</td></tr>
+        <tr><td class="destacado">Probabilidad percibida</td><td><span class="pastilla marca-ok">↑ Maximizada</span></td><td>Gesto físico de un segundo · 83% de conversión</td></tr>
+        <tr><td class="destacado">Retraso temporal</td><td><span class="pastilla marca-dato">↓ Minimizado</span></td><td>0,3 segundos</td></tr>
+        <tr><td class="destacado">Esfuerzo y sacrificio</td><td><span class="pastilla marca-dato">↓ Minimizado</span></td><td>Cero para el cliente, cero fricción para la administración</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    Con el numerador maximizado y el denominador tendiendo a cero, <strong>el valor percibido de la
+    oferta se dispara</strong>. Sobre ese fundamento se apoya la estructura financiera que sigue.
+  </div>
+</div></section>
+
+<!-- ============================ 06 FINANCIERO ============================ -->
+<section id="s6"><div class="env">
+  <div class="num-sec">06</div>
+  <h2>Estructura financiera · LTV y ROI</h2>
+  <p class="bajada">
+    Toda la argumentación anterior es cualitativa. Esta sección la traduce a números, con los datos
+    promedio de la plaza de Córdoba.
+  </p>
+
+  <h3>6.1 · Parámetros de entrada</h3>
+  <p class="nota" style="margin-bottom:0">Sucursal promedio de Pizzería Popular, plaza Córdoba.</p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:28%">Parámetro</th><th class="n" style="width:20%">Valor</th><th>Definición</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Ticket promedio</td><td class="n destacado">$40.000 ARS</td><td>Mesa familiar de 4 personas en salón, o combo de delivery familiar completo</td></tr>
+        <tr><td class="destacado">Frecuencia anual de compra</td><td class="n destacado">12</td><td>Cliente fiel — una compra por mes</td></tr>
+        <tr><td class="destacado">Vida media del cliente</td><td class="n destacado">3 años</td><td>Permanencia antes de migrar a otra marca</td></tr>
+        <tr><td class="destacado">Inversión del sistema</td><td class="n destacado">$180.000 ARS</td><td>Pack Corporativo Premium por sucursal — pago único de por vida</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>6.2 · Valor del tiempo de vida del cliente</h3>
+  <div class="formula">
+    <div class="formula-tit">Fórmula</div>
+    <div class="eq">
+      <span>LTV</span><span class="op">=</span><span>Ticket promedio</span><span class="op">×</span>
+      <span>Frecuencia anual de compra</span><span class="op">×</span><span>Vida media del cliente</span>
+    </div>
+    <div class="paso">Aplicación</div>
+    <div class="eq">
+      <span>LTV</span><span class="op">=</span><span>$40.000</span><span class="op">×</span>
+      <span>12</span><span class="op">×</span><span>3</span>
+      <span class="op">=</span><span class="eq-res">$1.440.000 ARS</span>
+    </div>
+  </div>
+  <div class="destaque">
+    <strong>Un solo cliente fiel de Pizzería Popular vale $1.440.000 ARS</strong> a lo largo de su
+    vida como cliente. Este número reencuadra toda la conversación de precio: la discusión no es
+    cuánto cuesta el sistema, sino cuánto vale cada cliente que hoy se pierde por no aparecer en el
+    Map Pack, o que se va por una mala experiencia que nunca llegó a la central.
+  </div>
+
+  <h3>6.3 · Retorno de inversión del sistema</h3>
+  <div class="formula">
+    <div class="formula-tit">Fórmula</div>
+    <div class="eq">
+      <span>ROI</span><span class="op">=</span>
+      <span class="frac">
+        <span class="arr">( Nuevos clientes anuales &nbsp;×&nbsp; LTV ) &nbsp;−&nbsp; Inversión NFC</span>
+        <span class="aba">Inversión NFC</span>
+      </span>
+      <span class="op">×</span><span>100</span>
+    </div>
+    <div class="paso">Escenario umbral · un solo cliente en todo el año</div>
+    <div class="eq">
+      <span>ROI</span><span class="op">=</span>
+      <span class="frac">
+        <span class="arr">( 1 × $1.440.000 ) − $180.000</span>
+        <span class="aba">$180.000</span>
+      </span>
+      <span class="op">×</span><span>100</span>
+      <span class="op">=</span><span class="eq-res">700%</span>
+    </div>
+  </div>
+  <p class="nota">
+    Modelamos el escenario más conservador imaginable: que el sistema, en todo un año, con 20
+    expositores y 5 tarjetas operando en la sucursal, capte o retenga un único cliente recurrente.
+  </p>
+
+  <h3>6.4 · El precio relativo del sistema</h3>
+  <div class="cifras">
+    <div class="cifra inv"><b>700%</b><span>ROI con un solo cliente</span><em>$1.260.000 de retorno neto sobre $180.000 invertidos.</em></div>
+    <div class="cifra"><b>8×</b><span>Múltiplo que devuelve un cliente</span><em>$1.440.000 ÷ $180.000. Es 2,6 veces por encima del triple de la inversión.</em></div>
+    <div class="cifra"><b>4,5</b><span>Mesas familiares</span><em>Punto de equilibrio en tres años: $180.000 ÷ $40.000.</em></div>
+    <div class="cifra"><b>$164</b><span>Costo por día</span><em>Inversión amortizada sobre 1.095 días. Menos que una porción de muzzarella.</em></div>
+  </div>
+
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:38%">Métrica de contraste</th><th style="width:28%">Cálculo</th><th class="n">Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>Retorno sobre inversión con 1 cliente</td><td>$1.260.000 ÷ $180.000</td><td class="n destacado">700%</td></tr>
+        <tr><td>Múltiplo que devuelve 1 cliente</td><td>$1.440.000 ÷ $180.000</td><td class="n destacado">8 veces</td></tr>
+        <tr><td>Punto de equilibrio en clientes</td><td>$180.000 ÷ $1.440.000</td><td class="n destacado">0,125 clientes</td></tr>
+        <tr><td>Punto de equilibrio en tickets</td><td>$180.000 ÷ $40.000</td><td class="n destacado">4,5 mesas familiares</td></tr>
+        <tr><td>Costo mensual amortizado (36 meses)</td><td>$180.000 ÷ 36</td><td class="n destacado">$5.000 / mes</td></tr>
+        <tr><td>Costo diario amortizado</td><td>$180.000 ÷ 1.095</td><td class="n destacado">$164 / día</td></tr>
+        <tr><td>Costo por dispositivo instalado</td><td>$180.000 ÷ 25 piezas</td><td class="n destacado">$7.200 por pieza</td></tr>
+        <tr><td>Inversión como porcentaje del LTV de 1 cliente</td><td>$180.000 ÷ $1.440.000</td><td class="n destacado">12,5%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="destaque">
+    Retener o captar <strong>un solo cliente recurrente</strong> devuelve <strong>$1.440.000 ARS</strong>
+    contra una inversión total de <strong>$180.000 ARS</strong>: <strong>8 veces la inversión total del
+    sistema de esa sucursal</strong>, 2,6 veces por encima del triple. El sistema completo se paga con
+    <strong>4,5 mesas familiares repartidas en tres años</strong>. Cuando el retorno de una sola unidad
+    de resultado equivale a ocho veces el costo total, el precio deja de ser una variable de decisión:
+    la única variable relevante pasa a ser el costo de oportunidad de no implementarlo.
+  </div>
+
+  <h3>6.5 · Escenarios de captación · proyección anual por sucursal</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:26%">Escenario</th><th class="n">Clientes nuevos recurrentes / año</th><th class="n">Valor incorporado (LTV)</th><th class="n">ROI</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Umbral mínimo</td><td class="n">1</td><td class="n">$1.440.000</td><td class="n destacado">700%</td></tr>
+        <tr><td class="destacado">Conservador</td><td class="n">5</td><td class="n">$7.200.000</td><td class="n destacado">3.900%</td></tr>
+        <tr><td class="destacado">Base</td><td class="n">15</td><td class="n">$21.600.000</td><td class="n destacado">11.900%</td></tr>
+        <tr><td class="destacado">Objetivo</td><td class="n">30</td><td class="n">$43.200.000</td><td class="n destacado">23.900%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>6.6 · Proyección de red · 120 sucursales</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:38%">Concepto</th><th style="width:28%">Cálculo</th><th class="n">Total</th></tr></thead>
+      <tbody>
+        <tr><td>Inversión total de la red</td><td>120 × $180.000</td><td class="n destacado">$21.600.000 ARS</td></tr>
+        <tr><td>Clientes nuevos — escenario conservador</td><td>120 × 5</td><td class="n destacado">600 clientes</td></tr>
+        <tr><td>Valor de vida incorporado a la red</td><td>600 × $1.440.000</td><td class="n destacado">$864.000.000 ARS</td></tr>
+        <tr class="total"><td>Retorno de red</td><td>($864.000.000 − $21.600.000) ÷ $21.600.000</td><td class="n">3.900%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    Para dimensionarlo en términos de tesorería: la inversión de la red completa —120 sucursales,
+    2.400 expositores, 600 tarjetas, licencias vitalicias y plataforma corporativa— equivale al valor
+    de vida de <strong>15 clientes fieles</strong>. Quince, sobre una base de decenas de miles.
+  </div>
+</div></section>
+
+<!-- ============================ 07 STACK ============================ -->
+<section id="s7"><div class="env">
+  <div class="num-sec">07</div>
+  <h2>Pack Corporativo Premium</h2>
+  <p class="bajada">Desglose completo de lo que recibe cada sucursal, con su valor de mercado individual.</p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:30%">Componente</th><th style="width:44%">Especificación</th><th class="n">Valor de mercado</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Expositores de mesa acrílico premium</td><td>20 unidades · NFC + QR dinámico · ID único impreso</td><td class="n">$500.000</td></tr>
+        <tr><td class="destacado">Tarjetas de PVC portátiles</td><td>5 unidades · mate de alta durabilidad · para mozos y repartidores</td><td class="n">$125.000</td></tr>
+        <tr><td class="destacado">Licencia de redirección dinámica</td><td>De por vida · sin vencimiento · sin abono</td><td class="n">$1.260.000</td></tr>
+        <tr><td class="destacado">ID Tracking para todo el staff</td><td>Vinculación ilimitada de legajos · altas y bajas sin costo</td><td class="n">$420.000</td></tr>
+        <tr><td class="destacado">Smart Feedback Filter</td><td>Bifurcación 5★ / 1-4★ con ruteo a Administración Central</td><td class="n">$360.000</td></tr>
+        <tr><td class="destacado">Auditoría de rendimiento por empleado</td><td>Ranking nominal · detección de patrones · comparativa de red</td><td class="n">$540.000</td></tr>
+        <tr><td class="destacado">Evolución y tendencias por sucursal</td><td>Series históricas · benchmark multi-sucursal y multi-país</td><td class="n">$480.000</td></tr>
+        <tr><td class="destacado">Alertas de inactividad de ID</td><td>Monitoreo permanente de adopción por dispositivo</td><td class="n">$180.000</td></tr>
+        <tr><td class="destacado">Reportes automatizados en PDF</td><td>Generación y distribución semanal a la central</td><td class="n">$240.000</td></tr>
+        <tr><td class="destacado">Playbook de incentivos de personal</td><td>Sistema documentado de gamificación, bonos y rankings</td><td class="n">$300.000</td></tr>
+        <tr><td class="destacado">Implementación y capacitación</td><td>Protocolo operativo de captura post-satisfacción</td><td class="n">$240.000</td></tr>
+        <tr class="total"><td colspan="2">Valor total del stack</td><td class="n">$4.645.000 ARS</td></tr>
+        <tr class="precio"><td colspan="2">Inversión Pack Corporativo Premium · pago único de por vida</td><td class="n">$180.000 ARS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lead" style="margin-top:26px">
+    Sin cuotas. Sin renovación anual. Sin costo por usuario. Sin costo por legajo agregado. Sin costo
+    por redirección.
+  </p>
+</div></section>
+
+<!-- ============================ 08 OBSTÁCULOS ============================ -->
+<section id="s8"><div class="env">
+  <div class="num-sec">08</div>
+  <h2>Resolución anticipada de obstáculos</h2>
+  <p class="bajada">
+    Toda oferta se compra o se rechaza en función de los obstáculos que el decisor anticipa. Cada
+    objeción legítima que planteará la Dirección de Franquicias ya está resuelta dentro del stack.
+  </p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:4%">#</th><th style="width:24%">Obstáculo</th><th style="width:22%">Elemento del stack</th><th>Mecánica de resolución</th><th class="n">Costo de entrega</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="n">1</td>
+          <td>«¿Cómo controlo que los 120 franquiciados usen efectivamente las tarjetas y los expositores?»</td>
+          <td class="destacado">Alertas automáticas de inactividad de ID</td>
+          <td>Cada ID reporta su último tap. Si un dispositivo no registra actividad en el umbral configurado, la central recibe alerta con sucursal, legajo y días de inactividad. La adopción deja de ser un acto de fe y pasa a ser un indicador del tablero.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">2</td>
+          <td>«¿Qué pasa si un mozo esconde la tarjeta justamente porque atiende mal y no quiere ser evaluado?»</td>
+          <td class="destacado">Alertas de inactividad + ranking mensual con incentivo</td>
+          <td>Doble mecanismo. <strong>Detección:</strong> un legajo sin taps mientras sus pares del mismo turno registran actividad normal genera una anomalía visible — esconder la tarjeta se vuelve más evidente que usarla. <strong>Incentivo:</strong> el bono por ranking hace que esconderla tenga un costo económico personal directo. El sistema alinea el interés del empleado con el de la marca.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">3</td>
+          <td>«¿Cómo evitamos que la administración central se sature con miles de datos sin procesar?»</td>
+          <td class="destacado">Reportes PDF semanales + alertas por excepción</td>
+          <td>La central no consume datos crudos: recibe un PDF semanal con los indicadores consolidados, más alertas únicamente cuando algo se sale del umbral. El principio de diseño es <strong>gestión por excepción</strong>: si todo está en verde, no llega nada. El volumen de información que llega a Dirección es constante, tenga la red 120 o 400 sucursales.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">4</td>
+          <td>«¿Y si un franquiciado se niega a implementarlo?»</td>
+          <td class="destacado">Benchmark comparativo de red</td>
+          <td>El ranking inter-sucursal expone la brecha de desempeño con datos objetivos. El franquiciado rezagado ve su posición contra la media de la red. La adopción se vuelve una decisión comercial propia, no una imposición de la central.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">5</td>
+          <td>«¿Qué pasa con la rotación de personal? Perdemos tarjetas todo el tiempo.»</td>
+          <td class="destacado">Redirección flexible y reasignación de ID</td>
+          <td>El ID se desvincula del legajo saliente y se reasigna al entrante desde el panel, en segundos. La tarjeta física se reutiliza íntegra. Cero reimpresión, cero costo por rotación.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">6</td>
+          <td>«¿Cómo se integra esto con nuestros sistemas administrativos actuales?»</td>
+          <td class="destacado">Vinculación por legajo</td>
+          <td>El sistema no reemplaza ni interfiere con el ERP o el sistema de RR.HH. existente: se vincula por el número de legajo que Pizzería Popular ya usa. Sin migración, sin desarrollo a medida, sin proyecto de IT.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">7</td>
+          <td>«¿Y si Google cambia sus reglas o cambiamos de ficha?»</td>
+          <td class="destacado">Redirección flexible sin costo de impresión</td>
+          <td>Todo destino es dinámico y controlado desde la central. Cualquier cambio de plataforma, de ficha o de estrategia se ejecuta con una operación sobre los 3.000 dispositivos de la red. El hardware nunca queda obsoleto.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+        <tr>
+          <td class="n">8</td>
+          <td>«El presupuesto de este trimestre ya está cerrado.»</td>
+          <td class="destacado">Pago único sin abono mensual</td>
+          <td>No genera línea de gasto recurrente ni compromiso presupuestario futuro. Es una compra de activo, no un servicio contratado. A $164 por día amortizado, no compite con ninguna partida operativa relevante.</td>
+          <td class="n destacado">$0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    Los ocho obstáculos se resuelven con funcionalidades ya construidas dentro de la plataforma. No
+    requieren desarrollo adicional, personal dedicado ni costo variable por sucursal. Por eso se
+    incluyen íntegramente en el stack <strong>sin trasladar un peso al precio</strong>.
+  </div>
+</div></section>
+
+<!-- ============================ 09 GARANTÍA ============================ -->
+<section id="s9"><div class="env">
+  <div class="num-sec">09</div>
+  <h2>Garantía asimétrica de riesgo cero</h2>
+  <p class="bajada">
+    Toda la responsabilidad del resultado es nuestra. Pizzería Popular no asume riesgo financiero
+    alguno en esta implementación.
+  </p>
+
+  <div class="garantia">
+    <div class="kicker">Garantía de doble condición con retención de hardware</div>
+    <h3>
+      Si transcurridos 90 días de uso activo la sucursal no logra un incremento comprobado del 30%
+      en su volumen semanal de reseñas —
+    </h3>
+    <h3>
+      — o si, con independencia de ese resultado, la Administración Central de Pizzería Popular
+      determina que el sistema de métricas de personal no le resulta útil para su gestión —
+    </h3>
+    <h3 style="font-weight:600">
+      MetricsField reembolsa el 100% de la inversión realizada. Y Pizzería Popular conserva, sin cargo
+      alguno, la totalidad del hardware entregado — los 20 expositores acrílicos y las 5 tarjetas de
+      PVC de cada sucursal — como compensación por el tiempo invertido por su equipo.
+    </h3>
+    <div class="sello">Riesgo del comprador: cero</div>
+  </div>
+
+  <h3>Por qué la garantía tiene dos condiciones</h3>
+  <p>
+    La primera es <strong>objetiva y medible</strong>: el incremento del 30% en volumen semanal de
+    reseñas se verifica contra la línea de base registrada en los primeros 7 días de operación, con
+    datos auditables en el propio panel. No hay margen de interpretación.
+  </p>
+  <p>
+    La segunda es <strong>deliberadamente subjetiva</strong>: alcanza con que la Administración Central
+    diga que el sistema de métricas de personal no le sirve. Sin justificación, sin proceso de reclamo,
+    sin evaluación de nuestra parte. Se estructuró así porque el criterio real de éxito de este
+    programa no es reputacional, es de control de gestión: si el módulo de auditoría de personal no le
+    cambia la forma de trabajar a la Dirección de Operaciones, el sistema falló aunque las reseñas
+    hayan subido — y en ese caso corresponde devolver el dinero.
+  </p>
+
+  <h3>La asimetría, explicitada</h3>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:22%">Escenario</th><th style="width:44%">Resultado para Pizzería Popular</th><th>Resultado para MetricsField</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">El sistema funciona</td><td>Domina el Map Pack, audita 120 sucursales por legajo y blinda la marca</td><td>Cobra $180.000 por sucursal</td></tr>
+        <tr><td class="destacado">El sistema no funciona</td><td class="destacado">Recupera el 100% del dinero y conserva todo el hardware</td><td>Pierde la producción, la logística, la implementación y el ingreso</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Pizzería Popular no puede terminar esta operación en una posición peor a la actual. En el peor
+    escenario posible termina con el dinero de vuelta y con 2.400 expositores acrílicos y 600 tarjetas
+    de PVC en su poder, sin haber pagado nada.
+  </p>
+  <p class="nota">
+    <strong>Condición única.</strong> «Uso activo» significa que el protocolo de captura
+    post-satisfacción se ejecutó efectivamente, verificable mediante el registro de taps por ID en el
+    panel. La garantía cubre la eficacia de nuestro sistema, y su verificación es responsabilidad
+    nuestra a través de los datos del propio dashboard.
+  </p>
+</div></section>
+
+<!-- ============================ 10 MAGIC ============================ -->
+<section id="s10"><div class="env">
+  <div class="num-sec">10</div>
+  <h2>Nombre del programa · Fórmula M-A-G-I-C</h2>
+  <p class="bajada">Construcción del nombre corporativo a partir de sus cinco componentes.</p>
+
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:10%">Componente</th><th style="width:32%">Definición</th><th>Aplicación a Pizzería Popular</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">M</td><td>Magnetic reason why — el motivo que justifica la oferta ahora</td><td><em>Programa Nacional</em> — apertura del despliegue federal e internacional para la red</td></tr>
+        <tr><td class="destacado">A</td><td>Avatar — a quién está dirigido, con precisión</td><td><em>Franquicias de Pizzería Popular</em> — Dirección de Operaciones, Dirección de Franquicias y Administración Central</td></tr>
+        <tr><td class="destacado">G</td><td>Goal — el resultado concreto y deseado</td><td><em>Auditar a cada mozo y repartidor por legajo y duplicar el posicionamiento local de cada sucursal</em></td></tr>
+        <tr><td class="destacado">I</td><td>Interval of time — el plazo definido de obtención</td><td><em>90 días</em></td></tr>
+        <tr><td class="destacado">C</td><td>Container word — la palabra que da entidad al conjunto</td><td><em>Sistema Llave en Mano</em></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="magic">
+    <div class="kicker">Nombre corporativo del programa</div>
+    <div class="titulo">
+      Programa Nacional de Dominación de Reputación y Auditoría de Servicio para las Franquicias de
+      Pizzería Popular
+    </div>
+    <div class="sub">
+      El Sistema Llave en Mano que audita a cada mozo y repartidor por número de legajo y duplica el
+      posicionamiento local de cada sucursal en 90 días — sin abonos mensuales ni reimpresión de
+      hardware.
+    </div>
+  </div>
+
+  <h3>Denominaciones operativas abreviadas</h3>
+  <p class="nota" style="margin-bottom:0">Para uso interno y en comunicación con franquiciados.</p>
+  <ul class="lista">
+    <li>Programa Dominación Popular 90</li>
+    <li>Sistema de Auditoría de Servicio Pizzería Popular — SASPP</li>
+    <li>Pack Corporativo Premium · Red Pizzería Popular</li>
+  </ul>
+</div></section>
+
+<!-- ============================ 11 IMPLEMENTACIÓN ============================ -->
+<section id="s11"><div class="env">
+  <div class="num-sec">11</div>
+  <h2>Plan de implementación a 90 días</h2>
+  <p class="bajada">Cinco fases, con responsable asignado y salida verificable en cada una.</p>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:18%">Fase</th><th class="n" style="width:12%">Período</th><th style="width:44%">Actividades</th><th>Responsable</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">0 · Configuración</td><td class="n">Días 1 – 7</td><td>Alta de sucursales y franquiciados en el panel. Carga del padrón de legajos. Vinculación de fichas de Google por sucursal. Definición de umbrales de alerta.</td><td>MetricsField + Administración Central</td></tr>
+        <tr><td class="destacado">1 · Despliegue físico</td><td class="n">Días 8 – 21</td><td>Producción y distribución de expositores y tarjetas con ID único. Asignación de dispositivos a legajos. Registro de la línea de base de reseñas.</td><td>MetricsField</td></tr>
+        <tr><td class="destacado">2 · Activación de protocolo</td><td class="n">Días 22 – 35</td><td>Capacitación del staff en el protocolo de captura post-satisfacción. Puesta en marcha del Playbook de Incentivos. Primer ranking mensual.</td><td>MetricsField + encargados de sucursal</td></tr>
+        <tr><td class="destacado">3 · Operación auditada</td><td class="n">Días 36 – 75</td><td>Operación plena. Reportes PDF semanales a la central. Alertas de inactividad activas. Primera ronda de bonos por desempeño.</td><td>Administración Central</td></tr>
+        <tr><td class="destacado">4 · Auditoría de resultados</td><td class="n">Días 76 – 90</td><td>Medición contra línea de base. Comparativa inter-sucursal e inter-país. Evaluación formal de la garantía. Plan de expansión de red.</td><td>Comité de Dirección</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- ============================ 12 SÍNTESIS ============================ -->
+<section id="s12"><div class="env">
+  <div class="num-sec">12</div>
+  <h2>Síntesis de la decisión</h2>
+  <div class="tabla-env">
+    <table>
+      <thead><tr><th style="width:24%">Dimensión</th><th style="width:36%">Situación actual</th><th>Con el programa implementado</th></tr></thead>
+      <tbody>
+        <tr><td class="destacado">Auditoría de personal</td><td>Percepción y mystery shopper esporádico</td><td>Nominal, por legajo, continua y comparable</td></tr>
+        <tr><td class="destacado">Detección de problemas</td><td>Cuando la reseña negativa ya es pública</td><td>En privado, en el instante, con legajo y sucursal</td></tr>
+        <tr><td class="destacado">Comparación entre franquicias</td><td>Reportes autoinformados</td><td>Tablero objetivo, normalizado y multi-país</td></tr>
+        <tr><td class="destacado">Captación de reseñas</td><td>Espontánea y sesgada al reclamo</td><td>Sistemática, en el pico de satisfacción</td></tr>
+        <tr><td class="destacado">Costo de cambios de hardware</td><td>Reimpresión y logística a 120 locales</td><td>Cero — redirección dinámica desde la central</td></tr>
+        <tr><td class="destacado">Estructura de costos</td><td>—</td><td>$180.000 por sucursal, pago único de por vida</td></tr>
+        <tr><td class="destacado">Riesgo asumido</td><td>—</td><td>Cero — reembolso total con retención de hardware</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="destaque">
+    La decisión no es si el sistema es caro: un solo cliente fiel recuperado paga ocho veces el
+    sistema completo de su sucursal. <strong>La decisión es cuántos meses más la red va a operar 120
+    sucursales sin saber, con nombre y apellido, quién está construyendo la reputación de Pizzería
+    Popular y quién la está erosionando.</strong>
+  </div>
+</div></section>
+
+<!-- ============================ 13 CIERRE ============================ -->
+<section id="s13" class="cierre"><div class="env">
+  <img class="logo-cierre" src="__LOGO_BLANCO__" alt="MetricsField">
+  <div class="kicker" style="color:#8A8A8A">13 · Próximo paso</div>
+  <h2>Sesión de diagnóstico de red</h2>
+  <p class="bajada">45 minutos, sin cargo. Para el Director de Operaciones, el Director de Franquicias y el equipo administrativo central.</p>
+  <h4 style="color:#8A8A8A">Salida concreta de la sesión</h4>
+  <ul class="lista">
+    <li>Auditoría en vivo del estado reputacional actual de 5 sucursales testigo de la red</li>
+    <li>Proyección de LTV y ROI con los datos reales de ticket promedio de Pizzería Popular</li>
+    <li>Demostración funcional del dashboard corporativo con datos de la red</li>
+    <li>Definición del piloto: sucursales, plazos y línea de base de medición</li>
+  </ul>
+  <div class="pie">
+    <strong style="color:#FFF">MetricsField</strong> · Córdoba, Argentina · Inteligencia de datos para el mundo físico<br>
+    Documento confidencial elaborado exclusivamente para la Dirección de Pizzería Popular.
+    Los parámetros financieros corresponden a valores promedio de la plaza de Córdoba y se recalibran
+    con los datos reales de la cadena durante la sesión de diagnóstico.
+  </div>
+</div></section>
