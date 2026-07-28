@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-Compila la propuesta corporativa de Pizzería Popular en un HTML autocontenido.
+Compila las propuestas comerciales en HTML autocontenidos.
 
-Toma la plantilla, embebe la tipografía Montserrat, los logos de MetricsField y
-las cuatro fotos de producto como data URIs, y escribe un único archivo que se
-abre sin conexión y se puede enviar por mail o imprimir a PDF.
+Toma cada plantilla de assets/, le inyecta la hoja de estilos de marca, la
+tipografía Montserrat, los logos de MetricsField y las fotos de producto como
+data URIs, y escribe un único archivo por documento que se abre sin conexión y
+se puede enviar por mail o imprimir a PDF.
+
+Documentos que compila:
+    propuesta-pizzeria-popular.html   Cadena de franquicias Pizzería Popular
+    propuesta-agencia-marketing.html  Alianza estratégica B2B con agencia
 
 Uso:
     python3 docs/propuestas/build-propuesta.py
@@ -28,8 +33,11 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent
 ASSETS = BASE / "assets"
 IMG = BASE / "img"
-PLANTILLA = ASSETS / "plantilla.html"
-SALIDA = BASE / "propuesta-pizzeria-popular.html"
+# (plantilla, salida) de cada documento que se compila
+DOCUMENTOS = [
+    ("plantilla-pizzeria.html", "propuesta-pizzeria-popular.html"),
+    ("plantilla-agencia.html", "propuesta-agencia-marketing.html"),
+]
 
 FOTOS = {
     "__FOTO_1__": ("01-expositor", "Expositor acrílico Thanks for visiting"),
@@ -69,15 +77,14 @@ def buscar_foto(base_nombre: str) -> Path | None:
     return None
 
 
-def main() -> int:
-    if not PLANTILLA.exists():
-        print(f"ERROR: falta la plantilla en {PLANTILLA}", file=sys.stderr)
-        return 1
+def compilar(plantilla: Path, salida: Path, faltantes: set) -> None:
+    html = plantilla.read_text(encoding="utf-8")
 
-    html = PLANTILLA.read_text(encoding="utf-8")
+    # Hoja de estilos de marca y tipografía: compartidas por todos los documentos
+    css = (ASSETS / "marca.css").read_text(encoding="utf-8")
+    css = css.replace("__FONT_CSS__", (ASSETS / "montserrat-inline.css").read_text())
+    html = html.replace("__MARCA_CSS__", css)
 
-    # Tipografía y logos: obligatorios, viven en assets/
-    html = html.replace("__FONT_CSS__", (ASSETS / "montserrat-inline.css").read_text())
     for token, archivo in (
         ("__LOGO_BLANCO__", "logo-blanco.png"),
         ("__LOGO_NEGRO__", "logo-negro.png"),
@@ -87,25 +94,35 @@ def main() -> int:
         if token in html:
             html = html.replace(token, data_uri(ASSETS / archivo))
 
-    faltantes = []
     for token, (nombre, descripcion) in FOTOS.items():
+        if token not in html:
+            continue
         ruta = buscar_foto(nombre)
         if ruta:
             html = html.replace(token, data_uri(ruta))
-            print(f"  ok  {token} -> img/{ruta.name} ({ruta.stat().st_size // 1024} KB)")
         else:
             html = html.replace(token, marcador(descripcion))
-            faltantes.append(f"{nombre}{EXTENSIONES[0]}  ({descripcion})")
+            faltantes.add(f"{nombre}{EXTENSIONES[0]}  ({descripcion})")
 
-    SALIDA.write_text(html, encoding="utf-8")
-    print(f"\nEscrito: {SALIDA.relative_to(BASE.parent.parent)}  "
-          f"({SALIDA.stat().st_size // 1024} KB, autocontenido)")
+    salida.write_text(html, encoding="utf-8")
+    print(f"  {salida.name}  ({salida.stat().st_size // 1024} KB, autocontenido)")
+
+
+def main() -> int:
+    faltantes: set = set()
+    print("Compilando propuestas:")
+    for nombre_plantilla, nombre_salida in DOCUMENTOS:
+        plantilla = ASSETS / nombre_plantilla
+        if not plantilla.exists():
+            print(f"ERROR: falta la plantilla {plantilla}", file=sys.stderr)
+            return 1
+        compilar(plantilla, BASE / nombre_salida, faltantes)
 
     if faltantes:
         print("\nFaltan estas fotos en docs/propuestas/img/ :")
-        for f in faltantes:
+        for f in sorted(faltantes):
             print(f"  - {f}")
-        print("Copialas ahí y volvé a correr el script para cerrar el archivo final.")
+        print("Copialas ahí y volvé a correr el script para cerrar los archivos finales.")
     return 0
 
 
