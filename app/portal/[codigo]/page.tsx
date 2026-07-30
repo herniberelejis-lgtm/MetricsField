@@ -57,6 +57,7 @@ import {
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
 import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
+import ScrollFadeRow from "@/components/ScrollFadeRow";
 import PortalShell, {
   IconGrid,
   IconStarNav,
@@ -597,33 +598,40 @@ export default async function PortalPage({
       <>
         {/* Selector compacto: todos los locales, el elegido resaltado —
             cambiarlo recarga la página con ese local como "activo" en
-            todo el portal, así que el detalle de abajo es siempre suyo. */}
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          {ubicaciones.map((s) => {
-            const activa = s.id === activo.id;
-            const chip = (
-              <a
-                href={hrefSucursal(c.codigoAcceso, c.id, s)}
-                className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
-                  activa
-                    ? "bg-brand text-white"
-                    : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {s.nombre}
-              </a>
-            );
-            // En mobile la tira es más ancha que la pantalla — sin esto, si
-            // el local elegido está lejos del principio, entrás y no lo ves
-            // resaltado sin scrollear la tira vos mismo.
-            return activa ? (
-              <ScrollActiveIntoView key={s.id}>{chip}</ScrollActiveIntoView>
-            ) : (
-              <div key={s.id} className="contents">
-                {chip}
-              </div>
-            );
-          })}
+            todo el portal, así que el detalle de abajo es siempre suyo.
+            ScrollFadeRow agrega el degradé en el borde cuando hay más
+            locales de los que entran en el ancho disponible — sin esto,
+            el último visible queda cortado a mitad de nombre, sin ninguna
+            pista de que hay más para scrollear (el scrollbar nativo puede
+            estar oculto según el navegador/SO). */}
+        <div className="mb-4">
+          <ScrollFadeRow>
+            {ubicaciones.map((s) => {
+              const activa = s.id === activo.id;
+              const chip = (
+                <a
+                  href={hrefSucursal(c.codigoAcceso, c.id, s)}
+                  className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
+                    activa
+                      ? "bg-brand text-white"
+                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {s.nombre}
+                </a>
+              );
+              // En mobile la tira es más ancha que la pantalla — sin esto,
+              // si el local elegido está lejos del principio, entrás y no
+              // lo ves resaltado sin scrollear la tira vos mismo.
+              return activa ? (
+                <ScrollActiveIntoView key={s.id}>{chip}</ScrollActiveIntoView>
+              ) : (
+                <div key={s.id} className="contents">
+                  {chip}
+                </div>
+              );
+            })}
+          </ScrollFadeRow>
         </div>
 
         <div className="space-y-4">
