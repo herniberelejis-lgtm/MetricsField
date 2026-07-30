@@ -22,17 +22,25 @@ export default function ChartCard({
   legend,
   table,
   children,
+  variant = "solid",
 }: {
   title: string;
   subtitle?: string;
   legend?: LegendItem[];
   table: TableData;
   children: ReactNode;
+  /** "glass" es el look de vidrio esmerilado del portal del cliente —
+   * "solid" (default) es el que sigue usando /admin. */
+  variant?: "solid" | "glass";
 }) {
   const [view, setView] = useState<"chart" | "table">("chart");
+  const wrapClass =
+    variant === "glass"
+      ? "rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl"
+      : "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className={wrapClass}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">{title}</h3>

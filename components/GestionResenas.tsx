@@ -98,7 +98,7 @@ function TarjetaResena({
 
   return (
     <div
-      className={`rounded-xl border border-slate-200 bg-white p-4 transition-all duration-300 ${
+      className={`rounded-2xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl transition-all duration-300 ${
         saliendo ? "-translate-x-2 opacity-0" : "opacity-100"
       }`}
     >
@@ -180,7 +180,7 @@ export default function GestionResenas({
 
   if (pendientes.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
+      <div className="rounded-2xl border border-white/60 bg-white/65 p-4 text-sm text-slate-500 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
         No tenés reseñas pendientes de responder por ahora.
       </div>
     );

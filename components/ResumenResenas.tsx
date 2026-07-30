@@ -65,12 +65,24 @@ const FLECHA_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   flat: "→",
 };
 
-export default function ResumenResenas({ data }: { data: ResumenResenasData }) {
+export default function ResumenResenas({
+  data,
+  variant = "solid",
+}: {
+  data: ResumenResenasData;
+  /** "glass" es el look de vidrio esmerilado del portal del cliente —
+   * "solid" (default) es el que sigue usando la ficha de /admin. */
+  variant?: "solid" | "glass";
+}) {
   const { distribucion, total, promedio, tendencia, temasRecurrentes } = data;
   const max = Math.max(...distribucion.map((d) => d.cantidad), 1);
+  const wrapClass =
+    variant === "glass"
+      ? "rounded-2xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl"
+      : "rounded-xl border border-slate-200 bg-white p-4";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className={wrapClass}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-slate-700">Cómo van tus reseñas</p>
         {promedio !== null && (

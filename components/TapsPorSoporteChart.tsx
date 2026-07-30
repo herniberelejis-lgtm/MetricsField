@@ -83,6 +83,7 @@ export default function TapsPorSoporteChart({
 
   return (
     <ChartCard
+      variant="glass"
       title="Taps por día"
       subtitle={`Últimos ${labels.length} días${mostrarQr ? " · separados por NFC y QR" : ""}`}
       legend={

@@ -57,6 +57,7 @@ export default function TendenciaResenasChart({
 
   return (
     <ChartCard
+      variant="glass"
       title="Tendencia de reseñas"
       subtitle="Cantidad total y calidad (rating promedio) mes a mes"
       legend={[
