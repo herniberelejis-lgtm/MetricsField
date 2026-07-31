@@ -154,29 +154,37 @@ export default async function HardwarePage({
                     <td className="px-4 py-3 text-xs text-slate-500">{p.lote || "—"}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3">
-                      <form action={accionAsignarPieza} className="flex flex-wrap items-center gap-2">
+                      {/* Cada control lleva su label visible arriba: en este
+                          ancho se apilan, así que un encabezado de columna
+                          nunca les queda alineado, y el placeholder solo
+                          desaparecía al escribir. */}
+                      <form action={accionAsignarPieza} className="flex flex-wrap items-end gap-2">
                         <input type="hidden" name="id" value={p.id} />
-                        <select
-                          name="comercioId"
-                          required
-                          aria-label={`Cliente para la pieza ${p.id}`}
-                          className={`${inputCls} w-40`}
-                        >
-                          <option value="">Elegir cliente…</option>
-                          {clientes.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.nombre}
-                              {c.comercioPadreId ? " (sucursal)" : ""}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          name="etiqueta"
-                          placeholder="Mesa 4, mozo Juan…"
-                          required
-                          aria-label={`Etiqueta de la pieza ${p.id}`}
-                          className={`${inputCls} w-36`}
-                        />
+                        <Field label="Cliente">
+                          <select
+                            name="comercioId"
+                            required
+                            aria-label={`Cliente para la pieza ${p.id}`}
+                            className={`${inputCls} w-40`}
+                          >
+                            <option value="">Elegir cliente…</option>
+                            {clientes.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.nombre}
+                                {c.comercioPadreId ? " (sucursal)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                        <Field label="Etiqueta">
+                          <input
+                            name="etiqueta"
+                            placeholder="Mesa 4, mozo Juan…"
+                            required
+                            aria-label={`Etiqueta de la pieza ${p.id}`}
+                            className={`${inputCls} w-36`}
+                          />
+                        </Field>
                         <input type="hidden" name="destino" value="resena" />
                         <button
                           type="submit"
