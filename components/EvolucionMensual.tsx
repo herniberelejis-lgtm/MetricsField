@@ -90,7 +90,7 @@ function FilaMes({
         aria-expanded={open}
       >
         <td className="px-4 py-2.5 font-medium text-slate-800">
-          <span className="mr-1.5 inline-block text-slate-400">{open ? "▾" : "▸"}</span>
+          <span className="mr-1.5 inline-block text-slate-500">{open ? "▾" : "▸"}</span>
           {fmtMes(h.mes)}
         </td>
         <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasNuevas)}</td>
@@ -104,7 +104,7 @@ function FilaMes({
           <td colSpan={cols} className="px-4 py-4">
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                   Temas más repetidos este mes
                 </p>
                 {detalle && detalle.terminos.length > 0 ? (
@@ -116,11 +116,11 @@ function FilaMes({
                           className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
                         >
                           {t.termino}
-                          <span className="tabular-nums text-slate-400">{t.conteo}</span>
+                          <span className="tabular-nums text-slate-500">{t.conteo}</span>
                         </span>
                       ))}
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-slate-500">
                       Sobre {detalle.nResenasTexto} reseña
                       {detalle.nResenasTexto === 1 ? "" : "s"} y feedback con texto de ese mes.
                     </p>
@@ -132,7 +132,7 @@ function FilaMes({
                   </p>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Horarios y empleados mencionados: no disponibles todavía con los
                 datos que se registran hoy.
               </p>

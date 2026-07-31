@@ -132,15 +132,19 @@ export function CalificacionGoogleCard({
 
       {deltaRating !== null && deltaResenas !== null && (
         <div className="mt-3 border-t border-slate-100 pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          {/* Medido sobre producción: slate-400 a 10px daba 2.56:1 y
+              emerald-600 a 12px daba 3.77:1, los dos abajo del mínimo AA de
+              4.5:1. Es el dato que más le importa al comercio ("+106 reseñas
+              desde que usás MetricsField"), así que tiene que leerse. */}
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Desde que usás MetricsField
           </p>
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-            <span className={deltaRating >= 0 ? "text-emerald-600" : "text-rose-600"}>
+            <span className={deltaRating >= 0 ? "text-emerald-700" : "text-rose-700"}>
               {deltaRating >= 0 ? "+" : ""}
               {deltaRating.toFixed(1)}★
             </span>
-            <span className={deltaResenas >= 0 ? "text-emerald-600" : "text-rose-600"}>
+            <span className={deltaResenas >= 0 ? "text-emerald-700" : "text-rose-700"}>
               {deltaResenas >= 0 ? "+" : ""}
               {fmtNum(deltaResenas)} reseñas
             </span>
@@ -201,7 +205,7 @@ export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-2">
                   <span className="truncate text-sm font-medium text-slate-800">{r.autor}</span>
-                  <span className="shrink-0 text-[11px] text-slate-400">{tiempoRelativo(r.fecha)}</span>
+                  <span className="shrink-0 text-[11px] text-slate-500">{tiempoRelativo(r.fecha)}</span>
                 </div>
                 <span className="text-xs text-amber-400" aria-hidden>
                   {"★".repeat(r.estrellas)}

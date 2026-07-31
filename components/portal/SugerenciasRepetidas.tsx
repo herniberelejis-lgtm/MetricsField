@@ -21,7 +21,7 @@ export default function SugerenciasRepetidas({
       </p>
 
       {temas.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-500">
           Todavía no hay suficientes reseñas con texto para detectar un patrón repetido.
         </p>
       ) : (
@@ -32,7 +32,7 @@ export default function SugerenciasRepetidas({
               className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
             >
               {t.termino}
-              <span className="tabular-nums text-slate-400">{t.conteo}</span>
+              <span className="tabular-nums text-slate-500">{t.conteo}</span>
             </span>
           ))}
         </div>

@@ -105,7 +105,7 @@ export default async function CompetenciaPage({
 
         {competidores.length > 0 && (
           <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Competidores cargados
             </p>
             {competidores.map((comp) => (
@@ -132,7 +132,7 @@ export default async function CompetenciaPage({
                         {" · "}
                         {comp.totalResenas ?? "—"} reseñas
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-400">
+                      <p className="mt-0.5 text-xs text-slate-500">
                         Actualizado {new Date(comp.actualizadoEn).toLocaleString("es-AR")} · se refresca solo todos los días
                       </p>
                     </div>

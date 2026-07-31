@@ -157,7 +157,9 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    // En mobile el título y las acciones se pisaban: el subtítulo quedaba en
+    // cuatro renglones al lado de los chips de período. Apilados hasta sm.
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">
           {title}
@@ -182,12 +184,15 @@ export function Kpi({
   delta?: { dir: "up" | "down" | "flat"; text: string; good?: boolean };
   variant?: "solid" | "glass";
 }) {
+  // slate-400 sobre blanco da 2.56:1 y emerald-600 a 12px da 3.77:1: los dos
+  // quedan abajo del mínimo AA (4.5:1) justo en la línea que aclara el período
+  // del número. Un tono más oscuro cada uno y pasan sin cambiar el look.
   const deltaColor =
     !delta || delta.dir === "flat"
-      ? "text-slate-400"
+      ? "text-slate-500"
       : delta.good
-        ? "text-emerald-600"
-        : "text-rose-600";
+        ? "text-emerald-700"
+        : "text-rose-700";
   const arrow =
     delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "→";
   return (
@@ -202,7 +207,7 @@ export function Kpi({
             {arrow} {delta.text}
           </span>
         )}
-        {hint && <span className="text-slate-400">{hint}</span>}
+        {hint && <span className="text-slate-500">{hint}</span>}
       </div>
     </Card>
   );

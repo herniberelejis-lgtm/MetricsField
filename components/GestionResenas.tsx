@@ -109,7 +109,7 @@ function TarjetaResena({
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{resena.autor}</div>
-            <div className="text-xs text-slate-400">{fechaConHora(resena)}</div>
+            <div className="text-xs text-slate-500">{fechaConHora(resena)}</div>
           </div>
         </div>
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
@@ -122,7 +122,7 @@ function TarjetaResena({
 
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
             Respuesta sugerida — editala si querés
           </span>
           <button
@@ -157,7 +157,7 @@ function TarjetaResena({
           Descartar
         </button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-400">
+      <p className="mt-2 text-[11px] text-slate-500">
         Al aprobar, guardamos esta respuesta acá. Todavía no podemos publicarla sola en Google —
         copiala y pegala vos como respuesta de la reseña.
       </p>

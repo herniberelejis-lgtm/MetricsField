@@ -65,25 +65,25 @@ export default async function ClientesPage() {
 
               <Link href={`/admin/clientes/${c.id}`}>
                 <div className="mt-4 flex items-center justify-between">
-                  {m ? <Stars rating={m.ratingPromedio} /> : <span className="text-xs text-slate-400">sin datos</span>}
+                  {m ? <Stars rating={m.ratingPromedio} /> : <span className="text-xs text-slate-500">sin datos</span>}
                   <EstadoBadge estado={c.estado} />
                 </div>
 
                 <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-center">
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">Reseñas</dt>
+                    <dt className="text-[11px] uppercase text-slate-500">Reseñas</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {m?.resenasTotal ?? "—"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">Visitas</dt>
+                    <dt className="text-[11px] uppercase text-slate-500">Visitas</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {m?.visitasPerfil ?? "—"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">IA</dt>
+                    <dt className="text-[11px] uppercase text-slate-500">IA</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {c.plan === "Premium" ? citasIA(m) : "—"}
                     </dd>

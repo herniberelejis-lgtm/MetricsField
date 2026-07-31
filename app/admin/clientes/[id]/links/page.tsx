@@ -113,23 +113,23 @@ export default async function LinksPage({
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <div className="text-lg font-semibold text-slate-900">{totalConNfc}</div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">chips NFC instalados</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">chips NFC instalados</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">{totalConQr}</div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">QR impresos instalados</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">QR impresos instalados</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">
                 {fmtNum(resumenTipo.nfc.taps)}
               </div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps solo-NFC</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">taps solo-NFC</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">
                 {fmtNum(resumenTipo.qr.taps + resumenTipo.ambos.taps)}
               </div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps con QR habilitado</div>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">taps con QR habilitado</div>
             </div>
           </div>
         </Card>
@@ -265,7 +265,7 @@ export default async function LinksPage({
                       <div className="text-lg font-semibold text-slate-900">
                         {fmtNum(l.taps)}
                       </div>
-                      <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                      <div className="text-[11px] uppercase tracking-wide text-slate-500">
                         taps
                       </div>
                     </div>

@@ -75,7 +75,7 @@ export default function GooglePlaceIdField({ defaultValue }: { defaultValue?: st
       {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
 
       {resultados && resultados.length === 0 && (
-        <p className="mt-1.5 text-xs text-slate-400">Sin resultados.</p>
+        <p className="mt-1.5 text-xs text-slate-500">Sin resultados.</p>
       )}
 
       {resultados && resultados.length > 0 && (
@@ -91,7 +91,7 @@ export default function GooglePlaceIdField({ defaultValue }: { defaultValue?: st
                 className="block w-full px-3 py-2 text-left text-xs hover:bg-slate-50"
               >
                 <div className="font-medium text-slate-800">{r.nombre}</div>
-                <div className="text-slate-400">{r.direccion}</div>
+                <div className="text-slate-500">{r.direccion}</div>
               </button>
             </li>
           ))}

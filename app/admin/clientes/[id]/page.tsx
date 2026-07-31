@@ -198,7 +198,7 @@ export default async function ClienteDetallePage({
                       <div className="text-xs text-slate-500">{s.zona}</div>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      {sm ? <Stars rating={sm.ratingPromedio} /> : <span className="text-xs text-slate-400">sin datos</span>}
+                      {sm ? <Stars rating={sm.ratingPromedio} /> : <span className="text-xs text-slate-500">sin datos</span>}
                       <EstadoBadge estado={s.estado} />
                     </div>
                   </Link>
@@ -264,7 +264,7 @@ export default async function ClienteDetallePage({
               c.googleSyncEn ? (
                 <div className="mt-1 text-sm text-slate-800">
                   {c.ratingGoogle?.toFixed(1)}★ · {fmtNum(c.resenasGoogle ?? 0)} reseñas
-                  <span className="ml-2 text-xs text-slate-400">
+                  <span className="ml-2 text-xs text-slate-500">
                     actualizado {new Date(c.googleSyncEn).toLocaleString("es-AR")}
                   </span>
                 </div>
@@ -306,7 +306,7 @@ export default async function ClienteDetallePage({
                 <input type="hidden" name="id" value={c.id} />
                 <button
                   type="submit"
-                  className="text-xs font-medium text-slate-400 hover:text-rose-600"
+                  className="text-xs font-medium text-slate-500 hover:text-rose-600"
                 >
                   Desconectar
                 </button>
