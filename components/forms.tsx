@@ -92,20 +92,34 @@ export function ClienteForm({
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Rubro">
-          <select name="rubro" defaultValue={cliente?.rubro} className={inputCls}>
-            {RUBROS.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
+          <input
+            name="rubro"
+            list="rubros-sugeridos"
+            defaultValue={cliente?.rubro}
+            placeholder="Peluquería, restaurante, taller…"
+            className={inputCls}
+          />
         </Field>
         <Field label="Zona">
-          <select name="zona" defaultValue={cliente?.zona} className={inputCls}>
-            {ZONAS.map((z) => (
-              <option key={z}>{z}</option>
-            ))}
-          </select>
+          <input
+            name="zona"
+            list="zonas-sugeridas"
+            defaultValue={cliente?.zona}
+            placeholder="Güemes, Nueva Córdoba…"
+            className={inputCls}
+          />
         </Field>
       </div>
+      <datalist id="rubros-sugeridos">
+        {RUBROS.map((r) => (
+          <option key={r} value={r} />
+        ))}
+      </datalist>
+      <datalist id="zonas-sugeridas">
+        {ZONAS.map((z) => (
+          <option key={z} value={z} />
+        ))}
+      </datalist>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Plan">
@@ -252,20 +266,32 @@ export function SucursalForm({
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Rubro">
-          <select name="rubro" className={inputCls}>
-            {RUBROS.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
+          <input
+            name="rubro"
+            list="rubros-sugeridos"
+            placeholder="Peluquería, restaurante, taller…"
+            className={inputCls}
+          />
         </Field>
         <Field label="Zona">
-          <select name="zona" className={inputCls}>
-            {ZONAS.map((z) => (
-              <option key={z}>{z}</option>
-            ))}
-          </select>
+          <input
+            name="zona"
+            list="zonas-sugeridas"
+            placeholder="Güemes, Nueva Córdoba…"
+            className={inputCls}
+          />
         </Field>
       </div>
+      <datalist id="rubros-sugeridos">
+        {RUBROS.map((r) => (
+          <option key={r} value={r} />
+        ))}
+      </datalist>
+      <datalist id="zonas-sugeridas">
+        {ZONAS.map((z) => (
+          <option key={z} value={z} />
+        ))}
+      </datalist>
 
       <Field
         label="Link de reseñas de Google"

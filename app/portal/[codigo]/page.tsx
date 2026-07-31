@@ -56,6 +56,8 @@ import {
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import PrioridadesPanel, { type Prioridad } from "@/components/portal/PrioridadesPanel";
+import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
 import ScrollFadeRow from "@/components/ScrollFadeRow";
 import PortalShell, {
@@ -283,7 +285,6 @@ export default async function PortalPage({
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
   // lo único que hay que "hacer", así que va primero pase lo que pase.
-  type Prioridad = { texto: string; href: string; tono: "urgente" | "atencion" | "info" };
   const prioridades: Prioridad[] = [];
   if (resenasPendientes.length > 0) {
     prioridades.push({
@@ -306,12 +307,6 @@ export default async function PortalPage({
       tono: "info",
     });
   }
-  const COLOR_TONO: Record<Prioridad["tono"], string> = {
-    urgente: "bg-rose-500",
-    atencion: "bg-amber-500",
-    info: "bg-brand",
-  };
-
   // Distribución de reseñas por estrella — para la barra 5★..1★ del panel
   // "Mi Rating en Google". Sobre TODAS las reseñas conocidas (no solo las
   // pendientes), igual que resumenResenas más arriba.
@@ -390,30 +385,9 @@ export default async function PortalPage({
       )}
 
       {/* Lo único que requiere una acción del dueño, ordenado por
-          urgencia — todo lo demás en este portal es informativo. */}
-      {prioridades.length > 0 && (
-        <Card className="mb-4 !p-0 overflow-hidden">
-          <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Necesita tu atención</p>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
-              {prioridades.length}
-            </span>
-          </div>
-          <div className="divide-y divide-slate-100 border-t border-slate-100">
-            {prioridades.map((p) => (
-              <a
-                key={p.href + p.texto}
-                href={p.href}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
-              >
-                <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_TONO[p.tono]}`} aria-hidden />
-                <span className="flex-1">{p.texto}</span>
-                <span className="text-slate-300" aria-hidden>→</span>
-              </a>
-            ))}
-          </div>
-        </Card>
-      )}
+          urgencia — todo lo demás en este portal es informativo. Arranca
+          colapsado (ver PrioridadesPanel) para no ocupar media pantalla. */}
+      <PrioridadesPanel prioridades={prioridades} />
 
       {/* De un vistazo: para abrir el portal y entender el estado del
           negocio sin tener que entrar a ninguna otra sección todavía.
@@ -548,25 +522,27 @@ export default async function PortalPage({
   // sus reseñas de Google, sin depender del equipo de MetricsField.
   if (resenas.length > 0) {
     panels.resenas = (
-      <Card>
+      <Card variant="glass">
         <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
         <p className="mt-1 text-xs text-slate-500">
-          Las positivas se responden solas (ver más abajo); las que necesitan tu
-          criterio quedan acá para que las edites, apruebes y copies a Google vos mismo.
+          Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
+          Google vos mismo — todavía no publicamos nada en tu nombre.
         </p>
         <div className="mt-3">
-          <ResumenResenas data={resumenResenas} />
+          <ResumenResenas data={resumenResenas} variant="glass" />
         </div>
-        <div className="mt-3">
-          <AutomatizacionResenas
-            codigo={c.codigoAcceso}
-            comercioId={activo.id}
-            activa={activo.autoResponderPositivas}
-            umbral={activo.autoResponderUmbral}
-            apiHabilitada={resenasApiHabilitada()}
-            resenasAutomaticas={resenasAutomaticas}
-          />
-        </div>
+        {resenasApiHabilitada() && (
+          <div className="mt-3">
+            <AutomatizacionResenas
+              codigo={c.codigoAcceso}
+              comercioId={activo.id}
+              activa={activo.autoResponderPositivas}
+              umbral={activo.autoResponderUmbral}
+              apiHabilitada
+              resenasAutomaticas={resenasAutomaticas}
+            />
+          </div>
+        )}
         <div className="mt-3">
           <GestionResenas
             resenasIniciales={resenasPendientes}
@@ -653,7 +629,7 @@ export default async function PortalPage({
               las reseñas de acá son del local completo, no por mesa). Para
               el personal con tarjeta propia sí hay una señal extra más
               abajo, vía menciones de su nombre en el texto. */}
-          <Card>
+          <Card variant="glass">
             <p className="text-sm font-medium text-slate-700">Dispositivos de {activo.nombre}</p>
             {linksConTaps.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">
@@ -698,14 +674,14 @@ export default async function PortalPage({
           </Card>
 
           {/* Evolución de reseñas del local, mes a mes. */}
-          <Card>
+          <Card variant="glass">
             <p className="mb-3 text-sm font-medium text-slate-700">Evolución de {activo.nombre}</p>
             <EvolucionMensual historico={activo.historico} esPremium={esPremium} detalle={detalleMensual} />
           </Card>
 
           {/* Personal con tarjeta NFC propia en este local, si tiene. */}
           {personalEmpleados.length > 0 && (
-            <Card>
+            <Card variant="glass">
               <p className="text-sm font-medium text-slate-700">Personal de {activo.nombre}</p>
               <p className="mt-1 text-xs text-slate-500">
                 Taps de su tarjeta (dato exacto) y reseñas que lo nombran en el texto (señal, no
@@ -719,26 +695,27 @@ export default async function PortalPage({
 
           {/* Gestión de reseñas de este local: boceto de respuesta listo
               para editar y publicar en pocos clics. */}
-          <Card>
+          <Card variant="glass">
             <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
             <p className="mt-1 text-xs text-slate-500">
-              Las positivas se responden solas (si activaste la automatización); las que
-              necesitan tu criterio quedan acá con un borrador de respuesta para que edites,
-              apruebes y copies a Google vos mismo.
+              Te sugerimos un borrador de respuesta para cada reseña; la editás, la apruebas
+              y la copiás a Google vos mismo — todavía no publicamos nada en tu nombre.
             </p>
             <div className="mt-3">
-              <ResumenResenas data={resumenResenas} />
+              <ResumenResenas data={resumenResenas} variant="glass" />
             </div>
-            <div className="mt-3">
-              <AutomatizacionResenas
-                codigo={c.codigoAcceso}
-                comercioId={activo.id}
-                activa={activo.autoResponderPositivas}
-                umbral={activo.autoResponderUmbral}
-                apiHabilitada={resenasApiHabilitada()}
-                resenasAutomaticas={resenasAutomaticas}
-              />
-            </div>
+            {resenasApiHabilitada() && (
+              <div className="mt-3">
+                <AutomatizacionResenas
+                  codigo={c.codigoAcceso}
+                  comercioId={activo.id}
+                  activa={activo.autoResponderPositivas}
+                  umbral={activo.autoResponderUmbral}
+                  apiHabilitada
+                  resenasAutomaticas={resenasAutomaticas}
+                />
+              </div>
+            )}
             <div className="mt-3">
               <GestionResenas
                 resenasIniciales={resenasPendientes}
@@ -754,7 +731,7 @@ export default async function PortalPage({
 
   panels.dispositivos =
     linksConTaps.length === 0 ? (
-      <Card>
+      <Card variant="glass">
         <p className="text-sm text-slate-600">Todavía no tenés dispositivos asignados.</p>
       </Card>
     ) : (
@@ -798,7 +775,7 @@ export default async function PortalPage({
         </div>
 
         {linksConTaps.length > 1 && totalTapsHistorico > 0 && (
-          <Card className="mt-4">
+          <Card variant="glass" className="mt-4">
             <p className="text-sm font-medium text-slate-700">Taps por cartel</p>
             <p className="mt-0.5 text-xs text-slate-500">histórico total, desde que se instaló cada uno</p>
             <div className="mt-3 space-y-2">
@@ -830,7 +807,7 @@ export default async function PortalPage({
   panels.escaneos = (
     <>
       <p className="mb-4 text-sm text-slate-500">Esto se actualiza solo, apenas pasa — nadie tiene que cargar nada.</p>
-      <Card className="mb-4">
+      <Card variant="glass" className="mb-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
@@ -868,7 +845,7 @@ export default async function PortalPage({
           comercioId={activo.id}
         />
       ) : (
-        <Card>
+        <Card variant="glass">
           <p className="text-sm text-slate-600">
             Todavía no hay actividad del cartel. En cuanto alguien lo toque por primera vez,
             vas a ver acá el total de taps.
@@ -892,7 +869,7 @@ export default async function PortalPage({
 
   panels.rating = (
     <>
-      <Card className="mb-4">
+      <Card variant="glass" className="mb-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <span
@@ -922,12 +899,17 @@ export default async function PortalPage({
               )}
             </div>
           </div>
-          <a
-            href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`}
-            className={`shrink-0 ${gbpConectado ? btnSecondary : btnPrimary}`}
-          >
-            {gbpConectado ? "Reconectar" : "Conectar con Google"}
-          </a>
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`}
+              className={gbpConectado ? btnSecondary : btnPrimary}
+            >
+              {gbpConectado ? "Reconectar" : "Conectar con Google"}
+            </a>
+            {gbpConectado && (
+              <DesconectarGoogleBoton codigo={c.codigoAcceso} comercioId={activo.id} />
+            )}
+          </div>
         </div>
         {gbpPorVencer && (
           <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
@@ -941,7 +923,7 @@ export default async function PortalPage({
       </Card>
 
       {activo.googleSyncEn && (
-        <Card className="mb-4">
+        <Card variant="glass" className="mb-4">
           <p className="text-sm font-medium text-slate-700">Tu ficha de Google ahora mismo</p>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-semibold tracking-tight text-slate-900">{activo.ratingGoogle?.toFixed(1)}★</span>
@@ -954,7 +936,7 @@ export default async function PortalPage({
       )}
 
       {ratingHero !== null && (
-        <Card className="mb-4 max-w-md">
+        <Card variant="glass" className="mb-4 max-w-md">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Calificación</p>
           <div className="mt-2 text-4xl font-bold tracking-tight text-slate-900 tabular-nums">{ratingHero.toFixed(1)}</div>
           <Stars rating={ratingHero} />
@@ -975,7 +957,7 @@ export default async function PortalPage({
       )}
 
       {resenas.length > 0 && (
-        <Card>
+        <Card variant="glass">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cómo vienen tus reseñas</p>
           <div className="mt-3 flex flex-col gap-2">
             {distribucionEstrellas.map((d) => (
@@ -1010,7 +992,7 @@ export default async function PortalPage({
   panels.mes = (
     <>
       {!m ? (
-        <Card>
+        <Card variant="glass">
           <p className="text-sm text-slate-600">
             Todavía no cargamos las métricas de este mes (reseñas, posición en Maps, visitas).
             Se actualiza una vez al mes — mientras tanto, en "Escaneos" ya ves lo que pasa con
@@ -1021,6 +1003,7 @@ export default async function PortalPage({
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <Kpi
+              variant="glass"
               label="Reseñas nuevas"
               value={fmtNum(m.resenasNuevas)}
               hint={`total ${fmtNum(m.resenasTotal)}`}
@@ -1034,8 +1017,9 @@ export default async function PortalPage({
                   : undefined
               }
             />
-            <Kpi label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
+            <Kpi variant="glass" label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
             <Kpi
+              variant="glass"
               label={esPremium ? "Citaciones en IA" : "Clics cómo llegar"}
               value={fmtNum(esPremium ? citasIA(m) : m.clicsComoLlegar)}
               hint={esPremium ? "ChatGPT · Copilot · Perplexity" : undefined}
@@ -1052,14 +1036,14 @@ export default async function PortalPage({
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card>
+            <Card variant="glass">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Reseñas acumuladas</span>
                 <Stars rating={m.ratingPromedio} />
               </div>
               <Sparkline values={activo.historico.map((h) => h.resenasTotal)} width={280} height={60} />
             </Card>
-            <Card>
+            <Card variant="glass">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
               </div>
@@ -1070,7 +1054,7 @@ export default async function PortalPage({
       )}
 
       {esPremium && (
-        <Card className="mt-4">
+        <Card variant="glass" className="mt-4">
           <h2 className="text-sm font-medium text-slate-700">Tu negocio en la IA este mes</h2>
           <ul className="mt-2 space-y-1 text-sm text-slate-600">
             <li>· ChatGPT te recomendó {fmtNum(m?.citasChatGPT ?? 0)} veces</li>
@@ -1101,7 +1085,7 @@ export default async function PortalPage({
       )}
 
       {checklist.length > 0 && (
-        <Card className="mt-4">
+        <Card variant="glass" className="mt-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-slate-700">Ficha de Google optimizada</p>
             <span className="text-sm font-semibold text-slate-900">{checklistPct}%</span>
@@ -1145,7 +1129,7 @@ export default async function PortalPage({
   );
 
   panels.ayuda = (
-    <Card className="flex flex-wrap items-center justify-between gap-4">
+    <Card variant="glass" className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h3 className="text-sm font-semibold text-slate-800">¿Algo no funciona o tenés una duda?</h3>
         <p className="mt-1.5 text-xs text-slate-500">
@@ -1172,12 +1156,11 @@ export default async function PortalPage({
       clienteNombre={c.nombre}
       clienteSub={`${activo.rubro} · ${activo.zona}${sucursales.length > 0 ? ` · ${activo.nombre}` : ""}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
       planBadge={<PlanBadge plan={c.plan} />}
-      googlePill={
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500">
-          <span className={`h-1.5 w-1.5 rounded-full ${gbpConectado ? "bg-emerald-500" : "bg-slate-300"}`} />
-          {gbpConectado ? "Google conectado" : "Google sin conectar"}
-        </span>
-      }
+      google={{
+        conectado: gbpConectado,
+        conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
+        perfilPanelId: "rating",
+      }}
       whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
       nav={nav}
       panels={panels}

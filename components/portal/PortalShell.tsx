@@ -116,6 +116,16 @@ function IconClose(p: { size?: number; className?: string }) {
     </IconBase>
   );
 }
+function IconGoogleG({ size = 14, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+      <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.46 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.11A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28V6.61H1.26A12 12 0 0 0 0 12c0 1.94.46 3.77 1.26 5.39l4.01-3.11Z" />
+      <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.61l4.01 3.11C6.22 6.86 8.87 4.75 12 4.75Z" />
+    </svg>
+  );
+}
 
 export type PortalNavLeaf = {
   type: "leaf";
@@ -133,11 +143,19 @@ export type PortalNavGroup = {
 };
 export type PortalNavEntry = PortalNavLeaf | PortalNavGroup;
 
+export type PortalGoogleEstado = {
+  conectado: boolean;
+  conectarHref: string;
+  /** Panel al que lleva el badge "Google conectado" — el perfil vive ahí. */
+  perfilPanelId: string;
+};
+
 export default function PortalShell({
   clienteNombre,
   clienteSub,
   planBadge,
-  googlePill,
+  logo,
+  google,
   whatsappHref,
   nav,
   panels,
@@ -146,7 +164,8 @@ export default function PortalShell({
   clienteNombre: string;
   clienteSub: string;
   planBadge: ReactNode;
-  googlePill?: ReactNode;
+  logo?: ReactNode;
+  google?: PortalGoogleEstado;
   whatsappHref?: string | null;
   nav: PortalNavEntry[];
   panels: Record<string, ReactNode>;
@@ -193,13 +212,25 @@ export default function PortalShell({
   const currentPanel = panels[active] ?? panels[defaultPanel];
 
   return (
-    <div className="min-h-screen bg-slate-50 lg:grid lg:grid-cols-[264px_1fr]">
+    <div className="relative isolate min-h-screen lg:grid lg:grid-cols-[264px_1fr]">
+      {/* Fondo de "nubes" pastel — decorativo, fijo detrás de todo el panel
+          (no del sidebar/header, que son de vidrio por encima). La estética
+          la pidió el cliente tal cual de una referencia (glassmorphism sobre
+          degradé rosa/lavanda/durazno), no es la paleta de marca del resto
+          del sitio — vive solo acá, en el portal. */}
+      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-[#fbf9ff]">
+        <div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,_rgba(244,194,222,0.55),_transparent_70%)] blur-2xl" />
+        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(199,196,245,0.55),_transparent_70%)] blur-2xl" />
+        <div className="absolute left-1/3 top-1/2 h-[620px] w-[620px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(255,224,199,0.45),_transparent_70%)] blur-3xl" />
+        <div className="absolute -bottom-40 right-10 h-[440px] w-[440px] rounded-full bg-[radial-gradient(circle,_rgba(196,225,245,0.5),_transparent_70%)] blur-2xl" />
+      </div>
+
       <button
         type="button"
         onClick={() => setNavOpen((v) => !v)}
         aria-label={navOpen ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={navOpen}
-        className="fixed left-3.5 top-3.5 z-50 grid h-11 w-11 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden"
+        className="fixed left-3.5 top-3.5 z-50 grid h-11 w-11 place-items-center rounded-xl border border-white/60 bg-white/80 text-slate-700 shadow-sm backdrop-blur-lg lg:hidden"
       >
         {navOpen ? <IconClose size={20} /> : <IconMenuBars size={20} />}
       </button>
@@ -208,24 +239,26 @@ export default function PortalShell({
           type="button"
           aria-label="Cerrar menú"
           onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-40 bg-black/45 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto bg-slate-950 text-slate-100 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto border border-white/60 bg-white/60 text-slate-600 shadow-xl backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:top-3 lg:my-3 lg:ml-3 lg:h-[calc(100vh-1.5rem)] lg:translate-x-0 lg:rounded-3xl ${
           navOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-slate-950">
-              <path d="M12 2l3.5 3.5L12 9 8.5 5.5 12 2zm7 7l3.5 3.5L19 16l-3.5-3.5L19 9zM5 9l3.5 3.5L5 16l-3.5-3.5L5 9zm7 7l3.5 3.5L12 23l-3.5-3.5L12 16z" />
-            </svg>
-          </span>
+          {logo ?? (
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
+                <path d="M12 2l3.5 3.5L12 9 8.5 5.5 12 2zm7 7l3.5 3.5L19 16l-3.5-3.5L19 9zM5 9l3.5 3.5L5 16l-3.5-3.5L5 9zm7 7l3.5 3.5L12 23l-3.5-3.5L12 16z" />
+              </svg>
+            </span>
+          )}
           <div className="min-w-0">
-            <div className="truncate text-sm font-extrabold tracking-tight text-slate-50">METRICSFIELD</div>
-            <div className="text-[10.5px] text-slate-400">Portal de cliente</div>
+            <div className="truncate text-sm font-extrabold tracking-tight text-slate-900">METRICSFIELD</div>
+            <div className="text-[10.5px] text-slate-500">Portal de cliente</div>
           </div>
         </div>
 
@@ -240,8 +273,8 @@ export default function PortalShell({
                   type="button"
                   onClick={() => goTo(entry.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex min-h-[40px] items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] font-medium transition-colors ${
-                    isActive ? "bg-slate-800/80 text-slate-50" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                  className={`flex min-h-[40px] items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-medium transition-colors ${
+                    isActive ? "bg-white/90 text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/50 hover:text-slate-800"
                   }`}
                 >
                   {entry.icon}
@@ -260,7 +293,7 @@ export default function PortalShell({
                   type="button"
                   onClick={() => setGroupOpen((g) => ({ ...g, [entry.id]: !open }))}
                   aria-expanded={open}
-                  className="flex min-h-[40px] w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13.5px] font-medium text-slate-400 transition-colors hover:bg-slate-900 hover:text-slate-100"
+                  className="flex min-h-[40px] w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-medium text-slate-500 transition-colors hover:bg-white/50 hover:text-slate-800"
                 >
                   {entry.icon}
                   <span className="flex-1 truncate">{entry.label}</span>
@@ -276,8 +309,8 @@ export default function PortalShell({
                           type="button"
                           onClick={() => goTo(item.id)}
                           aria-current={isActive ? "page" : undefined}
-                          className={`flex min-h-[38px] items-center gap-2.5 rounded-lg border-l border-slate-800 px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors ${
-                            isActive ? "bg-slate-800/80 text-slate-50" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                          className={`flex min-h-[38px] items-center gap-2.5 rounded-xl border-l border-white/70 px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors ${
+                            isActive ? "bg-white/90 text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/50 hover:text-slate-800"
                           }`}
                         >
                           {item.icon}
@@ -293,18 +326,45 @@ export default function PortalShell({
           })}
         </nav>
 
-        <div className="border-t border-slate-800 px-5 py-4 text-[11px] leading-snug text-slate-500">
-          Portal privado de <b className="text-slate-300">{clienteNombre}</b>. No compartas este link.
+        <div className="border-t border-white/60 px-5 py-4 text-[11px] leading-snug text-slate-500">
+          Portal privado de <b className="text-slate-700">{clienteNombre}</b>. No compartas este link.
+          <div className="mt-2 flex gap-3">
+            <a href="/privacidad" className="underline underline-offset-2 hover:text-slate-700">
+              Privacidad
+            </a>
+            <a href="/terminos" className="underline underline-offset-2 hover:text-slate-700">
+              Términos
+            </a>
+          </div>
         </div>
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur lg:px-8 lg:pl-8">
+        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/50 bg-white/70 px-5 py-4 backdrop-blur-xl lg:px-8 lg:pl-8">
           <h1 className="truncate pl-11 text-lg font-semibold tracking-tight text-slate-900 lg:pl-0">
             {activeLeaf?.label ?? "Resumen"}
           </h1>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            {googlePill}
+            {google &&
+              (google.conectado ? (
+                <button
+                  type="button"
+                  onClick={() => goTo(google.perfilPanelId)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                  Google conectado
+                  <IconChevron size={13} className="text-emerald-400" />
+                </button>
+              ) : (
+                <a
+                  href={google.conectarHref}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  <IconGoogleG size={13} />
+                  Conectar con Google
+                </a>
+              ))}
             {whatsappHref && (
               <a
                 href={whatsappHref}
@@ -315,7 +375,7 @@ export default function PortalShell({
                 <IconChat size={14} /> Hablar con tu agencia
               </a>
             )}
-            <div className="flex items-center gap-2.5 border-l border-slate-200 pl-3">
+            <div className="flex items-center gap-2.5 border-l border-slate-200/70 pl-3">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
                 {clienteNombre.trim().charAt(0).toUpperCase() || "?"}
               </span>

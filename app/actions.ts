@@ -205,6 +205,11 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
   if (destino !== "resena" && !urlDestino) {
     throw new Error("Este destino necesita una URL.");
   }
+  if (destino === "resena" && urlDestino) {
+    throw new Error(
+      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
+    );
+  }
   await db.crearLink(comercioId, {
     etiqueta: str(fd, "etiqueta") || "Nuevo link",
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
@@ -222,6 +227,14 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
   const comercioId = str(fd, "comercioId");
   const destino = str(fd, "destino") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
+  if (destino !== "resena" && !urlDestino) {
+    throw new Error("Este destino necesita una URL.");
+  }
+  if (destino === "resena" && urlDestino) {
+    throw new Error(
+      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
+    );
+  }
   await db.actualizarLink(linkId, {
     etiqueta: str(fd, "etiqueta"),
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
@@ -266,6 +279,11 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   const urlDestino = str(fd, "urlDestino");
   if (destino !== "resena" && !urlDestino) {
     throw new Error("Este destino necesita una URL.");
+  }
+  if (destino === "resena" && urlDestino) {
+    throw new Error(
+      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
+    );
   }
   await db.asignarPiezaACliente(id, comercioId, {
     etiqueta: str(fd, "etiqueta") || "Sin etiquetar",

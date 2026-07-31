@@ -8,6 +8,7 @@ import {
   actualizarResena,
   actualizarAutomatizacionResenas,
   getTapsPorHora,
+  desconectarGoogleComercio,
   type TapsPorHora,
 } from "@/lib/db";
 import type { Cliente } from "@/lib/types";
@@ -74,6 +75,18 @@ export async function accionActualizarAutomatizacionResenasPortal(fd: FormData):
   const autoResponderUmbral = umbral === 5 ? 5 : 4;
 
   await actualizarAutomatizacionResenas(comercio.id, { autoResponderPositivas, autoResponderUmbral });
+  revalidatePath(`/portal/${codigo}`);
+}
+
+/** El propio comercio revoca la conexión de Google desde su portal — sin
+ * esto, la única forma de desconectar era que el equipo lo hiciera desde
+ * /admin, lo cual no coincidía con lo que dice /privacidad ("o desde el
+ * botón de desconexión de su propio portal"). */
+export async function accionDesconectarGoogleComercioPortal(fd: FormData): Promise<void> {
+  const codigo = String(fd.get("codigo") ?? "");
+  const comercioId = String(fd.get("comercioId") ?? "");
+  const comercio = await comercioAutorizado(codigo, comercioId);
+  await desconectarGoogleComercio(comercio.id);
   revalidatePath(`/portal/${codigo}`);
 }
 

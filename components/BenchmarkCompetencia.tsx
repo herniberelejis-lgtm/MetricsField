@@ -35,7 +35,7 @@ export default function BenchmarkCompetencia({
   const fmtPct = (v: number | null) => (v === null ? null : `${v >= 0 ? "+" : ""}${v.toFixed(0)}%`);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
       {crecimiento && (crecimiento.propioPct !== null || crecimiento.competenciaPct !== null) && (
         <div className="mb-4 rounded-lg bg-brand/5 px-3.5 py-2.5 text-sm">
           <span className="font-medium text-slate-800">

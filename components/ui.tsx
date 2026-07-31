@@ -126,16 +126,22 @@ export function Card({
   children,
   className = "",
   id,
+  variant = "solid",
 }: {
   children: ReactNode;
   className?: string;
   id?: string;
+  /** "glass" es el look de vidrio esmerilado del portal del cliente (fondo
+   * con degradé) — "solid" (default) es el look de siempre, el que usa
+   * /admin, y no cambia. */
+  variant?: "solid" | "glass";
 }) {
+  const base =
+    variant === "glass"
+      ? "rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl"
+      : "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
   return (
-    <div
-      id={id}
-      className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}
-    >
+    <div id={id} className={`${base} ${className}`}>
       {children}
     </div>
   );
@@ -168,11 +174,13 @@ export function Kpi({
   value,
   hint,
   delta,
+  variant = "solid",
 }: {
   label: string;
   value: string;
   hint?: string;
   delta?: { dir: "up" | "down" | "flat"; text: string; good?: boolean };
+  variant?: "solid" | "glass";
 }) {
   const deltaColor =
     !delta || delta.dir === "flat"
@@ -183,7 +191,7 @@ export function Kpi({
   const arrow =
     delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "→";
   return (
-    <Card>
+    <Card variant={variant}>
       <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
         {label}
       </div>

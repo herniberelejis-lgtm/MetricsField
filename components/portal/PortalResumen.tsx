@@ -79,7 +79,7 @@ export function StatChip({
   chipClass: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
       <span
         className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${chipClass}`}
       >
@@ -116,7 +116,7 @@ export function CalificacionGoogleCard({
   const full = Math.round(rating);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
       <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
         <IconPin size={13} className="text-rose-400" />
         Calificación Google
@@ -185,7 +185,7 @@ function tiempoRelativo(fechaISO: string): string {
  * Gestión de reseñas. */
 export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
       <p className="text-sm font-semibold text-slate-800">Reseñas recientes</p>
       {resenas.length === 0 ? (
         <p className="mt-2 text-sm text-slate-500">Todavía no hay reseñas cargadas de este local.</p>
