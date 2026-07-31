@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Glifos, no una librería de íconos: alcanza y no suma dependencia. Lo que sí
+// importa es que se distingan entre sí — Clientes y Actividad usaban ☰ y ≡,
+// que a 16px son el mismo dibujo.
 const nav = [
   { href: "/admin", label: "Panel", icon: "◧" },
-  { href: "/admin/clientes", label: "Clientes", icon: "☰" },
+  { href: "/admin/clientes", label: "Clientes", icon: "◍" },
   { href: "/admin/hardware", label: "Hardware", icon: "▢" },
   { href: "/admin/administradores", label: "Administradores", icon: "◇" },
   { href: "/admin/actividad", label: "Actividad", icon: "≡" },
