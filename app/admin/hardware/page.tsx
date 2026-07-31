@@ -24,7 +24,19 @@ const LABEL_TIPO: Record<string, string> = {
   ambos: "NFC + QR",
 };
 
-export default async function HardwarePage() {
+const ERRORES_ASIGNAR: Record<string, string> = {
+  "sin-cliente": "Elegí a qué cliente asignarla antes de guardar.",
+  "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
+  "url-ignorada":
+    'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre.',
+};
+
+export default async function HardwarePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 
   const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
@@ -38,6 +50,12 @@ export default async function HardwarePage() {
         title="Hardware"
         subtitle={`${inventario.length} piezas generadas · ${libres.length} libres · ${autogestionadas.length} autogestionadas · ${asignadas.length} asignadas`}
       />
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          {ERRORES_ASIGNAR[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
+        </div>
+      )}
 
       <Card className="mb-6">
         <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
