@@ -33,7 +33,7 @@ export default function EvolucionMensual({
   const cols = esPremium ? 6 : 5;
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
+    <div className="overflow-x-auto rounded-2xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
