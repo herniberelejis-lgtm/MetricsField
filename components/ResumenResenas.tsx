@@ -109,7 +109,10 @@ export default function ResumenResenas({
                 <span className="w-8 shrink-0 text-xs text-slate-500">{d.estrellas}★</span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-brand"
+                    // Mismo código de color que el panel: rojo hasta 3★, verde
+                    // de 4★ para arriba. Antes todas las barras eran azules, así
+                    // que una fila de 1★ se veía igual que una de 5★.
+                    className={`h-full rounded-full ${d.estrellas <= 3 ? "bg-rose-500" : "bg-emerald-600"}`}
                     style={{ width: d.cantidad ? `${Math.max(4, (d.cantidad / max) * 100)}%` : "0%" }}
                   />
                 </div>
