@@ -170,8 +170,10 @@ export default async function DashboardPage({
       {/* Detalle por cliente: nada de arriba se filtra por plan — acá se
           puede discriminar el dato de cada uno individualmente. */}
       <h2 className="mb-3 mt-8 text-sm font-semibold text-slate-900">Detalle por cliente</h2>
-      <Card className="overflow-hidden p-0">
-        <table className="w-full text-sm">
+      {/* overflow-x-auto y no overflow-hidden: en mobile la tabla es más ancha
+          que la pantalla y con hidden las últimas columnas se perdían. */}
+      <Card className="overflow-x-auto p-0">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Negocio</th>

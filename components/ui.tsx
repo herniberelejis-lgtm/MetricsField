@@ -157,7 +157,9 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    // En mobile el título y las acciones se pisaban: el subtítulo quedaba en
+    // cuatro renglones al lado de los chips de período. Apilados hasta sm.
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">
           {title}
