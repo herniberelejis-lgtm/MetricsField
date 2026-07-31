@@ -56,6 +56,7 @@ import {
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
 import ScrollFadeRow from "@/components/ScrollFadeRow";
 import PortalShell, {
@@ -922,12 +923,17 @@ export default async function PortalPage({
               )}
             </div>
           </div>
-          <a
-            href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`}
-            className={`shrink-0 ${gbpConectado ? btnSecondary : btnPrimary}`}
-          >
-            {gbpConectado ? "Reconectar" : "Conectar con Google"}
-          </a>
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href={`/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`}
+              className={gbpConectado ? btnSecondary : btnPrimary}
+            >
+              {gbpConectado ? "Reconectar" : "Conectar con Google"}
+            </a>
+            {gbpConectado && (
+              <DesconectarGoogleBoton codigo={c.codigoAcceso} comercioId={activo.id} />
+            )}
+          </div>
         </div>
         {gbpPorVencer && (
           <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
