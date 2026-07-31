@@ -49,12 +49,21 @@ const COLOR_TIPO: Record<string, string> = {
   ambos: "bg-brand/10 text-brand-fg",
 };
 
+const ERRORES_LINK: Record<string, string> = {
+  "sin-url": 'Ese destino necesita una URL — completá "URL de destino" y guardá de nuevo.',
+  "url-ignorada":
+    'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
+};
+
 export default async function LinksPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const [c, links, tapsPorDia] = await Promise.all([
     getCliente(id),
     getLinks(id),
@@ -89,6 +98,12 @@ export default async function LinksPage({
         title="Links NFC"
         subtitle={`${c.nombre} · ${fmtNum(totalTaps)} taps históricos en ${links.length} link${links.length === 1 ? "" : "s"}`}
       />
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          {ERRORES_LINK[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
+        </div>
+      )}
 
       {links.length > 0 && (
         <Card className="mb-6">

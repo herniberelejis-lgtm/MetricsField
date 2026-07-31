@@ -203,12 +203,10 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
   const destino = str(fd, "destino") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
   if (destino !== "resena" && !urlDestino) {
-    throw new Error("Este destino necesita una URL.");
+    redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
   if (destino === "resena" && urlDestino) {
-    throw new Error(
-      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
-    );
+    redirect(`/admin/clientes/${comercioId}/links?error=url-ignorada`);
   }
   await db.crearLink(comercioId, {
     etiqueta: str(fd, "etiqueta") || "Nuevo link",
@@ -228,12 +226,10 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
   const destino = str(fd, "destino") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
   if (destino !== "resena" && !urlDestino) {
-    throw new Error("Este destino necesita una URL.");
+    redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
   if (destino === "resena" && urlDestino) {
-    throw new Error(
-      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
-    );
+    redirect(`/admin/clientes/${comercioId}/links?error=url-ignorada`);
   }
   await db.actualizarLink(linkId, {
     etiqueta: str(fd, "etiqueta"),
@@ -274,16 +270,14 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
   const comercioId = str(fd, "comercioId");
-  if (!comercioId) throw new Error("Elegí a qué cliente asignarla.");
+  if (!comercioId) redirect("/admin/hardware?error=sin-cliente");
   const destino = (str(fd, "destino") || "resena") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
   if (destino !== "resena" && !urlDestino) {
-    throw new Error("Este destino necesita una URL.");
+    redirect("/admin/hardware?error=sin-url");
   }
   if (destino === "resena" && urlDestino) {
-    throw new Error(
-      'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
-    );
+    redirect("/admin/hardware?error=url-ignorada");
   }
   await db.asignarPiezaACliente(id, comercioId, {
     etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
