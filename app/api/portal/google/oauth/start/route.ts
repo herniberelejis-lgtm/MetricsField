@@ -14,7 +14,7 @@ import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 export async function GET(req: NextRequest): Promise<NextResponse> {
   limpiarVencidos();
   const ip = ipDelRequest(req.headers);
-  if (!permitir(`portal-codigo:${ip}`, 20, 10 * 60_000)) {
+  if (!(await permitir(`portal-codigo:${ip}`, 20, 10 * 60_000))) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

@@ -139,7 +139,7 @@ export default async function PortalPage({
   // código inválido, para no confirmarle a quien enumera si pegó cerca.
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  if (!permitir(`portal-codigo:${ip}`, 20, 10 * 60_000)) notFound();
+  if (!(await permitir(`portal-codigo:${ip}`, 20, 10 * 60_000))) notFound();
 
   const c = await getClientePorCodigo(codigo);
   if (!c || c.estado === "baja") notFound();

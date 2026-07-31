@@ -12,7 +12,7 @@ export async function accionLogin(fd: FormData): Promise<void> {
   // se puede probar por fuerza bruta sin límite.
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  if (!permitir(`login:${ip}`, 10, 15 * 60_000)) {
+  if (!(await permitir(`login:${ip}`, 10, 15 * 60_000))) {
     redirect("/login?error=limite");
   }
 
