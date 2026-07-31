@@ -9,3 +9,18 @@
 body {
   @apply bg-slate-50 text-slate-800 antialiased;
 }
+
+/* Quien tenga activado "reducir movimiento" en el sistema (marea, vértigo,
+   migraña) no debería comerse las transiciones del portal ni el scroll
+   animado. No apagamos la animación del todo: la dejamos en 1ms para que
+   los estados finales sigan aplicándose y nada quede a medio camino. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
