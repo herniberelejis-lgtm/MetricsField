@@ -17,7 +17,25 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   eliminar_prospecto: "Eliminó un prospecto",
   agregar_admin: "Agregó un administrador",
   eliminar_admin: "Quitó un administrador",
+  crear_sucursal: "Creó sucursal",
+  generar_lote_piezas: "Generó un lote de piezas",
+  asignar_pieza_hardware: "Asignó una pieza de hardware",
+  // Cobros: la función ya no existe en el código, pero las filas viejas
+  // siguen en la auditoría y tienen que leerse en castellano igual.
+  registrar_cobro: "Registró un cobro",
+  marcar_cobro_pagado: "Marcó un cobro como pagado",
+  eliminar_cobro: "Eliminó un cobro",
 };
+
+// Red de contención: si mañana alguien agrega una acción y se olvida de
+// sumarla al mapa, la pantalla muestra "Asignar pieza hardware" y no el
+// identificador crudo de la base.
+function etiquetaAccion(accion: string): string {
+  const conocida = ETIQUETAS_ACCION[accion];
+  if (conocida) return conocida;
+  const texto = accion.replace(/_/g, " ");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export default async function ActividadPage() {
   const entradas = await getAuditoria(200);
@@ -51,7 +69,7 @@ export default async function ActividadPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-800">
-                  {ETIQUETAS_ACCION[e.accion] ?? e.accion}
+                  {etiquetaAccion(e.accion)}
                 </td>
                 <td className="px-4 py-3 text-slate-500">{e.detalle || "—"}</td>
               </tr>
