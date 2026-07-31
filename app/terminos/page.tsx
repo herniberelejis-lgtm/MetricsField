@@ -136,73 +136,73 @@ export default function TerminosPage() {
             <p className="mt-2 text-sm text-slate-500">Last updated: July 2026</p>
             <div className="mt-8 space-y-6 text-[15px] leading-relaxed">
               <section>
-                <h2 className="text-base font-semibold text-slate-900">1. The service</h2>
+                <h2 className="text-base font-semibold text-slate-900">1. The Service</h2>
                 <p className="mt-2">
                   MetricsField (metricsfield.com) provides local businesses with:
-                  (a) physical hardware using NFC technology and/or QR codes that
-                  directs their customers to leave a public review on Google; and
+                  (a) physical hardware featuring NFC technology and/or QR codes
+                  that direct customers to leave a public review on Google; and
                   (b) a software platform with a private dashboard where the
-                  business can see their sign&rsquo;s activity, their reviews, and
-                  their Google Business Profile metrics. By purchasing or using
-                  either, you accept these terms.
+                  business can view its display activity, reviews, and metrics
+                  from its Google Business Profile. By purchasing or using either
+                  service, you accept these terms.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-base font-semibold text-slate-900">2. Portal access</h2>
+                <h2 className="text-base font-semibold text-slate-900">2. Portal Access</h2>
                 <p className="mt-2">
                   Access to the business portal is via a link with a private code.
-                  The business is responsible for not sharing that link with anyone
-                  outside their business, and may request it be regenerated at any
-                  time. Self-managed hardware pieces are set up with a PIN chosen by
-                  the buyer, who is responsible for keeping it safe.
+                  The business is responsible for not sharing this link with
+                  unauthorized persons; it may request a new link at any time.
+                  Self-managed hardware units are configured with a PIN chosen by
+                  the buyer, who is responsible for safeguarding it.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-base font-semibold text-slate-900">3. Reviews: what we do and don&rsquo;t do</h2>
+                <h2 className="text-base font-semibold text-slate-900">3. Reviews: What We Do and What We Don&rsquo;t Do</h2>
                 <p className="mt-2">
-                  MetricsField helps a business&rsquo;s real customers leave genuine
-                  reviews. We do not write, buy, or fabricate reviews: the sign
-                  directs every customer equally, regardless of their rating, to
-                  the same public Google review form. The business agrees not to
-                  use the service for practices that violate Google&rsquo;s content
-                  policies.
+                  MetricsField helps real customers of a business leave genuine
+                  reviews. We do not write, buy, or generate fake reviews: the
+                  display directs all customers equally, regardless of their
+                  rating, to the same public Google review form. The business
+                  agrees not to use the service for practices contrary to
+                  Google&rsquo;s content policies.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">4. Hardware</h2>
                 <p className="mt-2">
-                  Purchased hardware (standees, cards, stickers) becomes the
-                  property of the business at the time of purchase. Each piece&rsquo;s
-                  destination is configurable via software without needing to
-                  reprint it. The warranty covers manufacturing defects; it does
-                  not cover physical damage, loss, or theft.
+                  Hardware sold (standees, cards, stickers) becomes the property
+                  of the business upon purchase. The destination URL each piece
+                  directs to is configurable via software without needing to
+                  reprint. The warranty covers manufacturing defects; it does not
+                  cover physical damage, loss, or theft.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-base font-semibold text-slate-900">5. Subscription and payments</h2>
+                <h2 className="text-base font-semibold text-slate-900">5. Subscription and Payments</h2>
                 <p className="mt-2">
-                  The software is offered as a monthly subscription, with the
-                  trial period and price communicated at signup. Non-payment may
-                  result in suspension of dashboard access; already-purchased
-                  hardware remains the business&rsquo;s property and keeps working as a
-                  basic redirect.
+                  The software is provided on a monthly subscription basis, with
+                  the trial period and pricing communicated at the time of
+                  sign-up. Non-payment may result in suspension of access to the
+                  dashboard; purchased hardware remains the property of the
+                  business and continues to function as a basic redirect.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">6. Data</h2>
                 <p className="mt-2">
-                  Handling of personal data, and of data obtained from Google
-                  APIs, is described in our{" "}
+                  The handling of personal data and data obtained from Google APIs
+                  is described in our{" "}
                   <a href="/privacidad" className="text-brand-fg underline underline-offset-2">
                     Privacy Policy
                   </a>
-                  . The business may revoke access to their Google account and
-                  request deletion of their data at any time.
+                  . The business may revoke access to its Google account and
+                  request the deletion of its data at any time.
                 </p>
                 <p className="mt-2">
                   On cancellation, or at the business&rsquo;s request, we
@@ -218,23 +218,24 @@ export default function TerminosPage() {
               <section>
                 <h2 className="text-base font-semibold text-slate-900">7. Liability</h2>
                 <p className="mt-2">
-                  MetricsField does not control or guarantee the behavior of
+                  MetricsField does not control or guarantee the operation of
                   third-party platforms (Google, Meta, etc.), including changes to
-                  their policies, APIs, or how they handle the business&rsquo;s
-                  listing. The service is provided &ldquo;as is,&rdquo; with
-                  reasonable best-effort availability and support. Our total
-                  liability to the business is limited to amounts paid for the
+                  their policies, APIs, or how they handle the business listing.
+                  The service is provided &ldquo;as is&rdquo;, with best
+                  reasonable effort regarding availability and support. Our total
+                  liability to the business is limited to the amounts paid for the
                   service in the last 3 months.
                 </p>
               </section>
 
               <section>
-                <h2 className="text-base font-semibold text-slate-900">8. Changes and contact</h2>
+                <h2 className="text-base font-semibold text-slate-900">8. Changes and Contact</h2>
                 <p className="mt-2">
-                  We may update these terms; material changes are communicated
-                  through the service&rsquo;s usual channels. These terms are governed
-                  by the laws of the Argentine Republic, with jurisdiction in the
-                  ordinary courts of the city of Córdoba. Inquiries:{" "}
+                  We may update these terms; relevant changes will be communicated
+                  through the usual service channels. These terms are governed by
+                  the laws of the Republic of Argentina, subject to the
+                  jurisdiction of the ordinary courts of the city of Córdoba.
+                  Inquiries:{" "}
                   <a href="mailto:info@metricsfield.com" className="text-brand-fg underline underline-offset-2">
                     info@metricsfield.com
                   </a>

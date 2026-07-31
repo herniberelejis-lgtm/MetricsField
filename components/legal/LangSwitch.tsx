@@ -12,33 +12,35 @@ export default function LangSwitch({ es, en }: { es: ReactNode; en: ReactNode })
 
   return (
     <div>
-      <div
-        role="group"
-        aria-label="Idioma / Language"
-        className="mb-8 inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold"
-      >
-        <button
-          type="button"
-          onClick={() => setLang("es")}
-          aria-pressed={lang === "es"}
-          className={`rounded-full px-3.5 py-1.5 transition ${
-            lang === "es" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
-          }`}
+      <div className="flex justify-end">
+        <div
+          role="group"
+          aria-label="Idioma / Language"
+          className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold"
         >
-          Español
-        </button>
-        <button
-          type="button"
-          onClick={() => setLang("en")}
-          aria-pressed={lang === "en"}
-          className={`rounded-full px-3.5 py-1.5 transition ${
-            lang === "en" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          English
-        </button>
+          <button
+            type="button"
+            onClick={() => setLang("es")}
+            aria-pressed={lang === "es"}
+            className={`rounded-full px-3.5 py-1.5 transition ${
+              lang === "es" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            ES
+          </button>
+          <button
+            type="button"
+            onClick={() => setLang("en")}
+            aria-pressed={lang === "en"}
+            className={`rounded-full px-3.5 py-1.5 transition ${
+              lang === "en" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            EN
+          </button>
+        </div>
       </div>
-      {lang === "es" ? es : en}
+      <div className="mt-4">{lang === "es" ? es : en}</div>
     </div>
   );
 }

@@ -159,67 +159,70 @@ export default function PrivacidadPage() {
             <p className="mt-2 text-sm text-slate-500">Last updated: July 2026</p>
             <div className="mt-8 space-y-6 text-[15px] leading-relaxed">
               <section>
-                <h2 className="text-base font-semibold text-slate-900">What is MetricsField</h2>
+                <h2 className="text-base font-semibold text-slate-900">What MetricsField Is</h2>
                 <p className="mt-2">
                   MetricsField (metricsfield.com) is an online reputation
                   management platform for local businesses in Córdoba, Argentina.
-                  We help our clients earn reviews on Google and track the
+                  We help our clients get Google reviews and track the
                   performance of their Google Business Profile listing.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">
-                  What Google data we access, and why
+                  What Google Data We Access and Why
                 </h2>
                 <p className="mt-2">
-                  With the business&rsquo;s explicit authorization, through Google&rsquo;s
-                  OAuth flow, we access only:
+                  With explicit authorization from the business (via Google OAuth
+                  flow), we access only:
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   <li>
-                    Their Google Business Profile listing data: rating, public
-                    review count, and performance metrics (profile views, calls,
-                    &ldquo;get directions&rdquo; requests) — scope{" "}
-                    <code className="rounded bg-slate-100 px-1 text-[13px]">business.manage</code>.
+                    Data from its Google Business Profile listing: rating, public
+                    review count, and performance metrics (profile views, phone
+                    calls, &ldquo;get directions&rdquo; requests) —{" "}
+                    <code className="rounded bg-slate-100 px-1 text-[13px]">business.manage</code>{" "}
+                    scope.
                   </li>
                   <li>
-                    For the MetricsField team&rsquo;s own access to the dashboard: the
-                    email address and account name of whoever signs in (scopes{" "}
+                    For MetricsField internal team access to our admin panel:
+                    email address and account name of the signing-in user (
                     <code className="rounded bg-slate-100 px-1 text-[13px]">openid</code>,{" "}
                     <code className="rounded bg-slate-100 px-1 text-[13px]">email</code>,{" "}
-                    <code className="rounded bg-slate-100 px-1 text-[13px]">profile</code>) —
-                    solely to identify who performed each action.
+                    <code className="rounded bg-slate-100 px-1 text-[13px]">profile</code>{" "}
+                    scopes) — solely to identify who performs each action.
                   </li>
                 </ul>
                 <p className="mt-2">
-                  We do not access emails, contacts, files, or any other data from
+                  We do not access emails, contacts, files, or any other data in
                   the Google account. We do not publish or modify content on the
-                  business&rsquo;s listing without their configuration or direct action.
+                  business listing without your explicit setup or direct
+                  intervention.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">
-                  How we use and protect this data
+                  How We Use and Protect This Data
                 </h2>
                 <p className="mt-2">
-                  Data is shown only to the business that owns the listing, inside
-                  their private MetricsField dashboard, and to our internal team in
-                  order to deliver the contracted service. It is encrypted in
-                  transit (HTTPS/TLS) and at rest, on cloud infrastructure with
-                  restricted access. We do not sell this data, do not use it for
-                  advertising, and do not share it with third parties.
+                  Data is displayed solely to the business owning the listing,
+                  within its private dashboard on MetricsField, and to our
+                  internal team to provide the contracted service. Data is
+                  encrypted in transit (HTTPS/TLS) and at rest, stored on
+                  restricted-access cloud infrastructure. We do not sell this
+                  data, we do not use it for advertising, and we do not share it
+                  with third parties.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">
-                  Limited Use — Google API data
+                  Limited Use — Google API Data
                 </h2>
                 <p className="mt-2">
                   MetricsField&rsquo;s use of information received from Google APIs
-                  adheres to the{" "}
+                  will adhere to the{" "}
                   <a
                     href="https://developers.google.com/terms/api-services-user-data-policy"
                     className="text-brand-fg underline underline-offset-2"
@@ -228,34 +231,34 @@ export default function PrivacidadPage() {
                   >
                     Google API Services User Data Policy
                   </a>
-                  , including the Limited Use requirements. Specifically: we use
-                  this data only to provide and improve the user-facing features of
-                  the business dashboard; we do not transfer it to third parties
-                  except to operate the service, comply with a legal requirement,
-                  or with explicit consent; we do not use it for advertising; and
-                  no person reads it except with consent, for support needs,
-                  security, or legal compliance.
+                  , including the Limited Use requirements. In particular: we only
+                  use that data to provide and improve visible features on the
+                  business dashboard; we do not transfer it to third parties
+                  except to operate the service, as required by law, or with
+                  explicit consent; we do not use it for advertising; and no human
+                  reads the data unless consented, necessary for support, required
+                  for security, or for legal compliance.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">
-                  Retention and deletion
+                  Retention and Deletion
                 </h2>
                 <p className="mt-2">
-                  We retain data for as long as the business keeps its service
-                  active. On cancellation, or at the business&rsquo;s request, we delete
-                  their Google data from our systems within 30 days. Deletion can
-                  also be requested at any time by writing to the contact below.
+                  We retain data as long as the business maintains an active
+                  service. Upon cancellation, or upon request, we delete its
+                  Google data from our systems within 30 days. You may also
+                  request deletion at any time by contacting us below.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">
-                  How to revoke access
+                  How to Revoke Access
                 </h2>
                 <p className="mt-2">
-                  Any business can revoke MetricsField&rsquo;s access to their Google
+                  Any business can revoke MetricsField&rsquo;s access to its Google
                   account at any time from{" "}
                   <a
                     href="https://myaccount.google.com/permissions"
@@ -263,17 +266,17 @@ export default function PrivacidadPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    myaccount.google.com/permissions
+                    https://myaccount.google.com/permissions
                   </a>
-                  , or from the disconnect button inside their own portal.
+                  , or using the disconnect button in its own portal.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-base font-semibold text-slate-900">Contact</h2>
                 <p className="mt-2">
-                  For questions about this policy, or to request deletion of your
-                  data, write to{" "}
+                  For inquiries regarding this policy or to request the deletion
+                  of your data, write to us at{" "}
                   <a href="mailto:info@metricsfield.com" className="text-brand-fg underline underline-offset-2">
                     info@metricsfield.com
                   </a>
