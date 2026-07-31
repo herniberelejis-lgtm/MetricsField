@@ -18,10 +18,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    // En mobile el sidebar es una barra arriba y el contenido va abajo; de md
+    // para arriba, las dos columnas de siempre. `min-w-0` evita que una tabla
+    // ancha estire el main y recorte el contenido dentro del flex.
+    <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
-      <main className="flex-1 overflow-x-hidden">
-        <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+      <main className="min-w-0 flex-1 overflow-x-hidden">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
       </main>
     </div>
   );

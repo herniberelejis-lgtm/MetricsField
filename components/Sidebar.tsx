@@ -15,15 +15,28 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-5 py-5">
-        <div className="text-sm font-semibold tracking-tight text-slate-900">
-          MetricsField
+    // Hasta md el sidebar se convierte en barra superior (el panel se abre
+    // desde el celular más seguido de lo que parece); de md para arriba vuelve
+    // a ser la columna lateral fija de siempre.
+    <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white md:sticky md:top-0 md:h-screen md:w-60 md:overflow-y-auto md:border-b-0 md:border-r">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 md:block md:py-5">
+        <div>
+          <div className="text-sm font-semibold tracking-tight text-slate-900">
+            MetricsField
+          </div>
+          <div className="mt-0.5 text-xs text-slate-500">Córdoba · presencia digital</div>
         </div>
-        <div className="mt-0.5 text-xs text-slate-500">Córdoba · presencia digital</div>
+        <form action="/api/logout" method="post" className="md:hidden">
+          <button
+            type="submit"
+            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          >
+            Salir
+          </button>
+        </form>
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex gap-1 overflow-x-auto p-3 md:flex-1 md:flex-col md:space-y-1 md:overflow-x-visible">
         {nav.map((item) => {
           const active =
             item.href === "/admin"
@@ -34,7 +47,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={[
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                "flex min-h-11 shrink-0 items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors",
                 active
                   ? "bg-brand/10 font-medium text-brand-fg"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
@@ -47,10 +60,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="flex items-center justify-between border-t border-slate-200 p-4 text-xs text-slate-400">
+      <div className="hidden items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-400 md:flex">
         <span>v0.2</span>
         <form action="/api/logout" method="post">
-          <button type="submit" className="text-slate-400 hover:text-slate-700">
+          <button
+            type="submit"
+            className="-mr-2 inline-flex min-h-11 items-center rounded-lg px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
             Salir
           </button>
         </form>
