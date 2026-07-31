@@ -143,7 +143,11 @@ export interface LinkNFC {
   /** Tanda de fabricación/pedido a la que pertenece — útil para saber qué
    * pedido a China corresponde a cada pieza. */
   lote: string;
+  /** Etiqueta descriptiva de para qué se usa la pieza — no condiciona el
+   * redirect (ver urlDestino). */
   destino: DestinoLink;
+  /** Si tiene valor, el cartel manda SIEMPRE ahí, sin importar `destino`
+   * (incluido 'resena'). null/vacío = manda a `Cliente.googleReviewUrl`. */
   urlDestino: string | null;
   activo: boolean;
   /** Columna histórica (`usar_filtro`) — el código ya no la usa: todo

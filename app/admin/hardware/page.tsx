@@ -27,8 +27,6 @@ const LABEL_TIPO: Record<string, string> = {
 const ERRORES_ASIGNAR: Record<string, string> = {
   "sin-cliente": "Elegí a qué cliente asignarla antes de guardar.",
   "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
-  "url-ignorada":
-    'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre.',
 };
 
 export default async function HardwarePage({
