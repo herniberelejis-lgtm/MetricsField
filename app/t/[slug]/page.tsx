@@ -73,28 +73,35 @@ export default async function TapPage({
     );
   }
 
-  if (link.destino !== "resena") {
-    const url = link.urlDestino ? urlSegura(link.urlDestino) : null;
+  // Si la pieza tiene una URL propia cargada, manda ahí siempre — sin
+  // importar el "Destino" elegido (incluido "Reseña de Google"). Quien
+  // administra la pieza decide a qué apunta cada una; el Destino es solo
+  // una etiqueta descriptiva y lo que se usa cuando NO hay URL cargada
+  // (ver más abajo). Sin URL propia cargada, cae en la reseña de Google
+  // del comercio — el comportamiento de siempre.
+  if (link.urlDestino) {
+    const url = urlSegura(link.urlDestino);
     if (!url) notFound();
+    if (link.autogestionado) {
+      // Deja un link visible de vuelta a /t/<slug>/editar — un redirect()
+      // de servidor no renderiza nada, y es la única forma de que el
+      // dueño de una pieza autogestionada (sin cuenta ni portal) vuelva a
+      // editarla.
+      return <RedireccionSuave url={url} slug={slug} />;
+    }
     redirect(url);
   }
 
-  // Sin comercio de agencia: o es una pieza del canal Mercado Libre ya
-  // activada por su comprador (redirige a su link cargado — ver detalle en
-  // lib/db.ts), o es una pieza libre que nadie activó todavía y este es el
-  // primer toque: le mostramos el formulario para que se autoconfigure.
+  // Sin URL propia y sin comercio de agencia: pieza libre que nadie activó
+  // todavía — primer toque, mostrar el formulario para que se autoconfigure
+  // (canal Mercado Libre).
   if (!comercio) {
-    if (link.autogestionado) {
-      const url = link.urlDestino ? urlSegura(link.urlDestino) : null;
-      if (!url) notFound();
-      return <RedireccionSuave url={url} slug={slug} />;
-    }
     return <ActivarCartel slug={slug} />;
   }
 
-  // Todo cartel con destino "resena" va derecho a la reseña pública de
-  // Google, para todo el mundo — sin pantallas intermedias. El tap ya quedó
-  // contado arriba.
+  // Sin URL propia cargada: todo cartel va derecho a la reseña pública de
+  // Google del comercio, para todo el mundo — sin pantallas intermedias.
+  // El tap ya quedó contado arriba.
   const urlResena = urlSegura(comercio.googleReviewUrl);
   if (!urlResena) notFound();
   redirect(urlResena);
