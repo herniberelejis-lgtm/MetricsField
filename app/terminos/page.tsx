@@ -90,6 +90,15 @@ export default function TerminosPage() {
                   . El comercio puede revocar el acceso a su cuenta de Google y
                   pedir la eliminación de sus datos en cualquier momento.
                 </p>
+                <p className="mt-2">
+                  Al darse de baja, o a pedido del comercio, eliminamos de forma
+                  permanente e irreversible la cuenta y todos los datos
+                  asociados — reseñas, métricas mensuales, links y actividad de
+                  hardware NFC, competidores, checklist SEO, audits GEO y el
+                  acceso al portal — dentro de los 30 días. El hardware físico
+                  ya entregado (standees, tarjetas, stickers) no se ve afectado:
+                  sigue siendo propiedad del comercio.
+                </p>
               </section>
 
               <section>
@@ -194,6 +203,15 @@ export default function TerminosPage() {
                   </a>
                   . The business may revoke access to their Google account and
                   request deletion of their data at any time.
+                </p>
+                <p className="mt-2">
+                  On cancellation, or at the business&rsquo;s request, we
+                  permanently and irreversibly delete the account and all
+                  associated data — reviews, monthly metrics, NFC hardware
+                  links and activity, competitors, SEO checklist, GEO audits,
+                  and portal access — within 30 days. Physical hardware already
+                  delivered (standees, cards, stickers) is not affected: it
+                  remains the business&rsquo;s property.
                 </p>
               </section>
 
