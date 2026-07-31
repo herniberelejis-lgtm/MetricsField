@@ -3,7 +3,7 @@
 Este documento es para cualquiera del equipo (Simón, la tercera cuenta, o
 quien se sume) que vaya a trabajar en este proyecto usando Claude Code. Reúne
 todo lo que hay que saber para arrancar sin tener que releer meses de chat:
-qué es Taply, cómo está armado el repo, cómo venimos trabajando con Claude, y
+qué es MetricsField, cómo está armado el repo, cómo venimos trabajando con Claude, y
 qué falta.
 
 Si algo de acá contradice al `README.md` o a los docs de la carpeta de Drive
@@ -11,9 +11,9 @@ del equipo, **este es el más actualizado**.
 
 ---
 
-## 1 · Qué es Taply
+## 1 · Qué es MetricsField
 
-Taply es un sistema de gestión de reputación online para comercios locales de
+MetricsField es una plataforma de gestión de reputación online para comercios locales de
 Córdoba, Argentina. Dos partes:
 
 1. **Hardware**: un standee (cartel) con NFC y/o QR — el cliente final apoya
@@ -26,13 +26,16 @@ Córdoba, Argentina. Dos partes:
    recibe alertas por email cuando entra una reseña mala o una queja privada,
    y un resumen mensual por email.
 
-### El "star-gate" (base legal del producto — no tocar sin pensarlo dos veces)
-El cliente final elige de 1 a 5 estrellas:
-- **4-5 estrellas** → va directo a dejar la reseña pública en Google.
-- **1-3 estrellas** → además se le OFRECE un formulario de feedback privado.
-  El link público a Google **sigue siempre visible**, para todos, incluso a
-  quien puntúa mal. Esconderlo ("review gating") viola las políticas de
-  Google y puede terminar en que le bajen o penalicen la ficha al comercio.
+### Sin desvío de reseñas (base legal del producto — no tocar sin pensarlo dos veces)
+El cartel manda a **todos** los clientes finales, sin importar cómo vayan a
+calificar, directo al mismo link público de reseñas de Google — sin pantalla
+intermedia. Hasta mediados de 2026 existió un "star-gate" (1-3★ ofrecía
+además un formulario de feedback privado antes de la reseña pública); se
+**eliminó del producto a pedido del dueño** por rozar el "review gating" que
+Google penaliza. Las columnas `usar_filtro` y la tabla `feedback` siguen en
+el schema solo como resto histórico — el código ya no las escribe. Si ven
+esto descripto como activo en docs viejos o código legacy, está obsoleto:
+**no reintroducirlo**.
 
 ### Modelo comercial actual
 - **1 mes de software gratis** para que el comercio lo pruebe con datos
@@ -56,14 +59,20 @@ El cliente final elige de 1 a 5 estrellas:
 
 ### Ramas y despliegue (recién armado, importante)
 - **`main`** = rama de producción. Lo que está ahí es lo que ven los clientes
-  reales en `https://geo-seo-analytics.vercel.app`. En Vercel, "Production
-  Branch" tiene que estar apuntando a `main` (Settings → Git).
+  reales en `https://app.metricsfield.com` (CNAME propio, ver sección DNS de
+  `CLAUDE.md` — el dominio raíz `metricsfield.com` es la landing, repo
+  aparte). En Vercel, "Production Branch" tiene que estar apuntando a `main`
+  (Settings → Git).
 - **Ramas de sesión/feature** (ej. `claude/new-session-xxxx`) = donde Claude
   hace los cambios nuevos. Cada rama que se pushea genera automáticamente una
   **URL de preview propia en Vercel** — se prueba ahí, sin tocar lo que ven
   los clientes.
 - Cuando algo probado en preview convence, se fusiona a `main` con un Pull
   Request — recién ahí pasa a producción.
+- **Estado al cierre de esta sesión** (julio 2026): todo lo de "Julio 2026"
+  (sección 5) está en la rama `claude/new-session-4qxzuz`, PR #40 abierto sin
+  mergear todavía. Si arrancás una sesión nueva antes de mergearlo, decile
+  que siga en esa rama en vez de crear una nueva.
 
 ### Cómo darle tareas a Claude
 - Claude Code corre en un entorno en la nube, aislado, **sin acceso directo**
@@ -123,10 +132,16 @@ app/
     portal/google/oauth/ → conexión de Business Profile POR CLIENTE
     cron/           → sincronización diaria (Places + Business Profile)
     logout, places-search
-  portal/[codigo]/  → lo que ve cada cliente (solo lectura, aislado)
-  t/[slug]/         → la página pública que abre el cartel NFC (star-gate)
+  portal/[codigo]/  → lo que ve cada cliente (solo lectura, aislado; visual
+                      propio tipo "vidrio esmerilado", ver sección 5)
+  portal/actions.ts → server actions públicas del portal (auth por código,
+                      no por sesión de admin)
+  t/[slug]/         → la página pública que abre el cartel NFC (va directo
+                      al link de reseñas de Google, sin desvío)
   login/            → login del panel (contraseña + Google)
-  privacidad/       → política de privacidad (requisito de verificación OAuth)
+  privacidad/       → política de privacidad, bilingüe ES/EN (requisito de
+                      verificación OAuth — ver docs/VERIFICACION-OAUTH-GOOGLE.md)
+  terminos/         → términos de servicio, bilingüe ES/EN
 lib/
   db.ts             → TODO el acceso a datos (la capa más importante del repo)
   types.ts          → modelo de dominio
@@ -135,6 +150,9 @@ lib/
   gbp.ts, places.ts → clientes de las APIs de Google
   sql.ts            → conexión a Postgres
 components/         → UI compartida (Card, Kpi, Sidebar, etc.)
+components/portal/  → piezas propias del portal del cliente (no se comparten
+                      con /admin a propósito)
+components/legal/   → LangSwitch, el toggle ES/EN de /privacidad y /terminos
 db/schema.sql       → esquema canónico DE REFERENCIA (no se auto-aplica —
                       cada cambio necesita su .sql aparte para correr en Neon)
 docs/               → este archivo (el manual operativo y los prompts
@@ -156,8 +174,8 @@ docs/               → este archivo (el manual operativo y los prompts
    "equipo (sin identificar)"; con Google, con el email de quién fue).
 3. **Cliente → conexión de Google Business Profile**: desde su propio
    portal, el cliente autoriza con SU cuenta de Google (no con la del equipo)
-   para que Taply lea automáticamente visitas/llamadas de SU ficha. No es un
-   login a Taply — es un permiso de datos, aparte.
+   para que MetricsField lea automáticamente visitas/llamadas de SU ficha. No es
+   un login a MetricsField — es un permiso de datos, aparte.
 
 ---
 
@@ -200,6 +218,34 @@ docs/               → este archivo (el manual operativo y los prompts
   entero porque no se puede automatizar ni entregar de forma honesta al
   cliente. Si ven referencias a esto en documentos viejos, están obsoletas.
 
+### Julio 2026 — portal visual + preparación de verificación OAuth
+- **Portal del cliente, look "vidrio esmerilado"**: fondo con degradé pastel
+  y tarjetas glassmorphism, a pedido de referencia visual del dueño. Se
+  aplicó vía un `variant="glass"` opcional en `Card`/`Kpi`/`ChartCard`/
+  `ResumenResenas` (`components/ui.tsx` y afines) — `/admin` no cambió, sigue
+  con el look de siempre por default. Vive solo en `PortalShell.tsx` y los
+  componentes de `components/portal/`.
+- **`/terminos` y `/privacidad` bilingües** (toggle ES/EN vía
+  `components/legal/LangSwitch.tsx`, español por default) — la misma URL
+  pública declarada en Google Cloud Console ahora puede mostrarse en inglés
+  para el video de verificación, sin duplicar la política. Antes tampoco
+  estaban enlazadas desde ningún lado de la app — ahora hay link desde el
+  pie del portal y desde `/login`.
+- **Botón real de "Desconectar" Google en el portal** (antes solo existía en
+  `/admin`, operado por el equipo) — hace cierta la promesa de
+  `/privacidad` de que el comercio puede revocar el acceso él mismo.
+- **Eliminar cliente**: la lógica ya existía (`accionEliminarCliente` +
+  `db.eliminarCliente`, DELETE con cascada por `db/schema.sql`) pero no
+  estaba conectada a ningún botón en la ficha — solo en el menú del
+  listado. Se agregó también al menú "Más acciones" de la ficha, con
+  confirmación por nombre exacto.
+- **Rubro y Zona** en alta/edición de cliente y sucursal pasaron de `<select>`
+  cerrado a texto libre con `<datalist>` de sugerencias.
+- **Preparación completa de la verificación OAuth de Google**: descripciones
+  de la app, justificación de cada scope, y guion del video de demo —
+  todo consolidado en `docs/VERIFICACION-OAUTH-GOOGLE.md`. Falta grabar el
+  video y enviar el trámite (ver sección 6).
+
 ---
 
 ## 6 · Lo que falta / en construcción
@@ -213,7 +259,9 @@ En orden de lo más cerca a lo más lejos:
    dos trámites separados con Google. Mientras tanto el sistema queda en modo
    Prueba (máx 100 usuarios, reautorizar cada ~7 días). El código de reseñas
    automáticas ya está listo — el día de la aprobación solo hay que poner
-   `GOOGLE_REVIEWS_API_ENABLED=true` en Vercel.
+   `GOOGLE_REVIEWS_API_ENABLED=true` en Vercel. **Todos los textos y el guion
+   del video ya están listos** en `docs/VERIFICACION-OAUTH-GOOGLE.md` — solo
+   falta grabar el video con un cliente demo y enviar el formulario.
 3. **Cargar `SMTP_*` en Vercel** para que las alertas por email y el resumen
    mensual salgan de verdad (funcionan con cualquier casilla, no hace falta
    esperar el dominio propio).
@@ -238,6 +286,7 @@ En orden de lo más cerca a lo más lejos:
 | Qué integraciones están hechas vs. pendientes | `README.md`, sección "Integraciones" |
 | Variables de entorno necesarias y para qué sirve cada una | `.env.example` |
 | El esquema completo de la base de datos | `db/schema.sql` |
+| Textos, guion de video y checklist de la verificación OAuth de Google | `docs/VERIFICACION-OAUTH-GOOGLE.md` |
 | Este resumen de contexto y progreso | `docs/CONTEXTO-Y-PROGRESO.md` (este archivo) |
 
 ---
