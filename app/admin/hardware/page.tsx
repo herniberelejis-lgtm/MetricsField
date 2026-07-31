@@ -156,7 +156,12 @@ export default async function HardwarePage({
                     <td className="px-4 py-3">
                       <form action={accionAsignarPieza} className="flex flex-wrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
-                        <select name="comercioId" required className={`${inputCls} w-40`}>
+                        <select
+                          name="comercioId"
+                          required
+                          aria-label={`Cliente para la pieza ${p.id}`}
+                          className={`${inputCls} w-40`}
+                        >
                           <option value="">Elegir cliente…</option>
                           {clientes.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -167,8 +172,9 @@ export default async function HardwarePage({
                         </select>
                         <input
                           name="etiqueta"
-                          placeholder="Mesa 4, mozo Juan..."
+                          placeholder="Mesa 4, mozo Juan…"
                           required
+                          aria-label={`Etiqueta de la pieza ${p.id}`}
                           className={`${inputCls} w-36`}
                         />
                         <input type="hidden" name="destino" value="resena" />
