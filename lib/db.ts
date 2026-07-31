@@ -7,6 +7,7 @@ import { listarUbicaciones, rendimientoDelMes } from "./gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "./google-reviews";
 import { generarRespuestaSugerida } from "./respuestas";
 import { hashearPin, pinCoincide } from "./pin";
+import { cifrar, descifrar } from "./crypto";
 import { alertarResenaMala, enviarResumenMensual } from "./alertas";
 import type {
   AuditGEOResultado,
@@ -515,14 +516,15 @@ async function accessTokenGBPComercio(id: string): Promise<string | null> {
   const rows = await sql`SELECT google_refresh_token FROM comercios WHERE id = ${id}`;
   const refresh = rows[0]?.google_refresh_token as string | undefined;
   if (!refresh) return null;
-  return accessTokenDesdeRefresh(refresh);
+  return accessTokenDesdeRefresh(descifrar(refresh));
 }
 
 /** Guarda el refresh token que el cliente acaba de autorizar desde su
- * portal. Se llama desde el callback de /api/portal/google/oauth. */
+ * portal. Se llama desde el callback de /api/portal/google/oauth. Cifrado
+ * en reposo (ver lib/crypto.ts) — con TOKEN_ENCRYPTION_KEY configurada. */
 export async function guardarTokenGoogleComercio(id: string, refreshToken: string): Promise<void> {
   await sql`
-    UPDATE comercios SET google_refresh_token = ${refreshToken}, google_conectado_en = now()
+    UPDATE comercios SET google_refresh_token = ${cifrar(refreshToken)}, google_conectado_en = now()
     WHERE id = ${id}
   `;
 }
@@ -951,13 +953,24 @@ export async function generarLotePiezas(
     `;
     let max = 0;
     for (const r of rows) {
-      const n = Number((r.id as string).slice(2));
+      const m = /^p-(\d+)/.exec(r.id as string);
+      if (!m) continue;
+      const n = Number(m[1]);
       if (Number.isFinite(n) && n > max) max = n;
     }
 
+    // Sufijo random (no correlativo) en el propio id — es la URL pública
+    // del /t/<id>, y la activación autogestionada de una pieza libre no
+    // pide más prueba que "conocer el id" (ver ActivarCartel). Si fuera
+    // puramente secuencial, cualquiera podría enumerar p-0001, p-0002... y
+    // reclamar piezas libres (inclusive las que la agencia ya reservó para
+    // un cliente real) antes de que su dueño real las escanee. El prefijo
+    // "p-0001" se mantiene al frente solo para que el inventario impreso
+    // siga siendo legible/ordenable a simple vista.
     const nuevas: string[] = [];
     for (let i = 1; i <= cantidad; i++) {
-      nuevas.push(`p-${String(max + i).padStart(4, "0")}`);
+      const numero = String(max + i).padStart(4, "0");
+      nuevas.push(`p-${numero}-${crypto.randomBytes(3).toString("hex")}`);
     }
 
     for (const id of nuevas) {

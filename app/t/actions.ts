@@ -40,7 +40,7 @@ export async function activarCartel(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  if (!permitir(`activar-cartel:${ip}`, 5, 30 * 60_000)) {
+  if (!(await permitir(`activar-cartel:${ip}`, 5, 30 * 60_000))) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
@@ -72,7 +72,7 @@ export async function editarCartel(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  if (!permitir(`editar-cartel:${ip}:${slug}`, 5, 15 * 60_000)) {
+  if (!(await permitir(`editar-cartel:${ip}:${slug}`, 5, 15 * 60_000))) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 

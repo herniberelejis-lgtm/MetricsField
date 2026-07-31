@@ -40,7 +40,7 @@ export default async function TapPage({
   // al comercio y sobre los que se factura valor.
   limpiarVencidos();
   const ip = ipDelRequest(h);
-  const dentroDelLimite = permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
+  const dentroDelLimite = await permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
   if (!esPrefetch && !UA_BOT.test(userAgent) && dentroDelLimite) {
     await registrarTap(slug, userAgent || null);
   }

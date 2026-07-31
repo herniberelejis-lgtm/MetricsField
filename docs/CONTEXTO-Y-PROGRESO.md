@@ -194,8 +194,12 @@ docs/               → este archivo (el manual operativo y los prompts
   monitoreo de competencia manual, cron diario, alertas por wa.me, reportes
   mensuales imprimibles, módulo de Finanzas (cobros), sección Tutoriales.
 - Seguridad: auditoría zero-trust aplicada (sesiones con vencimiento firmado,
-  rate limits en login/portal/taps/feedback, headers de seguridad, magic
-  bytes en uploads). Ver `docs/AUDITORIA-ZERO-TRUST-2026-07.md`.
+  rate limit distribuido en Upstash Redis para login/portal/taps/PIN de
+  hardware autogestionado, headers de seguridad, refresh tokens de Google
+  cifrados en reposo). Ver `docs/AUDITORIA-ZERO-TRUST-2026-07.md`. **Ojo**:
+  la subida de capturas (con validación de magic bytes) que menciona ese
+  doc se eliminó del producto — no reintroducir esa referencia sin revisar
+  primero si la feature sigue existiendo.
 - **Ya NO existe** "Posición en Maps" como feature — se sacó del producto
   entero porque no se puede automatizar ni entregar de forma honesta al
   cliente. Si ven referencias a esto en documentos viejos, están obsoletas.
