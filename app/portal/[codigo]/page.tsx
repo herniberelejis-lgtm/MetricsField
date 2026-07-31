@@ -56,6 +56,7 @@ import {
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import PrioridadesPanel, { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
 import ScrollFadeRow from "@/components/ScrollFadeRow";
@@ -284,7 +285,6 @@ export default async function PortalPage({
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
   // lo único que hay que "hacer", así que va primero pase lo que pase.
-  type Prioridad = { texto: string; href: string; tono: "urgente" | "atencion" | "info" };
   const prioridades: Prioridad[] = [];
   if (resenasPendientes.length > 0) {
     prioridades.push({
@@ -307,12 +307,6 @@ export default async function PortalPage({
       tono: "info",
     });
   }
-  const COLOR_TONO: Record<Prioridad["tono"], string> = {
-    urgente: "bg-rose-500",
-    atencion: "bg-amber-500",
-    info: "bg-brand",
-  };
-
   // Distribución de reseñas por estrella — para la barra 5★..1★ del panel
   // "Mi Rating en Google". Sobre TODAS las reseñas conocidas (no solo las
   // pendientes), igual que resumenResenas más arriba.
@@ -391,30 +385,9 @@ export default async function PortalPage({
       )}
 
       {/* Lo único que requiere una acción del dueño, ordenado por
-          urgencia — todo lo demás en este portal es informativo. */}
-      {prioridades.length > 0 && (
-        <Card variant="glass" className="mb-4 !p-0 overflow-hidden">
-          <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Necesita tu atención</p>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
-              {prioridades.length}
-            </span>
-          </div>
-          <div className="divide-y divide-slate-100 border-t border-slate-100">
-            {prioridades.map((p) => (
-              <a
-                key={p.href + p.texto}
-                href={p.href}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
-              >
-                <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_TONO[p.tono]}`} aria-hidden />
-                <span className="flex-1">{p.texto}</span>
-                <span className="text-slate-300" aria-hidden>→</span>
-              </a>
-            ))}
-          </div>
-        </Card>
-      )}
+          urgencia — todo lo demás en este portal es informativo. Arranca
+          colapsado (ver PrioridadesPanel) para no ocupar media pantalla. */}
+      <PrioridadesPanel prioridades={prioridades} />
 
       {/* De un vistazo: para abrir el portal y entender el estado del
           negocio sin tener que entrar a ninguna otra sección todavía.
@@ -552,22 +525,24 @@ export default async function PortalPage({
       <Card variant="glass">
         <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
         <p className="mt-1 text-xs text-slate-500">
-          Las positivas se responden solas (ver más abajo); las que necesitan tu
-          criterio quedan acá para que las edites, apruebes y copies a Google vos mismo.
+          Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
+          Google vos mismo — todavía no publicamos nada en tu nombre.
         </p>
         <div className="mt-3">
           <ResumenResenas data={resumenResenas} variant="glass" />
         </div>
-        <div className="mt-3">
-          <AutomatizacionResenas
-            codigo={c.codigoAcceso}
-            comercioId={activo.id}
-            activa={activo.autoResponderPositivas}
-            umbral={activo.autoResponderUmbral}
-            apiHabilitada={resenasApiHabilitada()}
-            resenasAutomaticas={resenasAutomaticas}
-          />
-        </div>
+        {resenasApiHabilitada() && (
+          <div className="mt-3">
+            <AutomatizacionResenas
+              codigo={c.codigoAcceso}
+              comercioId={activo.id}
+              activa={activo.autoResponderPositivas}
+              umbral={activo.autoResponderUmbral}
+              apiHabilitada
+              resenasAutomaticas={resenasAutomaticas}
+            />
+          </div>
+        )}
         <div className="mt-3">
           <GestionResenas
             resenasIniciales={resenasPendientes}
@@ -723,23 +698,24 @@ export default async function PortalPage({
           <Card variant="glass">
             <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
             <p className="mt-1 text-xs text-slate-500">
-              Las positivas se responden solas (si activaste la automatización); las que
-              necesitan tu criterio quedan acá con un borrador de respuesta para que edites,
-              apruebes y copies a Google vos mismo.
+              Te sugerimos un borrador de respuesta para cada reseña; la editás, la apruebas
+              y la copiás a Google vos mismo — todavía no publicamos nada en tu nombre.
             </p>
             <div className="mt-3">
               <ResumenResenas data={resumenResenas} variant="glass" />
             </div>
-            <div className="mt-3">
-              <AutomatizacionResenas
-                codigo={c.codigoAcceso}
-                comercioId={activo.id}
-                activa={activo.autoResponderPositivas}
-                umbral={activo.autoResponderUmbral}
-                apiHabilitada={resenasApiHabilitada()}
-                resenasAutomaticas={resenasAutomaticas}
-              />
-            </div>
+            {resenasApiHabilitada() && (
+              <div className="mt-3">
+                <AutomatizacionResenas
+                  codigo={c.codigoAcceso}
+                  comercioId={activo.id}
+                  activa={activo.autoResponderPositivas}
+                  umbral={activo.autoResponderUmbral}
+                  apiHabilitada
+                  resenasAutomaticas={resenasAutomaticas}
+                />
+              </div>
+            )}
             <div className="mt-3">
               <GestionResenas
                 resenasIniciales={resenasPendientes}
@@ -1180,12 +1156,11 @@ export default async function PortalPage({
       clienteNombre={c.nombre}
       clienteSub={`${activo.rubro} · ${activo.zona}${sucursales.length > 0 ? ` · ${activo.nombre}` : ""}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
       planBadge={<PlanBadge plan={c.plan} />}
-      googlePill={
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500">
-          <span className={`h-1.5 w-1.5 rounded-full ${gbpConectado ? "bg-emerald-500" : "bg-slate-300"}`} />
-          {gbpConectado ? "Google conectado" : "Google sin conectar"}
-        </span>
-      }
+      google={{
+        conectado: gbpConectado,
+        conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
+        perfilPanelId: "rating",
+      }}
       whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
       nav={nav}
       panels={panels}

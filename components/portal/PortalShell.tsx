@@ -116,6 +116,16 @@ function IconClose(p: { size?: number; className?: string }) {
     </IconBase>
   );
 }
+function IconGoogleG({ size = 14, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true">
+      <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.46 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.11A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28V6.61H1.26A12 12 0 0 0 0 12c0 1.94.46 3.77 1.26 5.39l4.01-3.11Z" />
+      <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.79l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.61l4.01 3.11C6.22 6.86 8.87 4.75 12 4.75Z" />
+    </svg>
+  );
+}
 
 export type PortalNavLeaf = {
   type: "leaf";
@@ -133,11 +143,19 @@ export type PortalNavGroup = {
 };
 export type PortalNavEntry = PortalNavLeaf | PortalNavGroup;
 
+export type PortalGoogleEstado = {
+  conectado: boolean;
+  conectarHref: string;
+  /** Panel al que lleva el badge "Google conectado" — el perfil vive ahí. */
+  perfilPanelId: string;
+};
+
 export default function PortalShell({
   clienteNombre,
   clienteSub,
   planBadge,
-  googlePill,
+  logo,
+  google,
   whatsappHref,
   nav,
   panels,
@@ -146,7 +164,8 @@ export default function PortalShell({
   clienteNombre: string;
   clienteSub: string;
   planBadge: ReactNode;
-  googlePill?: ReactNode;
+  logo?: ReactNode;
+  google?: PortalGoogleEstado;
   whatsappHref?: string | null;
   nav: PortalNavEntry[];
   panels: Record<string, ReactNode>;
@@ -230,11 +249,13 @@ export default function PortalShell({
         }`}
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
-              <path d="M12 2l3.5 3.5L12 9 8.5 5.5 12 2zm7 7l3.5 3.5L19 16l-3.5-3.5L19 9zM5 9l3.5 3.5L5 16l-3.5-3.5L5 9zm7 7l3.5 3.5L12 23l-3.5-3.5L12 16z" />
-            </svg>
-          </span>
+          {logo ?? (
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
+                <path d="M12 2l3.5 3.5L12 9 8.5 5.5 12 2zm7 7l3.5 3.5L19 16l-3.5-3.5L19 9zM5 9l3.5 3.5L5 16l-3.5-3.5L5 9zm7 7l3.5 3.5L12 23l-3.5-3.5L12 16z" />
+              </svg>
+            </span>
+          )}
           <div className="min-w-0">
             <div className="truncate text-sm font-extrabold tracking-tight text-slate-900">METRICSFIELD</div>
             <div className="text-[10.5px] text-slate-500">Portal de cliente</div>
@@ -324,7 +345,26 @@ export default function PortalShell({
             {activeLeaf?.label ?? "Resumen"}
           </h1>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
-            {googlePill}
+            {google &&
+              (google.conectado ? (
+                <button
+                  type="button"
+                  onClick={() => goTo(google.perfilPanelId)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                  Google conectado
+                  <IconChevron size={13} className="text-emerald-400" />
+                </button>
+              ) : (
+                <a
+                  href={google.conectarHref}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+                >
+                  <IconGoogleG size={13} />
+                  Conectar con Google
+                </a>
+              ))}
             {whatsappHref && (
               <a
                 href={whatsappHref}
