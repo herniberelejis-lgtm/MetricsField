@@ -467,7 +467,7 @@ export default async function PortalPage({
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
                   <p className="text-xs text-slate-500">{s.zona}</p>
-                  <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
+                  <p className="mt-3 text-xs text-slate-500">Sin datos de Google todavía.</p>
                 </div>
               );
             if (!hayVarios) return <div key={s.id} className="min-w-[240px] max-w-sm flex-1">{tarjeta}</div>;
@@ -784,7 +784,7 @@ export default async function PortalPage({
                   <span className="w-28 shrink-0 truncate text-xs text-slate-600">
                     {l.etiqueta}
                     {tieneSoporteQr && (
-                      <span className="ml-1 text-[10px] uppercase text-slate-400">
+                      <span className="ml-1 text-[11px] uppercase text-slate-500">
                         · {l.tipo === "ambos" ? "NFC+QR" : l.tipo}
                       </span>
                     )}
@@ -893,7 +893,7 @@ export default async function PortalPage({
                   : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
               </p>
               {gbpConectado && (
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-500">
                   Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
                 </p>
               )}
@@ -1063,7 +1063,7 @@ export default async function PortalPage({
           </ul>
           {ultimosAudits.length > 0 && (
             <div className="mt-4 border-t border-slate-100 pt-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Últimas consultas de Audit GEO</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Últimas consultas de Audit GEO</p>
               <ul className="mt-2 space-y-1.5">
                 {ultimosAudits.map((a) => (
                   <li key={a.id} className="flex items-start gap-2 text-sm text-slate-600">
@@ -1074,7 +1074,7 @@ export default async function PortalPage({
                     )}
                     <span>
                       &ldquo;{a.pregunta}&rdquo;
-                      <span className="text-xs text-slate-400"> · {a.plataforma}</span>
+                      <span className="text-xs text-slate-500"> · {a.plataforma}</span>
                     </span>
                   </li>
                 ))}

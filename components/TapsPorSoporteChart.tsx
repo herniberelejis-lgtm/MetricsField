@@ -193,7 +193,7 @@ export default function TapsPorSoporteChart({
         )}
       </div>
 
-      <p className="mt-1 text-center text-[11px] text-slate-400">Tocá un día para ver a qué hora te tocaron el cartel.</p>
+      <p className="mt-1 text-center text-[11px] text-slate-500">Tocá un día para ver a qué hora te tocaron el cartel.</p>
 
       {diaAbierto !== null && (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
