@@ -18,14 +18,6 @@ const TIPOS: { value: string; label: string }[] = [
   { value: "ambos", label: "NFC + QR (mismo standee)" },
 ];
 
-const DESTINOS: { value: string; label: string }[] = [
-  { value: "resena", label: "Reseña de Google" },
-  { value: "menu", label: "Menú / catálogo" },
-  { value: "instagram", label: "Instagram" },
-  { value: "promo", label: "Promoción" },
-  { value: "url_custom", label: "Otra URL" },
-];
-
 const LABEL_TIPO: Record<string, string> = {
   nfc: "NFC",
   qr: "QR",
@@ -88,9 +80,15 @@ export default async function HardwarePage() {
       {libres.length > 0 && (
         <>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Piezas libres ({libres.length})
-            </h2>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Piezas libres ({libres.length})
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Al asignar, el destino arranca en &ldquo;Reseña de Google&rdquo; — para apuntarla a
+                otra URL (o cambiarla después), editala desde la ficha del cliente → Links.
+              </p>
+            </div>
             <div className="flex flex-wrap gap-2">
               <a
                 href="/api/admin/hardware/qr-lote?estado=libre"
@@ -155,13 +153,7 @@ export default async function HardwarePage() {
                           required
                           className={`${inputCls} w-36`}
                         />
-                        <select name="destino" defaultValue="resena" className={`${inputCls} w-40`}>
-                          {DESTINOS.map((d) => (
-                            <option key={d.value} value={d.value}>
-                              {d.label}
-                            </option>
-                          ))}
-                        </select>
+                        <input type="hidden" name="destino" value="resena" />
                         <button
                           type="submit"
                           className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
