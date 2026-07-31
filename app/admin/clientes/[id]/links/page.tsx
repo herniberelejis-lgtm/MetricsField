@@ -51,8 +51,6 @@ const COLOR_TIPO: Record<string, string> = {
 
 const ERRORES_LINK: Record<string, string> = {
   "sin-url": 'Ese destino necesita una URL — completá "URL de destino" y guardá de nuevo.',
-  "url-ignorada":
-    'Cargaste una URL de destino pero el Destino sigue en "Reseña de Google" — con ese destino, la URL se ignora siempre. Cambiá el Destino a "Otra URL" para usarla, o borrá el campo si el cartel debe mandar a la reseña.',
 };
 
 export default async function LinksPage({
@@ -179,7 +177,7 @@ export default async function LinksPage({
           </div>
           <Field
             label="URL de destino"
-            hint="Solo si el destino no es 'Reseña de Google' (que usa el link de Google Reviews cargado en el comercio)"
+            hint="Si la cargás, el cartel manda ahí siempre — sin importar el Destino elegido. Dejala vacía para que mande a la reseña de Google del cliente."
           >
             <input
               name="urlDestino"
@@ -314,7 +312,10 @@ export default async function LinksPage({
                         </select>
                       </Field>
                     </div>
-                    <Field label="URL de destino">
+                    <Field
+                      label="URL de destino"
+                      hint="Si la cargás, el cartel manda ahí siempre — sin importar el Destino elegido. Dejala vacía para que mande a la reseña de Google del cliente."
+                    >
                       <input
                         name="urlDestino"
                         type="url"

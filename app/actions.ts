@@ -205,14 +205,11 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
   if (destino !== "resena" && !urlDestino) {
     redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
-  if (destino === "resena" && urlDestino) {
-    redirect(`/admin/clientes/${comercioId}/links?error=url-ignorada`);
-  }
   await db.crearLink(comercioId, {
     etiqueta: str(fd, "etiqueta") || "Nuevo link",
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
-    urlDestino: destino === "resena" ? null : urlDestino,
+    urlDestino: urlDestino || null,
     nombreEmpleado: str(fd, "nombreEmpleado"),
   });
   revalidatePath("/", "layout");
@@ -228,14 +225,11 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
   if (destino !== "resena" && !urlDestino) {
     redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
-  if (destino === "resena" && urlDestino) {
-    redirect(`/admin/clientes/${comercioId}/links?error=url-ignorada`);
-  }
   await db.actualizarLink(linkId, {
     etiqueta: str(fd, "etiqueta"),
     tipo: (str(fd, "tipo") || "nfc") as TipoSoporte,
     destino,
-    urlDestino: destino === "resena" ? null : urlDestino,
+    urlDestino: urlDestino || null,
     activo: fd.get("activo") === "1",
     nombreEmpleado: str(fd, "nombreEmpleado"),
   });
@@ -276,14 +270,11 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   if (destino !== "resena" && !urlDestino) {
     redirect("/admin/hardware?error=sin-url");
   }
-  if (destino === "resena" && urlDestino) {
-    redirect("/admin/hardware?error=url-ignorada");
-  }
   await db.asignarPiezaACliente(id, comercioId, {
     etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
     tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
     destino,
-    urlDestino: destino === "resena" ? null : urlDestino,
+    urlDestino: urlDestino || null,
   });
   await auditar("asignar_pieza_hardware", `${id} → ${comercioId}`);
   revalidatePath("/", "layout");

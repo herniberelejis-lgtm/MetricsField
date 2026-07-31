@@ -103,8 +103,8 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   etiqueta     TEXT NOT NULL DEFAULT '',               -- "mostrador", "mesa 4"... vacío mientras está libre
   tipo         TEXT NOT NULL DEFAULT 'nfc',            -- 'nfc'|'qr'|'ambos' — qué soporte físico es
   lote         TEXT NOT NULL DEFAULT '',                -- identifica la tanda de fabricación/pedido
-  destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom'
-  url_destino  TEXT,                                   -- solo si destino = 'url_custom' u otro fijo
+  destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom' — etiqueta descriptiva, no condiciona el redirect (ver url_destino)
+  url_destino  TEXT,                                   -- si tiene valor, el cartel manda SIEMPRE ahí (sin importar destino); vacío = manda a la reseña de Google del comercio
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
   usar_filtro  BOOLEAN NOT NULL DEFAULT FALSE,          -- columna histórica: el código ya no la lee — todo destino 'resena' va directo a Google. No borrar sin migración coordinada.
   autogestionado BOOLEAN NOT NULL DEFAULT FALSE,        -- true = el propio comprador la activó (canal Mercado Libre, sin comercio_id)
