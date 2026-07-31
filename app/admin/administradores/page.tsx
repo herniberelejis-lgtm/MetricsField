@@ -83,7 +83,7 @@ export default async function AdministradoresPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-slate-600">{a.nombre || "—"}</td>
-                <td className="px-4 py-3 text-xs text-slate-400">
+                <td className="px-4 py-3 text-xs text-slate-500">
                   {new Date(a.creadoEn).toLocaleDateString("es-AR")}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -101,7 +101,7 @@ export default async function AdministradoresPage() {
             ))}
             {admins.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
                   Todavía no hay administradores cargados.
                 </td>
               </tr>

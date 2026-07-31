@@ -56,7 +56,7 @@ export default async function LoginPage({
               </svg>
               Entrar con Google
             </a>
-            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-400">
+            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-500">
               <div className="h-px flex-1 bg-slate-200" />
               o
               <div className="h-px flex-1 bg-slate-200" />
@@ -93,10 +93,10 @@ export default async function LoginPage({
           </form>
         )}
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-slate-500">
           ¿Sos cliente? Entrá con el link privado que te mandamos por WhatsApp.
         </p>
-        <p className="mt-3 text-center text-xs text-slate-400">
+        <p className="mt-3 text-center text-xs text-slate-500">
           <a href="/privacidad" className="underline underline-offset-2 hover:text-slate-600">
             Privacidad
           </a>

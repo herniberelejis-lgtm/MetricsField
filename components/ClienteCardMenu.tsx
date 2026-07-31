@@ -30,7 +30,7 @@ export default function ClienteCardMenu({ id, nombre }: { id: string; nombre: st
         aria-label="Más acciones"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="grid h-7 w-7 place-items-center rounded-full text-lg leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+        className="grid h-7 w-7 place-items-center rounded-full text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-700"
       >
         ⋯
       </button>

@@ -54,10 +54,12 @@ export function calcularResumenResenas(resenas: ResenaCRM[]): ResumenResenasData
   return { distribucion, total, promedio, tendencia, temasRecurrentes };
 }
 
+// emerald-600 y rose-600 a 12px dan 3.77:1 y 4.28:1 sobre blanco, los dos
+// abajo del mínimo AA de 4.5:1. Los tonos 700 pasan sin cambiar la lectura.
 const COLOR_TENDENCIA: Record<"up" | "down" | "flat", string> = {
-  up: "text-emerald-600",
-  down: "text-rose-600",
-  flat: "text-slate-400",
+  up: "text-emerald-700",
+  down: "text-rose-700",
+  flat: "text-slate-500",
 };
 const FLECHA_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   up: "▲",
@@ -124,7 +126,7 @@ export default function ResumenResenas({
           </div>
 
           <div className="mt-3 border-t border-slate-100 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Lo que más se repite en las quejas
             </p>
             {temasRecurrentes.length > 0 ? (
@@ -135,12 +137,12 @@ export default function ResumenResenas({
                     className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
                   >
                     {t.termino}
-                    <span className="tabular-nums text-slate-400">{t.conteo}</span>
+                    <span className="tabular-nums text-slate-500">{t.conteo}</span>
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 text-xs text-slate-500">
                 No hay ninguna queja que se repita — buena señal.
               </p>
             )}

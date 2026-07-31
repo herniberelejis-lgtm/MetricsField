@@ -99,18 +99,18 @@ export default function AutomatizacionResenas({
           <option value={5}>solo 5★</option>
         </select>
         {(pendiente || guardado) && (
-          <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+          <span className="inline-flex items-center gap-1 text-xs text-slate-500">
             {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-emerald-600" /></>}
           </span>
         )}
       </div>
 
       <div className="mt-3 border-t border-slate-100 pt-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
           Respondidas automáticamente
         </p>
         {resenasAutomaticas.length === 0 ? (
-          <p className="mt-1.5 text-xs text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-500">
             Todavía no se respondió ninguna sola — van a aparecer acá apenas se active
             la publicación automática.
           </p>

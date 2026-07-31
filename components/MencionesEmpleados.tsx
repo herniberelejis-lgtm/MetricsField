@@ -50,7 +50,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
             </div>
 
             {m.menciones === 0 ? (
-              <p className="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-400">
+              <p className="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-500">
                 Todavía ninguna reseña lo menciona por nombre.
               </p>
             ) : (
@@ -63,7 +63,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
                 )}
                 {m.quejasFrecuentes.length > 0 && (
                   <div className="mt-2 border-t border-slate-200 pt-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                       Quejas que se repiten
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -73,7 +73,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
                           className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
                         >
                           {t.termino}
-                          <span className="tabular-nums text-slate-400">{t.conteo}</span>
+                          <span className="tabular-nums text-slate-500">{t.conteo}</span>
                         </span>
                       ))}
                     </div>

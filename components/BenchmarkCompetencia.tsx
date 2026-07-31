@@ -106,7 +106,7 @@ export default function BenchmarkCompetencia({
       </div>
 
       {mes.propioResenas === null && (
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-500">
           Este mes todavía no tiene tus métricas cargadas, por eso aparece “—”
           en tu fila.
         </p>

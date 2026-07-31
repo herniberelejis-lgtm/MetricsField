@@ -65,7 +65,7 @@ export default async function ActividadPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-800">
                   {e.adminEmail || (
-                    <span className="text-slate-400">equipo (sin identificar)</span>
+                    <span className="text-slate-500">equipo (sin identificar)</span>
                   )}
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-800">
@@ -76,7 +76,7 @@ export default async function ActividadPage() {
             ))}
             {entradas.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
                   Todavía no hay actividad registrada.
                 </td>
               </tr>

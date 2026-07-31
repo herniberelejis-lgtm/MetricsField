@@ -340,7 +340,7 @@ export default async function PortalPage({
       icon: <IconBuilding size={18} />,
       badge:
         sucursales.length === 0 ? (
-          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
+          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-500">
             Pronto
           </span>
         ) : (

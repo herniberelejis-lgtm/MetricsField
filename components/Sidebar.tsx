@@ -63,12 +63,12 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="hidden items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-400 md:flex">
+      <div className="hidden items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-500 md:flex">
         <span>v0.2</span>
         <form action="/api/logout" method="post">
           <button
             type="submit"
-            className="-mr-2 inline-flex min-h-11 items-center rounded-lg px-3 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="-mr-2 inline-flex min-h-11 items-center rounded-lg px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
           >
             Salir
           </button>

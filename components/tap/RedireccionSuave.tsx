@@ -16,12 +16,12 @@ export default function RedireccionSuave({ url, slug }: { url: string; slug: str
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white px-6 text-center">
       <p className="text-sm text-slate-500">Redirigiendo…</p>
-      <a href={url} className="text-xs text-slate-400 underline underline-offset-2">
+      <a href={url} className="text-xs text-slate-500 underline underline-offset-2">
         Si no pasa nada, tocá acá
       </a>
       <a
         href={`/t/${slug}/editar`}
-        className="mt-8 text-[11px] text-slate-300 underline underline-offset-2 hover:text-slate-400"
+        className="mt-8 text-[11px] text-slate-300 underline underline-offset-2 hover:text-slate-500"
       >
         ¿Sos el dueño de este cartel? Editar
       </a>

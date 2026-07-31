@@ -131,7 +131,7 @@ export default async function CRMPage({
                         </span>
                       </div>
                       <p className="mt-1 max-w-xl text-sm text-slate-700">{r.texto}</p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-500">
                         {r.plataforma} · {fechaCorta(r.fecha)}
                       </p>
                     </div>

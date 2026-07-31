@@ -199,9 +199,9 @@ export default function TapsPorSoporteChart({
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
           <p className="mb-2 text-xs font-medium text-slate-600">{labels[diaAbierto]} · por hora</p>
           {pendiente || !horas ? (
-            <p className="text-xs text-slate-400">Cargando…</p>
+            <p className="text-xs text-slate-500">Cargando…</p>
           ) : horas.every((h) => h.taps === 0) ? (
-            <p className="text-xs text-slate-400">No hubo taps ese día.</p>
+            <p className="text-xs text-slate-500">No hubo taps ese día.</p>
           ) : (
             <div className="space-y-1">
               {horas
