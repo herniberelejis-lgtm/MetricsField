@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { IconChat } from "@/components/ui";
 import BrandMark from "@/components/BrandMark";
+import FloatingBottomNav from "@/components/FloatingBottomNav";
 
 // Cascarón de navegación del portal del cliente: sidebar oscuro con
 // paneles (en vez del scroll único de antes), forma tomada de la maqueta
@@ -212,6 +213,27 @@ export default function PortalShell({
   const activeLeaf = leaves.find((l) => l.id === active) ?? leaves[0];
   const currentPanel = panels[active] ?? panels[defaultPanel];
 
+  // Barra flotante inferior: un ítem por entrada de primer nivel del nav del
+  // portal (un grupo lleva al primero de sus hijos disponibles) — nunca
+  // ítems de otra superficie.
+  const floatingItems = nav
+    .map((entry) => {
+      if (entry.type === "leaf") {
+        if (!availableIds.has(entry.id)) return null;
+        return { key: entry.id, label: entry.label, target: entry.id, isActive: active === entry.id };
+      }
+      const visible = entry.items.filter((i) => availableIds.has(i.id));
+      if (visible.length === 0) return null;
+      return {
+        key: entry.id,
+        label: entry.label,
+        target: visible[0].id,
+        isActive: visible.some((i) => i.id === active),
+      };
+    })
+    .filter((x): x is { key: string; label: string; target: string; isActive: boolean } => x !== null)
+    .map((x) => ({ key: x.key, label: x.label, active: x.isActive, onClick: () => goTo(x.target) }));
+
   return (
     <div className="relative isolate min-h-screen lg:grid lg:grid-cols-[264px_1fr]">
       {/* Fondo del panel: gris muy claro de marca (F7F7F7), con el mismo
@@ -387,8 +409,10 @@ export default function PortalShell({
           </div>
         </header>
 
-        <main className="mx-auto max-w-4xl px-5 py-7 lg:px-8">{currentPanel}</main>
+        <main className="mx-auto max-w-4xl px-5 py-7 pb-24 lg:px-8">{currentPanel}</main>
       </div>
+
+      <FloatingBottomNav items={floatingItems} />
     </div>
   );
 }

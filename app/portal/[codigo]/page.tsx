@@ -452,19 +452,20 @@ export default async function PortalPage({
           {ubicaciones.map((s) => {
             const activa = s.id === activo.id;
             const hayVarios = ubicaciones.length > 1;
-            const hero = heroDeCalificacion(s);
+            const heroData = heroDeCalificacion(s);
             const tarjeta =
-              hero.rating !== null ? (
+              heroData.rating !== null ? (
                 <CalificacionGoogleCard
-                  rating={hero.rating}
-                  totalResenas={hero.totalResenas}
-                  deltaRating={hero.deltaRating}
-                  deltaResenas={hero.deltaResenas}
+                  rating={heroData.rating}
+                  totalResenas={heroData.totalResenas}
+                  deltaRating={heroData.deltaRating}
+                  deltaResenas={heroData.deltaResenas}
                   nombre={s.nombre}
                   subtitulo={`${s.zona}${activa && hayVarios ? " · viendo ahora" : ""}`}
+                  hero={activa && hayVarios}
                 />
               ) : (
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
                   <p className="text-xs text-slate-500">{s.zona}</p>
                   <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
@@ -476,8 +477,8 @@ export default async function PortalPage({
                 key={s.id}
                 href={hrefSucursal(c.codigoAcceso, c.id, s)}
                 title={`Ver el detalle de ${s.nombre}`}
-                className={`block min-w-[240px] max-w-sm flex-1 rounded-xl transition ${
-                  activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
+                className={`block min-w-[240px] max-w-sm flex-1 rounded-3xl transition ${
+                  activa ? "" : "hover:-translate-y-0.5"
                 }`}
               >
                 {tarjeta}

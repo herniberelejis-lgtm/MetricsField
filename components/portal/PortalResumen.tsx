@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { ResenaCRM } from "@/lib/types";
 import { fmtNum } from "@/lib/format";
+import RatingGauge from "@/components/RatingGauge";
 
 // Piezas visuales propias del portal del cliente (no se comparten con
 // /admin): chips de actividad con ícono de color, la card grande de
@@ -71,18 +72,16 @@ export function StatChip({
   icon,
   value,
   label,
-  chipClass,
 }: {
   icon: ReactNode;
   value: string;
   label: string;
-  chipClass: string;
+  /** @deprecated ya no se usa — los chips son monocromáticos por diseño. */
+  chipClass?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-      <span
-        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${chipClass}`}
-      >
+    <div className="flex items-center gap-3 rounded-3xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-700">
         {icon}
       </span>
       <div className="min-w-0">
@@ -104,6 +103,7 @@ export function CalificacionGoogleCard({
   deltaResenas,
   nombre,
   subtitulo,
+  hero = false,
 }: {
   rating: number | null;
   totalResenas: number;
@@ -111,45 +111,59 @@ export function CalificacionGoogleCard({
   deltaResenas: number | null;
   nombre: string;
   subtitulo: string;
+  /** Card "hero" (fondo negro, gauge blanco) — el local activo en la grilla
+   * de Rendimiento. El resto de las cards usa la variante clara. */
+  hero?: boolean;
 }) {
   if (rating === null) return null;
   const full = Math.round(rating);
 
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-      <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <IconPin size={13} className="text-rose-400" />
+    <div
+      className={`rounded-3xl border p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl ${
+        hero ? "border-slate-900 bg-slate-900 text-white" : "border-white/60 bg-white/65"
+      }`}
+    >
+      <div
+        className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+          hero ? "text-white/60" : "text-slate-500"
+        }`}
+      >
+        <IconPin size={13} className={hero ? "text-white/50" : "text-rose-400"} />
         Calificación Google
       </div>
-      <div className="mt-2 text-4xl font-bold tracking-tight text-slate-900 tabular-nums">
-        {rating.toFixed(1)}
-      </div>
-      <div className="mt-1 text-sm text-amber-400" aria-hidden>
-        {"★".repeat(full)}
-        <span className="text-slate-200">{"★".repeat(5 - full)}</span>
-      </div>
-      <p className="mt-1 text-xs text-slate-500">{fmtNum(totalResenas)} reseñas</p>
 
-      {deltaRating !== null && deltaResenas !== null && (
-        <div className="mt-3 border-t border-slate-100 pt-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-            Desde que usás MetricsField
-          </p>
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-            <span className={deltaRating >= 0 ? "text-emerald-600" : "text-rose-600"}>
-              {deltaRating >= 0 ? "+" : ""}
-              {deltaRating.toFixed(1)}★
-            </span>
-            <span className={deltaResenas >= 0 ? "text-emerald-600" : "text-rose-600"}>
-              {deltaResenas >= 0 ? "+" : ""}
-              {fmtNum(deltaResenas)} reseñas
-            </span>
-          </p>
+      <div className="mt-4 flex items-center gap-5">
+        <RatingGauge rating={rating} size={92} dark={hero} />
+        <div className="min-w-0">
+          <div className="text-sm" aria-hidden>
+            <span className="text-amber-400">{"★".repeat(full)}</span>
+            <span className={hero ? "text-white/25" : "text-slate-200"}>{"★".repeat(5 - full)}</span>
+          </div>
+          <p className={`mt-1 text-xs ${hero ? "text-white/60" : "text-slate-500"}`}>{fmtNum(totalResenas)} reseñas</p>
+
+          {deltaRating !== null && deltaResenas !== null && (
+            <div className={`mt-3 border-t pt-3 ${hero ? "border-white/15" : "border-slate-100"}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-wide ${hero ? "text-white/40" : "text-slate-400"}`}>
+                Desde que usás MetricsField
+              </p>
+              <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
+                <span className={deltaRating >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                  {deltaRating >= 0 ? "+" : ""}
+                  {deltaRating.toFixed(1)}★
+                </span>
+                <span className={deltaResenas >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                  {deltaResenas >= 0 ? "+" : ""}
+                  {fmtNum(deltaResenas)} reseñas
+                </span>
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      <p className="mt-3 text-sm font-semibold text-slate-800">{nombre}</p>
-      <p className="text-xs text-slate-500">{subtitulo}</p>
+      <p className={`mt-4 text-sm font-semibold ${hero ? "text-white" : "text-slate-800"}`}>{nombre}</p>
+      <p className={`text-xs ${hero ? "text-white/60" : "text-slate-500"}`}>{subtitulo}</p>
     </div>
   );
 }
@@ -185,7 +199,7 @@ function tiempoRelativo(fechaISO: string): string {
  * Gestión de reseñas. */
 export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+    <div className="rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
       <p className="text-sm font-semibold text-slate-800">Reseñas recientes</p>
       {resenas.length === 0 ? (
         <p className="mt-2 text-sm text-slate-500">Todavía no hay reseñas cargadas de este local.</p>

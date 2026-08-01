@@ -39,7 +39,7 @@ export default function PrioridadesPanel({ prioridades }: { prioridades: Priorid
   const masUrgente = prioridades[0];
 
   return (
-    <div className="mb-4 overflow-hidden rounded-2xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+    <div className="mb-4 overflow-hidden rounded-3xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}

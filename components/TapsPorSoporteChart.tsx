@@ -74,7 +74,10 @@ export default function TapsPorSoporteChart({
     serie.map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i)} ${yAt(v)}`).join(" ");
   const pathNfc = pathDe(nfc);
   const pathQr = pathDe(qr);
-  const areaNfc = `${pathNfc} L ${xAt(nfc.length - 1)} ${yAt(0)} L ${xAt(0)} ${yAt(0)} Z`;
+  const areaDe = (path: string, serie: number[]) =>
+    `${path} L ${xAt(serie.length - 1)} ${yAt(0)} L ${xAt(0)} ${yAt(0)} Z`;
+  const areaNfc = areaDe(pathNfc, nfc);
+  const areaQr = areaDe(pathQr, qr);
 
   const table = {
     head: mostrarQr ? ["Día", "Taps NFC", "Taps QR"] : ["Día", "Taps"],
@@ -98,6 +101,16 @@ export default function TapsPorSoporteChart({
     >
       <div className="relative">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Taps por día">
+          <defs>
+            <linearGradient id="tapsNfcGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={COLOR_NFC} stopOpacity={0.22} />
+              <stop offset="100%" stopColor={COLOR_NFC} stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="tapsQrGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={COLOR_QR} stopOpacity={0.18} />
+              <stop offset="100%" stopColor={COLOR_QR} stopOpacity={0} />
+            </linearGradient>
+          </defs>
           {ticks.map((t) => (
             <g key={t}>
               <line
@@ -131,10 +144,11 @@ export default function TapsPorSoporteChart({
             <line x1={xAt(hover)} x2={xAt(hover)} y1={M.top} y2={M.top + plotH} stroke={INK.axis} strokeWidth={1} />
           )}
 
-          <path d={areaNfc} fill={COLOR_NFC} opacity={0.1} />
-          <path d={pathNfc} fill="none" stroke={COLOR_NFC} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          {mostrarQr && <path d={areaQr} fill="url(#tapsQrGradient)" />}
+          <path d={areaNfc} fill="url(#tapsNfcGradient)" />
+          <path d={pathNfc} fill="none" stroke={COLOR_NFC} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
           {mostrarQr && (
-            <path d={pathQr} fill="none" stroke={COLOR_QR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+            <path d={pathQr} fill="none" stroke={COLOR_QR} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
           )}
 
           <circle cx={xAt(last)} cy={yAt(nfc[last])} r={4} fill={COLOR_NFC} stroke={INK.surface} strokeWidth={2} />
