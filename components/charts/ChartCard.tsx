@@ -36,8 +36,8 @@ export default function ChartCard({
   const [view, setView] = useState<"chart" | "table">("chart");
   const wrapClass =
     variant === "glass"
-      ? "rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
-      : "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
+      ? "rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
+      : "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm";
 
   return (
     <div className={wrapClass}>

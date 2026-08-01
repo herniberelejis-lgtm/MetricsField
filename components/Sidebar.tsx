@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
+import FloatingBottomNav from "@/components/FloatingBottomNav";
 
 const nav = [
   { href: "/admin", label: "Panel", icon: "◧" },
@@ -15,7 +16,11 @@ const nav = [
 export default function Sidebar() {
   const pathname = usePathname();
 
+  const activeOf = (href: string) =>
+    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+
   return (
+    <>
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2.5 border-b border-slate-200 px-5 py-5">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
@@ -31,10 +36,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 space-y-1 p-3">
         {nav.map((item) => {
-          const active =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
+          const active = activeOf(item.href);
           return (
             <Link
               key={item.href}
@@ -62,5 +64,9 @@ export default function Sidebar() {
         </form>
       </div>
     </aside>
+    <FloatingBottomNav
+      items={nav.map((item) => ({ key: item.href, label: item.label, active: activeOf(item.href), href: item.href }))}
+    />
+    </>
   );
 }
