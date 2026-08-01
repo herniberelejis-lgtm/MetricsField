@@ -2,29 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getDatosTap, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
+import { urlSegura } from "@/lib/url";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
 
 export const dynamic = "force-dynamic";
-
-/** Deja una URL lista para ir al header HTTP `Location` (redirect()) sin
- * tirar abajo la página. Un salto de línea o cualquier carácter de control
- * pegado sin querer al copiar el link (pasa seguido con Google Reviews)
- * hace que Node tire "Invalid character in header content" sin capturar —
- * en la ruta más caliente del producto, cada tap real de un cliente. Se
- * sanea acá SIEMPRE, además de al guardar (lib/db.ts), porque un dato ya
- * guardado sucio no debe poder tumbar esta página nunca. */
-function urlSegura(url: string): string | null {
-  // eslint-disable-next-line no-control-regex
-  const limpia = url.replace(/[\x00-\x1f\x7f]/g, "").trim();
-  if (!limpia) return null;
-  try {
-    new URL(limpia);
-    return limpia;
-  } catch {
-    return null;
-  }
-}
 
 // Crawlers y generadores de preview (WhatsApp, Google, etc.) abren esta URL
 // sin que nadie haya tocado el cartel — no deben inflar los taps del cliente.
