@@ -96,7 +96,7 @@ export const btnSecondary =
 export const btnGhost =
   "inline-flex items-center justify-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
 export const btnSuccess =
-  "inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Encabezado de sección reutilizable: título + descripción corta, mismo
  * peso tipográfico en toda la app en vez de que cada pantalla lo reinvente. */
@@ -185,9 +185,13 @@ export function Kpi({
   const deltaColor =
     !delta || delta.dir === "flat"
       ? "text-slate-400"
-      : delta.good
-        ? "text-emerald-600"
-        : "text-rose-600";
+      : variant === "glass"
+        ? delta.good
+          ? "text-slate-900"
+          : "text-slate-400"
+        : delta.good
+          ? "text-emerald-600"
+          : "text-rose-600";
   const arrow =
     delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "→";
   return (
@@ -214,18 +218,21 @@ export function Sparkline({
   width = 120,
   height = 32,
   invert = false,
+  mono = false,
 }: {
   values: number[];
   width?: number;
   height?: number;
   invert?: boolean; // true cuando "menos es mejor" para esta métrica
+  /** Sin color: siempre negro, sin distinguir tendencia buena/mala por tinta. */
+  mono?: boolean;
 }) {
   if (values.length === 0) return null;
   if (values.length === 1) {
     // un solo dato: todavía no hay tendencia que dibujar — un punto
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <circle cx={width / 2} cy={height / 2} r={4} fill="#3D5A80" stroke="#ffffff" strokeWidth={2} />
+        <circle cx={width / 2} cy={height / 2} r={4} fill={mono ? "#1A1A1A" : "#3D5A80"} stroke="#ffffff" strokeWidth={2} />
       </svg>
     );
   }
@@ -240,7 +247,7 @@ export function Sparkline({
   });
   const rising = values[values.length - 1] >= values[0];
   const good = invert ? !rising : rising;
-  const stroke = good ? "#2F6D4D" : "#8A3B3B";
+  const stroke = mono ? "#1A1A1A" : good ? "#2F6D4D" : "#8A3B3B";
   return (
     <svg
       width={width}
@@ -260,9 +267,12 @@ export function Sparkline({
   );
 }
 
-export function PlanBadge({ plan }: { plan: Plan }) {
-  const cls =
-    plan === "Premium"
+export function PlanBadge({ plan, mono = false }: { plan: Plan; mono?: boolean }) {
+  const cls = mono
+    ? plan === "Premium"
+      ? "bg-slate-900 text-white"
+      : "bg-slate-100 text-slate-700"
+    : plan === "Premium"
       ? "bg-violet-100 text-violet-700"
       : "bg-sky-100 text-sky-700";
   return (
@@ -289,11 +299,11 @@ export function EstadoBadge({ estado }: { estado: EstadoCliente }) {
   );
 }
 
-export function Stars({ rating }: { rating: number }) {
+export function Stars({ rating, mono = false }: { rating: number; mono?: boolean }) {
   const full = Math.round(rating);
   return (
     <span className="inline-flex items-center gap-1">
-      <span className="text-amber-400" aria-hidden>
+      <span className={mono ? "text-slate-900" : "text-amber-400"} aria-hidden>
         {"★".repeat(full)}
         <span className="text-slate-200">{"★".repeat(5 - full)}</span>
       </span>

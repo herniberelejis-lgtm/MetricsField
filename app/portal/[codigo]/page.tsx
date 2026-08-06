@@ -317,7 +317,7 @@ export default async function PortalPage({
   }));
   const maxDistribucion = Math.max(...distribucionEstrellas.map((d) => d.cantidad), 1);
   const COLOR_ESTRELLA: Record<number, string> = {
-    5: "bg-emerald-600", 4: "bg-emerald-600", 3: "bg-amber-500", 2: "bg-rose-500", 1: "bg-rose-500",
+    5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
   };
 
   const nav: PortalNavEntry[] = [
@@ -329,7 +329,7 @@ export default async function PortalPage({
       icon: <IconStarNav size={18} />,
       badge:
         resenasPendientes.length > 0 ? (
-          <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+          <span className="rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
             {resenasPendientes.length}
           </span>
         ) : undefined,
@@ -378,7 +378,7 @@ export default async function PortalPage({
       {mensajeGoogle && (
         <div
           className={`mb-4 rounded-lg px-3 py-2 text-sm ${
-            mensajeGoogle.tono === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+            mensajeGoogle.tono === "ok" ? "bg-slate-100 text-slate-800" : "border border-slate-300 text-slate-700"
           }`}
         >
           {mensajeGoogle.texto}
@@ -398,42 +398,37 @@ export default async function PortalPage({
       <div className="mb-4 flex flex-wrap gap-3">
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
-            icon={<IconWave size={18} className="text-blue-600" />}
+            icon={<IconWave size={18} className="text-slate-700" />}
             value={fmtNum(totalTapsHistorico)}
             label="Taps del cartel"
-            chipClass="bg-blue-50"
           />
         </div>
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
-            icon={<IconStarChip size={17} className="text-rose-600" />}
+            icon={<IconStarChip size={17} className="text-slate-700" />}
             value={fmtNum(resenasHoy)}
             label="Reseñas hoy"
-            chipClass="bg-rose-50"
           />
         </div>
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
-            icon={<IconStarChip size={17} className="text-emerald-600" />}
+            icon={<IconStarChip size={17} className="text-slate-700" />}
             value={fmtNum(m?.resenasNuevas ?? 0)}
             label="Reseñas este mes"
-            chipClass="bg-emerald-50"
           />
         </div>
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
-            icon={<IconVisitas size={18} className="text-violet-600" />}
+            icon={<IconVisitas size={18} className="text-slate-700" />}
             value={fmtNum(m?.visitasPerfil ?? 0)}
             label="Visitas al perfil"
-            chipClass="bg-violet-50"
           />
         </div>
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
-            icon={<IconCrecimiento size={18} className="text-amber-600" />}
+            icon={<IconCrecimiento size={18} className="text-slate-700" />}
             value={fmtNum(resenasHero)}
             label="Reseñas totales"
-            chipClass="bg-amber-50"
           />
         </div>
       </div>
@@ -568,7 +563,7 @@ export default async function PortalPage({
           Cuando tengas más de un local, vas a poder elegir entre ellos desde acá y ver el
           rating y las reseñas de cada uno por separado. Hoy tu cuenta gestiona un solo local.
         </p>
-        <span className="mt-3.5 inline-block rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-700">
+        <span className="mt-3.5 inline-block rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
           Próximamente
         </span>
       </div>
@@ -661,7 +656,7 @@ export default async function PortalPage({
                         <td className="px-4 py-3">
                           <span
                             className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                              l.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                              l.activo ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
                             }`}
                           >
                             ● {l.activo ? "en vivo" : "inactivo"}
@@ -855,7 +850,7 @@ export default async function PortalPage({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <span
-              className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-emerald-500" : "bg-slate-300"}`}
+              className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-slate-900" : "bg-slate-300"}`}
               aria-hidden
             />
             <div>
@@ -863,7 +858,7 @@ export default async function PortalPage({
                 <p className="text-sm font-semibold text-slate-800">Google Business Profile</p>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    gbpConectado ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                    gbpConectado ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   {gbpConectado ? "Conectado" : "No conectado"}
@@ -894,7 +889,7 @@ export default async function PortalPage({
           </div>
         </div>
         {gbpPorVencer && (
-          <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          <p className="mt-3 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
             <IconClock size={14} className="mt-0.5 shrink-0" />
             <span>
               Todavía estamos terminando de verificar la app con Google — mientras tanto, este
@@ -921,15 +916,15 @@ export default async function PortalPage({
         <Card variant="glass" className="mb-4 max-w-md">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Calificación</p>
           <div className="mt-2 text-4xl font-bold tracking-tight text-slate-900 tabular-nums">{ratingHero.toFixed(1)}</div>
-          <Stars rating={ratingHero} />
+          <Stars rating={ratingHero} mono />
           <p className="mt-1 text-xs text-slate-500">{fmtNum(resenasHero)} reseñas totales</p>
           {deltaRatingHero !== null && deltaResenasHero !== null && (
             <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-100 pt-3 text-xs font-semibold">
-              <span className={deltaRatingHero >= 0 ? "text-emerald-600" : "text-rose-600"}>
+              <span className={deltaRatingHero >= 0 ? "text-slate-900" : "text-slate-400"}>
                 {deltaRatingHero >= 0 ? "+" : ""}
                 {deltaRatingHero.toFixed(1)}★
               </span>
-              <span className={deltaResenasHero >= 0 ? "text-emerald-600" : "text-rose-600"}>
+              <span className={deltaResenasHero >= 0 ? "text-slate-900" : "text-slate-400"}>
                 {deltaResenasHero >= 0 ? "+" : ""}
                 {fmtNum(deltaResenasHero)} reseñas
               </span>
@@ -1021,15 +1016,15 @@ export default async function PortalPage({
             <Card variant="glass">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Reseñas acumuladas</span>
-                <Stars rating={m.ratingPromedio} />
+                <Stars rating={m.ratingPromedio} mono />
               </div>
-              <Sparkline values={activo.historico.map((h) => h.resenasTotal)} width={280} height={60} />
+              <Sparkline values={activo.historico.map((h) => h.resenasTotal)} width={280} height={60} mono />
             </Card>
             <Card variant="glass">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
               </div>
-              <Sparkline values={activo.historico.map((h) => h.visitasPerfil)} width={280} height={60} />
+              <Sparkline values={activo.historico.map((h) => h.visitasPerfil)} width={280} height={60} mono />
             </Card>
           </div>
         </>
@@ -1050,9 +1045,9 @@ export default async function PortalPage({
                 {ultimosAudits.map((a) => (
                   <li key={a.id} className="flex items-start gap-2 text-sm text-slate-600">
                     {a.aparece ? (
-                      <IconCheck size={15} className="mt-0.5 shrink-0 text-emerald-600" />
+                      <IconCheck size={15} className="mt-0.5 shrink-0 text-slate-900" />
                     ) : (
-                      <IconX size={15} className="mt-0.5 shrink-0 text-rose-500" />
+                      <IconX size={15} className="mt-0.5 shrink-0 text-slate-400" />
                     )}
                     <span>
                       &ldquo;{a.pregunta}&rdquo;
@@ -1137,7 +1132,7 @@ export default async function PortalPage({
     <PortalShell
       clienteNombre={c.nombre}
       clienteSub={`${activo.rubro} · ${activo.zona}${sucursales.length > 0 ? ` · ${activo.nombre}` : ""}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
-      planBadge={<PlanBadge plan={c.plan} />}
+      planBadge={<PlanBadge plan={c.plan} mono />}
       google={{
         conectado: gbpConectado,
         conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,

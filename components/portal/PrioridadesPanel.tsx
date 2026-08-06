@@ -5,9 +5,9 @@ import { useState } from "react";
 export type Prioridad = { texto: string; href: string; tono: "urgente" | "atencion" | "info" };
 
 const COLOR_TONO: Record<Prioridad["tono"], string> = {
-  urgente: "bg-rose-500",
-  atencion: "bg-amber-500",
-  info: "bg-brand",
+  urgente: "bg-slate-900",
+  atencion: "bg-slate-600",
+  info: "bg-slate-300",
 };
 
 function IconChevronDown({ className = "" }: { className?: string }) {

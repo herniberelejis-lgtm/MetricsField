@@ -55,12 +55,12 @@ export default function AutomatizacionResenas({
       <p className="text-sm font-medium text-slate-700">Respuestas automáticas a reseñas positivas</p>
 
       {apiHabilitada ? (
-        <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-600">
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-700">
           <IconCheck size={13} className="shrink-0" />
           Activo: en cuanto llega una reseña de {umbralLocal}★ o más, se responde sola.
         </p>
       ) : (
-        <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <p className="mt-1.5 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
           <IconClock size={14} className="mt-0.5 shrink-0" />
           <span>
             Esta función ya está lista, pero en pausa: todavía estamos esperando que
@@ -100,7 +100,7 @@ export default function AutomatizacionResenas({
         </select>
         {(pendiente || guardado) && (
           <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-            {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-emerald-600" /></>}
+            {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-slate-900" /></>}
           </span>
         )}
       </div>
@@ -120,9 +120,9 @@ export default function AutomatizacionResenas({
               <div key={r.id} className="rounded-lg bg-slate-50 px-3 py-2 text-xs">
                 <div className="flex items-center gap-2 text-slate-500">
                   <span className="font-medium text-slate-700">{r.autor}</span>
-                  <span className="text-amber-400">{"★".repeat(r.estrellas)}</span>
+                  <span className="text-slate-900">{"★".repeat(r.estrellas)}</span>
                   <span>{fechaCorta(r.fecha)}</span>
-                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 font-medium text-white">
                     <IconZap size={11} /> respondida sola
                   </span>
                 </div>
