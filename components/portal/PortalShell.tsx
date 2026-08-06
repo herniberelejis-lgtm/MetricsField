@@ -265,7 +265,7 @@ export default function PortalShell({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto border border-white/60 bg-white/60 text-slate-600 shadow-xl backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:top-3 lg:my-3 lg:ml-3 lg:h-[calc(100vh-1.5rem)] lg:translate-x-0 lg:rounded-3xl ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto border-r border-white/60 bg-white/60 text-slate-600 shadow-xl backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           navOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
