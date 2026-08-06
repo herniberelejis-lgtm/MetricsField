@@ -138,8 +138,8 @@ export function Card({
 }) {
   const base =
     variant === "glass"
-      ? "rounded-2xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl"
-      : "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
+      ? "rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
+      : "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm";
   return (
     <div id={id} className={`${base} ${className}`}>
       {children}
@@ -225,7 +225,7 @@ export function Sparkline({
     // un solo dato: todavía no hay tendencia que dibujar — un punto
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <circle cx={width / 2} cy={height / 2} r={4} fill="#2a78d6" stroke="#ffffff" strokeWidth={2} />
+        <circle cx={width / 2} cy={height / 2} r={4} fill="#3D5A80" stroke="#ffffff" strokeWidth={2} />
       </svg>
     );
   }
@@ -240,7 +240,7 @@ export function Sparkline({
   });
   const rising = values[values.length - 1] >= values[0];
   const good = invert ? !rising : rising;
-  const stroke = good ? "#059669" : "#e11d48";
+  const stroke = good ? "#2F6D4D" : "#8A3B3B";
   return (
     <svg
       width={width}

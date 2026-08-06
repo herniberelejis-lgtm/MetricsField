@@ -16,7 +16,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
   if (menciones.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(76,55,140,0.35)] backdrop-blur-xl">
+    <div className="rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
       <p className="text-sm font-medium text-slate-700">Tu equipo, tarjeta por tarjeta</p>
       <p className="mt-1 text-xs text-slate-500">
         Los <span className="font-medium text-slate-600">taps</span> son un dato exacto: cuántas veces

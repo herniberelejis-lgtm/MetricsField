@@ -9,9 +9,12 @@ import {
   actualizarAutomatizacionResenas,
   getTapsPorHora,
   desconectarGoogleComercio,
+  getLink,
+  actualizarLink,
   type TapsPorHora,
 } from "@/lib/db";
 import type { Cliente } from "@/lib/types";
+import { urlSegura } from "@/lib/url";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial — pero esa credencial vive en la CUENTA
@@ -88,6 +91,44 @@ export async function accionDesconectarGoogleComercioPortal(fd: FormData): Promi
   const comercio = await comercioAutorizado(codigo, comercioId);
   await desconectarGoogleComercio(comercio.id);
   revalidatePath(`/portal/${codigo}`);
+}
+
+/** Autogestión del enlace de un dispositivo desde el portal: el dueño
+ * cambia a dónde manda su cartel/tarjeta sin depender del equipo interno.
+ * Solo toca `urlDestino` (el QR/NFC impreso no cambia — ver arquitectura en
+ * app/t/[slug]/page.tsx: "urlDestino" manda siempre si está cargada). No
+ * usa throw+redirect para el error de URL inválida porque esta acción se
+ * llama directo desde un componente cliente (no un <form action=>) y un
+ * throw sin capturar tumbaría el panel entero — se devuelve un resultado
+ * explícito en cambio. */
+export async function accionActualizarUrlLinkPortal(
+  fd: FormData,
+): Promise<{ ok: boolean; error?: string }> {
+  const codigo = String(fd.get("codigo") ?? "");
+  const comercioId = String(fd.get("comercioId") ?? "");
+  const linkId = String(fd.get("linkId") ?? "");
+  const nuevaUrl = String(fd.get("urlDestino") ?? "").trim();
+
+  const comercio = await comercioAutorizado(codigo, comercioId);
+  const link = await getLink(linkId);
+  if (!link || link.comercioId !== comercio.id) {
+    throw new Error("Ese dispositivo no pertenece a este portal.");
+  }
+
+  if (!nuevaUrl) {
+    await actualizarLink(linkId, { urlDestino: null });
+    revalidatePath(`/portal/${codigo}`);
+    return { ok: true };
+  }
+
+  const limpia = urlSegura(nuevaUrl);
+  if (!limpia) {
+    return { ok: false, error: "Esa URL no parece válida — revisala e intentá de nuevo." };
+  }
+
+  await actualizarLink(linkId, { urlDestino: limpia });
+  revalidatePath(`/portal/${codigo}`);
+  return { ok: true };
 }
 
 /** Desglose hora a hora de un día — para expandir el gráfico de "Taps por

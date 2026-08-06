@@ -56,6 +56,7 @@ import {
   IconCrecimiento,
 } from "@/components/portal/PortalResumen";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import DispositivosTabla from "@/components/portal/DispositivosTabla";
 import PrioridadesPanel, { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import ScrollActiveIntoView from "@/components/ScrollActiveIntoView";
@@ -452,19 +453,20 @@ export default async function PortalPage({
           {ubicaciones.map((s) => {
             const activa = s.id === activo.id;
             const hayVarios = ubicaciones.length > 1;
-            const hero = heroDeCalificacion(s);
+            const heroData = heroDeCalificacion(s);
             const tarjeta =
-              hero.rating !== null ? (
+              heroData.rating !== null ? (
                 <CalificacionGoogleCard
-                  rating={hero.rating}
-                  totalResenas={hero.totalResenas}
-                  deltaRating={hero.deltaRating}
-                  deltaResenas={hero.deltaResenas}
+                  rating={heroData.rating}
+                  totalResenas={heroData.totalResenas}
+                  deltaRating={heroData.deltaRating}
+                  deltaResenas={heroData.deltaResenas}
                   nombre={s.nombre}
                   subtitulo={`${s.zona}${activa && hayVarios ? " · viendo ahora" : ""}`}
+                  hero={activa && hayVarios}
                 />
               ) : (
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
                   <p className="text-xs text-slate-500">{s.zona}</p>
                   <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
@@ -476,8 +478,8 @@ export default async function PortalPage({
                 key={s.id}
                 href={hrefSucursal(c.codigoAcceso, c.id, s)}
                 title={`Ver el detalle de ${s.nombre}`}
-                className={`block min-w-[240px] max-w-sm flex-1 rounded-xl transition ${
-                  activa ? "ring-2 ring-brand" : "hover:-translate-y-0.5"
+                className={`block min-w-[240px] max-w-sm flex-1 rounded-3xl transition ${
+                  activa ? "" : "hover:-translate-y-0.5"
                 }`}
               >
                 {tarjeta}
@@ -736,42 +738,22 @@ export default async function PortalPage({
       </Card>
     ) : (
       <>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
-            <thead>
-              <tr className="bg-slate-50 text-left text-[10.5px] font-bold uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-2.5">Dispositivo</th>
-                {tieneSoporteQr && <th className="px-4 py-2.5">Tipo</th>}
-                <th className="px-4 py-2.5">Taps totales</th>
-                <th className="px-4 py-2.5">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {linksConTaps.map((l) => (
-                <tr key={l.id} className="border-t border-slate-100">
-                  <td className="flex items-center gap-2.5 px-4 py-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-500">
-                      <IconDevice size={16} />
-                    </span>
-                    {l.etiqueta || "Sin etiqueta"}
-                  </td>
-                  {tieneSoporteQr && (
-                    <td className="px-4 py-3 text-slate-600">{l.tipo === "ambos" ? "NFC + QR" : l.tipo.toUpperCase()}</td>
-                  )}
-                  <td className="px-4 py-3 tabular-nums text-slate-700">{fmtNum(l.taps)}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                        l.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      ● {l.activo ? "en vivo" : "inactivo"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <p className="mb-3 text-xs text-slate-500">
+          Tocá &ldquo;Editar&rdquo; en cualquier dispositivo para cambiar a dónde manda — el cartel impreso no cambia,
+          solo a dónde redirige.
+        </p>
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <DispositivosTabla
+            links={linksConTaps}
+            codigo={c.codigoAcceso}
+            comercioId={activo.id}
+            tieneSoporteQr={tieneSoporteQr}
+            iconoDispositivo={
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-500">
+                <IconDevice size={16} />
+              </span>
+            }
+          />
         </div>
 
         {linksConTaps.length > 1 && totalTapsHistorico > 0 && (

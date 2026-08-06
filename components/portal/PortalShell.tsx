@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { IconChat } from "@/components/ui";
+import BrandMark from "@/components/BrandMark";
+import FloatingBottomNav from "@/components/FloatingBottomNav";
 
 // Cascarón de navegación del portal del cliente: sidebar oscuro con
 // paneles (en vez del scroll único de antes), forma tomada de la maqueta
@@ -211,18 +213,37 @@ export default function PortalShell({
   const activeLeaf = leaves.find((l) => l.id === active) ?? leaves[0];
   const currentPanel = panels[active] ?? panels[defaultPanel];
 
+  // Barra flotante inferior: un ítem por entrada de primer nivel del nav del
+  // portal (un grupo lleva al primero de sus hijos disponibles) — nunca
+  // ítems de otra superficie.
+  const floatingItems = nav
+    .map((entry) => {
+      if (entry.type === "leaf") {
+        if (!availableIds.has(entry.id)) return null;
+        return { key: entry.id, label: entry.label, target: entry.id, isActive: active === entry.id };
+      }
+      const visible = entry.items.filter((i) => availableIds.has(i.id));
+      if (visible.length === 0) return null;
+      return {
+        key: entry.id,
+        label: entry.label,
+        target: visible[0].id,
+        isActive: visible.some((i) => i.id === active),
+      };
+    })
+    .filter((x): x is { key: string; label: string; target: string; isActive: boolean } => x !== null)
+    .map((x) => ({ key: x.key, label: x.label, active: x.isActive, onClick: () => goTo(x.target) }));
+
   return (
     <div className="relative isolate min-h-screen lg:grid lg:grid-cols-[264px_1fr]">
-      {/* Fondo de "nubes" pastel — decorativo, fijo detrás de todo el panel
-          (no del sidebar/header, que son de vidrio por encima). La estética
-          la pidió el cliente tal cual de una referencia (glassmorphism sobre
-          degradé rosa/lavanda/durazno), no es la paleta de marca del resto
-          del sitio — vive solo acá, en el portal. */}
-      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-[#fbf9ff]">
-        <div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,_rgba(244,194,222,0.55),_transparent_70%)] blur-2xl" />
-        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(199,196,245,0.55),_transparent_70%)] blur-2xl" />
-        <div className="absolute left-1/3 top-1/2 h-[620px] w-[620px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,_rgba(255,224,199,0.45),_transparent_70%)] blur-3xl" />
-        <div className="absolute -bottom-40 right-10 h-[440px] w-[440px] rounded-full bg-[radial-gradient(circle,_rgba(196,225,245,0.5),_transparent_70%)] blur-2xl" />
+      {/* Fondo del panel: gris muy claro de marca (F7F7F7), con el mismo
+          efecto vidrio-esmerilado en sidebar/header/cards de siempre, pero
+          sin el degradé rosa/lavanda/durazno — reemplazado por la paleta
+          monocromática del Manual de Marca. */}
+      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-slate-50">
+        <div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.04),_transparent_70%)] blur-2xl" />
+        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(200,216,232,0.5),_transparent_70%)] blur-2xl" />
+        <div className="absolute -bottom-40 right-10 h-[440px] w-[440px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.035),_transparent_70%)] blur-2xl" />
       </div>
 
       <button
@@ -250,14 +271,12 @@ export default function PortalShell({
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
           {logo ?? (
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
-                <path d="M12 2l3.5 3.5L12 9 8.5 5.5 12 2zm7 7l3.5 3.5L19 16l-3.5-3.5L19 9zM5 9l3.5 3.5L5 16l-3.5-3.5L5 9zm7 7l3.5 3.5L12 23l-3.5-3.5L12 16z" />
-              </svg>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
+              <BrandMark size={18} strokeWidth={7} />
             </span>
           )}
           <div className="min-w-0">
-            <div className="truncate text-sm font-extrabold tracking-tight text-slate-900">METRICSFIELD</div>
+            <div className="truncate text-sm font-bold tracking-tight text-slate-900">METRICSFIELD</div>
             <div className="text-[10.5px] text-slate-500">Portal de cliente</div>
           </div>
         </div>
@@ -390,8 +409,10 @@ export default function PortalShell({
           </div>
         </header>
 
-        <main className="mx-auto max-w-4xl px-5 py-7 lg:px-8">{currentPanel}</main>
+        <main className="mx-auto max-w-4xl px-5 py-7 pb-24 lg:px-8">{currentPanel}</main>
       </div>
+
+      <FloatingBottomNav items={floatingItems} />
     </div>
   );
 }
