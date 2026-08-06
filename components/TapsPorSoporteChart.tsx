@@ -3,16 +3,18 @@
 import { useState, useTransition } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { SERIES, INK, niceTicks } from "@/lib/palette";
+import { INK, niceTicks } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
 import { accionObtenerTapsPorHora } from "@/app/portal/actions";
 
 // Taps por día, separados por soporte (NFC vs QR) — mismo eje, misma unidad
-// (cantidad de taps), así que van juntos en un solo gráfico con 2 series de
-// color categórico, no un dual-axis. Si el comercio no tiene ningún link con
-// QR habilitado, se muestra solo la línea de NFC (sin leyenda, una serie).
-const COLOR_NFC = SERIES[0]; // azul
-const COLOR_QR = SERIES[1]; // aqua
+// (cantidad de taps), así que van juntos en un solo gráfico con 2 series. Sin
+// color (panel del cliente: solo blanco y negro del manual de marca) — se
+// distinguen por tinta (negro/gris) y por trazo (sólido/punteado). Si el
+// comercio no tiene ningún link con QR habilitado, se muestra solo la línea
+// de NFC (sin leyenda, una serie).
+const COLOR_NFC = "#1A1A1A";
+const COLOR_QR = "#8A8A8A";
 
 export default function TapsPorSoporteChart({
   labels,
@@ -148,7 +150,15 @@ export default function TapsPorSoporteChart({
           <path d={areaNfc} fill="url(#tapsNfcGradient)" />
           <path d={pathNfc} fill="none" stroke={COLOR_NFC} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
           {mostrarQr && (
-            <path d={pathQr} fill="none" stroke={COLOR_QR} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+            <path
+              d={pathQr}
+              fill="none"
+              stroke={COLOR_QR}
+              strokeWidth={2.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              strokeDasharray="6 5"
+            />
           )}
 
           <circle cx={xAt(last)} cy={yAt(nfc[last])} r={4} fill={COLOR_NFC} stroke={INK.surface} strokeWidth={2} />

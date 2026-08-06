@@ -129,7 +129,7 @@ export function CalificacionGoogleCard({
           hero ? "text-white/60" : "text-slate-500"
         }`}
       >
-        <IconPin size={13} className={hero ? "text-white/50" : "text-rose-400"} />
+        <IconPin size={13} className={hero ? "text-white/50" : "text-slate-400"} />
         Calificación Google
       </div>
 
@@ -137,7 +137,7 @@ export function CalificacionGoogleCard({
         <RatingGauge rating={rating} size={92} dark={hero} />
         <div className="min-w-0">
           <div className="text-sm" aria-hidden>
-            <span className="text-amber-400">{"★".repeat(full)}</span>
+            <span className={hero ? "text-white" : "text-slate-900"}>{"★".repeat(full)}</span>
             <span className={hero ? "text-white/25" : "text-slate-200"}>{"★".repeat(5 - full)}</span>
           </div>
           <p className={`mt-1 text-xs ${hero ? "text-white/60" : "text-slate-500"}`}>{fmtNum(totalResenas)} reseñas</p>
@@ -148,11 +148,11 @@ export function CalificacionGoogleCard({
                 Desde que usás MetricsField
               </p>
               <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-                <span className={deltaRating >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                <span className={deltaRating >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-400"}>
                   {deltaRating >= 0 ? "+" : ""}
                   {deltaRating.toFixed(1)}★
                 </span>
-                <span className={deltaResenas >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                <span className={deltaResenas >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-400"}>
                   {deltaResenas >= 0 ? "+" : ""}
                   {fmtNum(deltaResenas)} reseñas
                 </span>
@@ -169,10 +169,10 @@ export function CalificacionGoogleCard({
 }
 
 const COLORES_AVATAR = [
-  "bg-sky-100 text-sky-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-violet-100 text-violet-700",
-  "bg-amber-100 text-amber-700",
+  "bg-slate-100 text-slate-700",
+  "bg-slate-800 text-white",
+  "bg-slate-200 text-slate-800",
+  "bg-slate-900 text-white",
 ];
 
 function inicial(nombre: string): string {
@@ -217,7 +217,7 @@ export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
                   <span className="truncate text-sm font-medium text-slate-800">{r.autor}</span>
                   <span className="shrink-0 text-[11px] text-slate-400">{tiempoRelativo(r.fecha)}</span>
                 </div>
-                <span className="text-xs text-amber-400" aria-hidden>
+                <span className="text-xs text-slate-900" aria-hidden>
                   {"★".repeat(r.estrellas)}
                   <span className="text-slate-200">{"★".repeat(5 - r.estrellas)}</span>
                 </span>

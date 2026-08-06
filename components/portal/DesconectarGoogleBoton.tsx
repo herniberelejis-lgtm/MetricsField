@@ -22,7 +22,7 @@ export default function DesconectarGoogleBoton({
     >
       <input type="hidden" name="codigo" value={codigo} />
       <input type="hidden" name="comercioId" value={comercioId} />
-      <button type="submit" className={`${btnGhost} text-rose-500 hover:text-rose-700`}>
+      <button type="submit" className={`${btnGhost} text-slate-500 hover:text-slate-900`}>
         Desconectar
       </button>
     </form>

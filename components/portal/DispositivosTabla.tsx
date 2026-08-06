@@ -61,7 +61,7 @@ function FilaDispositivo({
         <td className="px-4 py-3">
           <span
             className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-              link.activo ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+              link.activo ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
             }`}
           >
             ● {link.activo ? "en vivo" : "inactivo"}
@@ -121,7 +121,7 @@ function FilaDispositivo({
                 Cancelar
               </button>
             </div>
-            {error && <p className="mt-2 text-xs font-medium text-rose-600">{error}</p>}
+            {error && <p className="mt-2 text-xs font-bold text-slate-900">⚠ {error}</p>}
           </td>
         </tr>
       )}

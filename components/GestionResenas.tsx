@@ -14,11 +14,11 @@ import { btnSuccess, btnSecondary, btnGhost, IconCheck } from "@/components/ui";
 // promete una publicación automática que hoy no existe.
 
 const COLOR_BADGE: Record<number, string> = {
-  1: "bg-rose-50 text-rose-700",
-  2: "bg-rose-50 text-rose-700",
-  3: "bg-amber-50 text-amber-700",
-  4: "bg-emerald-50 text-emerald-700",
-  5: "bg-emerald-50 text-emerald-700",
+  1: "bg-slate-100 text-slate-500",
+  2: "bg-slate-100 text-slate-500",
+  3: "bg-slate-200 text-slate-700",
+  4: "bg-slate-900 text-white",
+  5: "bg-slate-900 text-white",
 };
 
 function fechaCorta(v: string): string {
@@ -152,7 +152,7 @@ function TarjetaResena({
           type="button"
           disabled={pendiente}
           onClick={descartar}
-          className={`${btnGhost} ml-auto !text-xs hover:!text-rose-600`}
+          className={`${btnGhost} ml-auto !text-xs hover:!text-slate-900`}
         >
           Descartar
         </button>

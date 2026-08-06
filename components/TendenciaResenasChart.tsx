@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { SERIES, INK, niceTicks } from "@/lib/palette";
+import { INK, niceTicks } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
 
 // Tendencia de reseñas: dos variables sobre el mismo eje de tiempo —
@@ -15,8 +15,10 @@ import { fmtNum } from "@/lib/format";
 // Autocontenido (no usa LineChart, que es de una sola serie) pero comparte
 // la misma paleta y la misma card con toggle Gráfico/Tabla del resto.
 
-const COLOR_TOTAL = SERIES[0]; // azul — cantidad
-const COLOR_RATING = SERIES[3]; // verde — calidad
+// Sin color (panel del cliente: solo blanco y negro del manual de marca) —
+// se distinguen por tinta (negro/gris) y por trazo (sólido/punteado).
+const COLOR_TOTAL = "#1A1A1A"; // cantidad
+const COLOR_RATING = "#8A8A8A"; // calidad
 
 export default function TendenciaResenasChart({
   labels,

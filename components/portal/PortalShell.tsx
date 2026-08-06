@@ -242,7 +242,7 @@ export default function PortalShell({
           monocromática del Manual de Marca. */}
       <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-slate-50">
         <div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.04),_transparent_70%)] blur-2xl" />
-        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(200,216,232,0.5),_transparent_70%)] blur-2xl" />
+        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.045),_transparent_70%)] blur-2xl" />
         <div className="absolute -bottom-40 right-10 h-[440px] w-[440px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.035),_transparent_70%)] blur-2xl" />
       </div>
 
@@ -369,11 +369,11 @@ export default function PortalShell({
                 <button
                   type="button"
                   onClick={() => goTo(google.perfilPanelId)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
                 >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" aria-hidden />
                   Google conectado
-                  <IconChevron size={13} className="text-emerald-400" />
+                  <IconChevron size={13} className="text-slate-400" />
                 </button>
               ) : (
                 <a

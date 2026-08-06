@@ -29,7 +29,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
           <div key={m.nombre} className="rounded-lg bg-slate-50 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-800 text-xs font-bold text-white">
                   {iniciales(m.nombre)}
                 </span>
                 <span className="text-sm font-medium text-slate-800">{m.nombre}</span>
@@ -40,7 +40,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
                 </span>
                 {m.menciones > 0 && (
                   <>
-                    <span className="font-semibold text-amber-500">{m.ratingPromedio.toFixed(1)}★</span>
+                    <span className="font-semibold text-slate-900">{m.ratingPromedio.toFixed(1)}★</span>
                     <span className="text-slate-500">
                       {m.menciones} mención{m.menciones === 1 ? "" : "es"}
                     </span>
@@ -56,7 +56,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
             ) : (
               <>
                 {m.menciones < MUESTRA_CHICA && (
-                  <p className="mt-2 text-[11px] font-medium text-amber-600">
+                  <p className="mt-2 text-[11px] font-medium text-slate-500">
                     Muestra chica ({m.menciones} mención{m.menciones === 1 ? "" : "es"}) — no saques
                     conclusiones firmes todavía.
                   </p>
@@ -84,7 +84,7 @@ export default function MencionesEmpleados({ menciones }: { menciones: MencionEm
                     {m.ejemplos.map((e, i) => (
                       <p key={i} className="text-xs text-slate-600">
                         <span className="font-medium text-slate-700">{e.autor}</span>{" "}
-                        <span className="text-amber-400">{"★".repeat(e.estrellas)}</span> — &ldquo;{e.texto}&rdquo;
+                        <span className="text-slate-900">{"★".repeat(e.estrellas)}</span> — &ldquo;{e.texto}&rdquo;
                       </p>
                     ))}
                   </div>

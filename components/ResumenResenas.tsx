@@ -59,6 +59,11 @@ const COLOR_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   down: "text-rose-600",
   flat: "text-slate-400",
 };
+const COLOR_TENDENCIA_MONO: Record<"up" | "down" | "flat", string> = {
+  up: "text-slate-900",
+  down: "text-slate-400",
+  flat: "text-slate-400",
+};
 const FLECHA_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   up: "▲",
   down: "▼",
@@ -76,6 +81,7 @@ export default function ResumenResenas({
 }) {
   const { distribucion, total, promedio, tendencia, temasRecurrentes } = data;
   const max = Math.max(...distribucion.map((d) => d.cantidad), 1);
+  const colorTendencia = variant === "glass" ? COLOR_TENDENCIA_MONO : COLOR_TENDENCIA;
   const wrapClass =
     variant === "glass"
       ? "rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
@@ -91,7 +97,7 @@ export default function ResumenResenas({
               {promedio.toFixed(1)}★
             </span>
             {tendencia && (
-              <span className={`text-xs font-medium ${COLOR_TENDENCIA[tendencia.dir]}`}>
+              <span className={`text-xs font-medium ${colorTendencia[tendencia.dir]}`}>
                 {FLECHA_TENDENCIA[tendencia.dir]} {tendencia.texto}
               </span>
             )}

@@ -18,7 +18,7 @@ export default function RatingGauge({
   const dash = c * pct;
 
   const track = dark ? "rgba(255,255,255,0.18)" : "#EAEAEA";
-  const progress = dark ? "#FFFFFF" : "#3D5A80";
+  const progress = dark ? "#FFFFFF" : "#1A1A1A";
   const text = dark ? "#FFFFFF" : "#1A1A1A";
 
   return (
