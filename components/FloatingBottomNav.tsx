@@ -16,7 +16,7 @@ export default function FloatingBottomNav({ items }: { items: FloatingNavItem[] 
   return (
     <nav
       aria-label="Navegación rápida"
-      className="fixed bottom-4 left-1/2 z-30 hidden max-w-[calc(100vw-2rem)] -translate-x-1/2 md:block"
+      className="fixed bottom-4 left-1/2 z-30 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 md:hidden"
     >
       <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white/90 p-1.5 shadow-lg shadow-black/10 backdrop-blur-xl">
         {items.map((item) => {
