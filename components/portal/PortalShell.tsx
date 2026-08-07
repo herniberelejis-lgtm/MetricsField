@@ -389,9 +389,11 @@ export default function PortalShell({
                 href={whatsappHref}
                 target="_blank"
                 rel="noreferrer"
-                className="hidden items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366] lg:inline-flex"
+                aria-label="Hablar con tu agencia por WhatsApp"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366] lg:px-3.5"
               >
-                <IconChat size={14} /> Hablar con tu agencia
+                <IconChat size={14} />
+                <span className="hidden lg:inline">Hablar con tu agencia</span>
               </a>
             )}
             <div className="flex items-center gap-2.5 border-l border-slate-200/70 pl-3">
