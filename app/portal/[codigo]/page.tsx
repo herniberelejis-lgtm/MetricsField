@@ -30,7 +30,6 @@ import {
   SectionHeading,
   btnPrimary,
   btnSecondary,
-  IconChat,
   IconClock,
   IconWave,
   IconCheck,
@@ -68,7 +67,6 @@ import PortalShell, {
   IconDevice,
   IconActivity,
   IconSearch,
-  IconHelp,
   IconUsers,
   type PortalNavEntry,
 } from "@/components/portal/PortalShell";
@@ -320,6 +318,12 @@ export default async function PortalPage({
     5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
   };
 
+  // Menú simplificado: 3 secciones reales (antes eran 9). Todo lo
+  // relacionado con "cómo va mi negocio" (locales, dispositivos, escaneos,
+  // rating de Google, competencia, resumen del mes) vive junto adentro de
+  // "Mi Negocio" — Personal se mudó adentro de Reseñas (son menciones de
+  // reseñas) — y Ayuda ya no ocupa un ítem propio: el botón de WhatsApp del
+  // header alcanza.
   const nav: PortalNavEntry[] = [
     { type: "leaf", id: "resumen", label: "Resumen", icon: <IconGrid size={18} /> },
     {
@@ -335,40 +339,37 @@ export default async function PortalPage({
         ) : undefined,
     },
     {
-      type: "leaf",
-      id: "sucursales",
-      label: "Mis Sucursales",
-      icon: <IconBuilding size={18} />,
-      badge:
-        sucursales.length === 0 ? (
-          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
-            Pronto
-          </span>
-        ) : (
-          // Total de locales (cuenta + sucursales), no solo las sucursales
-          // hijas — mismo número que "Rendimiento · N locales" en Resumen.
-          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
-            {ubicaciones.length}
-          </span>
-        ),
-    },
-    { type: "leaf", id: "dispositivos", label: "Mis Dispositivos", icon: <IconDevice size={18} /> },
-    { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconActivity size={18} /> },
-    ...(personalEmpleados.length > 0
-      ? [{ type: "leaf" as const, id: "personal", label: "Personal", icon: <IconUsers size={18} /> }]
-      : []),
-    {
       type: "group",
-      id: "google",
-      label: "Mi Negocio en Google",
-      icon: <IconSearch size={18} />,
+      id: "negocio",
+      label: "Mi Negocio",
+      icon: <IconBuilding size={18} />,
       items: [
+        {
+          type: "leaf",
+          id: "sucursales",
+          label: "Sucursales",
+          icon: <IconBuilding size={16} />,
+          badge:
+            sucursales.length === 0 ? (
+              <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
+                Pronto
+              </span>
+            ) : (
+              // Total de locales (cuenta + sucursales), no solo las
+              // sucursales hijas — mismo número que "Rendimiento · N
+              // locales" en Resumen.
+              <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
+                {ubicaciones.length}
+              </span>
+            ),
+        },
+        { type: "leaf", id: "dispositivos", label: "Dispositivos", icon: <IconDevice size={16} /> },
+        { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconWave size={16} /> },
         { type: "leaf", id: "rating", label: "Mi Rating en Google", icon: <IconStarNav size={16} /> },
-        { type: "leaf", id: "competidores", label: "Competidores", icon: <IconActivity size={16} /> },
-        { type: "leaf", id: "mes", label: "Resumen del mes", icon: <IconGrid size={16} /> },
+        { type: "leaf", id: "competidores", label: "Competidores", icon: <IconSearch size={16} /> },
+        { type: "leaf", id: "mes", label: "Resumen del mes", icon: <IconActivity size={16} /> },
       ],
     },
-    { type: "leaf", id: "ayuda", label: "Ayuda / Soporte", icon: <IconHelp size={18} /> },
   ];
 
   const panels: Record<string, ReactNode> = {};
@@ -516,39 +517,62 @@ export default async function PortalPage({
   );
 
   // Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida para
-  // sus reseñas de Google, sin depender del equipo de MetricsField.
-  if (resenas.length > 0) {
+  // sus reseñas de Google, sin depender del equipo de MetricsField. Personal
+  // vive acá también (antes era su propio ítem de menú): son menciones
+  // dentro del texto de las reseñas, tiene más sentido leerlas junto a ellas
+  // que en una sección aparte.
+  if (resenas.length > 0 || personalEmpleados.length > 0) {
     panels.resenas = (
-      <Card variant="glass">
-        <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
-        <p className="mt-1 text-xs text-slate-500">
-          Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
-          Google vos mismo — todavía no publicamos nada en tu nombre.
-        </p>
-        <div className="mt-3">
-          <ResumenResenas data={resumenResenas} variant="glass" />
-        </div>
-        {resenasApiHabilitada() && (
-          <div className="mt-3">
-            <AutomatizacionResenas
-              codigo={c.codigoAcceso}
-              comercioId={activo.id}
-              activa={activo.autoResponderPositivas}
-              umbral={activo.autoResponderUmbral}
-              apiHabilitada
-              resenasAutomaticas={resenasAutomaticas}
-            />
-          </div>
+      <>
+        {resenas.length > 0 && (
+          <Card variant="glass">
+            <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
+              Google vos mismo — todavía no publicamos nada en tu nombre.
+            </p>
+            <div className="mt-3">
+              <ResumenResenas data={resumenResenas} variant="glass" />
+            </div>
+            {resenasApiHabilitada() && (
+              <div className="mt-3">
+                <AutomatizacionResenas
+                  codigo={c.codigoAcceso}
+                  comercioId={activo.id}
+                  activa={activo.autoResponderPositivas}
+                  umbral={activo.autoResponderUmbral}
+                  apiHabilitada
+                  resenasAutomaticas={resenasAutomaticas}
+                />
+              </div>
+            )}
+            <div className="mt-3">
+              <GestionResenas
+                resenasIniciales={resenasPendientes}
+                tonoMarca={c.tonoMarca}
+                codigo={c.codigoAcceso}
+                comercioId={activo.id}
+              />
+            </div>
+          </Card>
         )}
-        <div className="mt-3">
-          <GestionResenas
-            resenasIniciales={resenasPendientes}
-            tonoMarca={c.tonoMarca}
-            codigo={c.codigoAcceso}
-            comercioId={activo.id}
-          />
-        </div>
-      </Card>
+
+        {personalEmpleados.length > 0 && (
+          <Card variant="glass" className={resenas.length > 0 ? "mt-4" : undefined}>
+            <div className="flex items-center gap-2">
+              <IconUsers size={16} className="text-slate-500" />
+              <p className="text-sm font-medium text-slate-700">Tu equipo</p>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Cada mozo o empleado con tarjeta NFC propia, con sus taps (dato exacto) y las
+              reseñas que lo nombran en el texto (señal, no atribución exacta).
+            </p>
+            <div className="mt-3">
+              <MencionesEmpleados menciones={personalEmpleados} />
+            </div>
+          </Card>
+        )}
+      </>
     );
   }
 
@@ -619,109 +643,14 @@ export default async function PortalPage({
             />
           )}
 
-          {/* Desglose por dispositivo NFC/QR de este local — mozo, mesa,
-              mostrador, lo que se haya cargado como etiqueta. Los taps son
-              el único dato 100% atribuible por dispositivo: Google no
-              informa de qué tarjeta vino cada reseña (por eso el rating y
-              las reseñas de acá son del local completo, no por mesa). Para
-              el personal con tarjeta propia sí hay una señal extra más
-              abajo, vía menciones de su nombre en el texto. */}
-          <Card variant="glass">
-            <p className="text-sm font-medium text-slate-700">Dispositivos de {activo.nombre}</p>
-            {linksConTaps.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">
-                Todavía no tenés dispositivos asignados a este local.
-              </p>
-            ) : (
-              <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full min-w-[480px] border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 text-left text-[10.5px] font-bold uppercase tracking-wide text-slate-500">
-                      <th className="px-4 py-2.5">Dispositivo</th>
-                      {tieneSoporteQr && <th className="px-4 py-2.5">Tipo</th>}
-                      <th className="px-4 py-2.5">Taps totales</th>
-                      <th className="px-4 py-2.5">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {linksConTaps.map((l) => (
-                      <tr key={l.id} className="border-t border-slate-100">
-                        <td className="px-4 py-3 text-slate-700">{l.etiqueta || "Sin etiqueta"}</td>
-                        {tieneSoporteQr && (
-                          <td className="px-4 py-3 text-slate-600">
-                            {l.tipo === "ambos" ? "NFC + QR" : l.tipo.toUpperCase()}
-                          </td>
-                        )}
-                        <td className="px-4 py-3 tabular-nums text-slate-700">{fmtNum(l.taps)}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                              l.activo ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            ● {l.activo ? "en vivo" : "inactivo"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
-
-          {/* Evolución de reseñas del local, mes a mes. */}
-          <Card variant="glass">
-            <p className="mb-3 text-sm font-medium text-slate-700">Evolución de {activo.nombre}</p>
-            <EvolucionMensual historico={activo.historico} esPremium={esPremium} detalle={detalleMensual} />
-          </Card>
-
-          {/* Personal con tarjeta NFC propia en este local, si tiene. */}
-          {personalEmpleados.length > 0 && (
-            <Card variant="glass">
-              <p className="text-sm font-medium text-slate-700">Personal de {activo.nombre}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Taps de su tarjeta (dato exacto) y reseñas que lo nombran en el texto (señal, no
-                atribución exacta).
-              </p>
-              <div className="mt-3">
-                <MencionesEmpleados menciones={personalEmpleados} />
-              </div>
-            </Card>
-          )}
-
-          {/* Gestión de reseñas de este local: boceto de respuesta listo
-              para editar y publicar en pocos clics. */}
-          <Card variant="glass">
-            <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Te sugerimos un borrador de respuesta para cada reseña; la editás, la apruebas
-              y la copiás a Google vos mismo — todavía no publicamos nada en tu nombre.
-            </p>
-            <div className="mt-3">
-              <ResumenResenas data={resumenResenas} variant="glass" />
-            </div>
-            {resenasApiHabilitada() && (
-              <div className="mt-3">
-                <AutomatizacionResenas
-                  codigo={c.codigoAcceso}
-                  comercioId={activo.id}
-                  activa={activo.autoResponderPositivas}
-                  umbral={activo.autoResponderUmbral}
-                  apiHabilitada
-                  resenasAutomaticas={resenasAutomaticas}
-                />
-              </div>
-            )}
-            <div className="mt-3">
-              <GestionResenas
-                resenasIniciales={resenasPendientes}
-                tonoMarca={c.tonoMarca}
-                codigo={c.codigoAcceso}
-                comercioId={activo.id}
-              />
-            </div>
-          </Card>
+          {/* El detalle de este local (dispositivos, reseñas, evolución
+              mensual) ya se ve en las otras pestañas de "Mi Negocio" — acá
+              solo se elige el local, para no repetir las mismas tarjetas
+              dos veces. */}
+          <p className="text-xs text-slate-400">
+            El resto de las pestañas de Mi Negocio (Dispositivos, Reseñas, Resumen del mes) ya muestran
+            el detalle de <b className="text-slate-500">{activo.nombre}</b>, el local elegido acá arriba.
+          </p>
         </div>
       </>
     );
@@ -831,18 +760,6 @@ export default async function PortalPage({
       )}
     </>
   );
-
-  if (personalEmpleados.length > 0) {
-    panels.personal = (
-      <>
-        <p className="mb-4 text-sm text-slate-500">
-          Cada mozo o empleado con tarjeta NFC propia, con sus taps (dato exacto) y las reseñas
-          que lo nombran (señal, no atribución exacta — ver detalle abajo).
-        </p>
-        <MencionesEmpleados menciones={personalEmpleados} />
-      </>
-    );
-  }
 
   panels.rating = (
     <>
@@ -1103,29 +1020,6 @@ export default async function PortalPage({
         </>
       )}
     </>
-  );
-
-  panels.ayuda = (
-    <Card variant="glass" className="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h3 className="text-sm font-semibold text-slate-800">¿Algo no funciona o tenés una duda?</h3>
-        <p className="mt-1.5 text-xs text-slate-500">
-          {AGENCIA_WHATSAPP
-            ? "Escribinos por WhatsApp, te respondemos nosotros — no un bot."
-            : "Contactá a tu agencia para resolver cualquier duda sobre tu cuenta."}
-        </p>
-      </div>
-      {AGENCIA_WHATSAPP && (
-        <a
-          href={waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
-        >
-          <IconChat size={15} /> Escribir por WhatsApp
-        </a>
-      )}
-    </Card>
   );
 
   return (
