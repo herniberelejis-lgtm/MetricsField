@@ -1,0 +1,38 @@
+Tarea,Proyecto,Objetivo,Prioridad,Responsable,Vence,Notas
+Correr migración 010 en Neon,Dejar el producto terminado,,Alta,Hernán,2026-08-10,"Correr primero el PASO 1 (solo lectura). Si feedback/cobros/prospectos tienen filas, avisar antes de borrar."
+Cargar MONITOR_WEBHOOK_URL en Vercel,Dejar el producto terminado,,Alta,Hernán,2026-08-10,"Webhook de Slack o Discord. Sin esto, si el cron falla un domingo no se entera nadie."
+Verificar NEXT_PUBLIC_BASE_URL en Vercel,Lanzamiento Piloto,,Alta,Hernán,2026-08-10,"CRÍTICO: define a dónde apuntan los QR impresos. Bloquea el envío del lote a imprenta."
+Verificar SMTP_* en Vercel,Dejar el producto terminado,,Media,Hernán,2026-08-10,"Si no están, las alertas de reseña mala y el resumen mensual no se mandan y no falla nada."
+Enviar verificación OAuth a Google,Motor de Reseñas,,Media,Hernán,2026-08-11,"Necesita dominio verificado en Search Console y video de demo del flujo de conexión."
+Enviar solicitud de Business Profile APIs,Motor de Reseñas,,Media,Hernán,2026-08-11,Trámite separado del de verificación. Los dos relojes arrancan el mismo día.
+Cargar 30 paneles de demo de prospectos,Lanzamiento Piloto,Validar el producto en mercado,Alta,Hernán,2026-08-09,"Alta como prospecto + Place ID + 2 competidores por comercio. 18 servicios de ticket alto, 12 gastronomía. Es el prerequisito de los WhatsApps del lunes."
+Crear links de pago en Mercado Pago,Kit Comercial,Alcanzar tracción comercial,Alta,Hernán,2026-08-10,"Tres: seña 20.000, saldo 19.000, pack anual 249.000."
+Enviar 5 WhatsApps de prueba y medir respuesta,Lanzamiento Piloto,Alcanzar tracción comercial,Alta,Hernán,2026-08-10,"Solo 5, no 30. Si no contesta ninguno, reescribir el mensaje antes de quemar los otros 25."
+Salir a la calle - 15 puertas por día,Lanzamiento Piloto,Alcanzar tracción comercial,Alta,Hernán,2026-08-13,"Nueva Córdoba y Güemes, de 15:00 a 17:30. Cerrar con seña y fecha de instalación."
+Enviar propuesta RADAR a 3 cadenas,Lanzamiento Piloto,Alcanzar tracción comercial,Media,Hernán,2026-08-11,Ciclo largo. Arrancarlo y dejarlo corriendo en paralelo.
+Encargar el lote de hardware,Lanzamiento Piloto,,Alta,Simón,2026-08-10,"LA TAREA MÁS URGENTE DE LA SEMANA. Pedir fecha por escrito y plan B. Si se atrasa, se decide ese mismo día."
+Generar lote en /admin/hardware y descargar ZIP de QR,Lanzamiento Piloto,,Alta,Simón,2026-08-10,Esperar a que Hernán confirme NEXT_PUBLIC_BASE_URL antes de generar.
+Verificar 3 QR del lote con celular real,Lanzamiento Piloto,,Alta,Simón,2026-08-10,"Deben abrir app.metricsfield.com/t/... Único error de la semana que cuesta plata y no se arregla con un commit."
+Escribir instructivo que va con el cartel,Kit Comercial,,Media,Simón,2026-08-11,"Dónde apoyarlo, qué hacer si el cliente no tiene NFC, a quién escribir. Sin tecnicismos."
+Escribir protocolo de instalación en el local,Lanzamiento Piloto,,Media,Simón,2026-08-12,"Dónde va el cartel, qué se prueba delante del dueño, qué se explica al personal. Como pasos."
+Cotizar segundo lote y tiempo de reposición,Lanzamiento Piloto,,Media,Simón,2026-08-13,"Costo unitario, plazo de entrega y punto de repedido. Si la venta arranca, el 24 hacen falta más."
+Escribir checklist de alta de cliente,Dejar el producto terminado,Validar el producto en mercado,Alta,Luis,2026-08-10,"Con Hernán. Desde que alguien seña hasta que su portal anda. Probarlo dando de alta un comercio de prueba."
+Extraer contenido del sitio Impulso,Kit Comercial,,Media,Luis,2026-08-10,"Ver docs/BRIEF-LUIS-SITIO-IMPULSO.html. 40 min: bajar el .zip y contestar 4 preguntas."
+QA visual del portal del cliente,Dejar el producto terminado,,Alta,Luis,2026-08-11,"Los 3 paneles, escritorio y celular, con un comercio con sucursales y otro sin."
+QA visual del panel de admin,Dejar el producto terminado,,Media,Luis,2026-08-12,Buscar textos cortados y botones que no se ven en pantalla chica.
+Escribir checklist de demo,Kit Comercial,Alcanzar tracción comercial,Media,Luis,2026-08-12,Qué se revisa antes de abrir un portal delante de un cliente.
+Escribir proceso de soporte,Dejar el producto terminado,,Media,Luis,2026-08-13,"Quién contesta, en cuánto, qué se pregunta primero. Qué hacer si se cae la sync o un cartel deja de andar."
+Levantar entorno local y leer onboarding,Dejar el producto terminado,,Alta,David,2026-08-10,"Seguir docs/ONBOARDING.html. Tocar el cartel de prueba con el celular y ver el tap en el portal."
+Hacer primer PR de prueba,Dejar el producto terminado,,Media,David,2026-08-10,"Algo mínimo. El objetivo no es el cambio, es recorrer el circuito: rama, PR, CI verde, merge."
+Tests de lib/format.ts,Dejar el producto terminado,,Alta,David,2026-08-11,"Empezar por delta(): alimenta todos los indicadores del portal. Función pura, sin base de datos."
+Tests de lib/types.ts,Dejar el producto terminado,,Alta,David,2026-08-11,"metricaActual, metricaAnterior, citasIA, ingresoNFC. Funciones puras."
+Tests de lib/empleados.ts,Dejar el producto terminado,,Alta,David,2026-08-12,"metricasPorEmpleado. Es el diferencial del producto, priorizarlo."
+Tests de lib/keywords.ts,Dejar el producto terminado,,Media,David,2026-08-12,terminosFrecuentes. Función pura.
+Tests de lib/recomendacion.ts,Dejar el producto terminado,,Media,David,2026-08-13,recomendacionDelMes. Función pura.
+Tests de lib/respuestas.ts,Dejar el producto terminado,,Media,David,2026-08-13,Lo que el cliente lee y aprueba en el portal.
+Revisar refactors de Claude en rama desarrollo,Dejar el producto terminado,,Alta,David,2026-08-13,"Criterio: si algún test tuvo que cambiar, el refactor cambió comportamiento y está mal."
+Cron con cursor por google_sync_en,Dejar el producto terminado,,Alta,Claude,2026-08-10,"Hoy toma la cartera entera sin ORDER BY ni LIMIT con tope de 60s. Es el único techo que rompe el producto al crecer."
+Partir lib/db.ts por dominio,Dejar el producto terminado,,Media,Claude,2026-08-12,"1.561 líneas. Dejar lib/db.ts reexportando para no tocar los 25 archivos que lo importan. Va a desarrollo."
+Desarmar app/portal/[codigo]/page.tsx en componentes,Dejar el producto terminado,,Media,Claude,2026-08-13,"1.041 líneas, 8 paneles. Verificar con capturas antes y después. Va a desarrollo."
+Bajar de desarrollo a main lo verificado,Dejar el producto terminado,,Alta,Claude,2026-08-14,"Solo lo que David haya revisado. Lo que no esté verificado se queda en desarrollo."
+QA final de punta a punta en la preview,Dejar el producto terminado,,Alta,David,2026-08-14,"Con Luis. Los 3 mundos: tap, portal y admin. Incluir activación con PIN y comercio con sucursales."
