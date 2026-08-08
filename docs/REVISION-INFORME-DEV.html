@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Revisión del informe técnico</title>
+<style>
+  :root{
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1020px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.25rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.82rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:1rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.76rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1020px;margin:0 auto;padding:0 1.5rem 6rem}
+  .col{max-width:70ch}
+  header.mast{padding:3.5rem 0 2.25rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1.1rem}
+  h1{font-size:clamp(2rem,5vw,2.9rem);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:0 0 1.1rem;text-wrap:balance;max-width:20ch}
+  .stand{font-size:1.05rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.75rem;font-size:.74rem;color:var(--muted)}
+
+  .verdict{margin:2.25rem 0 0;padding:1.6rem;background:var(--ink);color:var(--ground);border-radius:12px}
+  .verdict .eyebrow{color:color-mix(in srgb,var(--ground) 60%,transparent)}
+  .verdict p{margin:0 0 .95rem;font-size:1rem;line-height:1.6;max-width:64ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ground);font-weight:700}
+  .verdict code{background:color-mix(in srgb,var(--ground) 14%,transparent);color:var(--ground)}
+
+  section{padding-top:3.5rem;scroll-margin-top:4rem}
+  .s-head{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.4rem}
+  .s-num{font-size:.74rem;color:var(--muted);font-weight:600;padding-top:.35rem}
+  h2{font-size:clamp(1.4rem,2.8vw,1.8rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.9rem;margin:0 0 1.75rem 2.5rem;max-width:62ch}
+  h3{font-size:1rem;font-weight:700;letter-spacing:-.012em;margin:2.4rem 0 .8rem;text-wrap:balance}
+  p{margin:0 0 1rem}
+  ul,ol{margin:0 0 1rem;padding-left:1.15rem}
+  li{margin-bottom:.4rem}
+  li::marker{color:var(--muted)}
+
+  .chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.64rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1.1rem 0 1.6rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.865rem;min-width:620px}
+  thead th{text-align:left;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.75rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.75rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.5}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.8rem}
+
+  .cards{display:grid;gap:.7rem;margin:1.1rem 0 1.5rem}
+  .card{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1.05rem 1.2rem;border-left:3px solid var(--rule)}
+  .card.crit{border-left-color:var(--crit)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.ok{border-left-color:var(--ok)}
+  .card-h{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.35rem}
+  .card-t{font-weight:700;font-size:.94rem;letter-spacing:-.01em}
+  .card p{margin:0;font-size:.885rem;color:var(--ink-2);line-height:1.56}
+  .card p+p{margin-top:.55rem}
+  .card .prueba{margin-top:.6rem;padding-top:.55rem;border-top:1px dashed var(--faint);font-size:.8rem;color:var(--muted)}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1.05rem 1.2rem;margin:1.4rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.9rem;line-height:1.58}
+  .callout p+p{margin-top:.65rem}
+  .callout .eyebrow{margin-bottom:.45rem}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin:1.4rem 0}
+  .metric{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:.9rem}
+  .metric-v{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;display:block;
+    font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .metric-l{font-size:.72rem;color:var(--muted);margin-top:.25rem;display:block;line-height:1.35}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:3rem 0 0}
+  footer{margin-top:3.5rem;padding-top:1.4rem;border-top:1px solid var(--rule);font-size:.78rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Revisión del informe</div>
+  <nav>
+    <a href="#veredicto">Veredicto</a>
+    <a href="#punto-por-punto">Punto por punto</a>
+    <a href="#faltaba">Lo que faltaba</a>
+    <a href="#ahora">Qué queda</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Revisión del informe del desarrollador saliente</p>
+  <h1>Qué de eso sigue siendo cierto</h1>
+  <p class="stand">
+    Verifiqué los doce puntos del informe contra el código que hay hoy en
+    <code>main</code>. Ocho ya están resueltos, uno está mal descrito, uno es inexacto,
+    y dos siguen vigentes. Abajo está cada uno con la prueba concreta.
+  </p>
+  <div class="mast-meta">
+    <span>Verificado contra <code>06a58f2</code></span>
+    <span>12 puntos revisados</span>
+  </div>
+</header>
+
+<div class="verdict">
+  <p class="eyebrow">Lo primero, y es importante para ser justos</p>
+  <p>
+    <strong>El informe es una foto anterior a los propios arreglos del desarrollador.</strong>
+    No es que se haya equivocado: varios comentarios que hoy están en el código
+    describen exactamente los bugs que él reporta, <em>en tiempo pasado</em>. Por ejemplo,
+    en <code>getClientes()</code> se lee «la versión anterior era un N+1 que castigaba todas
+    las páginas del panel», y en <code>crearCliente()</code>, «sin esto, un fallo en el segundo
+    INSERT dejaba un comercio sin link».
+  </p>
+  <p>
+    O sea: <strong>relevó bien, después lo arregló, y el informe quedó sin actualizar.</strong>
+    El diagnóstico fue correcto; lo que está desactualizado es el estado.
+  </p>
+  <p>
+    Lo que sí conviene saber es que <strong>el informe no detectó el único problema
+    realmente crítico</strong> que tenía el sistema — un XSS almacenado que permitía robar
+    la sesión del panel. Lo encontramos esta semana y ya está cerrado.
+  </p>
+</div>
+
+<div class="metrics">
+  <div class="metric"><span class="metric-v">8</span><span class="metric-l">Ya resueltos</span></div>
+  <div class="metric"><span class="metric-v">1</span><span class="metric-l">Mal descrito, riesgo real</span></div>
+  <div class="metric"><span class="metric-v">1</span><span class="metric-l">Inexacto</span></div>
+  <div class="metric"><span class="metric-v">2</span><span class="metric-l">Vigentes</span></div>
+</div>
+
+<!-- 01 -->
+<section id="punto-por-punto">
+  <div class="s-head"><span class="s-num">01</span><h2>Punto por punto</h2></div>
+  <p class="s-sub">Cada fila verificada leyendo el código, no la documentación.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>El informe decía</th><th>Estado real</th><th>Prueba</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Fotos y documentos guardados dentro de la base</td>
+        <td><span class="chip c-flat">Obsoleto</span></td>
+        <td>La subida de archivos <strong>se eliminó del producto</strong>. No hay ningún <code>input type="file"</code> ni columna binaria en las 13 tablas.</td>
+      </tr>
+      <tr>
+        <td>Credenciales de Google sin cifrar</td>
+        <td><span class="chip c-ok">Resuelto</span></td>
+        <td><code>lib/crypto.ts</code>, AES-256-GCM. <code>lib/db.ts:527</code> guarda con <code>cifrar()</code> y lee con <code>descifrar()</code>. Cubierto por 9 tests.</td>
+      </tr>
+      <tr>
+        <td>Límite de intentos por servidor, no global</td>
+        <td><span class="chip c-ok">Resuelto</span></td>
+        <td><code>lib/ratelimit.ts</code> usa Upstash Redis: el límite es global entre instancias. Aplicado en 6 puntos (login, portal, taps, PIN).</td>
+      </tr>
+      <tr>
+        <td>La página del cliente final hace consultas de más</td>
+        <td><span class="chip c-flat">Obsoleto</span></td>
+        <td><code>/t/[slug]</code> hace <strong>un</strong> SELECT con JOIN (<code>getDatosTap</code>) más el INSERT del tap. No hay nada que aligerar.</td>
+      </tr>
+      <tr>
+        <td>El panel consulta cliente por cliente (~100 consultas)</td>
+        <td><span class="chip c-ok">Resuelto</span></td>
+        <td><code>getClientes()</code> hace <strong>3 consultas fijas</strong> y arma el resultado en memoria, sin importar cuántos clientes haya.</td>
+      </tr>
+      <tr>
+        <td>La sincronización con Google es secuencial</td>
+        <td><span class="chip c-warn">Mal descrito<br>riesgo real</span></td>
+        <td><strong>No es secuencial</strong>: corre en lotes de 5 en paralelo (<code>LOTE_SYNC</code>). Pero <strong>el riesgo que describe sí existe</strong> — ver abajo.</td>
+      </tr>
+      <tr>
+        <td>Alta de cliente no es «todo o nada»</td>
+        <td><span class="chip c-ok">Resuelto</span></td>
+        <td><code>crearCliente()</code> usa <code>sql.begin()</code>: el comercio y su link nacen juntos o no nace ninguno. El comentario describe justamente ese bug viejo.</td>
+      </tr>
+      <tr>
+        <td>Ediciones simultáneas se pisan</td>
+        <td><span class="chip c-ok">Resuelto<br>casi del todo</span></td>
+        <td><code>actualizarCliente()</code> es un UPDATE atómico donde cada campo ausente conserva su valor en SQL. Dos personas editando campos <em>distintos</em> ya no se pisan.</td>
+      </tr>
+      <tr>
+        <td>El código está ordenado y sin dependencias innecesarias</td>
+        <td><span class="chip c-ok">Vigente</span></td>
+        <td>Correcto, y sigue siéndolo. 10 dependencias de producción, cero vulnerabilidades en <code>npm audit</code>.</td>
+      </tr>
+      <tr>
+        <td>Business Profile esperando aprobación de Google</td>
+        <td><span class="chip c-warn">Vigente</span></td>
+        <td>Sigue en modo Prueba: el permiso vence cada 7 días y hay tope de 100 usuarios.</td>
+      </tr>
+      <tr>
+        <td>Respuesta automática a reseñas, esperando lo mismo</td>
+        <td><span class="chip c-warn">Vigente</span></td>
+        <td>Código completo, apagado tras <code>GOOGLE_REVIEWS_API_ENABLED=false</code>.</td>
+      </tr>
+      <tr>
+        <td>«El enchufe técnico de IA ya está listo, falta presupuesto»</td>
+        <td><span class="chip c-crit">Inexacto</span></td>
+        <td><strong>No hay una sola línea de código de IA en el repo.</strong> Ver abajo.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h3>Los tres que merecen explicación</h3>
+
+  <div class="cards">
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Mal descrito</span><span class="card-t">La sincronización diaria</span></div>
+      <p>
+        El informe dice que revisa «un comercio a la vez, en fila». Eso no es así: procesa
+        <strong>lotes de 5 en paralelo</strong> con <code>Promise.allSettled</code>.
+      </p>
+      <p>
+        <strong>Pero la conclusión del informe es correcta igual, y es importante.</strong> El cron tiene
+        <code>maxDuration = 60</code> segundos y cada comercio implica al menos una llamada HTTP a
+        Google. Alrededor de 60-80 clientes el proceso se corta a la mitad — y como el orden
+        es estable, <strong>quedan sin sincronizar siempre los mismos</strong>, en silencio.
+      </p>
+      <p class="prueba">
+        Ya no es del todo silencioso: se agregó <code>lib/monitor.ts</code>, que reporta cada falla a un
+        webhook. Falta cargar <code>MONITOR_WEBHOOK_URL</code> en Vercel para que sirva.
+      </p>
+    </div>
+
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-ok">Casi resuelto</span><span class="card-t">Ediciones simultáneas</span></div>
+      <p>
+        El caso grave ya no existe: antes se leía el registro, se mezclaba en JavaScript y se
+        volvía a escribir entero, así que si dos personas editaban <em>campos distintos</em>, la
+        segunda borraba el cambio de la primera. Hoy es un UPDATE atómico y eso no pasa más.
+      </p>
+      <p>
+        Queda el caso menor: si dos personas editan <strong>el mismo campo</strong> a la vez, gana el
+        último. Eso es el comportamiento normal de casi cualquier sistema y no lo resolvería
+        salvo que un día moleste de verdad.
+      </p>
+    </div>
+
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Inexacto</span><span class="card-t">La IA</span></div>
+      <p>
+        El informe da a entender que hay una integración de IA construida y esperando una
+        decisión de presupuesto. <strong>Eso no es así: no hay ninguna referencia a Anthropic ni a
+        ninguna API de IA en todo el repositorio.</strong>
+      </p>
+      <p>
+        Lo que sí existe es <code>lib/respuestas.ts</code>: un generador de respuestas <strong>por reglas</strong> que
+        combina sentimiento (según estrellas) × tema (por palabras clave) × tono de marca del
+        comercio, con variantes para no repetirse. Funciona sin pagar ninguna API.
+      </p>
+      <p class="prueba">
+        El propio comentario del archivo lo dice: «el enchufe a una API real queda para más
+        adelante… hasta entonces esto <em>es</em> el producto, no un placeholder». Conectar IA de
+        verdad es <strong>trabajo de desarrollo pendiente</strong>, no una variable de entorno por prender.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 02 -->
+<section id="faltaba">
+  <div class="s-head"><span class="s-num">02</span><h2>Lo que el informe no vio</h2></div>
+  <p class="s-sub">Encontrado esta semana. Todo ya corregido y en producción.</p>
+
+  <div class="cards">
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Era lo más grave</span><span class="card-t">XSS almacenado con robo de sesión del panel</span></div>
+      <p>
+        La validación de URLs aceptaba <strong>cualquier</strong> esquema, incluido <code>javascript:</code>. Ese valor
+        termina en un <code>location.replace()</code> y en un <code>&lt;a href&gt;</code> de la pantalla de redirección.
+      </p>
+      <p>
+        El ataque concreto: alguien compra un cartel por Mercado Libre, lo activa con su PIN, y
+        pone código como destino. Cualquiera que toque ese cartel lo ejecuta
+        <strong>en <code>app.metricsfield.com</code></strong> — el mismo origen donde vive la cookie de sesión de
+        <code>/admin</code>.
+      </p>
+      <p class="prueba">
+        Corregido con lista blanca (<code>http</code>/<code>https</code>) en <code>lib/url.ts</code>, con tests que lo cubren.
+        Verificado end-to-end: con <code>javascript:</code> el cartel devuelve 404; con una URL normal
+        redirige igual que siempre.
+      </p>
+    </div>
+
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">No mencionado</span><span class="card-t">Cero pruebas automatizadas</span></div>
+      <p>
+        No había ni un test. La lógica de sesión, el PIN, el cifrado y la validación de URLs
+        —todo lo que, si se rompe, abre un agujero— no tenía ninguna red.
+      </p>
+      <p class="prueba">Ahora hay 36 tests sobre esas cuatro zonas. <code>npm test</code>.</p>
+    </div>
+
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">No mencionado</span><span class="card-t">Sin monitoreo: los errores morían en silencio</span></div>
+      <p>
+        Las fallas del cron y del envío de emails se escribían con <code>console.error</code>. En
+        serverless esos logs se pierden salvo que alguien los esté mirando justo — o sea, nunca
+        a las 9 de la mañana de un domingo.
+      </p>
+      <p class="prueba">Agregado <code>lib/monitor.ts</code>. Falta cargar la variable en Vercel.</p>
+    </div>
+
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">No mencionado</span><span class="card-t">Documentación que prometía módulos inexistentes</span></div>
+      <p>
+        <code>docs/CONTEXTO-Y-PROGRESO.md</code> describía como vigentes cinco módulos que estaban
+        borrados del código: Finanzas, Prospectos, Reportes, Analytics y Tutoriales.
+        <strong>Riesgo comercial real</strong>: cualquiera del equipo que leyera ese doc para armar una
+        propuesta prometía cosas que no existen.
+      </p>
+      <p class="prueba">Corregido, y con una advertencia explícita para que no vuelva a pasar.</p>
+    </div>
+
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-flat">Limpieza</span><span class="card-t">Código y base con restos muertos</span></div>
+      <p>
+        441 líneas en archivos que no importaba nadie, dos columnas que ninguna función leía
+        (<code>usar_filtro</code>, <code>posicion_maps</code>) y tres tablas huérfanas.
+      </p>
+      <p class="prueba">
+        Código limpio; la base con la migración <code>010_limpieza_base.sql</code>, que verifica antes de
+        borrar y deja comentados los <code>DROP</code> que podrían llevarse datos históricos.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 03 -->
+<section id="ahora">
+  <div class="s-head"><span class="s-num">03</span><h2>Qué queda realmente por hacer</h2></div>
+  <p class="s-sub">La lista corta y actualizada, para el ingeniero que entra.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Qué</th><th>Por qué importa</th><th>Esfuerzo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Cargar <code>MONITOR_WEBHOOK_URL</code> en Vercel</strong></td>
+        <td>El código de monitoreo está, la variable no. Sin eso seguís sin enterarte si el cron falla.</td>
+        <td class="n">5 min</td>
+      </tr>
+      <tr>
+        <td><strong>Cron con cursor por <code>google_sync_en</code></strong></td>
+        <td>El único techo que rompe el producto al crecer. Que cada corrida procese los N más desactualizados y avance.</td>
+        <td class="n">1 día</td>
+      </tr>
+      <tr>
+        <td><strong>CI que corra <code>tsc</code> + <code>test</code> + <code>build</code> en cada PR</strong></td>
+        <td>Hoy los tests existen pero nada obliga a correrlos. Con un equipo nuevo, eso se olvida.</td>
+        <td class="n">30 min</td>
+      </tr>
+      <tr>
+        <td><strong>Tests de la lógica de negocio</strong></td>
+        <td>Los 36 actuales cubren solo seguridad. Es la condición para poder refactorizar sin miedo.</td>
+        <td class="n">Días</td>
+      </tr>
+      <tr>
+        <td><strong>Partir <code>lib/db.ts</code> y <code>app/portal/[codigo]/page.tsx</code></strong></td>
+        <td>1.561 y 1.041 líneas. Mantenibilidad, no urgencia. <strong>Después de los tests, nunca antes.</strong></td>
+        <td class="n">Días</td>
+      </tr>
+      <tr>
+        <td><strong>Códigos de hardware con sufijo aleatorio</strong></td>
+        <td>Hoy son correlativos (<code>p-0001</code>…). Enumerables; la única defensa es el rate limit.</td>
+        <td class="n">Bajo</td>
+      </tr>
+      <tr>
+        <td><strong>Poder rotar el <code>codigo_acceso</code> del portal</strong></td>
+        <td>Si un cliente reenvía su link privado, hoy no hay forma de revocarlo.</td>
+        <td class="n">Bajo</td>
+      </tr>
+      <tr>
+        <td>Paginar <code>getClientes()</code> · agregar <code>taps</code></td>
+        <td>Techos lejanos: ~200 comercios el primero, volumen alto el segundo. Anotarlos y seguir.</td>
+        <td class="n">Después</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Lo que NO hay que hacer</p>
+    <p>
+      <strong>No rehagas nada de lo que el informe marca como pendiente sin verificarlo antes.</strong>
+      Ocho de esos doce puntos ya están resueltos, y varios están resueltos <em>bien</em> — con
+      comentarios en el código que explican el bug viejo y por qué la solución es la que es.
+      Reescribir eso sería perder tiempo y probablemente reintroducir el problema.
+    </p>
+    <p>
+      La regla general con este repo: <strong>si algo parece raro, buscá el comentario antes de
+      cambiarlo.</strong> Casi todas las decisiones no obvias están explicadas ahí mismo.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Verificación hecha leyendo el código en <code>main</code> (<code>06a58f2</code>), archivo por archivo, contra
+    los doce puntos del informe original. Documento complementario:
+    <code>docs/TRASPASO-INGENIERIA.html</code>, con el relevamiento completo del sistema.
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
