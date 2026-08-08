@@ -51,8 +51,8 @@ Base de datos local/producción: se cargan a mano con
   correr a mano en el SQL Editor de Neon. Nunca asumir que "ya se aplicó".
 - **Ningún `DROP`/`DELETE` masivo sin avisar y confirmar antes** — ya hubo una
   pérdida de datos real por esto.
-- **Nunca pushear directo a `main`.** `main` es producción; todo cambio va por una
-  rama de sesión (genera preview propia en Vercel) y se fusiona con PR.
+- **Nunca pushear directo a `main` ni a `desarrollo`.** Todo cambio va por una rama
+  propia (genera preview en Vercel) y se fusiona con PR. Ver el flujo de ramas abajo.
 - **Sin desvío de reseñas (base legal del producto):** el "star-gate" (desviar
   1-3★ a un formulario privado) fue **eliminado del producto** a pedido del
   dueño — el cartel manda a todos directo al mismo link público de Google.
@@ -62,6 +62,42 @@ Base de datos local/producción: se cargan a mano con
   ya no las escribe.
 - **"Posición en Maps" fue eliminada del producto** — no se puede automatizar de
   forma honesta. Referencias en docs viejos están obsoletas; no reintroducir.
+
+## Flujo de ramas (equipo de 4 — importante para no pisarse)
+
+Dos ramas de larga vida. La regla que las separa: **`main` es lo que un cliente
+puede ver hoy; `desarrollo` es lo que todavía no.**
+
+```
+main          producción. Solo entra lo TERMINADO y verificado.
+              Deploy automático a app.metricsfield.com.
+
+desarrollo    lo que está a medias. Se acumula acá sin trabar nada del corto plazo.
+              Genera su propia preview en Vercel para probar.
+
+claude/…      una rama por tarea, sale de main o de desarrollo según a dónde vaya.
+tuNombre/…    idem para cada persona del equipo.
+```
+
+**Cómo elegir a dónde va tu PR:**
+
+| Tu cambio… | Va a |
+|---|---|
+| Está terminado, probado, y no rompe nada si un cliente lo ve hoy | `main` |
+| Anda pero le falta pulido, tests, o depende de algo que no llegó | `desarrollo` |
+| Es un refactor grande a medio camino | `desarrollo` |
+| Es un hotfix de producción | `main` (y después se baja a `desarrollo`) |
+
+**Reglas para no pisarse:**
+- Antes de empezar, decí en qué archivos vas a trabajar. Dos personas en
+  `lib/db.ts` el mismo día es conflicto asegurado.
+- Ramas cortas: una tarea, un PR, mismo día si se puede. Una rama de tres días
+  acumula conflictos con todo lo demás.
+- **Bajá `desarrollo` a tu rama seguido** (`git merge origin/desarrollo`), no una
+  sola vez al final.
+- Cuando `main` avanza, alguien tiene que bajar `main` a `desarrollo` el mismo
+  día. Si no, `desarrollo` se desincroniza y el merge final duele.
+- El CI corre en las dos ramas: si está rojo, no se fusiona.
 
 ## Arquitectura
 
