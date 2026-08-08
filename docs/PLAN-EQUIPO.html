@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Plan del equipo · semana del 10 al 14</title>
+<style>
+  :root{
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n,.daytag,.metric-v,.owner-tag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1020px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.1rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:.95rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.75rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1020px;margin:0 auto;padding:0 1.5rem 5rem}
+  .col{max-width:70ch}
+  header.mast{padding:3rem 0 1.9rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,4.6vw,2.8rem);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:0 0 1rem;text-wrap:balance;max-width:19ch}
+  .stand{font-size:1.02rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-top:1.5rem;font-size:.73rem;color:var(--muted)}
+
+  .verdict{margin:2rem 0 0;padding:1.5rem;background:var(--ink);color:var(--ground);border-radius:12px}
+  .verdict .eyebrow{color:color-mix(in srgb,var(--ground) 60%,transparent)}
+  .verdict p{margin:0 0 .85rem;font-size:.97rem;line-height:1.58;max-width:64ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ground);font-weight:700}
+  .verdict code{background:color-mix(in srgb,var(--ground) 14%,transparent);color:var(--ground)}
+
+  section{padding-top:3rem;scroll-margin-top:3.6rem}
+  .s-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.35rem}
+  .s-num{font-size:.73rem;color:var(--muted);font-weight:600;padding-top:.3rem}
+  h2{font-size:clamp(1.35rem,2.6vw,1.7rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.88rem;margin:0 0 1.5rem 2.4rem;max-width:62ch}
+  h3{font-size:.98rem;font-weight:700;letter-spacing:-.012em;margin:2.1rem 0 .7rem}
+  p{margin:0 0 .9rem}
+  ul,ol{margin:0 0 .9rem;padding-left:1.15rem}
+  li{margin-bottom:.35rem}
+  li::marker{color:var(--muted)}
+
+  .chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.63rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.18rem .48rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1rem 0 1.5rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.855rem;min-width:600px}
+  thead th{text-align:left;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.7rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.7rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.48}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.79rem}
+
+  /* fichas por persona */
+  .person{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.35rem 1.5rem;margin:1rem 0}
+  .person-top{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:.15rem}
+  .pname{font-size:1.15rem;font-weight:750;letter-spacing:-.02em}
+  .prole{font-size:.75rem;color:var(--muted)}
+  .pmision{font-size:.92rem;color:var(--ink-2);margin:.4rem 0 1rem;max-width:64ch}
+  .owner{background:var(--surface-2);border-radius:8px;padding:.7rem .85rem;margin-bottom:1rem;font-size:.8rem;color:var(--ink-2)}
+  .owner-tag{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.25rem}
+  .person ol{margin:0;padding-left:1.2rem}
+  .person ol>li{margin-bottom:.7rem;font-size:.885rem;color:var(--ink-2)}
+  .person ol>li>strong{color:var(--ink)}
+  .entrega{display:block;margin-top:.25rem;font-size:.79rem;color:var(--muted)}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1rem 1.15rem;margin:1.3rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.885rem;line-height:1.56}
+  .callout p+p{margin-top:.6rem}
+  .callout .eyebrow{margin-bottom:.4rem}
+  .callout.alarm{background:var(--crit-bg);border-color:var(--crit)}
+
+  pre{background:var(--surface-2);border:1px solid var(--faint);border-radius:8px;padding:.85rem 1rem;
+    overflow-x:auto;font-size:.78rem;line-height:1.6;margin:.8rem 0 1.3rem;white-space:pre}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:.65rem;margin:1.3rem 0}
+  .metric{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:.85rem}
+  .metric-v{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;display:block}
+  .metric-l{font-size:.71rem;color:var(--muted);margin-top:.22rem;display:block;line-height:1.35}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:2.6rem 0 0}
+  footer{margin-top:3rem;padding-top:1.3rem;border-top:1px solid var(--rule);font-size:.77rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Plan del equipo</div>
+  <nav>
+    <a href="#reunion">La reunión</a>
+    <a href="#ramas">Ramas</a>
+    <a href="#hernan">Hernán</a>
+    <a href="#david">David</a>
+    <a href="#luis">Luis</a>
+    <a href="#simon">Simón</a>
+    <a href="#claude">Claude</a>
+    <a href="#viernes">Viernes</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Plan de equipo · semana del 10 al 14 de agosto</p>
+  <h1>Cuatro personas, cuatro carriles</h1>
+  <p class="stand">
+    Quién hace qué, en qué archivos, y con qué entrega concreta cada día. Cada uno
+    tiene un área propia: nadie toca lo del otro, así que no hay conflictos ni
+    esperas. Al final del viernes, todo lo nuestro cerrado y listo para vender el 17.
+  </p>
+  <div class="mast-meta">
+    <span>Base: <code>217c038</code></span>
+    <span>4 personas + Claude</span>
+    <span>Hardware llega: <strong>lun 17</strong></span>
+  </div>
+</header>
+
+<div class="verdict">
+  <p class="eyebrow">Las tres decisiones que ordenan la semana</p>
+  <p>
+    <strong>1 · Lo nuestro cierra esta semana; Google tarda lo que tarde.</strong> Los trámites se
+    mandan el lunes para que arranque el reloj, pero nada de lo que hacemos depende de que
+    contesten.
+  </p>
+  <p>
+    <strong>2 · Lo que no llegue al 100% queda en <code>desarrollo</code>.</strong> Rama creada y ya andando.
+    <code>main</code> solo recibe lo terminado y verificado, así lo del corto plazo nunca se traba por
+    algo a medio hacer.
+  </p>
+  <p>
+    <strong>3 · Cada uno tiene archivos propios.</strong> David toca solo <code>test/</code>, Claude toca
+    <code>lib/</code> y <code>app/</code>, Luis y Simón no tocan código. Dos personas en <code>lib/db.ts</code> el mismo
+    día es conflicto asegurado — por eso nadie comparte carpeta.
+  </p>
+</div>
+
+<div class="metrics">
+  <div class="metric"><span class="metric-v">5</span><span class="metric-l">Días</span></div>
+  <div class="metric"><span class="metric-v">4</span><span class="metric-l">Carriles sin cruce</span></div>
+  <div class="metric"><span class="metric-v">17/8</span><span class="metric-l">Primera instalación</span></div>
+  <div class="metric"><span class="metric-v">0</span><span class="metric-l">Dependencias entre carriles</span></div>
+</div>
+
+<!-- REUNIÓN -->
+<section id="reunion">
+  <div class="s-head"><span class="s-num">01</span><h2>La reunión de mañana</h2></div>
+  <p class="s-sub">45 minutos alcanzan. Este es el orden que sugiero.</p>
+
+  <div class="col">
+    <ol>
+      <li><strong>Producto en 10 minutos</strong> — mostrá un cartel, tocalo con el celular, y abrí el portal para que vean el tap aparecer. Es la forma más rápida de que David y todos entiendan qué se está construyendo.</li>
+      <li><strong>La fecha que manda</strong> — el hardware llega el 17 y se instala esa semana. Todo lo de esta semana existe para llegar a esa fecha sin apurones.</li>
+      <li><strong>Cada uno lee su sección de este documento</strong> (5 min) y dice si algo no le cierra.</li>
+      <li><strong>Confirmar el flujo de ramas</strong> (sección 02). Es lo que evita que se pisen.</li>
+      <li><strong>Acordar el ritual diario</strong>: 15 minutos a la mañana, cada uno dice qué hizo, qué va a hacer y en qué archivos. Eso solo ya evita el 90% de los conflictos.</li>
+      <li><strong>Entregarle a David</strong> el documento de onboarding y las credenciales.</li>
+    </ol>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">Lo primero que hay que decidir en la reunión</p>
+    <p>
+      <strong>Simón tiene que encargar el hardware el lunes a primera hora.</strong> Es la única tarea de
+      toda la semana cuya demora no se puede recuperar: si el lote sale el miércoles, la
+      instalación se corre a la semana del 24 y toda la venta se atrasa con ella. Definan
+      cantidad y proveedor mañana, no el lunes.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- RAMAS -->
+<section id="ramas">
+  <div class="s-head"><span class="s-num">02</span><h2>Cómo trabajamos sin pisarnos</h2></div>
+  <p class="s-sub">Ya está montado y documentado en <code>CLAUDE.md</code>. Esto es el resumen.</p>
+
+<pre>main          producción. Solo lo TERMINADO y verificado.
+              Deploy automático a app.metricsfield.com.
+
+desarrollo    lo que está a medias. Se acumula acá sin trabar
+              nada del corto plazo. Tiene su propia preview.
+
+nombre/tarea  una rama por tarea. Sale de main o de desarrollo
+              según a dónde vaya a parar.</pre>
+
+  <div class="tw"><table>
+    <thead><tr><th>Tu cambio…</th><th>Va a</th></tr></thead>
+    <tbody>
+      <tr><td>Está terminado, probado, y no rompe nada si un cliente lo ve hoy</td><td class="n">main</td></tr>
+      <tr><td>Anda pero le falta pulido, tests, o depende de algo que no llegó</td><td class="n">desarrollo</td></tr>
+      <tr><td>Es un refactor grande a medio camino</td><td class="n">desarrollo</td></tr>
+      <tr><td>Es un hotfix de producción</td><td class="n">main</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+    <p><strong>Las cuatro reglas que evitan los conflictos:</strong></p>
+    <ul>
+      <li>Antes de empezar, decí en qué archivos vas a trabajar.</li>
+      <li>Ramas cortas: una tarea, un PR, mismo día si se puede.</li>
+      <li>Bajá <code>desarrollo</code> a tu rama seguido, no una sola vez al final.</li>
+      <li>Cuando <code>main</code> avanza, alguien baja <code>main</code> a <code>desarrollo</code> el mismo día.</li>
+    </ul>
+    <p>
+      El CI corre en las dos ramas: tipos, tests, build y vulnerabilidades. <strong>Si está rojo, no
+      se fusiona.</strong> Ya está funcionando — el primer PR pasó los ocho pasos.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- HERNÁN -->
+<section id="hernan">
+  <div class="s-head"><span class="s-num">03</span><h2>Los cuatro carriles</h2></div>
+  <p class="s-sub">Cada uno con su misión, sus archivos y su entrega diaria.</p>
+
+  <div class="person">
+    <div class="person-top"><span class="pname">Hernán</span><span class="prole">· fundador · accesos · venta</span></div>
+    <p class="pmision">
+      Sos el único con acceso a Neon, Vercel y Google. Tres tareas tuyas bloquean trabajo de
+      otros, así que van el lunes a primera hora. El resto de tu semana es vender.
+    </p>
+    <div class="owner"><span class="owner-tag">Tu territorio</span>Neon · Vercel · Google Cloud · Mercado Pago · la calle. <strong>No tocás código.</strong></div>
+    <ol>
+      <li>
+        <strong>Lunes 9:00 — correr la migración <code>010_limpieza_base.sql</code> en Neon.</strong>
+        Corré el PASO 1 primero: es de solo lectura y te dice qué hay antes de borrar nada. Si
+        <code>feedback</code>, <code>cobros</code> o <code>prospectos</code> tienen filas, avisá antes de seguir.
+        <span class="entrega">Entrega: captura del resultado del PASO 1 al grupo.</span>
+      </li>
+      <li>
+        <strong>Lunes 9:15 — cargar <code>MONITOR_WEBHOOK_URL</code> en Vercel.</strong> Sirve un webhook de
+        Slack o Discord. Sin esto, si el cron falla un domingo no se entera nadie.
+        <span class="entrega">Entrega: un mensaje de prueba llegando al canal.</span>
+      </li>
+      <li>
+        <strong>Lunes 9:30 — verificar <code>SMTP_*</code> en Vercel.</strong> Si no están, las alertas de reseña
+        mala y el resumen mensual no se mandan <em>y no falla nada</em>: simplemente no llegan.
+        <span class="entrega">Entrega: confirmado o cargado.</span>
+      </li>
+      <li>
+        <strong>Lunes — mandar los dos trámites de Google.</strong> Verificación OAuth + acceso a
+        Business Profile. Necesitás el dominio verificado en Search Console y un video de demo
+        del flujo de conexión. No bloquea nada, pero el reloj tarda semanas.
+        <span class="entrega">Entrega: los dos formularios enviados.</span>
+      </li>
+      <li>
+        <strong>Martes a viernes — vender.</strong> Los 30 paneles de demo pre-cargados, los WhatsApps y
+        la calle. La preventa con seña cierra esta semana para instalar la que viene.
+        <span class="entrega">Meta: 5 a 8 señas cobradas antes del viernes.</span>
+      </li>
+    </ol>
+  </div>
+
+  <!-- DAVID -->
+  <div class="person" id="david">
+    <div class="person-top"><span class="pname">David</span><span class="prole">· ingeniero de software · entra esta semana</span></div>
+    <p class="pmision">
+      Tu primera semana tiene un objetivo doble: entender el dominio y dejar la red de tests
+      que hoy no existe sobre la lógica de negocio. Escribir tests es la mejor forma de
+      aprender un sistema — te obliga a leer cómo funciona de verdad, no cómo dice la
+      documentación.
+    </p>
+    <div class="owner"><span class="owner-tag">Tu territorio</span>La carpeta <code>test/</code>, en exclusiva. Nadie más la toca esta semana. Leés todo el resto del repo, pero no lo modificás.</div>
+    <ol>
+      <li>
+        <strong>Lunes — entorno y lectura.</strong> Levantá el proyecto siguiendo <code>docs/ONBOARDING.html</code>.
+        Tocá el cartel de prueba con el celular y mirá el tap aparecer en el portal. Leé en el
+        orden que indica el documento.
+        <span class="entrega">Entrega: entorno andando y las tres URLs abiertas.</span>
+      </li>
+      <li>
+        <strong>Lunes tarde — primer PR, chiquito.</strong> Elegí algo mínimo (un comentario que esté
+        mal, un tipo que se pueda ajustar) y hacé el ciclo completo: rama, PR, CI en verde,
+        merge. El objetivo no es el cambio, es que el circuito te quede claro.
+        <span class="entrega">Entrega: un PR fusionado.</span>
+      </li>
+      <li>
+        <strong>Martes y miércoles — tests de caracterización de la lógica de negocio.</strong> Cuatro
+        zonas: cálculo de métricas y deltas mensuales, agregación de taps por día y por hora,
+        <code>resolverCuenta()</code> y el patrón cuenta/sucursal, y la detección de menciones por empleado.
+        <span class="entrega">Meta: de 36 a ~70 tests. Van a <code>main</code> — no rompen nada.</span>
+      </li>
+      <li>
+        <strong>Jueves — revisar los refactors de Claude.</strong> Los tests que escribiste son los que
+        prueban que los refactors no cambiaron nada. Revisá los PR en <code>desarrollo</code> con esa
+        mirada: ¿algún test tuvo que cambiar? Si sí, el refactor cambió comportamiento.
+        <span class="entrega">Entrega: PR revisados y aprobados o con observaciones.</span>
+      </li>
+      <li>
+        <strong>Viernes — QA técnico junto a Luis</strong> y anotá todo lo que te resultó confuso en la
+        semana. Esa lista es la mejora del onboarding para el próximo que entre.
+        <span class="entrega">Entrega: lista de fricciones del onboarding.</span>
+      </li>
+    </ol>
+    <div class="callout" style="margin-bottom:0">
+      <p class="eyebrow">Dos cosas antes de arrancar</p>
+      <p>
+        <strong>Leé las seis reglas de la sección 07 del onboarding antes de escribir código.</strong> Cada
+        una está ahí porque romperla causó daño o lo causaría. Y si algo del código te parece
+        raro, buscá el comentario antes de cambiarlo: casi todas las decisiones no obvias están
+        explicadas en el lugar donde importan.
+      </p>
+    </div>
+  </div>
+
+  <!-- LUIS -->
+  <div class="person" id="luis">
+    <div class="person-top"><span class="pname">Luis</span><span class="prole">· procesos · diseño · operaciones</span></div>
+    <p class="pmision">
+      Hoy el producto funciona pero <strong>no hay ningún proceso escrito</strong>: nadie sabe qué se hace
+      exactamente cuando entra un cliente nuevo, ni qué mirar antes de darlo por instalado. Con
+      cuatro personas y clientes reales entrando la semana que viene, eso se vuelve un problema
+      en días. Tu trabajo es que el producto sea <em>operable</em>, no solo funcional.
+    </p>
+    <div class="owner"><span class="owner-tag">Tu territorio</span>La carpeta <code>docs/</code> (procesos) y el QA visual. <strong>No tocás código</strong> — lo que encuentres se reporta, no se arregla.</div>
+    <ol>
+      <li>
+        <strong>Lunes — el checklist de alta de un cliente.</strong> Sentate con Hernán y escribí paso a
+        paso qué pasa desde que alguien paga la seña hasta que su portal está andando: qué se
+        carga en el panel, de dónde sale el Place ID, qué competidores se le cargan, qué link se
+        le manda y con qué mensaje. <strong>Probalo vos mismo dando de alta un comercio de prueba.</strong>
+        <span class="entrega">Entrega: <code>docs/PROCESO-ALTA-CLIENTE.md</code>, probado de punta a punta.</span>
+      </li>
+      <li>
+        <strong>Martes — QA visual completo del portal.</strong> Recorré los tres paneles en escritorio y
+        en celular, con un comercio que tenga sucursales y con uno que no. Buscá textos cortados,
+        números que no cierran, botones que no se ven en pantalla chica.
+        <span class="entrega">Entrega: lista de hallazgos con captura de cada uno.</span>
+      </li>
+      <li>
+        <strong>Miércoles — QA visual del panel de admin</strong> y el checklist de «producto listo para
+        mostrar»: qué se revisa antes de abrir un portal delante de un cliente.
+        <span class="entrega">Entrega: hallazgos + <code>docs/CHECKLIST-DEMO.md</code>.</span>
+      </li>
+      <li>
+        <strong>Jueves — el proceso de soporte.</strong> Cuando un cliente escriba «no me anda», ¿quién
+        contesta, en cuánto tiempo, y qué se le pregunta primero? Definí también qué se hace si
+        se cae la sincronización con Google o si un cartel deja de funcionar.
+        <span class="entrega">Entrega: <code>docs/PROCESO-SOPORTE.md</code>.</span>
+      </li>
+      <li>
+        <strong>Viernes — QA final junto a David</strong> sobre el preview, con todos los cambios de la
+        semana adentro.
+        <span class="entrega">Entrega: visto bueno o lista de bloqueantes.</span>
+      </li>
+    </ol>
+  </div>
+
+  <!-- SIMÓN -->
+  <div class="person" id="simon">
+    <div class="person-top"><span class="pname">Simón</span><span class="prole">· logística · proveedores · producto</span></div>
+    <p class="pmision">
+      Sos el carril con la única fecha que no se puede mover. Sin carteles el 17 no hay
+      instalación, y sin instalación no hay caso de éxito ni cobro del saldo. Todo lo demás de
+      la semana se puede correr un día; esto no.
+    </p>
+    <div class="owner"><span class="owner-tag">Tu territorio</span>Proveedores · el producto físico · el inventario. <strong>No tocás código</strong>, pero sí usás <code>/admin/hardware</code>.</div>
+    <ol>
+      <li>
+        <strong>Lunes 9:00 — encargar el lote.</strong> Cantidad y proveedor se deciden mañana en la
+        reunión. Pedí fecha de entrega <em>por escrito</em> y un plan B si se atrasa.
+        <span class="entrega">Entrega: orden puesta y fecha confirmada al grupo.</span>
+      </li>
+      <li>
+        <strong>Lunes — generar los códigos en el panel.</strong> Entrá a <code>/admin/hardware</code>, generá el
+        lote y descargá el <code>.zip</code> con los QR para el proveedor. <strong>Antes de mandarlos, abrí dos
+        o tres QR con el celular y verificá que resuelvan bien.</strong> Un QR mal generado en 50
+        carteles impresos es 50 carteles a la basura.
+        <span class="entrega">Entrega: <code>.zip</code> enviado al proveedor, con 3 QR verificados a mano.</span>
+      </li>
+      <li>
+        <strong>Martes — el instructivo que va con el cartel.</strong> Una tarjeta chica que el comercio
+        recibe: dónde apoyarlo, qué hacer si un cliente no tiene NFC (el QR del dorso), a quién
+        escribirle si no anda. Que se entienda sin saber nada de tecnología.
+        <span class="entrega">Entrega: instructivo listo para imprimir.</span>
+      </li>
+      <li>
+        <strong>Miércoles — el protocolo de instalación.</strong> Qué se hace en el local el día que se
+        instala: dónde se ubica el cartel, qué se prueba delante del dueño, qué se le explica al
+        personal. Escribilo como pasos, para que cualquiera de los cuatro pueda instalar.
+        <span class="entrega">Entrega: <code>docs/PROTOCOLO-INSTALACION.md</code>.</span>
+      </li>
+      <li>
+        <strong>Jueves — reposición y costos.</strong> Cotizá el segundo lote y el tiempo real de
+        reposición. Si la venta arranca bien, la semana del 24 necesitás carteles otra vez y no
+        querés descubrir ahí que el proveedor tarda tres semanas.
+        <span class="entrega">Entrega: costo por unidad, tiempo de entrega y punto de repedido.</span>
+      </li>
+    </ol>
+    <div class="callout alarm" style="margin-bottom:0">
+      <p class="eyebrow">Lo que no puede fallar</p>
+      <p>
+        <strong>Los QR se verifican con un celular real antes de mandarlos a imprimir, sí o sí.</strong> Es
+        el único error de la semana que cuesta plata de verdad y no se puede arreglar con un
+        commit.
+      </p>
+    </div>
+  </div>
+
+  <!-- CLAUDE -->
+  <div class="person" id="claude">
+    <div class="person-top"><span class="pname">Claude</span><span class="prole">· el trabajo de código pesado</span></div>
+    <p class="pmision">
+      Tomo lo que necesita conocimiento profundo del repo, para que David pueda aprender el
+      dominio sin el riesgo de tocar la capa de datos en su primera semana.
+    </p>
+    <div class="owner"><span class="owner-tag">Territorio</span><code>lib/</code> y <code>app/</code>. No toco <code>test/</code> — es de David.</div>
+    <ol>
+      <li>
+        <strong>Lunes — cron con cursor.</strong> Hoy procesa la cartera entera con un tope de 60
+        segundos: a los 60-80 clientes se corta y quedan sin sincronizar siempre los mismos. Con
+        cursor por <code>google_sync_en</code>, el techo desaparece.
+        <span class="entrega">Va a <code>main</code>: es acotado y verificable.</span>
+      </li>
+      <li>
+        <strong>Martes y miércoles — partir <code>lib/db.ts</code></strong> (1.561 líneas, 65 funciones) por
+        dominio, dejando <code>lib/db.ts</code> reexportando todo para que los 25 archivos que lo importan
+        no se toquen.
+        <span class="entrega">Va a <code>desarrollo</code> hasta que David lo revise con sus tests.</span>
+      </li>
+      <li>
+        <strong>Jueves — desarmar <code>app/portal/[codigo]/page.tsx</code></strong> (1.041 líneas) en componentes.
+        Verificado con capturas del portal antes y después, panel por panel.
+        <span class="entrega">Va a <code>desarrollo</code>.</span>
+      </li>
+      <li>
+        <strong>Viernes — cierre.</strong> Bajar de <code>desarrollo</code> a <code>main</code> lo que esté verificado, y
+        actualizar el onboarding con el mapa nuevo del repo.
+        <span class="entrega">Entrega: estado real de la semana, sin maquillaje.</span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- VIERNES -->
+<section id="viernes">
+  <div class="s-head"><span class="s-num">04</span><h2>Cómo sabemos que la semana salió bien</h2></div>
+  <p class="s-sub">El viernes a la tarde, esto tiene que estar entero.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Qué</th><th>Quién</th><th>Cómo se comprueba</th></tr></thead>
+    <tbody>
+      <tr><td>Base sin columnas ni tablas muertas</td><td class="n">Hernán</td><td>La consulta de verificación de la 010 devuelve 0 filas.</td></tr>
+      <tr><td>Las fallas llegan a un canal que alguien mira</td><td class="n">Hernán</td><td>Mensaje de prueba visible en el canal.</td></tr>
+      <tr><td>Trámites de Google enviados</td><td class="n">Hernán</td><td>Los dos formularios, con fecha.</td></tr>
+      <tr><td>5 a 8 señas cobradas</td><td class="n">Hernán</td><td>Comprobantes de Mercado Pago.</td></tr>
+      <tr><td>~70 tests, cubriendo seguridad y negocio</td><td class="n">David</td><td><code>npm test</code> en verde.</td></tr>
+      <tr><td>Proceso de alta escrito y probado</td><td class="n">Luis</td><td>Un comercio de prueba dado de alta siguiendo solo el documento.</td></tr>
+      <tr><td>Proceso de soporte y checklist de demo</td><td class="n">Luis</td><td>Documentos en <code>docs/</code>.</td></tr>
+      <tr><td>Lote de hardware encargado con fecha confirmada</td><td class="n">Simón</td><td>Orden por escrito del proveedor.</td></tr>
+      <tr><td>QR verificados con celular real</td><td class="n">Simón</td><td>3 códigos del lote abiertos a mano.</td></tr>
+      <tr><td>Protocolo de instalación e instructivo</td><td class="n">Simón</td><td>Documentos listos para imprimir.</td></tr>
+      <tr><td>Cron sin techo de escala</td><td class="n">Claude</td><td>Simulado con 300 comercios; ninguno queda atrás dos vueltas seguidas.</td></tr>
+      <tr><td>Sin archivos de más de 600 líneas</td><td class="n">Claude</td><td>En <code>desarrollo</code>, revisado por David.</td></tr>
+      <tr><td>Los tres mundos andan en el preview</td><td class="n">David + Luis</td><td>QA manual del viernes, escritorio y celular.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">El ritual que hace que esto funcione</p>
+    <p>
+      <strong>15 minutos todas las mañanas.</strong> Cada uno dice tres cosas: qué terminó ayer, qué va a
+      hacer hoy, y en qué archivos o sistemas va a estar. Ese último punto es el que evita los
+      conflictos — no la buena voluntad.
+    </p>
+    <p>
+      Y una regla para la semana: <strong>si algo se traba más de dos horas, se dice en el grupo.</strong>
+      Con cinco días y una fecha fija, dos horas trabado en silencio es medio día perdido que
+      nadie ve venir.
+    </p>
+  </div>
+
+  <div class="callout alarm">
+    <p class="eyebrow">El único riesgo real de la semana</p>
+    <p>
+      <strong>Todo depende de que el hardware llegue el 17.</strong> Si el lunes el proveedor da una fecha
+      posterior, hay que decidir ese mismo día: buscar otro proveedor, reducir la cantidad del
+      primer lote, o correr la instalación una semana y avisarle a los que ya señaron. Lo que no
+      se puede es enterarse el jueves.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Estado verificado leyendo el código en <code>main</code> (<code>217c038</code>). La rama <code>desarrollo</code> ya está
+    creada y el CI corre en las dos. Documentos complementarios: <code>docs/ONBOARDING.html</code>
+    (relevamiento del sistema, para David) y <code>CLAUDE.md</code> (reglas del proyecto y flujo de ramas).
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
