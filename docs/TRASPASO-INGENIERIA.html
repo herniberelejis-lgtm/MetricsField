@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Traspaso técnico</title>
+<style>
+  :root {
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1060px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.25rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.82rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:1rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.76rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1060px;margin:0 auto;padding:0 1.5rem 6rem}
+  .col{max-width:70ch}
+  header.mast{padding:3.5rem 0 2.25rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1.1rem}
+  h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:0 0 1.1rem;text-wrap:balance;max-width:20ch}
+  .stand{font-size:1.05rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.75rem;font-size:.74rem;color:var(--muted)}
+
+  section{padding-top:3.5rem;scroll-margin-top:4rem}
+  .s-head{display:flex;align-items:baseline;gap:.75rem;margin-bottom:.4rem}
+  .s-num{font-size:.74rem;color:var(--muted);font-weight:600;padding-top:.35rem}
+  h2{font-size:clamp(1.4rem,2.8vw,1.8rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.9rem;margin:0 0 1.75rem 2.5rem;max-width:62ch}
+  h3{font-size:1rem;font-weight:700;letter-spacing:-.012em;margin:2.5rem 0 .8rem;text-wrap:balance}
+  p{margin:0 0 1rem}
+  ul,ol{margin:0 0 1rem;padding-left:1.15rem}
+  li{margin-bottom:.4rem}
+  li::marker{color:var(--muted)}
+  a{color:var(--ink)}
+
+  .chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.65rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1.1rem 0 1.6rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.865rem;min-width:560px}
+  thead th{text-align:left;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.75rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.75rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.5}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.8rem}
+
+  .cards{display:grid;gap:.7rem;margin:1.1rem 0 1.5rem}
+  .card{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1.05rem 1.2rem;border-left:3px solid var(--rule)}
+  .card.crit{border-left-color:var(--crit)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.ok{border-left-color:var(--ok)}
+  .card-h{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.35rem}
+  .card-t{font-weight:700;font-size:.94rem;letter-spacing:-.01em}
+  .card p{margin:0;font-size:.885rem;color:var(--ink-2);line-height:1.56}
+  .card p+p{margin-top:.55rem}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1.05rem 1.2rem;margin:1.4rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.9rem;line-height:1.58}
+  .callout p+p{margin-top:.65rem}
+  .callout .eyebrow{margin-bottom:.45rem}
+  .callout.alarm{background:var(--crit-bg);border-color:var(--crit)}
+
+  pre{background:var(--surface-2);border:1px solid var(--faint);border-radius:8px;padding:.9rem 1rem;
+    overflow-x:auto;font-size:.8rem;line-height:1.55;margin:.9rem 0 1.4rem}
+  pre code{background:none;padding:0;font-size:inherit}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;margin:1.4rem 0}
+  .metric{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:.9rem}
+  .metric-v{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;display:block;
+    font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .metric-l{font-size:.72rem;color:var(--muted);margin-top:.25rem;display:block;line-height:1.35}
+
+  .tree{font-family:ui-monospace,Menlo,monospace;font-size:.79rem;line-height:1.75;white-space:pre;
+    background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1.1rem 1.2rem;overflow-x:auto;margin:1.1rem 0 1.6rem}
+  .tree .c{color:var(--muted)}
+  .tree .k{font-weight:700}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:3rem 0 0}
+  footer{margin-top:3.5rem;padding-top:1.4rem;border-top:1px solid var(--rule);font-size:.78rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Traspaso técnico</div>
+  <nav>
+    <a href="#arranque">Arranque</a>
+    <a href="#que-es">Qué es</a>
+    <a href="#stack">Stack</a>
+    <a href="#mapa">Mapa</a>
+    <a href="#datos">Datos</a>
+    <a href="#acceso">Acceso</a>
+    <a href="#integraciones">Google</a>
+    <a href="#reglas">Reglas</a>
+    <a href="#deuda">Deuda</a>
+    <a href="#roadmap">Roadmap</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Documento de traspaso · para el ingeniero entrante</p>
+  <h1>MetricsField, de punta a punta</h1>
+  <p class="stand">
+    Dónde está cada cosa, cómo funciona, por qué está hecha así, y qué hay que
+    arreglar. Escrito para alguien que sabe programar pero nunca vio este repo.
+    Leelo entero una vez antes de tocar nada: hay seis reglas que, si se rompen,
+    causan daño real, y están en la sección 08.
+  </p>
+  <div class="mast-meta">
+    <span>Commit <code>06a58f2</code></span>
+    <span>~13.000 líneas de TypeScript</span>
+    <span>Producción: <code>app.metricsfield.com</code></span>
+  </div>
+</header>
+
+<!-- 00 ARRANQUE -->
+<section id="arranque">
+  <div class="s-head"><span class="s-num">01</span><h2>Arrancar en 10 minutos</h2></div>
+  <p class="s-sub">Hacé esto primero. Si el portal carga y un tap redirige a Google, entendiste el 80% del producto.</p>
+
+<pre><code>git clone &lt;repo&gt; &amp;&amp; cd MetricsField
+npm install
+
+# Base local (Postgres 16). schema.sql es la referencia canónica.
+createdb taply
+psql "postgres://postgres:postgres@localhost:5432/taply" -f db/schema.sql
+psql "postgres://postgres:postgres@localhost:5432/taply" -f db/seed.sql
+
+cp .env.example .env.local
+# Mínimo indispensable para levantar:
+#   ADMIN_PASSWORD=loquesea
+#   DATABASE_URL=postgres://postgres:postgres@localhost:5432/taply
+
+npm run dev        # http://localhost:3000</code></pre>
+
+  <div class="col">
+    <p>Con eso andando, mirá estas tres URLs <strong>en este orden</strong>. Son los tres mundos del producto:</p>
+    <ol>
+      <li><code>/t/barberia-guemes-mostrador</code> — lo que pasa cuando un cliente final apoya el celular en el cartel. Redirige a Google y no renderiza nada. <strong>Es la ruta más caliente del sistema.</strong></li>
+      <li><code>/portal/bg7k2m4p</code> — lo que ve el dueño del comercio. Solo lectura, el código de la URL es la única credencial.</li>
+      <li><code>/admin</code> — el panel del equipo. Entrás con el <code>ADMIN_PASSWORD</code> que pusiste.</li>
+    </ol>
+  </div>
+
+  <h3>Los cuatro comandos que vas a usar todos los días</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Comando</th><th>Qué hace</th><th>Cuándo</th></tr></thead>
+    <tbody>
+      <tr><td class="n">npm run dev</td><td>Servidor de desarrollo</td><td>Siempre</td></tr>
+      <tr><td class="n">npx tsc --noEmit</td><td>Chequeo de tipos</td><td>Antes de cada commit</td></tr>
+      <tr><td class="n">npm test</td><td>36 tests de la lógica de seguridad</td><td>Antes de cada commit</td></tr>
+      <tr><td class="n">npm run build</td><td>Compilación de producción</td><td>Antes de cada commit</td></tr>
+    </tbody>
+  </table></div>
+  <p class="col"><strong>El ciclo es siempre esos tres últimos.</strong> No hay CI que te frene: si compila y los tests pasan, se commitea.</p>
+</section>
+
+<hr class="div">
+
+<!-- 02 QUÉ ES -->
+<section id="que-es">
+  <div class="s-head"><span class="s-num">02</span><h2>Qué es el producto</h2></div>
+  <p class="s-sub">Sin esto, la mitad de las decisiones del código no tienen sentido.</p>
+
+  <div class="col">
+    <p>
+      MetricsField es una plataforma de reputación online para comercios locales de
+      Córdoba. El negocio tiene <strong>dos mitades: hardware y software</strong>, y el código
+      solo tiene sentido si entendés las dos.
+    </p>
+    <p>
+      <strong>El hardware</strong> es un cartel con chip NFC y/o QR que se apoya en el mostrador
+      de un bar, una peluquería o una veterinaria. El cliente final apoya el celular,
+      y el celular abre <code>app.metricsfield.com/t/&lt;código&gt;</code>. Esa URL corta es lo único
+      que está impreso, y <strong>no cambia nunca</strong>: el destino se administra desde el panel.
+      Por eso un mismo cartel físico puede pasar de pedir reseñas a mostrar el menú sin
+      reimprimir nada.
+    </p>
+    <p>
+      <strong>El software</strong> es lo que el comercio paga por mes: un panel donde ve cuánta
+      gente tocó el cartel, a qué hora, qué reseñas dejaron en Google, y cómo viene
+      contra los competidores de su cuadra.
+    </p>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">El diferencial, en términos técnicos</p>
+    <p>
+      Cualquiera vende una tarjeta NFC. Lo que no puede dar nadie más es la
+      <strong>atribución</strong>: como el hardware y el software son del mismo sistema, se sabe
+      qué pieza generó cada tap, a qué hora, y de qué empleado era la tarjeta
+      (<code>links_nfc.nombre_empleado</code> cruzado con menciones en el texto de las reseñas,
+      ver <code>lib/empleados.ts</code>). Google no da ese dato. Es el activo del producto —
+      tenelo en cuenta antes de simplificar el modelo de datos de <code>links_nfc</code> o <code>taps</code>.
+    </p>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span class="metric-v">3.359</span><span class="metric-l">líneas en <code>lib/</code> (24 archivos)</span></div>
+    <div class="metric"><span class="metric-v">5.350</span><span class="metric-l">líneas en <code>app/</code> (37 archivos)</span></div>
+    <div class="metric"><span class="metric-v">4.269</span><span class="metric-l">líneas en <code>components/</code> (33)</span></div>
+    <div class="metric"><span class="metric-v">13</span><span class="metric-l">tablas en Postgres</span></div>
+    <div class="metric"><span class="metric-v">33</span><span class="metric-l">server actions</span></div>
+    <div class="metric"><span class="metric-v">36</span><span class="metric-l">tests</span></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 03 STACK -->
+<section id="stack">
+  <div class="s-head"><span class="s-num">03</span><h2>Stack y decisiones de arquitectura</h2></div>
+  <p class="s-sub">Qué se usó, y —más importante— qué se decidió <em>no</em> usar y por qué.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Capa</th><th>Elección</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Next.js 15, App Router</td><td>Render en servidor + rutas + serverless en un solo despliegue.</td></tr>
+      <tr><td>UI</td><td>React 19 + Tailwind 3</td><td><strong>Sin librería de componentes externa.</strong> Todo el UI es propio, en <code>components/</code>.</td></tr>
+      <tr><td>Lenguaje</td><td>TypeScript estricto</td><td>Alias <code>@/*</code> apunta a la raíz del repo.</td></tr>
+      <tr><td>Base</td><td>Postgres (Neon), driver <code>postgres</code></td><td><strong>Sin ORM.</strong> SQL directo con template literals parametrizados.</td></tr>
+      <tr><td>Mutaciones</td><td>Server Actions</td><td><strong>Sin API REST.</strong> Los formularios llaman funciones del servidor directo.</td></tr>
+      <tr><td>Hosting</td><td>Vercel + Vercel Cron</td><td><code>main</code> es producción. Cada rama genera su preview.</td></tr>
+      <tr><td>Tests</td><td>Vitest</td><td>Solo sobre la lógica de seguridad. Ver sección 09.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Las tres decisiones que más te van a sorprender</h3>
+  <div class="cards">
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">No hay ORM</span></div>
+      <p>
+        Todo el acceso a datos es SQL escrito a mano en <code>lib/db.ts</code>, usando los template
+        literals del driver <code>postgres</code>. Eso <strong>parametriza automáticamente</strong> — no hay
+        concatenación de strings en ningún lado, así que no hay superficie de inyección SQL.
+        Cada función mapea filas <code>snake_case</code> a objetos <code>camelCase</code> con un mapper explícito.
+      </p>
+      <p>
+        <strong>Consecuencia para vos:</strong> agregar una columna toca <em>tres</em> lugares y hay que
+        acordarse de los tres — <code>db/schema.sql</code>, el mapper en <code>lib/db.ts</code>, y el tipo en
+        <code>lib/types.ts</code>. Si te olvidás del mapper, el dato simplemente no aparece, sin error.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">No hay API REST</span></div>
+      <p>
+        Las mutaciones son Server Actions (<code>"use server"</code>). Un formulario llama a la función
+        del servidor directamente; no hay <code>fetch</code> a un endpoint propio. Las pocas rutas en
+        <code>app/api/</code> existen solo porque <em>tienen</em> que ser URLs: callbacks de OAuth, el cron,
+        y descargas de archivos.
+      </p>
+      <p>
+        <strong>Consecuencia:</strong> no busques controladores ni un cliente HTTP interno. El flujo es
+        formulario → action → <code>lib/db.ts</code> → Postgres → <code>revalidatePath</code>.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">Casi todo es <code>force-dynamic</code></span></div>
+      <p>
+        18 páginas declaran <code>export const dynamic = "force-dynamic"</code>: se renderizan en cada
+        request y cada una pega a la base. Es a propósito — son paneles de datos en vivo,
+        cachearlos mostraría números viejos.
+      </p>
+      <p>
+        <strong>Consecuencia:</strong> el TTFB depende de la latencia a Neon. Es el techo de
+        rendimiento actual y el primer lugar donde mirar si el panel se siente lento.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 04 MAPA -->
+<section id="mapa">
+  <div class="s-head"><span class="s-num">04</span><h2>Mapa del repositorio</h2></div>
+  <p class="s-sub">Dónde vive cada cosa. Los archivos marcados son los que vas a tocar más.</p>
+
+<div class="tree">
+<span class="c">app/                    </span>Rutas (App Router). Una carpeta = una URL.
+  <span class="k">t/[slug]/</span>             <span class="c">← LA RUTA MÁS CALIENTE. El tap del cartel NFC.</span>
+    page.tsx            <span class="c">Cuenta el tap y redirige. No renderiza casi nada.</span>
+    editar/             <span class="c">Edición con PIN de piezas autogestionadas (canal ML).</span>
+    actions.ts          <span class="c">2 actions: activar cartel, editar cartel.</span>
+  <span class="k">portal/[codigo]/</span>      <span class="c">← Lo que ve el CLIENTE. Solo lectura.</span>
+    page.tsx            <span class="c">1.041 líneas. El archivo a refactorizar (sección 09).</span>
+  portal/actions.ts     <span class="c">6 actions del portal.</span>
+  <span class="k">admin/</span>                <span class="c">← Panel del EQUIPO. Protegido por middleware.</span>
+    clientes/[id]/      <span class="c">Ficha del comercio + subpáginas (links, métricas, crm…).</span>
+    hardware/           <span class="c">Inventario de piezas NFC/QR, generación en lote.</span>
+    administradores/    <span class="c">Allowlist de logins con Google.</span>
+    actividad/          <span class="c">Registro de auditoría.</span>
+  actions.ts            <span class="c">23 server actions de admin. TODAS con requireAdmin().</span>
+  api/                  <span class="c">Solo lo que necesita ser URL de verdad:</span>
+    cron/sync-google/   <span class="c">Sincronización diaria. Protegido con CRON_SECRET.</span>
+    admin/oauth/        <span class="c">Login del equipo con Google.</span>
+    portal/google/oauth/<span class="c">Conexión de Business Profile POR CLIENTE.</span>
+
+<span class="c">lib/                    </span>Lógica. Nada de React acá.
+  <span class="k">db.ts</span>                 <span class="c">← EL ARCHIVO MÁS IMPORTANTE. 1.561 líneas, 65 funciones.</span>
+                        <span class="c">  TODO el acceso a datos pasa por acá.</span>
+  types.ts              <span class="c">El modelo de dominio. Leelo segundo.</span>
+  sql.ts                <span class="c">Conexión a Postgres. Ver la regla de prepare:false.</span>
+  sesion.ts             <span class="c">Formato y firma de las cookies. Corre en Node Y en Edge.</span>
+  auth.ts               <span class="c">requireAdmin() y manejo de sesión del panel.</span>
+  pin.ts                <span class="c">PIN de piezas autogestionadas (scrypt + salt).</span>
+  crypto.ts             <span class="c">AES-256-GCM para el refresh token de Google.</span>
+  url.ts                <span class="c">Validación de URLs. Lista blanca http/https. NO relajar.</span>
+  ratelimit.ts          <span class="c">Límite de intentos, distribuido vía Upstash Redis.</span>
+  monitor.ts            <span class="c">Reporte de fallas a un webhook.</span>
+  places.ts / gbp.ts /  <span class="c">Clientes de las APIs de Google (ver sección 07).</span>
+  google-oauth.ts / google-reviews.ts
+  alertas.ts / email.ts <span class="c">Alertas y resumen mensual por SMTP.</span>
+
+<span class="c">components/              </span>UI compartido. Sin librería externa.
+  ui.tsx                <span class="c">Card, Kpi, Stars, botones. Empezá por acá.</span>
+  portal/  charts/  tap/<span class="c">Agrupados por superficie.</span>
+
+<span class="c">db/</span>
+  <span class="k">schema.sql</span>            <span class="c">← Referencia canónica. NO se auto-aplica.</span>
+  migrations/           <span class="c">Se corren A MANO en Neon. Ver sección 08.</span>
+  seed.sql              <span class="c">Datos de prueba.</span>
+
+<span class="c">test/                   </span>Vitest. Solo lógica de seguridad.
+<span class="c">middleware.ts           </span>Protege /admin. Solo eso — matcher acotado a propósito.
+<span class="c">CLAUDE.md               </span>Reglas del proyecto. Leelo.
+</div>
+
+  <div class="callout">
+    <p class="eyebrow">Orden sugerido de lectura</p>
+    <p>
+      <code>lib/types.ts</code> (el dominio) → <code>lib/db.ts</code> (cómo se lee y escribe) →
+      <code>app/t/[slug]/page.tsx</code> (el camino caliente, corto y completo) →
+      <code>middleware.ts</code> + <code>lib/sesion.ts</code> (cómo se protege) →
+      <code>app/portal/[codigo]/page.tsx</code> (el más grande, dejalo para el final).
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 05 DATOS -->
+<section id="datos">
+  <div class="s-head"><span class="s-num">05</span><h2>La capa de datos</h2></div>
+  <p class="s-sub">13 tablas. La que importa es <code>comercios</code>: casi todo cuelga de ahí.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Tabla</th><th>Qué guarda</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr><td class="n">comercios</td><td>El comercio: identidad, plan, código de portal, datos de Google.</td><td><strong>Es también la tabla de sucursales</strong> — ver abajo.</td></tr>
+      <tr><td class="n">links_nfc</td><td>Cada pieza física de hardware. El <code>id</code> es lo impreso en el cartel.</td><td><code>url_destino</code> manda siempre si está cargada.</td></tr>
+      <tr><td class="n">taps</td><td>Un registro por toque del cartel.</td><td>La tabla que más va a crecer.</td></tr>
+      <tr><td class="n">resenas</td><td>Reseñas de Google + la respuesta sugerida.</td><td>Hoy se cargan a mano o por Places.</td></tr>
+      <tr><td class="n">metricas_mensuales</td><td>Snapshot mensual por comercio.</td><td>Fuente del histórico y los gráficos.</td></tr>
+      <tr><td class="n">competidores<br>competidores_snapshots</td><td>Comercios de la zona y su evolución.</td><td>Alimenta el benchmark.</td></tr>
+      <tr><td class="n">admins</td><td>Allowlist de emails que pueden entrar con Google.</td><td>Se revisa en cada mutación.</td></tr>
+      <tr><td class="n">auditoria</td><td>Quién hizo qué en el panel.</td><td>Escribe el helper de <code>app/actions.ts</code>.</td></tr>
+      <tr><td class="n">ventas_nfc · checklist_seo<br>audits_geo · ajustes</td><td>Ventas de hardware, checklist SEO, auditorías GEO, config suelta.</td><td>Periféricas.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>El patrón que más te va a confundir: multi-sucursal</h3>
+  <div class="col">
+    <p>
+      No hay tabla de sucursales. Una sucursal <strong>es una fila más en <code>comercios</code></strong>, con
+      <code>comercio_padre_id</code> apuntando a la cuenta madre. Si es <code>NULL</code>, la fila es una cuenta.
+    </p>
+    <p>
+      La consecuencia importante: los campos de <em>cuenta</em> (<code>codigo_acceso</code>, <code>plan</code>, <code>fee</code>,
+      <code>contacto</code>, <code>tono_marca</code>, <code>email_notificaciones</code>) <strong>se ignoran en las filas de
+      sucursal</strong> — siempre se leen de la fila raíz, vía <code>resolverCuenta()</code> en <code>lib/db.ts</code>.
+      Todo lo demás (Place ID, rating, links, reseñas, competidores) vive por fila, o sea
+      por local. Si agregás un campo, decidí a cuál de los dos grupos pertenece.
+    </p>
+  </div>
+
+  <h3>Cómo agregar una columna</h3>
+  <div class="col">
+    <ol>
+      <li>Declarala en <code>db/schema.sql</code> (la referencia canónica, para bases nuevas).</li>
+      <li>Escribí un <code>db/migrations/0NN_lo_que_sea.sql</code> para las bases que ya existen.</li>
+      <li>Agregala al mapper correspondiente en <code>lib/db.ts</code> (<code>snake_case</code> → <code>camelCase</code>).</li>
+      <li>Agregala al tipo en <code>lib/types.ts</code>.</li>
+      <li><strong>Pasale el <code>.sql</code> a Hernán para que lo corra a mano en Neon.</strong> No se aplica solo.</li>
+    </ol>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 06 ACCESO -->
+<section id="acceso">
+  <div class="s-head"><span class="s-num">06</span><h2>Los tres sistemas de acceso</h2></div>
+  <p class="s-sub">No se pisan entre sí, y mezclarlos es la forma más fácil de abrir un agujero grave.</p>
+
+  <div class="cards">
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-flat">1</span><span class="card-t">Cliente → su portal</span></div>
+      <p>
+        <code>/portal/&lt;codigo&gt;</code>. <strong>El código de la URL es la única credencial</strong> — no hay
+        usuario ni contraseña. Se manda por WhatsApp. Solo lectura, aislado a sus datos.
+      </p>
+      <p>
+        Como el código es la credencial, la defensa contra enumeración es el rate limit por
+        IP al principio de la página (20 intentos cada 10 minutos), que responde <code>404</code> igual
+        que un código inválido — a propósito, para no confirmarle a quien enumera si pegó cerca.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-flat">2</span><span class="card-t">Equipo → panel <code>/admin</code></span></div>
+      <p>
+        Dos formas en paralelo: <strong>contraseña compartida</strong> (<code>ADMIN_PASSWORD</code>) o
+        <strong>login con Google</strong> restringido a la allowlist de la tabla <code>admins</code>.
+      </p>
+      <p>
+        Hay <strong>dos guards independientes</strong> y los dos importan: <code>middleware.ts</code> corta el acceso
+        a las páginas, y <code>requireAdmin()</code> corre <em>dentro</em> de cada server action. El middleware
+        no alcanza porque una action se puede invocar directo. <strong>Las 23 actions de
+        <code>app/actions.ts</code> empiezan con <code>await requireAdmin()</code> — si agregás una, seguí la regla.</strong>
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-flat">3</span><span class="card-t">Cliente → su cuenta de Google</span></div>
+      <p>
+        Desde su portal, el cliente autoriza con <strong>su propia</strong> cuenta de Google para que
+        leamos las métricas de <em>su</em> ficha. <strong>No es un login a MetricsField</strong>: es un permiso
+        de datos OAuth, separado de todo lo demás.
+      </p>
+    </div>
+  </div>
+
+  <h3>Cómo funcionan las cookies de sesión</h3>
+  <div class="col">
+    <p>
+      Está en <code>lib/sesion.ts</code>, y tiene un detalle no obvio: <strong>ese archivo corre en dos
+      runtimes distintos</strong> — Node (server actions) y Edge (middleware). Por eso usa solo
+      WebCrypto y helpers estándar, nada de <code>node:crypto</code>. Es una sola implementación a
+      propósito: si el formato divergiera entre los dos guards, uno aceptaría lo que el otro
+      rechaza.
+    </p>
+    <p>
+      La cookie de contraseña <strong>no contiene la contraseña ni su hash</strong>: contiene un
+      vencimiento firmado con HMAC usando la contraseña como clave. Capturarla no permite
+      deducirla, y rotar <code>ADMIN_PASSWORD</code> invalida todas las sesiones vivas de una.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 07 INTEGRACIONES -->
+<section id="integraciones">
+  <div class="s-head"><span class="s-num">07</span><h2>Integraciones con Google</h2></div>
+  <p class="s-sub">Cuatro APIs distintas, en tres estados distintos. Esto confunde a todo el mundo.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>API</th><th>Archivo</th><th>Para qué</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Places</strong></td><td class="n">lib/places.ts</td>
+        <td>Rating y total de reseñas. Usa nuestra API key: <strong>no requiere que el cliente autorice nada</strong>.</td>
+        <td><span class="chip c-ok">Andando</span></td>
+      </tr>
+      <tr>
+        <td><strong>Business Profile Performance</strong></td><td class="n">lib/gbp.ts</td>
+        <td>Visitas al perfil, llamadas, clics de «cómo llegar». Requiere OAuth del cliente.</td>
+        <td><span class="chip c-warn">Modo Prueba</span></td>
+      </tr>
+      <tr>
+        <td><strong>Reviews</strong></td><td class="n">lib/google-reviews.ts</td>
+        <td>Listar y responder reseñas automáticamente.</td>
+        <td><span class="chip c-crit">Apagada</span></td>
+      </tr>
+      <tr>
+        <td><strong>OAuth (OpenID)</strong></td><td class="n">lib/google-oauth.ts</td>
+        <td>Genérico: sirve para el login del equipo <em>y</em> para la conexión del cliente.</td>
+        <td><span class="chip c-ok">Andando</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Lo que tenés que entender de esto</p>
+    <p>
+      <strong>La app OAuth está en «modo Prueba» de Google.</strong> Eso implica que el permiso del
+      cliente <strong>vence cada 7 días</strong> (por eso el portal muestra un aviso para reconectar),
+      hay tope de 100 usuarios, y cada email de cliente hay que sumarlo a mano como usuario
+      de prueba. La verificación está en trámite y lleva semanas.
+    </p>
+    <p>
+      <strong>La Reviews API está escrita entera pero apagada</strong> tras la bandera
+      <code>GOOGLE_REVIEWS_API_ENABLED</code>. Cuando Google apruebe el acceso, se prende la variable
+      en Vercel y funciona: <em>no hay que tocar código</em>. Hasta entonces las respuestas a
+      reseñas son copiar y pegar a mano desde el portal.
+    </p>
+  </div>
+
+  <h3>El cron diario</h3>
+  <div class="col">
+    <p>
+      Vercel dispara <code>/api/cron/sync-google</code> todos los días a las 9 UTC (<code>vercel.json</code>),
+      autenticado con <code>CRON_SECRET</code> comparado en tiempo constante. Sincroniza Places y
+      Business Profile, y el día 1 de cada mes manda el resumen mensual por email.
+    </p>
+    <p>
+      Procesa en <strong>lotes de 5 en paralelo</strong> (<code>LOTE_SYNC</code> en <code>lib/db.ts</code>) con
+      <code>maxDuration = 60</code> segundos. <strong>Ese límite es un techo real de escalabilidad</strong> — ver
+      la sección 09.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 08 REGLAS -->
+<section id="reglas">
+  <div class="s-head"><span class="s-num">08</span><h2>Las reglas que no se rompen</h2></div>
+  <p class="s-sub">Cada una está acá porque romperla ya causó daño, o porque causaría uno grave.</p>
+
+  <div class="cards">
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Regla 1</span><span class="card-t">Nunca saques <code>prepare: false</code> de <code>lib/sql.ts</code></span></div>
+      <p>
+        Neon corre detrás de un pooler (PgBouncer). Con prepared statements con nombre, el
+        pooler devuelve el error aleatorio <code>cached plan must not change result type</code>. Es
+        intermitente y dificilísimo de diagnosticar si no sabés esto.
+      </p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Regla 2</span><span class="card-t">Ningún <code>DROP</code> o <code>DELETE</code> masivo sin confirmar antes</span></div>
+      <p>
+        <strong>Ya hubo una pérdida de datos real por esto.</strong> Las migraciones que borran cosas se
+        entregan con los <code>DROP</code> comentados y con instrucciones de export. Mirá
+        <code>db/migrations/010_limpieza_base.sql</code> como modelo del formato esperado.
+      </p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Regla 3</span><span class="card-t">Nunca pushear directo a <code>main</code></span></div>
+      <p>
+        <code>main</code> es producción, desplegada automáticamente. Todo cambio va por una rama —que
+        genera su propia URL de preview en Vercel— y se fusiona con Pull Request.
+      </p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Regla 4</span><span class="card-t">Nunca filtrar ni desviar reseñas por calificación</span></div>
+      <p>
+        El cartel manda a <strong>todos</strong> al mismo link público de Google, sin importar qué
+        calificación vayan a poner. Cualquier variante de desviar las malas a un formulario
+        privado es <em>review gating</em>: <strong>Google lo penaliza y le puede bajar la ficha al
+        cliente.</strong> Esto es la base legal del producto, no una preferencia de diseño.
+      </p>
+      <p>
+        Existió antes y se eliminó. Si ves <code>usar_filtro</code> o la tabla <code>feedback</code> mencionadas
+        en algún doc viejo, están obsoletas — ya se limpiaron de la base.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Regla 5</span><span class="card-t">Los cambios de esquema no se aplican solos</span></div>
+      <p>
+        El entorno de desarrollo <strong>no tiene acceso a Neon</strong>. Cualquier <code>ALTER TABLE</code> o tabla
+        nueva se entrega como archivo <code>.sql</code> numerado para correr a mano en el editor de Neon.
+        Nunca asumas que «ya se aplicó»: verificá antes de escribir código que dependa de eso.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Regla 6</span><span class="card-t">No borres un test para hacer pasar un cambio</span></div>
+      <p>
+        Los 36 tests cubren solo lo que, si se rompe, abre un agujero: cookies de sesión, PIN,
+        cifrado y validación de URLs. Si uno se pone rojo, <strong>el cambio está mal, no el test</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">Idioma</p>
+    <p>
+      El proyecto trabaja <strong>en español</strong>: comentarios, mensajes de commit, nombres de
+      dominio (<code>Cliente</code>, <code>comercios</code>, <code>registrarAccion</code>), UI y documentación. Mantenelo —
+      la mezcla de idiomas en los nombres de dominio es la forma más rápida de volver
+      ilegible <code>lib/db.ts</code>.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 09 DEUDA -->
+<section id="deuda">
+  <div class="s-head"><span class="s-num">09</span><h2>Qué hay que arreglar</h2></div>
+  <p class="s-sub">Ordenado por lo que primero te va a doler. Ninguno es urgente hoy; todos lo son a 20 clientes.</p>
+
+  <h3>Escalabilidad — los tres techos reales</h3>
+  <div class="cards">
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">Techo 1</span><span class="card-t">El cron se queda sin tiempo</span></div>
+      <p>
+        <code>maxDuration = 60</code> segundos, lotes de 5 en paralelo, y cada comercio implica al menos
+        una llamada HTTP a Google. Con ~10 clientes sobra; con 60-80 el cron se corta a la
+        mitad y <strong>los últimos comercios de la lista no se sincronizan nunca</strong> — siempre los
+        mismos, porque el orden es estable.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> pasar a un modelo con cursor — que cada corrida procese los N más
+        desactualizados por <code>google_sync_en</code> y avance. Se arregla en un rato y elimina el
+        techo para siempre. <strong>Es lo primero que haría.</strong>
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Techo 2</span><span class="card-t"><code>getClientes()</code> trae la cartera entera a memoria</span></div>
+      <p>
+        Hace 3 consultas sin <code>WHERE</code> (<code>comercios</code>, <code>metricas_mensuales</code>, <code>ventas_nfc</code> completas)
+        y arma el objeto en JavaScript. Ya fue una mejora —antes era un N+1— pero no tiene
+        paginación ni filtro.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> nada por ahora. A ~200 comercios empezá a paginar. Anotalo y seguí.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Techo 3</span><span class="card-t"><code>taps</code> crece sin límite</span></div>
+      <p>
+        Una fila por cada toque de cartel, sin agregación ni archivado. Es la tabla que más
+        crece y las consultas del portal la leen por rango de fechas.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> cuando pese, una tabla de agregados diarios por link y archivar el
+        detalle viejo. Verificá primero que los índices de <code>db/schema.sql</code> cubran el patrón
+        de consulta real.
+      </p>
+    </div>
+  </div>
+
+  <h3>Código — el refactor que vale la pena</h3>
+  <div class="cards">
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Refactor</span><span class="card-t"><code>app/portal/[codigo]/page.tsx</code> — 1.041 líneas</span></div>
+      <p>
+        Es el archivo más difícil del repo. Un solo componente de servidor que trae todos los
+        datos, hace todos los cálculos derivados y arma <strong>ocho paneles de UI</strong> como variables
+        (<code>panels.resumen</code>, <code>panels.resenas</code>, …) antes de pasarlos a <code>PortalShell</code>.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> mover cada panel a su propio componente en <code>components/portal/</code>,
+        dejando la página solo con el fetching y el armado del nav. <strong>No lo hagas en tu primera
+        semana</strong> — hacelo cuando ya entiendas el producto, porque el orden de los cálculos
+        derivados tiene sutilezas (sucursal activa, deltas, permisos).
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Refactor</span><span class="card-t"><code>lib/db.ts</code> — 1.561 líneas, 65 funciones</span></div>
+      <p>
+        Está <em>bien escrito</em> —patrón consistente, mutaciones atómicas, sin N+1— pero es mucho
+        para un archivo. Mezcla comercios, links, taps, reseñas, competencia, auditoría y sync.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> partirlo por dominio (<code>db/comercios.ts</code>, <code>db/links.ts</code>, …) reexportando
+        desde <code>lib/db.ts</code> para no tocar los 25 archivos que lo importan. Es mecánico y de bajo
+        riesgo, pero <strong>bajá primero la cobertura de tests</strong> o vas a mover código a ciegas.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="chip c-ok">Ampliar</span><span class="card-t">Tests: hoy solo cubren seguridad</span></div>
+      <p>
+        36 tests sobre sesión, PIN, cifrado y URLs. <strong>Cero</strong> sobre la lógica de negocio: cálculo
+        de métricas, deltas, agregación de taps, resolución de cuenta/sucursal.
+      </p>
+      <p>
+        <strong>Qué hacer:</strong> antes de refactorizar cualquiera de los dos archivos de arriba, escribí
+        tests de caracterización de esa lógica. Es la condición para que el refactor sea seguro.
+      </p>
+    </div>
+  </div>
+
+  <h3>Seguridad — dónde está parado y qué falta</h3>
+  <div class="col">
+    <p>
+      La base es sólida y se auditó hace poco. <strong>Lo que ya está resuelto</strong> (no lo toques
+      pensando que falta): SQL 100% parametrizado, sesiones firmadas con vencimiento, PIN con
+      scrypt + salt y comparación en tiempo constante, refresh tokens cifrados con AES-256-GCM,
+      rate limit distribuido en Upstash, headers de seguridad, y validación de URLs con lista
+      blanca de esquemas.
+    </p>
+    <p>
+      Ese último punto vale una advertencia. <code>lib/url.ts</code> acepta <strong>solo <code>http</code> y <code>https</code></strong>, y
+      es deliberado: el valor termina en un <code>location.replace()</code> y en un <code>&lt;a href&gt;</code> dentro de
+      <code>components/tap/RedireccionSuave.tsx</code>. Si alguien relaja esa validación, el dueño de una
+      pieza comprada por Mercado Libre puede meter <code>javascript:</code> y ejecutar código
+      <strong>en el mismo origen que la cookie de sesión de <code>/admin</code></strong>. Ya pasó, ya se arregló, y hay
+      tests que lo cubren. <strong>No la relajes.</strong>
+    </p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Pendiente</th><th>Riesgo</th><th>Esfuerzo</th></tr></thead>
+    <tbody>
+      <tr><td>Cargar <code>MONITOR_WEBHOOK_URL</code> en Vercel — el código está, la variable no.</td><td><span class="chip c-warn">Medio</span> Sin esto, un cron que falla de madrugada es invisible.</td><td class="n">5 min</td></tr>
+      <tr><td>Códigos de hardware secuenciales (<code>p-0001</code>, <code>p-0002</code>…)</td><td><span class="chip c-warn">Medio</span> Enumerables. Hoy la única defensa contra reclamar piezas en masa es el rate limit.</td><td class="n">Bajo</td></tr>
+      <tr><td>Sin rotación de <code>codigo_acceso</code> del portal</td><td><span class="chip c-warn">Medio</span> Si un cliente reenvía su link, no hay forma de revocarlo.</td><td class="n">Bajo</td></tr>
+      <tr><td>Sin CI: nada obliga a correr tests antes de mergear</td><td><span class="chip c-flat">Bajo</span> Hoy funciona por disciplina.</td><td class="n">30 min</td></tr>
+      <tr><td>El PIN es de 4-8 dígitos</td><td><span class="chip c-flat">Bajo</span> Baja entropía a propósito (va anotado en la caja). Mitigado por rate limit.</td><td class="n">—</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<hr class="div">
+
+<!-- 10 ROADMAP -->
+<section id="roadmap">
+  <div class="s-head"><span class="s-num">10</span><h2>Tus primeras dos semanas</h2></div>
+  <p class="s-sub">Una sugerencia de orden, pensada para que aportes rápido sin romper nada.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Cuándo</th><th>Qué</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">Días 1-2</td>
+        <td>Levantar el entorno. Leer en el orden de la sección 04. Tocar el cartel de prueba con el celular y ver el tap aparecer en el portal.</td>
+        <td>Entender el producto físico antes que el código. Todo lo demás se ordena solo después de eso.</td>
+      </tr>
+      <tr>
+        <td class="n">Días 3-4</td>
+        <td>Cargar <code>MONITOR_WEBHOOK_URL</code> en Vercel. Armar un GitHub Action que corra <code>tsc</code> + <code>test</code> + <code>build</code> en cada PR.</td>
+        <td>Dos entregas chicas, visibles y de riesgo cero. Y a partir de ahí el repo se protege solo.</td>
+      </tr>
+      <tr>
+        <td class="n">Día 5</td>
+        <td>Arreglar el cron con un cursor por <code>google_sync_en</code>.</td>
+        <td>El único techo que realmente rompe el producto al crecer, y se arregla en un día.</td>
+      </tr>
+      <tr>
+        <td class="n">Semana 2</td>
+        <td>Tests de caracterización sobre la lógica de negocio. Recién después, partir <code>lib/db.ts</code> por dominio.</td>
+        <td>Los tests son la condición para que el refactor sea seguro. En ese orden, nunca al revés.</td>
+      </tr>
+      <tr>
+        <td class="n">Después</td>
+        <td>Desarmar <code>app/portal/[codigo]/page.tsx</code> en componentes.</td>
+        <td>El refactor de mayor impacto en mantenibilidad — pero necesita que ya entiendas el dominio.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Dos cosas que conviene saber antes de proponer cambios grandes</p>
+    <p>
+      <strong>El equipo es chico y el producto está saliendo a vender.</strong> La prioridad de las próximas
+      semanas es que el sistema no se caiga y que se puedan hacer demos, no la elegancia
+      interna. Un refactor que congele la entrega dos semanas es peor que la deuda que arregla.
+    </p>
+    <p>
+      <strong>Varias «rarezas» del código son decisiones deliberadas y están documentadas</strong> —
+      <code>prepare: false</code>, el matcher acotado del middleware, el <code>force-dynamic</code> en todos lados,
+      el rate limit que devuelve 404. Antes de «arreglar» algo que parece raro, buscá el
+      comentario: casi siempre está explicado ahí mismo.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Escrito a partir del código en <code>main</code> (<code>06a58f2</code>) — no de documentación previa, que
+    tenía drift. Complementos en el repo: <code>CLAUDE.md</code> (reglas operativas),
+    <code>docs/CONTEXTO-Y-PROGRESO.md</code> (contexto e historia del proyecto),
+    <code>.env.example</code> (cada variable de entorno explicada), <code>db/schema.sql</code> (esquema comentado).
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
