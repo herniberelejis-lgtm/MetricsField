@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Plan de cierre técnico</title>
+<style>
+  :root{
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n,.daytag,.metric-v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1000px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.1rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:.95rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.75rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1000px;margin:0 auto;padding:0 1.5rem 5rem}
+  .col{max-width:70ch}
+  header.mast{padding:3rem 0 1.9rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,4.6vw,2.8rem);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:0 0 1rem;text-wrap:balance;max-width:19ch}
+  .stand{font-size:1.02rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-top:1.5rem;font-size:.73rem;color:var(--muted)}
+
+  .verdict{margin:2rem 0 0;padding:1.5rem;background:var(--ink);color:var(--ground);border-radius:12px}
+  .verdict .eyebrow{color:color-mix(in srgb,var(--ground) 60%,transparent)}
+  .verdict p{margin:0 0 .85rem;font-size:.97rem;line-height:1.58;max-width:64ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ground);font-weight:700}
+  .verdict code{background:color-mix(in srgb,var(--ground) 14%,transparent);color:var(--ground)}
+
+  section{padding-top:3rem;scroll-margin-top:3.6rem}
+  .s-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.35rem}
+  .s-num{font-size:.73rem;color:var(--muted);font-weight:600;padding-top:.3rem}
+  h2{font-size:clamp(1.35rem,2.6vw,1.7rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.88rem;margin:0 0 1.5rem 2.4rem;max-width:62ch}
+  h3{font-size:.98rem;font-weight:700;letter-spacing:-.012em;margin:2.1rem 0 .7rem}
+  p{margin:0 0 .9rem}
+  ul,ol{margin:0 0 .9rem;padding-left:1.15rem}
+  li{margin-bottom:.35rem}
+  li::marker{color:var(--muted)}
+
+  .chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.63rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.18rem .48rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1rem 0 1.5rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.855rem;min-width:600px}
+  thead th{text-align:left;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.7rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.7rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.48}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.79rem}
+
+  .cards{display:grid;gap:.65rem;margin:1rem 0 1.4rem}
+  .card{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1rem 1.15rem;border-left:3px solid var(--rule)}
+  .card.crit{border-left-color:var(--crit)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.ok{border-left-color:var(--ok)}
+  .card-h{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem}
+  .card-t{font-weight:700;font-size:.92rem;letter-spacing:-.01em}
+  .card p{margin:0;font-size:.875rem;color:var(--ink-2);line-height:1.54}
+  .card p+p{margin-top:.5rem}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1rem 1.15rem;margin:1.3rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.885rem;line-height:1.56}
+  .callout p+p{margin-top:.6rem}
+  .callout .eyebrow{margin-bottom:.4rem}
+
+  .days{display:grid;gap:.65rem;margin:1.3rem 0}
+  .day{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1.15rem;
+    display:grid;grid-template-columns:104px 1fr;gap:1.15rem}
+  .day-when{display:flex;flex-direction:column;gap:.3rem}
+  .daytag{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+  .daydate{font-size:.71rem;color:var(--muted)}
+  .day-goal{font-weight:700;font-size:.95rem;letter-spacing:-.012em;margin-bottom:.5rem;text-wrap:balance}
+  .day ul{margin:0;padding-left:1.05rem}
+  .day li{font-size:.865rem;color:var(--ink-2);margin-bottom:.32rem}
+  @media(max-width:640px){.day{grid-template-columns:1fr;gap:.55rem}.day-when{flex-direction:row;align-items:baseline;gap:.6rem}}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.65rem;margin:1.3rem 0}
+  .metric{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:.85rem}
+  .metric-v{font-size:1.45rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;display:block}
+  .metric-l{font-size:.71rem;color:var(--muted);margin-top:.22rem;display:block;line-height:1.35}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:2.6rem 0 0}
+  footer{margin-top:3rem;padding-top:1.3rem;border-top:1px solid var(--rule);font-size:.77rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Plan de cierre</div>
+  <nav>
+    <a href="#alcance">Qué es «100%»</a>
+    <a href="#tuyo">Tus 15 minutos</a>
+    <a href="#semana">La semana</a>
+    <a href="#nohacer">Qué no hacer</a>
+    <a href="#cierre">Definición de terminado</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Plan de cierre técnico · semana del 10 al 14 de agosto</p>
+  <h1>Dejar el producto terminado</h1>
+  <p class="stand">
+    Todo lo que queda abierto, ordenado por día, con la secuencia que hace que
+    si la semana se corta a la mitad igual quede todo estable. Al final del
+    viernes no debería quedar ninguna tarea técnica pendiente que dependa de
+    nosotros.
+  </p>
+  <div class="mast-meta">
+    <span>Base: <code>970ec61</code></span>
+    <span>7 tareas de código</span>
+    <span>3 tareas tuyas · 15 min</span>
+  </div>
+</header>
+
+<div class="verdict">
+  <p class="eyebrow">Antes de arrancar, tres cosas honestas</p>
+  <p>
+    <strong>1 · Se puede terminar todo menos Google.</strong> Los trámites de verificación
+    (Business Profile y Reviews API) los resuelve Google en semanas y no dependen de
+    nadie acá. Todo lo demás sí se cierra esta semana.
+  </p>
+  <p>
+    <strong>2 · El orden importa más que la velocidad.</strong> Los tests van antes que los
+    refactors, sin excepción. Refactorizar <code>lib/db.ts</code> sin red de tests, la misma semana
+    en que salís a vender, es la forma más rápida de romper algo en producción sin enterarte.
+  </p>
+  <p>
+    <strong>3 · Dos tareas de la lista anterior ya estaban hechas.</strong> Los códigos de hardware
+    ya llevan sufijo aleatorio (<code>p-0001-a3f9c2</code>) y la rotación del código de portal ya
+    existe y está en la ficha del comercio. Las saqué del plan y corregí el documento de
+    onboarding.
+  </p>
+</div>
+
+<div class="metrics">
+  <div class="metric"><span class="metric-v">2</span><span class="metric-l">Ya hechas hoy</span></div>
+  <div class="metric"><span class="metric-v">5</span><span class="metric-l">De código, esta semana</span></div>
+  <div class="metric"><span class="metric-v">3</span><span class="metric-l">Tuyas, 15 minutos</span></div>
+  <div class="metric"><span class="metric-v">2</span><span class="metric-l">Bloqueadas por Google</span></div>
+</div>
+
+<!-- 01 ALCANCE -->
+<section id="alcance">
+  <div class="s-head"><span class="s-num">01</span><h2>Qué significa «terminado al 100»</h2></div>
+  <p class="s-sub">Conviene fijarlo antes, porque hay una lectura que suma trabajo sin sumar valor.</p>
+
+  <div class="col">
+    <p>
+      Terminado al 100% <strong>no es</strong> «optimizado para una escala que todavía no tenés». Paginar
+      el listado de clientes o agregar la tabla de taps son mejoras reales… a 200 comercios.
+      Hacerlas hoy, con la cartera actual, es meter riesgo en un producto que sale a vender
+      la semana que viene, a cambio de cero beneficio observable.
+    </p>
+    <p>Terminado al 100%, para este producto y este momento, es esto:</p>
+    <ul>
+      <li><strong>Cero deuda que bloquee crecer</strong> — que ningún techo se active al sumar los primeros 50 clientes.</li>
+      <li><strong>Cero riesgo de romper sin enterarse</strong> — CI que corta, tests sobre la lógica que importa, monitoreo que avisa.</li>
+      <li><strong>Cero trabajo manual pendiente</strong> — migraciones corridas, variables cargadas.</li>
+      <li><strong>Código que un ingeniero nuevo puede tocar sin miedo</strong> — sin archivos de 1.500 líneas.</li>
+    </ul>
+    <p>
+      Lo que queda afuera de esa definición queda anotado explícitamente en la sección 04, para
+      que sea una decisión y no un olvido.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 02 TUYO -->
+<section id="tuyo">
+  <div class="s-head"><span class="s-num">02</span><h2>Tus 15 minutos</h2></div>
+  <p class="s-sub">Esto no lo puedo hacer yo: necesita acceso a Neon y a Vercel. Es el lunes a la mañana.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Tarea</th><th>Dónde</th><th>Por qué importa</th><th>Tiempo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Correr la migración <code>010_limpieza_base.sql</code></strong></td>
+        <td>SQL Editor de Neon</td>
+        <td>Saca las columnas y tablas muertas. Corré el PASO 1 primero: es de solo lectura y te dice qué hay realmente antes de borrar nada.</td>
+        <td class="n">5 min</td>
+      </tr>
+      <tr>
+        <td><strong>Cargar <code>MONITOR_WEBHOOK_URL</code></strong></td>
+        <td>Vercel → Settings → Environment Variables</td>
+        <td>El código de monitoreo ya está. Sin la variable, si el cron falla un domingo a las 9 no se entera nadie. Sirve un webhook de Slack o Discord.</td>
+        <td class="n">5 min</td>
+      </tr>
+      <tr>
+        <td><strong>Verificar <code>SMTP_*</code></strong></td>
+        <td>Vercel → Settings → Environment Variables</td>
+        <td>Si no están cargadas, las alertas de reseña mala y el resumen mensual no se mandan — <strong>y no falla nada</strong>, simplemente no llegan. Andá a lo seguro y comprobalo.</td>
+        <td class="n">5 min</td>
+      </tr>
+      <tr>
+        <td>Mandar los dos trámites de Google</td>
+        <td>Google Cloud Console</td>
+        <td>Verificación OAuth + acceso a Business Profile APIs. <strong>No bloquea nada esta semana</strong>, pero el reloj tarda semanas: cuanto antes arranque, mejor.</td>
+        <td class="n">1-2 h</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Después de la migración, avisame</p>
+    <p>
+      Cuando corras la 010, decime qué devolvió el PASO 1. Si <code>feedback</code>, <code>cobros</code> o
+      <code>prospectos</code> tienen filas, hay que decidir caso por caso si se exportan o se dejan —
+      y <code>prospectos</code> con datos es pipeline de venta real, no lo borres sin mirar.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 03 SEMANA -->
+<section id="semana">
+  <div class="s-head"><span class="s-num">03</span><h2>La semana, día por día</h2></div>
+  <p class="s-sub">Cada día cierra con el producto desplegable. Si se corta el miércoles, lo hecho hasta ahí queda estable.</p>
+
+  <div class="days">
+    <div class="day">
+      <div class="day-when"><span class="daytag">Hecho</span><span class="daydate">hoy</span></div>
+      <div>
+        <div class="day-goal">Integración continua y correcciones <span class="chip c-ok">Listo</span></div>
+        <ul>
+          <li><strong>CI en GitHub Actions</strong>: tipos + tests + build + <code>npm audit</code> en cada PR y en cada push a <code>main</code>. Verificado corriendo los cuatro pasos localmente.</li>
+          <li>Corregidos los dos ítems del onboarding que ya estaban resueltos (códigos de hardware y rotación del código de portal).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="day-when"><span class="daytag">Día 1</span><span class="daydate">lun 10</span></div>
+      <div>
+        <div class="day-goal">Tests de la lógica de negocio — la red que habilita todo lo demás</div>
+        <ul>
+          <li>Tests de caracterización sobre: cálculo de métricas y deltas, agregación de taps por día y por hora, <code>resolverCuenta()</code> y el patrón cuenta/sucursal, y la detección de menciones por empleado.</li>
+          <li>Son <strong>tests de caracterización</strong>: fijan lo que el sistema hace <em>hoy</em>, esté bien o mal. El objetivo no es juzgar la lógica, es congelarla para que el refactor no la cambie sin que nos enteremos.</li>
+          <li>Meta: pasar de 36 a ~70 tests, cubriendo las cuatro zonas que tocan los refactors de miércoles y jueves.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="day-when"><span class="daytag">Día 2</span><span class="daydate">mar 11</span></div>
+      <div>
+        <div class="day-goal">Cron con cursor — el único techo que rompe el producto al crecer</div>
+        <ul>
+          <li>Hoy el cron procesa la cartera entera en lotes de 5 con <code>maxDuration = 60</code>. Alrededor de 60-80 clientes se corta, y como el orden es estable <strong>quedan sin sincronizar siempre los mismos</strong>.</li>
+          <li>Cambio: cada corrida toma los N comercios más desactualizados por <code>google_sync_en</code> y avanza. El techo desaparece: con 500 clientes, cada uno se sincroniza igual, solo que la vuelta completa tarda más de un día.</li>
+          <li>Sumar un tope de tiempo interno que corte antes del límite de Vercel y deje registro de dónde quedó, en vez de que lo mate el runtime a mitad de una llamada.</li>
+          <li>Tests del cursor: que no saltee comercios, que no repita, y que arranque bien con la tabla vacía.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="day-when"><span class="daytag">Día 3</span><span class="daydate">mié 12</span></div>
+      <div>
+        <div class="day-goal">Partir <code>lib/db.ts</code> — 1.561 líneas y 65 funciones en un archivo</div>
+        <ul>
+          <li>Separar por dominio: <code>db/comercios.ts</code>, <code>db/links.ts</code>, <code>db/taps.ts</code>, <code>db/resenas.ts</code>, <code>db/competencia.ts</code>, <code>db/sync.ts</code>, <code>db/admin.ts</code>.</li>
+          <li><strong><code>lib/db.ts</code> queda reexportando todo</strong>, así los 25 archivos que lo importan no se tocan. Cero cambios de comportamiento, cero riesgo de import roto.</li>
+          <li>Es mecánico, pero solo es seguro porque el lunes quedaron los tests. Se hace mover-y-correr-tests, en pasos chicos.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="day-when"><span class="daytag">Día 4</span><span class="daydate">jue 13</span></div>
+      <div>
+        <div class="day-goal">Desarmar <code>app/portal/[codigo]/page.tsx</code> — 1.041 líneas</div>
+        <ul>
+          <li>Hoy es un solo componente de servidor que trae los datos, calcula todo y arma ocho paneles de UI como variables antes de pasarlos a <code>PortalShell</code>.</li>
+          <li>Cada panel se va a su componente en <code>components/portal/</code>. La página queda con el fetching, los cálculos derivados y el armado del nav — debería bajar a unas 300 líneas.</li>
+          <li><strong>Es el más delicado de los dos refactors</strong>: el orden de los cálculos tiene sutilezas (sucursal activa, deltas contra el mes anterior, qué paneles existen según los datos). Se verifica con capturas del portal antes y después, panel por panel.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="day-when"><span class="daytag">Día 5</span><span class="daydate">vie 14</span></div>
+      <div>
+        <div class="day-goal">QA completo de punta a punta y cierre</div>
+        <ul>
+          <li>Recorrido manual de los tres mundos con navegador real: tap de un cartel (con y sin URL propia, activo e inactivo), portal completo panel por panel en escritorio y celular, y el panel de admin con las dos formas de login.</li>
+          <li>Probar los caminos que casi nunca se prueban: activación de una pieza autogestionada con PIN, edición con PIN correcto e incorrecto, generación de un lote de hardware, y un comercio con sucursales.</li>
+          <li>Verificar en el preview de Vercel, no solo en local.</li>
+          <li>Actualizar el documento de onboarding con el mapa nuevo del repo y cerrar la semana con el estado real.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">Por qué este orden y no otro</p>
+    <p>
+      Los dos refactors grandes van al final <strong>a propósito</strong>. Si el lunes o el martes aparece
+      algo urgente del lanzamiento, se corren y no pasa nada: lo de la primera mitad (CI, tests,
+      cron) es puro beneficio sin riesgo. Al revés —refactorizar primero y testear después— cada
+      día de la semana quedaría con el producto en un estado peor que el lunes.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 04 NO HACER -->
+<section id="nohacer">
+  <div class="s-head"><span class="s-num">04</span><h2>Lo que queda afuera, y por qué</h2></div>
+  <p class="s-sub">Decisiones explícitas, no olvidos. Si querés alguna adentro, se agrega.</p>
+
+  <div class="cards">
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Afuera</span><span class="card-t">Paginar <code>getClientes()</code> y agregar la tabla <code>taps</code></span></div>
+      <p>
+        Son techos reales pero <strong>lejanos</strong>: ~200 comercios el primero, volumen alto de taps el
+        segundo. Hacerlos ahora cambia consultas que hoy andan bien, en la semana previa a salir
+        a vender, sin que nadie note la diferencia.
+      </p>
+      <p><strong>Cuándo sí:</strong> cuando el panel se sienta lento o pases los 100 comercios. Están anotados en el onboarding.</p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">No depende de nosotros</span><span class="card-t">Verificación de Google y Reviews API</span></div>
+      <p>
+        El scope <code>business.manage</code> es sensible y pasa por revisión humana de Google: son semanas,
+        no días. <strong>No se puede terminar esta semana por más que se quiera.</strong>
+      </p>
+      <p>
+        Lo que sí se hace: mandar los dos trámites el lunes para que el reloj arranque. El código
+        ya está escrito y esperando — el día que aprueben, se prende una variable en Vercel y
+        funciona, sin tocar código.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Afuera</span><span class="card-t">Conectar IA de verdad</span></div>
+      <p>
+        Hoy las respuestas sugeridas las genera <code>lib/respuestas.ts</code> por reglas, sin pagar ninguna
+        API, y funciona. Conectar un modelo real es <strong>desarrollo nuevo</strong>, no una variable por
+        prender — y arrastra decisiones de costo por uso que son de negocio, no técnicas.
+      </p>
+      <p><strong>Cuándo sí:</strong> cuando haya volumen que justifique el costo variable, y como proyecto propio.</p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">Afuera</span><span class="card-t">Módulo de cobranza en el producto</span></div>
+      <p>
+        La tabla <code>cobros</code> sigue en la base pero el módulo se borró. Con los primeros diez clientes,
+        un link de pago de Mercado Pago y una planilla alcanzan y sobran.
+      </p>
+      <p><strong>Cuándo sí:</strong> pasando los diez clientes, cuando la cobranza manual empiece a doler.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 05 CIERRE -->
+<section id="cierre">
+  <div class="s-head"><span class="s-num">05</span><h2>Definición de terminado</h2></div>
+  <p class="s-sub">El viernes, esta lista tiene que estar entera en verde.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Verificación</th><th>Cómo se comprueba</th></tr></thead>
+    <tbody>
+      <tr><td>El CI corta un PR que rompe algo</td><td>Un PR con un test roto queda bloqueado en GitHub.</td></tr>
+      <tr><td>~70 tests, cubriendo seguridad y negocio</td><td><code>npm test</code></td></tr>
+      <tr><td>Sin archivos de más de 600 líneas</td><td><code>lib/db.ts</code> y el portal partidos, importadores intactos.</td></tr>
+      <tr><td>El cron termina siempre, sin dejar comercios atrás</td><td>Simulado con 300 comercios de prueba; ninguno queda sin actualizar dos vueltas seguidas.</td></tr>
+      <tr><td>Las fallas llegan a un canal que alguien mira</td><td>Forzar un error del cron y ver el mensaje en el webhook.</td></tr>
+      <tr><td>La base sin columnas ni tablas muertas</td><td>La consulta de verificación de la 010 devuelve 0 filas.</td></tr>
+      <tr><td>Los tres mundos andan en el preview de Vercel</td><td>QA manual del viernes, en escritorio y en celular.</td></tr>
+      <tr><td>0 vulnerabilidades</td><td><code>npm audit</code>, ahora también en el CI.</td></tr>
+      <tr><td>El onboarding refleja el repo nuevo</td><td>Mapa actualizado después de los refactors.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Cómo trabajamos esta semana</p>
+    <p>
+      Cada día es <strong>uno o dos PR chicos</strong>, no un PR gigante el viernes. Cada uno con su
+      verificación (tipos, tests, build) y con capturas cuando toca UI. Así podés mirar el avance
+      todos los días y, si algo no te cierra, se corrige ahí — no después de tres días de trabajo
+      apilado.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Estado verificado leyendo el código en <code>main</code> (<code>970ec61</code>). Los tiempos son estimaciones
+    de trabajo efectivo, sin contar las esperas de Google. Documento complementario:
+    <code>docs/ONBOARDING.html</code>, con el relevamiento completo del sistema.
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
