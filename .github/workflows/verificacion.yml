@@ -1,0 +1,46 @@
+name: Verificación
+
+# Corre el mismo ciclo que se pide antes de cada commit (ver CLAUDE.md):
+# tipos + tests + build. Hasta ahora eso dependía de que cada uno se
+# acordara; con esto, un PR que rompe algo no se puede fusionar sin que
+# quede a la vista.
+#
+# No necesita ningún secreto: el build de Next no se conecta a la base
+# (todas las páginas son force-dynamic, se renderizan en request) y los
+# tests son de lógica pura. DATABASE_URL se pasa en falso solo porque
+# lib/sql.ts corta el arranque si la variable no existe.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Chequeo de tipos
+        run: npx tsc --noEmit
+
+      - name: Tests
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build
+        env:
+          DATABASE_URL: postgres://build:build@localhost:5432/build
+          ADMIN_PASSWORD: build-no-se-usa
+
+      - name: Vulnerabilidades en dependencias
+        run: npm audit --audit-level=high

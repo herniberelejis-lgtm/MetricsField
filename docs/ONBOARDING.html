@@ -377,7 +377,7 @@ npm run dev                    # http://localhost:3000</code></pre>
       <tr>
         <td><strong>Cliente</strong><br>a su portal</td>
         <td><code>/portal/&lt;codigo&gt;</code> — el código de la URL es la única credencial. Se manda por WhatsApp.</td>
-        <td>Solo lectura, aislado a sus datos. La defensa contra enumeración es el rate limit por IP, que responde <code>404</code> igual que un código inválido — a propósito.</td>
+        <td>Solo lectura, aislado a sus datos. La defensa contra enumeración es el rate limit por IP, que responde <code>404</code> igual que un código inválido — a propósito. Si un cliente reenvía su link, se revoca desde la ficha del comercio con «Regenerar código».</td>
       </tr>
       <tr>
         <td><strong>Equipo</strong><br>al panel</td>
@@ -620,18 +620,8 @@ npm run dev                    # http://localhost:3000</code></pre>
         <td class="n">Días</td>
       </tr>
       <tr>
-        <td>Códigos de hardware con sufijo aleatorio</td>
-        <td>Hoy son correlativos (<code>p-0001</code>…). Enumerables; la única defensa es el rate limit.</td>
-        <td class="n">Bajo</td>
-      </tr>
-      <tr>
-        <td>Poder rotar el <code>codigo_acceso</code> del portal</td>
-        <td>Si un cliente reenvía su link privado, hoy no hay forma de revocarlo.</td>
-        <td class="n">Bajo</td>
-      </tr>
-      <tr>
         <td>Paginar <code>getClientes()</code> · agregar <code>taps</code></td>
-        <td>Techos lejanos: ~200 comercios el primero, volumen alto el segundo. Anotalos y seguí.</td>
+        <td>Techos lejanos: ~200 comercios el primero, volumen alto el segundo. Anotalos y seguí — hacerlos antes de necesitarlos es riesgo sin beneficio.</td>
         <td class="n">Después</td>
       </tr>
     </tbody>
