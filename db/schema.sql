@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS metricas_mensuales (
   resenas_nuevas   INTEGER NOT NULL DEFAULT 0,
   resenas_total    INTEGER NOT NULL DEFAULT 0,
   rating_promedio  NUMERIC NOT NULL DEFAULT 0,
-  posicion_maps    INTEGER NOT NULL DEFAULT 0,  -- legacy: la app ya no la lee ni la escribe
   visitas_perfil   INTEGER NOT NULL DEFAULT 0,
   llamadas         INTEGER NOT NULL DEFAULT 0,
   clics_como_llegar INTEGER NOT NULL DEFAULT 0,
@@ -106,7 +105,6 @@ CREATE TABLE IF NOT EXISTS links_nfc (
   destino      TEXT NOT NULL DEFAULT 'resena',         -- 'resena'|'menu'|'instagram'|'promo'|'url_custom' — etiqueta descriptiva, no condiciona el redirect (ver url_destino)
   url_destino  TEXT,                                   -- si tiene valor, el cartel manda SIEMPRE ahí (sin importar destino); vacío = manda a la reseña de Google del comercio
   activo       BOOLEAN NOT NULL DEFAULT TRUE,
-  usar_filtro  BOOLEAN NOT NULL DEFAULT FALSE,          -- columna histórica: el código ya no la lee — todo destino 'resena' va directo a Google. No borrar sin migración coordinada.
   autogestionado BOOLEAN NOT NULL DEFAULT FALSE,        -- true = el propio comprador la activó (canal Mercado Libre, sin comercio_id)
   nombre_negocio TEXT NOT NULL DEFAULT '',              -- solo para piezas autogestionadas: nombre elegido por el comprador
   pin_hash     TEXT,                                    -- solo para piezas autogestionadas: PIN de edición (scrypt, ver lib/pin.ts)
@@ -129,18 +127,12 @@ CREATE INDEX IF NOT EXISTS idx_taps_link_fecha ON taps(link_id, creado_en);
 -- formulario privado), eliminado del producto. El código ya no lee ni
 -- escribe acá — se conserva solo por los datos ya guardados. No borrar
 -- sin decisión explícita del dueño (implica DROP con pérdida de datos).
-CREATE TABLE IF NOT EXISTS feedback (
-  id               SERIAL PRIMARY KEY,
-  comercio_id      TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  estrellas        INTEGER NOT NULL CHECK (estrellas BETWEEN 1 AND 3),
-  texto            TEXT NOT NULL DEFAULT '',
-  contacto         TEXT,
-  estado           TEXT NOT NULL DEFAULT 'nuevo',      -- 'nuevo'|'en_proceso'|'resuelto'
-  notas_internas   TEXT NOT NULL DEFAULT '',
-  creado_en        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  actualizado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_feedback_comercio ON feedback(comercio_id, creado_en DESC);
+-- La tabla `feedback` guardaba los reclamos privados de quien puntuaba 1-3★
+-- cuando existía el star-gate. Esa función se eliminó del producto (es
+-- "review gating", Google lo penaliza) y ninguna línea de código la lee ni
+-- la escribe. No se declara más acá: una base nueva no debe crearla.
+-- Para sacarla de una base existente ver db/migrations/010_limpieza_base.sql,
+-- que primero te dice si tiene reclamos históricos para exportar.
 
 -- CRM de reseñas (las que el fundador carga a mano mientras no haya API
 -- oficial de Google Business Profile).
@@ -220,7 +212,11 @@ CREATE TABLE IF NOT EXISTS competidores_snapshots (
 );
 CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(comercio_id, mes);
 
--- Las tablas `cobros` (cobranza/finanzas) y `prospectos` (pipeline de
--- venta) se eliminaron del producto — panel simplificado a las métricas
--- clave de la cartera. Ver db/22-eliminar-finanzas-prospectos.sql para el
--- DROP TABLE, a correr a mano en Neon (no se auto-aplica).
+-- Las tablas `cobros` (cobranza/finanzas) y `prospectos` (pipeline de venta)
+-- se eliminaron del producto — panel simplificado a las métricas clave de la
+-- cartera. No se declaran acá: una base nueva no debe crearlas.
+--
+-- Si siguen existiendo en una base vieja, db/migrations/010_limpieza_base.sql
+-- las detecta, te dice cuántas filas tienen y trae los DROP comentados con el
+-- comando de export al lado. Ojo con `prospectos`: si tiene datos es pipeline
+-- de venta real, exportalo antes de borrar nada.
