@@ -9,6 +9,7 @@ import { generarRespuestaSugerida } from "./respuestas";
 import { hashearPin, pinCoincide } from "./pin";
 import { cifrar, descifrar } from "./crypto";
 import { alertarResenaMala, enviarResumenMensual } from "./alertas";
+import { reportarFalla } from "./monitor";
 import type {
   AuditGEOResultado,
   BenchmarkMes,
@@ -189,14 +190,14 @@ export async function getClientePorCodigo(codigo: string): Promise<Cliente | und
 export interface DatosTap {
   link: Pick<
     LinkNFC,
-    "id" | "destino" | "urlDestino" | "activo" | "usarFiltro" | "autogestionado" | "nombreNegocio"
+    "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio"
   >;
   comercio: { id: string; nombre: string; rubro: Rubro; googleReviewUrl: string } | null;
 }
 
 export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   const rows = await sql`
-    SELECT l.id, l.destino, l.url_destino, l.activo, l.usar_filtro,
+    SELECT l.id, l.destino, l.url_destino, l.activo,
            l.autogestionado, l.nombre_negocio,
            co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url
     FROM links_nfc l
@@ -212,7 +213,6 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
       urlDestino: (r.url_destino as string | null) ?? null,
       activo: Boolean(r.activo),
       // las columnas son NOT NULL y siempre vienen en el SELECT
-      usarFiltro: Boolean(r.usar_filtro),
       autogestionado: Boolean(r.autogestionado),
       nombreNegocio: (r.nombre_negocio as string) ?? "",
     },
@@ -476,7 +476,7 @@ async function sincronizarEnLotes<Id, T>(
     const resultados = await Promise.allSettled(lote.map(fn));
     resultados.forEach((r, j) => {
       if (r.status === "fulfilled") exitosos.push(r.value);
-      else console.error(`Sync falló para ${lote[j]}:`, r.reason);
+      else void reportarFalla("sync", r.reason, { comercio: String(lote[j]) });
     });
   }
   return exitosos;
@@ -750,7 +750,6 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     destino: r.destino as DestinoLink,
     urlDestino: (r.url_destino as string | null) ?? null,
     activo: Boolean(r.activo),
-    usarFiltro: r.usar_filtro === undefined ? false : Boolean(r.usar_filtro),
     autogestionado: Boolean(r.autogestionado),
     nombreNegocio: (r.nombre_negocio as string) ?? "",
     nombreEmpleado: (r.nombre_empleado as string) ?? "",
@@ -796,7 +795,6 @@ export async function crearLink(
     tipo?: TipoSoporte;
     destino: DestinoLink;
     urlDestino?: string | null;
-    usarFiltro?: boolean;
     nombreEmpleado?: string;
   },
 ): Promise<LinkNFC> {
@@ -807,8 +805,8 @@ export async function crearLink(
     id = `${slugLink(datos.etiqueta)}-${crypto.randomBytes(2).toString("hex")}`;
   }
   await sql`
-    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, usar_filtro, nombre_empleado)
-    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${limpiarUrl(datos.urlDestino) ?? null}, ${datos.usarFiltro ?? false}, ${datos.nombreEmpleado ?? ""})
+    INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, destino, url_destino, nombre_empleado)
+    VALUES (${id}, ${comercioId}, ${datos.etiqueta}, ${datos.tipo ?? "nfc"}, ${datos.destino}, ${limpiarUrl(datos.urlDestino) ?? null}, ${datos.nombreEmpleado ?? ""})
   `;
   const l = await getLink(id);
   if (!l) throw new Error("No se pudo crear el link.");
@@ -823,7 +821,6 @@ export async function actualizarLink(
     destino: DestinoLink;
     urlDestino: string | null;
     activo: boolean;
-    usarFiltro: boolean;
     nombreEmpleado: string;
   }>,
 ): Promise<LinkNFC> {
@@ -836,7 +833,6 @@ export async function actualizarLink(
       destino = ${datos.destino === undefined ? sql`destino` : datos.destino},
       url_destino = ${datos.urlDestino === undefined ? sql`url_destino` : limpiarUrl(datos.urlDestino)},
       activo = ${datos.activo === undefined ? sql`activo` : datos.activo},
-      usar_filtro = ${datos.usarFiltro === undefined ? sql`usar_filtro` : datos.usarFiltro},
       nombre_empleado = ${datos.nombreEmpleado === undefined ? sql`nombre_empleado` : datos.nombreEmpleado}
     WHERE id = ${linkId}
     RETURNING id
@@ -875,7 +871,6 @@ export async function activarAutogestion(
       autogestionado = TRUE,
       nombre_negocio = ${datos.nombreNegocio},
       url_destino = ${datos.urlDestino},
-      usar_filtro = FALSE,
       pin_hash = ${hash},
       pin_salt = ${salt}
     WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = FALSE
@@ -1012,7 +1007,6 @@ export async function asignarPiezaACliente(
     tipo?: TipoSoporte;
     destino: DestinoLink;
     urlDestino?: string | null;
-    usarFiltro?: boolean;
   },
 ): Promise<LinkNFC> {
   const rows = await sql`
@@ -1021,8 +1015,7 @@ export async function asignarPiezaACliente(
       etiqueta = ${datos.etiqueta},
       tipo = COALESCE(${datos.tipo ?? null}, tipo),
       destino = ${datos.destino},
-      url_destino = ${limpiarUrl(datos.urlDestino) ?? null},
-      usar_filtro = ${datos.usarFiltro ?? false}
+      url_destino = ${limpiarUrl(datos.urlDestino) ?? null}
     WHERE id = ${id} AND comercio_id IS NULL
     RETURNING *
   `;

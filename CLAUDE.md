@@ -25,11 +25,17 @@ npm run dev            # desarrollo en http://localhost:3000
 npm run build          # next build (compilación de producción)
 npm run start          # servir el build
 npm run lint           # next lint
+npm test               # vitest run — tests de la lógica de seguridad
 npx tsc --noEmit       # chequeo de tipos (paso previo a commitear)
 ```
 
-No hay framework de tests ni suite de pruebas. El ciclo de verificación por tarea
-es: `npx tsc --noEmit` + `next build`; si compila, commitear en español.
+Ciclo de verificación por tarea: `npx tsc --noEmit` + `npm test` + `next build`;
+si pasa, commitear en español.
+
+Los tests (`test/`) cubren solo lo que, si se rompe, abre un agujero: cookies de
+sesión del panel, PIN de las piezas autogestionadas, cifrado del refresh token de
+Google y validación de URLs. **No borres un test para hacer pasar un cambio** —
+si uno se pone rojo, el cambio está mal, no el test.
 
 Base de datos local/producción: se cargan a mano con
 `psql "<DATABASE_URL>" -f db/schema.sql` y `-f db/seed.sql`.

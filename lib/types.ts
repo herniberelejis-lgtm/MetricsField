@@ -150,10 +150,6 @@ export interface LinkNFC {
    * (incluido 'resena'). null/vacío = manda a `Cliente.googleReviewUrl`. */
   urlDestino: string | null;
   activo: boolean;
-  /** Columna histórica (`usar_filtro`) — el código ya no la usa: todo
-   * destino 'resena' va derecho a googleReviewUrl para todo el mundo.
-   * Se mantiene mapeada solo para no divergir del schema real. */
-  usarFiltro: boolean;
   /** true = el propio comprador la activó desde /t/<id> (canal Mercado
    * Libre: hardware suelto, sin agencia ni portal) — comercioId sigue NULL
    * para siempre en estas piezas. false para todo lo demás: inventario
