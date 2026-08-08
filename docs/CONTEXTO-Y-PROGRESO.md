@@ -26,13 +26,22 @@ Córdoba, Argentina. Dos partes:
    recibe alertas por email cuando entra una reseña mala o una queja privada,
    y un resumen mensual por email.
 
-### El "star-gate" (base legal del producto — no tocar sin pensarlo dos veces)
-El cliente final elige de 1 a 5 estrellas:
-- **4-5 estrellas** → va directo a dejar la reseña pública en Google.
-- **1-3 estrellas** → además se le OFRECE un formulario de feedback privado.
-  El link público a Google **sigue siempre visible**, para todos, incluso a
-  quien puntúa mal. Esconderlo ("review gating") viola las políticas de
-  Google y puede terminar en que le bajen o penalicen la ficha al comercio.
+### Sin desvío de reseñas (base legal del producto — no reintroducir)
+**El star-gate fue ELIMINADO del producto.** Hoy el cartel manda a todos al
+mismo link público de Google, sin pantallas intermedias y sin importar la
+calificación que vaya a poner la persona.
+
+Cualquier variante de filtrar o desviar por calificación ("review gating")
+viola las políticas de Google y puede terminar en que le bajen o penalicen la
+ficha al comercio. No reintroducirlo bajo ninguna forma.
+
+Esto además es **argumento de venta**: podés decirle al comercio que no
+filtrás nada, a diferencia de varios competidores que sí lo hacen y lo ponen
+en riesgo.
+
+Restos históricos en la base (ya sin uso en el código): la columna
+`links_nfc.usar_filtro` y la tabla `feedback`. Se limpian con
+`db/migrations/009_limpieza_star_gate.sql`, que hay que correr a mano.
 
 ### Modelo comercial actual
 - **1 mes de software gratis** para que el comercio lo pruebe con datos
@@ -56,7 +65,7 @@ El cliente final elige de 1 a 5 estrellas:
 
 ### Ramas y despliegue (recién armado, importante)
 - **`main`** = rama de producción. Lo que está ahí es lo que ven los clientes
-  reales en `https://geo-seo-analytics.vercel.app`. En Vercel, "Production
+  reales en `https://app.metricsfield.com`. En Vercel, "Production
   Branch" tiene que estar apuntando a `main` (Settings → Git).
 - **Ramas de sesión/feature** (ej. `claude/new-session-xxxx`) = donde Claude
   hace los cambios nuevos. Cada rama que se pushea genera automáticamente una
@@ -115,9 +124,7 @@ app/
     clientes/[id]/  → ficha de cada comercio + submódulos (crm, links, metricas, editar, auditoria)
     administradores/→ allowlist de logins con Google del equipo
     actividad/      → registro de auditoría de acciones del panel
-    prospectos/     → CRM de prospección (todavía no son clientes)
-    analytics/      → vista agregada de toda la cartera
-    reportes/[id]/  → reporte mensual imprimible por cliente
+    hardware/       → inventario de piezas NFC/QR (generar lote, asignar)
   api/
     admin/oauth/    → login del equipo con Google (allowlist)
     portal/google/oauth/ → conexión de Business Profile POR CLIENTE
@@ -191,15 +198,25 @@ docs/               → este archivo (el manual operativo y los prompts
   (`lib/google-reviews.ts`) pero gateada por `GOOGLE_REVIEWS_API_ENABLED`
   (apagada) hasta que Google apruebe el acceso a su Reviews API.
 - CRM de reseñas (con hora exacta opcional), checklist SEO, Audit GEO manual,
-  monitoreo de competencia manual, cron diario, alertas por wa.me, reportes
-  mensuales imprimibles, módulo de Finanzas (cobros), sección Tutoriales.
+  monitoreo de competencia manual, cron diario, alertas por wa.me.
 - Seguridad: auditoría zero-trust aplicada (sesiones con vencimiento firmado,
   rate limit distribuido en Upstash Redis para login/portal/taps/PIN de
   hardware autogestionado, headers de seguridad, refresh tokens de Google
-  cifrados en reposo). Ver `docs/AUDITORIA-ZERO-TRUST-2026-07.md`. **Ojo**:
-  la subida de capturas (con validación de magic bytes) que menciona ese
-  doc se eliminó del producto — no reintroducir esa referencia sin revisar
-  primero si la feature sigue existiendo.
+  cifrados en reposo, esquemas de URL en lista blanca). Suite de tests en
+  `test/` (`npm test`) sobre sesión, PIN, cifrado y validación de URLs.
+  Monitoreo de fallas vía `MONITOR_WEBHOOK_URL` (`lib/monitor.ts`).
+  Ver `docs/AUDITORIA-ZERO-TRUST-2026-07.md`. **Ojo**: la subida de capturas
+  (con validación de magic bytes) que menciona ese doc se eliminó del
+  producto — no reintroducir esa referencia sin revisar primero si la
+  feature sigue existiendo.
+
+### ⚠️ Módulos que estos docs mencionaban y NO existen
+Se borraron del código en el commit `d367091` (restructuración del panel).
+**No los prometas en una propuesta comercial:**
+`/admin/finanzas` (cobros) · `/admin/prospectos` (CRM de prospección) ·
+`/admin/reportes/[id]` (reporte mensual imprimible) · `/admin/analytics`
+(quedó unificado dentro de `/admin`) · sección Tutoriales.
+La tabla `cobros` sigue existiendo en Neon pero ningún código la lee.
 - **Ya NO existe** "Posición en Maps" como feature — se sacó del producto
   entero porque no se puede automatizar ni entregar de forma honesta al
   cliente. Si ven referencias a esto en documentos viejos, están obsoletas.

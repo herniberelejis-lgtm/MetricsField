@@ -1,5 +1,6 @@
 import "server-only";
 import nodemailer from "nodemailer";
+import { reportarFalla } from "./monitor";
 
 // Envío de email por SMTP genérico — funciona con Gmail/Google Workspace
 // (smtp.gmail.com + contraseña de aplicación), o con cualquier otro
@@ -43,7 +44,9 @@ export async function enviarEmail(opts: {
     });
     return true;
   } catch (e) {
-    console.error("Error enviando email:", e);
+    // El envío de email falla en silencio a propósito (nunca tumba el flujo
+    // que lo llamó), así que el reporte es la única forma de enterarse.
+    void reportarFalla("email", e, { para: opts.to });
     return false;
   }
 }
