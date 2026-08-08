@@ -1,0 +1,38 @@
+Correr migración 010 en Neon | Dejar el producto terminado | Alta | Hernán | 2026-08-10 | Correr primero el PASO 1 (solo lectura). Si feedback/cobros/prospectos tienen filas, avisar antes de borrar.
+Cargar MONITOR_WEBHOOK_URL en Vercel | Dejar el producto terminado | Alta | Hernán | 2026-08-10 | Webhook de Slack o Discord. Sin esto, si el cron falla un domingo no se entera nadie.
+Verificar NEXT_PUBLIC_BASE_URL en Vercel | Lanzamiento Piloto | Alta | Hernán | 2026-08-10 | CRITICO: define a dónde apuntan los QR impresos. Bloquea el envío del lote a imprenta. Avisar a Simón apenas esté confirmado.
+Verificar SMTP en Vercel | Dejar el producto terminado | Media | Hernán | 2026-08-10 | Si no están cargadas, las alertas de reseña mala y el resumen mensual no se mandan y no falla nada.
+Ejecutar cron con cursor por google_sync_en | Dejar el producto terminado | Alta | Hernán | 2026-08-10 | Con Claude. Hoy el cron toma la cartera entera sin ORDER BY ni LIMIT con tope de 60s: a los 60-80 clientes se corta y quedan sin sincronizar siempre los mismos. Va a main.
+Enviar 5 WhatsApps de prueba y medir respuesta | Lanzamiento Piloto | Alta | Hernán | 2026-08-10 | Solo 5, no 30. Si no contesta ninguno, reescribir el mensaje antes de quemar los otros 25.
+Enviar verificación OAuth a Google | Motor de Reseñas | Media | Hernán | 2026-08-11 | Con el material que prepara Luis. No bloquea nada de esta semana pero el trámite tarda semanas.
+Enviar solicitud de Business Profile APIs | Motor de Reseñas | Media | Hernán | 2026-08-11 | Trámite separado del de verificación. Los dos relojes tienen que arrancar el mismo día.
+Enviar propuesta RADAR a 3 cadenas | Lanzamiento Piloto | Media | Hernán | 2026-08-11 | Ciclo de venta largo. Arrancarlo ahora y dejarlo corriendo en paralelo.
+Partir lib/db.ts por dominio | Dejar el producto terminado | Media | Hernán | 2026-08-12 | Con Claude. 1.561 líneas y 65 funciones. Dejar lib/db.ts reexportando para no tocar los 25 archivos que lo importan. Va a la rama desarrollo.
+Salir a la calle - 15 puertas por día | Lanzamiento Piloto | Alta | Hernán | 2026-08-13 | Nueva Córdoba y Güemes, de 15:00 a 17:30. Cerrar con seña de 20.000 y fecha de instalación puesta.
+Desarmar page.tsx del portal en componentes | Dejar el producto terminado | Media | Hernán | 2026-08-13 | Con Claude. 1.041 líneas y 8 paneles armados como variables. Verificar con capturas antes y después. Va a desarrollo.
+Bajar de desarrollo a main lo verificado | Dejar el producto terminado | Alta | Hernán | 2026-08-14 | Con Claude. Solo lo que David haya revisado con sus tests. Lo que no esté verificado se queda en desarrollo.
+Cargar 30 paneles de demo de prospectos | Lanzamiento Piloto | Alta | Luis | 2026-08-09 | Alta como prospecto + Place ID + 2 competidores por comercio. 18 servicios de ticket alto y 12 de gastronomía. Es el prerequisito de los WhatsApps del lunes.
+Escribir checklist de alta de cliente | Dejar el producto terminado | Alta | Luis | 2026-08-10 | Con Hernán. Desde que alguien seña hasta que su portal anda. Probarlo dando de alta un comercio de prueba.
+Extraer contenido del sitio Impulso | Kit Comercial | Media | Luis | 2026-08-10 | Ver docs/BRIEF-LUIS-SITIO-IMPULSO.html. 40 minutos: bajar el zip y contestar las 4 preguntas.
+QA visual del portal del cliente | Dejar el producto terminado | Alta | Luis | 2026-08-11 | Los 3 paneles, en escritorio y celular, con un comercio con sucursales y otro sin.
+Preparar material del trámite de Google | Motor de Reseñas | Media | Luis | 2026-08-11 | Video de pantalla del flujo completo de conexión (portal, botón Conectar, pantalla de consentimiento con los scopes visibles, dato apareciendo en el panel). Sin cortes.
+QA visual del panel de admin | Dejar el producto terminado | Media | Luis | 2026-08-12 | Buscar textos cortados, números que no cierran y botones que no se ven en pantalla chica.
+Escribir checklist de demo | Kit Comercial | Media | Luis | 2026-08-12 | Qué se revisa antes de abrir un portal delante de un cliente.
+Escribir proceso de soporte | Dejar el producto terminado | Media | Luis | 2026-08-13 | Quién contesta, en cuánto tiempo, qué se pregunta primero. Y qué hacer si se cae la sync de Google o un cartel deja de andar.
+Encargar el lote de hardware | Lanzamiento Piloto | Alta | Simón | 2026-08-10 | LA MAS URGENTE DE LA SEMANA. Pedir fecha por escrito y plan B. Si el proveedor da una fecha posterior al 17, se decide ese mismo día.
+Generar lote y descargar ZIP de QR | Lanzamiento Piloto | Alta | Simón | 2026-08-10 | En /admin/hardware. Esperar a que Hernán confirme NEXT_PUBLIC_BASE_URL antes de generar.
+Verificar 3 QR del lote con celular real | Lanzamiento Piloto | Alta | Simón | 2026-08-10 | Tienen que abrir app.metricsfield.com/t/... Es el único error de la semana que cuesta plata y no se arregla con un commit.
+Crear links de pago en Mercado Pago | Kit Comercial | Alta | Simón | 2026-08-10 | Tres links: seña 20.000, saldo 19.000, pack anual 249.000. Pasarle los links a Hernán para la calle.
+Escribir instructivo que va con el cartel | Kit Comercial | Media | Simón | 2026-08-11 | Dónde apoyarlo, qué hacer si el cliente no tiene NFC, a quién escribir si no anda. Sin tecnicismos.
+Escribir protocolo de instalación en el local | Lanzamiento Piloto | Media | Simón | 2026-08-12 | Dónde va el cartel, qué se prueba delante del dueño, qué se explica al personal. Escrito como pasos para que cualquiera pueda instalar.
+Cotizar segundo lote y tiempo de reposición | Lanzamiento Piloto | Media | Simón | 2026-08-13 | Costo unitario, plazo real de entrega y punto de repedido. Si la venta arranca, el 24 hacen falta más carteles.
+Levantar entorno local y leer onboarding | Dejar el producto terminado | Alta | David | 2026-08-10 | Seguir docs/ONBOARDING.html. Tocar el cartel de prueba con el celular y ver el tap aparecer en el portal.
+Hacer primer PR de prueba | Dejar el producto terminado | Media | David | 2026-08-10 | Algo mínimo. El objetivo no es el cambio, es recorrer el circuito completo: rama, PR, CI en verde, merge.
+Escribir tests de lib/format.ts | Dejar el producto terminado | Alta | David | 2026-08-11 | Empezar por delta(): alimenta todos los indicadores del portal. Función pura, no necesita base de datos.
+Escribir tests de lib/types.ts | Dejar el producto terminado | Alta | David | 2026-08-11 | metricaActual, metricaAnterior, citasIA, ingresoNFC. Funciones puras.
+Escribir tests de lib/empleados.ts | Dejar el producto terminado | Alta | David | 2026-08-12 | metricasPorEmpleado. Es el diferencial del producto, priorizarlo.
+Escribir tests de lib/keywords.ts | Dejar el producto terminado | Media | David | 2026-08-12 | terminosFrecuentes. Función pura.
+Escribir tests de lib/recomendacion.ts | Dejar el producto terminado | Media | David | 2026-08-13 | recomendacionDelMes. Función pura.
+Escribir tests de lib/respuestas.ts | Dejar el producto terminado | Media | David | 2026-08-13 | Es lo que el cliente lee y aprueba en el portal.
+Revisar refactors en la rama desarrollo | Dejar el producto terminado | Alta | David | 2026-08-13 | Criterio: si algún test tuvo que cambiar, el refactor cambió comportamiento y está mal.
+Hacer QA final de punta a punta en la preview | Dejar el producto terminado | Alta | David | 2026-08-14 | Con Luis. Los 3 mundos: tap, portal y admin. Incluir activación con PIN y un comercio con sucursales.
