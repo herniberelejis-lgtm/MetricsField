@@ -1,0 +1,9 @@
+Cargar 30 paneles de demo de prospectos con su Place ID y 2 competidores
+Escribir el checklist de alta de cliente junto a Hernán
+Probar el checklist dando de alta un comercio de prueba
+Bajar el contenido del sitio Impulso y contestar las 4 preguntas del brief
+Hacer el QA visual del portal en escritorio y en celular
+Grabar el video del flujo de conexión con Google para el trámite
+Hacer el QA visual del panel de admin
+Escribir el checklist de qué revisar antes de una demo
+Escribir el proceso de soporte al cliente

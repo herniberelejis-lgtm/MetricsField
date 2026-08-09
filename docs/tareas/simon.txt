@@ -1,0 +1,7 @@
+Encargar el lote de hardware pidiendo fecha por escrito y plan B
+Generar el lote en el panel y descargar el ZIP de QR
+Verificar 3 QR con el celular antes de mandarlos a la imprenta
+Crear los 3 links de pago en Mercado Pago y pasárselos a Hernán
+Escribir el instructivo que va junto al cartel
+Escribir el protocolo de instalación en el local
+Cotizar el segundo lote y el tiempo real de reposición

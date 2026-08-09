@@ -1,0 +1,12 @@
+Levantar el entorno local siguiendo el documento de onboarding
+Tocar el cartel de prueba con el celular y ver el tap en el portal
+Hacer un primer PR mínimo para recorrer el circuito completo
+Escribir tests de lib/format.ts empezando por la función delta
+Escribir tests de lib/types.ts
+Escribir tests de lib/empleados.ts, que es el diferencial del producto
+Escribir tests de lib/keywords.ts
+Escribir tests de lib/recomendacion.ts
+Escribir tests de lib/respuestas.ts
+Revisar los refactors de la rama desarrollo usando los tests como criterio
+Hacer el QA final de punta a punta sobre la preview junto a Luis
+Anotar todo lo que resultó confuso del onboarding
