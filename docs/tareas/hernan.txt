@@ -1,0 +1,13 @@
+Correr la migración 010 en Neon, empezando por el PASO 1 de solo lectura
+Cargar MONITOR_WEBHOOK_URL en Vercel y probar que llegue un mensaje
+Verificar NEXT_PUBLIC_BASE_URL en Vercel y avisarle a Simón apenas esté
+Verificar que las variables SMTP estén cargadas en Vercel
+Cambiar el cron para que use un cursor por google_sync_en
+Mandar 5 WhatsApps de prueba y medir cuántos contestan
+Enviar la verificación OAuth a Google con el video que prepara Luis
+Enviar la solicitud de acceso a las Business Profile APIs
+Mandar la propuesta RADAR a 3 cadenas
+Partir lib/db.ts por dominio dejando el archivo reexportando todo
+Salir a la calle a tocar 15 puertas por día en Nueva Córdoba y Güemes
+Desarmar el page.tsx del portal en componentes separados
+Bajar de la rama desarrollo a main solo lo que David haya revisado
