@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Reglas de integridad: taps y menciones por empleado</title>
+<style>
+  :root{
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1000px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.1rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:.95rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.75rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1000px;margin:0 auto;padding:0 1.5rem 5rem}
+  .col{max-width:70ch}
+  header.mast{padding:3rem 0 1.8rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,4.6vw,2.7rem);line-height:1.06;letter-spacing:-.035em;font-weight:800;margin:0 0 1rem;text-wrap:balance;max-width:23ch}
+  .stand{font-size:1.02rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-top:1.4rem;font-size:.73rem;color:var(--muted)}
+
+  .verdict{margin:1.9rem 0 0;padding:1.45rem;background:var(--ink);color:var(--ground);border-radius:12px}
+  .verdict .eyebrow{color:color-mix(in srgb,var(--ground) 60%,transparent)}
+  .verdict p{margin:0 0 .82rem;font-size:.97rem;line-height:1.58;max-width:64ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ground);font-weight:700}
+  .verdict code{background:color-mix(in srgb,var(--ground) 14%,transparent);color:var(--ground)}
+
+  section{padding-top:2.9rem;scroll-margin-top:3.6rem}
+  .s-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.35rem}
+  .s-num{font-size:.73rem;color:var(--muted);font-weight:600;padding-top:.3rem}
+  h2{font-size:clamp(1.35rem,2.6vw,1.7rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.88rem;margin:0 0 1.4rem 2.4rem;max-width:62ch}
+  h3{font-size:.98rem;font-weight:700;margin:2rem 0 .7rem}
+  p{margin:0 0 .9rem}
+  ul,ol{margin:0 0 .9rem;padding-left:1.2rem}
+  li{margin-bottom:.4rem}
+  li::marker{color:var(--muted)}
+
+  .chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.63rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.18rem .48rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1rem 0 1.4rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.855rem;min-width:600px}
+  thead th{text-align:left;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.7rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.7rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.48}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.79rem}
+
+  .cards{display:grid;gap:.65rem;margin:1rem 0 1.4rem}
+  .card{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1rem 1.15rem;border-left:3px solid var(--rule)}
+  .card.crit{border-left-color:var(--crit)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.ok{border-left-color:var(--ok)}
+  .card-h{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem}
+  .card-t{font-weight:700;font-size:.92rem;letter-spacing:-.01em}
+  .card p{margin:0;font-size:.885rem;color:var(--ink-2);line-height:1.56}
+  .card p+p{margin-top:.55rem}
+
+  .rule{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:1.1rem 1.25rem;margin:.8rem 0}
+  .rule-h{display:flex;align-items:baseline;gap:.6rem;margin-bottom:.4rem;flex-wrap:wrap}
+  .rule-n{font-size:.7rem;font-weight:800;color:var(--muted);letter-spacing:.04em}
+  .rule-t{font-weight:700;font-size:1rem;letter-spacing:-.01em}
+  .rule p{margin:0 0 .5rem;font-size:.9rem;color:var(--ink-2);line-height:1.56}
+  .rule p:last-child{margin-bottom:0}
+  .rule .val{display:inline-block;background:var(--surface-2);border-radius:6px;padding:.15rem .5rem;font-weight:700;color:var(--ink);margin:0 .15rem}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1rem 1.15rem;margin:1.3rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.885rem;line-height:1.56}
+  .callout p+p{margin-top:.6rem}
+  .callout .eyebrow{margin-bottom:.4rem}
+  .callout.alarm{background:var(--crit-bg);border-color:var(--crit)}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:2.6rem 0 0}
+  footer{margin-top:2.9rem;padding-top:1.3rem;border-top:1px solid var(--rule);font-size:.77rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Reglas de integridad</div>
+  <nav>
+    <a href="#control">Qué controla</a>
+    <a href="#por-que">Por qué no se limita la reseña</a>
+    <a href="#taps">Reglas de taps</a>
+    <a href="#menciones">Reglas de menciones</a>
+    <a href="#implementacion">Para implementar</a>
+    <a href="#resumen">Resumen</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Definición de reglas de negocio · integridad de datos</p>
+  <h1>Cuánto puede "generar" un mismo usuario, y qué hacemos con eso</h1>
+  <p class="stand">
+    El caso del mozo que se auto-reseña. Antes de poner números, hay que
+    separar dos cosas que hoy se están pensando como una sola: lo que
+    MetricsField <strong>crea y controla</strong> (los taps), y lo que
+    MetricsField <strong>solo lee después de publicado</strong> (las reseñas
+    de Google). Las reglas son distintas para cada una.
+  </p>
+  <div class="mast-meta">
+    <span>No es tarea de esta semana — definición, sin código todavía</span>
+  </div>
+</header>
+
+<div class="verdict">
+  <p class="eyebrow">La aclaración que ordena todo lo demás</p>
+  <p>
+    <strong>MetricsField no crea reseñas.</strong> El cartel redirige a la página
+    pública de Google (<code>app/t/[slug]/page.tsx</code>) — quien escribe y
+    publica la reseña lo hace en Google, con su propia cuenta de Google, y
+    ahí termina la participación del sistema. No hay ningún momento en el
+    flujo donde MetricsField reciba "el usuario X está creando una reseña" —
+    solo se entera de que una reseña existe días después, cuando el cron la
+    trae sincronizada.
+  </p>
+  <p>
+    Por eso <strong>"cuántas reviews puede generar un mismo usuario" no es una
+    pregunta que este sistema pueda responder con una regla</strong> — esa
+    pregunta es de Google, y Google ya tiene sus propias defensas (una
+    cuenta de Google, en general, deja una sola reseña por local; Google
+    corre su propio sistema anti-spam sobre el contenido).
+  </p>
+  <p>
+    Lo que <strong>sí</strong> se puede gobernar con una regla propia es el <strong>tap</strong>:
+    ahí sí hay un dato exacto, propio, con timestamp, y es exactamente el
+    paso donde un mozo que quiere inflar su propio número puede hacer
+    trampa — tocando su tarjeta muchas veces, la reseñe alguien o no.
+  </p>
+</div>
+
+<!-- 01 -->
+<section id="control">
+  <div class="s-head"><span class="s-num">01</span><h2>Qué controla el sistema, con precisión</h2></div>
+  <p class="s-sub">Tres datos distintos, tres niveles de control distintos. Confundirlos es lo que hace parecer imposible este problema.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Dato</th><th>Quién lo genera</th><th>Nivel de control</th><th>Se puede limitar</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Tap</strong> (<code>taps</code>)</td>
+        <td>El navegador de quien toca el cartel, contado por MetricsField en el momento</td>
+        <td><span class="chip c-ok">Total</span></td>
+        <td>Sí — es el propio sistema quien decide si cuenta o no</td>
+      </tr>
+      <tr>
+        <td><strong>Reseña</strong> (<code>resenas</code>)</td>
+        <td>Google, cuando la persona la publica con su cuenta</td>
+        <td><span class="chip c-crit">Ninguno</span></td>
+        <td>No — MetricsField se entera días después, por sync</td>
+      </tr>
+      <tr>
+        <td><strong>Mención</strong> (nombre del empleado en el texto)</td>
+        <td>Derivada: se calcula sobre el texto ya publicado en Google</td>
+        <td><span class="chip c-warn">Ninguno sobre el origen</span></td>
+        <td>No sobre la mención en sí — sí sobre cómo se <em>muestra</em></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Un dato que hace más difícil todavía "identificar al usuario"</p>
+    <p>
+      El campo <code>autor</code> de una reseña (<code>lib/types.ts</code>) es el nombre que
+      esa persona eligió mostrar en Google — texto libre, no una identidad
+      verificada. MetricsField no recibe ni guarda ningún ID de cuenta de
+      Google del autor. No hay forma técnica de saber si "Juan P." de una
+      reseña es la misma persona física que dejó otra reseña como
+      "Juanito 🍕" la semana pasada.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 02 -->
+<section id="por-que">
+  <div class="s-head"><span class="s-num">02</span><h2>Por qué no conviene limitar la reseña, aunque se pudiera</h2></div>
+  <p class="s-sub">Además de la limitación técnica, hay una razón de producto que ya está resuelta en este repo.</p>
+
+  <div class="col">
+    <p>
+      <code>CLAUDE.md</code> tiene una regla que ya se peleó y se ganó una vez:
+      <strong>el cartel manda a todos al mismo link público de Google, sin
+      excepción</strong>. El star-gate (desviar reseñas según la calificación) se
+      eliminó del producto porque cualquier forma de interponerse entre la
+      persona y su reseña roza el <em>review gating</em> que Google penaliza.
+    </p>
+    <p>
+      Una regla que dijera <em>"esta persona ya generó una reseña hoy, no la
+      dejamos tocar el cartel de nuevo"</em> es la misma familia de problema,
+      aunque la intención sea la opuesta (evitar fraude, no evitar reseñas
+      malas). Técnicamente además el sistema no distingue personas —
+      distingue tarjetas físicas. Bloquear una tarjeta bloquea a <strong>todos
+      los clientes reales</strong> que la toquen después, no solo al mozo que
+      hizo trampa una vez.
+    </p>
+  </div>
+
+  <div class="callout alarm">
+    <p class="eyebrow">La regla de fondo para todo lo que sigue</p>
+    <p>
+      <strong>Ninguna regla de esta página bloquea nunca el redirect a Google.</strong>
+      Todo lo que se propone abajo es <em>señal para el equipo</em> —algo que se
+      ve en el panel de admin o se registra para revisar— nunca una barrera
+      para el cliente final. Es el mismo principio que ya usa
+      <code>lib/ratelimit.ts</code> para el resto del sistema, aplicado acá con más
+      cuidado porque este es el único punto que toca directo el acceso a
+      dejar una reseña.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 03 -->
+<section id="taps">
+  <div class="s-head"><span class="s-num">03</span><h2>Reglas sobre taps — lo que sí se gobierna</h2></div>
+  <p class="s-sub">Acá vive el caso real del mozo. Tres reglas, dos ya existentes y una nueva.</p>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 1 · YA EXISTE</span><span class="rule-t">Límite general anti-abuso</span></div>
+    <p>
+      <code>app/t/[slug]/page.tsx</code>: <span class="val">30 taps</span> cada
+      <span class="val">10 minutos</span>, por IP y por cartel. Está pensado
+      para frenar un loop automatizado (un script pegándole al link), no
+      para detectar a una persona tocando su propia tarjeta a mano —
+      treinta toques en diez minutos es un volumen que ni el mozo más
+      insistente genera manualmente. No se toca.
+    </p>
+  </div>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 2 · NUEVA — PROPUESTA</span><span class="rule-t">Umbral de alerta para tarjetas personales</span></div>
+    <p>
+      Un link con <code>nombreEmpleado</code> cargado (la tarjeta personal de un
+      mozo) que acumula más de <span class="val">20 taps por hora</span> o
+      <span class="val">60 por día</span> genera una señal para revisar —
+      no bloquea nada. Son <strong>números de arranque, no una verdad
+      medida</strong>: hoy no hay una sola tarjeta personal en producción
+      todavía (el seed no tiene ninguna cargada), así que no hay datos
+      reales de cuánto genera un mozo ocupado de verdad en un turno.
+      Correcto es fijarlos conservadores ahora y ajustarlos con los
+      números reales de las primeras dos o tres semanas de uso.
+    </p>
+    <p>
+      La señal debería mostrarse en el panel de admin, en la ficha del
+      comercio, como algo neutral: <em>"Nicolás: 34 taps en la última
+      hora — arriba de lo habitual"</em>. Ni acusa, ni bloquea. Deja que el
+      equipo o el dueño del comercio decidan si vale la pena preguntar.
+    </p>
+  </div>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 3 · PRINCIPIO</span><span class="rule-t">Nunca bloquear un tap</span></div>
+    <p>
+      Ya en el verdict de arriba, pero vale repetirlo acá donde importa
+      más: <strong>la regla 2 nunca corta el redirect.</strong> Un falso positivo en
+      un bloqueo real le niega a un cliente de verdad el acceso a dejar su
+      reseña — el peor resultado posible para este producto.
+    </p>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">Un límite de lo que se puede saber después del hecho</p>
+    <p>
+      La tabla <code>taps</code> (<code>db/schema.sql</code>) guarda <code>link_id</code>,
+      <code>creado_en</code> y <code>user_agent</code> — <strong>no guarda IP.</strong> El
+      límite de la Regla 1 se aplica en el momento (vía Upstash) pero no
+      queda un rastro que permita, dos semanas después, mirar "¿quién
+      tocó esta tarjeta 40 veces el martes?". Si la Regla 2 se implementa,
+      hace falta guardar algo que permita esa revisión — ver sección 05.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 04 -->
+<section id="menciones">
+  <div class="s-head"><span class="s-num">04</span><h2>Reglas sobre menciones — lo que se puede hacer con contenido ajeno</h2></div>
+  <p class="s-sub">Acá no hay nada que "limitar": la mención ya existe en Google antes de que MetricsField la vea. Lo único que se controla es cómo se presenta.</p>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 4 · YA EXISTE</span><span class="rule-t">Aviso de muestra chica</span></div>
+    <p>
+      <code>components/MencionesEmpleados.tsx</code>: con menos de
+      <span class="val">5 menciones</span> (<code>MUESTRA_CHICA</code>), el
+      panel ya muestra <em>"Muestra chica — no saques conclusiones firmes
+      todavía"</em>. Es exactamente el mecanismo correcto para este problema:
+      informa la incertidumbre en vez de fingir precisión. No baja.
+    </p>
+  </div>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 5 · NUEVA — PROPUESTA</span><span class="rule-t">Aviso de salto atípico</span></div>
+    <p>
+      Si un empleado pasa de su ritmo normal a <span class="val">3 o más
+      menciones en 48 horas</span>, mostrar un segundo aviso —<em>"Salto
+      atípico de menciones esta semana"</em>— con el mismo tono neutral que
+      la Regla 4. Sirve tanto para el caso de fraude (reseñas fabricadas en
+      lote) como para el caso feliz (tuvo un fin de semana espectacular) —
+      no distingue uno de otro, solo marca que vale la pena mirar el
+      detalle, que ya está disponible un clic más abajo en el mismo panel.
+    </p>
+  </div>
+
+  <div class="rule">
+    <div class="rule-h"><span class="rule-n">REGLA 6 · PRINCIPIO</span><span class="rule-t">Nunca tocar el contenido de una reseña real</span></div>
+    <p>
+      Ninguna regla de esta sección oculta, edita o excluye una reseña de
+      la vista del portal o del reporte al cliente. Eso sería manipular
+      contenido que no es propio, y es la misma familia de riesgo legal
+      que ya llevó a eliminar el star-gate.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 05 -->
+<section id="implementacion">
+  <div class="s-head"><span class="s-num">05</span><h2>Qué hace falta para implementarlo</h2></div>
+  <p class="s-sub">No es trabajo de esta semana. Queda anotado para cuando el equipo lo priorice.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Qué</th><th>Para qué regla</th><th>Tamaño</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Guardar un hash de IP en <code>taps</code> (nunca la IP en texto plano)</td>
+        <td>Regla 2 — poder revisar el patrón días después, no solo bloquear en vivo</td>
+        <td class="n">Migración chica + 1 línea en <code>registrarTap</code></td>
+      </tr>
+      <tr>
+        <td>Función que calcule el umbral por hora/día y la exponga en el admin</td>
+        <td>Regla 2</td>
+        <td class="n">Función nueva en <code>lib/db.ts</code> o archivo propio + UI</td>
+      </tr>
+      <tr>
+        <td>Comparar menciones de los últimos 2 días contra el promedio histórico del empleado</td>
+        <td>Regla 5</td>
+        <td class="n">Extensión de <code>lib/empleados.ts</code></td>
+      </tr>
+      <tr>
+        <td>Tests de las tres reglas nuevas (2, 5, y que 1/4/6 sigan intactas)</td>
+        <td>Todas</td>
+        <td class="n">Mismo patrón que los tests de <code>lib/empleados.ts</code> que David ya tiene asignados</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <p class="eyebrow">Por qué no va en el plan de esta semana</p>
+    <p>
+      El plan de lanzamiento ya está repartido y cerrado en Slack. Meter
+      esto ahora sería trabajo nuevo sin dueño asignado, en la semana que
+      menos margen tiene. Además, todavía no hay ni una tarjeta personal
+      cargada en producción — construir el umbral de la Regla 2 antes de
+      tener un solo dato real sería adivinar dos veces en vez de una.
+      Mejor: anotarlo acá, y retomarlo cuando haya usuarios reales
+      generando taps de tarjetas personales para calibrar los números con
+      datos, no con estimaciones.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 06 -->
+<section id="resumen">
+  <div class="s-head"><span class="s-num">06</span><h2>Resumen para llevar a la reunión</h2></div>
+
+  <div class="cards">
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">Lo que ya está bien y no se toca</span></div>
+      <p>El límite general de taps (anti-DoS) y el aviso de muestra chica en menciones. Los dos ya hacen, cada uno a su manera, lo que este documento pide.</p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="card-t">Lo que se define hoy, se construye después</span></div>
+      <p>Umbral de alerta para tarjetas personales (20/hora, 60/día — a recalibrar con datos reales) y aviso de salto atípico en menciones (3+ en 48h). Ninguna de las dos bloquea nada.</p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="card-t">Lo que no se va a hacer, y por qué</span></div>
+      <p>Limitar cuántas reseñas puede publicar una persona en Google: técnicamente imposible (no hay identidad ni control sobre la creación) y, si lo fuera, entraría en el mismo problema legal que el star-gate ya eliminado.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Basado en el código real de <code>lib/db.ts</code>, <code>lib/ratelimit.ts</code>,
+    <code>lib/empleados.ts</code>, <code>components/MencionesEmpleados.tsx</code> y
+    <code>db/schema.sql</code>. Los umbrales numéricos de las reglas 2 y 5 son
+    puntos de partida razonados, no medidos — se marcan así a propósito
+    en el texto.
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
