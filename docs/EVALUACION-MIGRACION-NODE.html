@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetricsField — Evaluación: sacar Next.js por Node + frontend aparte</title>
+<style>
+  :root{
+    --ground:#F7F7F8; --surface:#FFFFFF; --surface-2:#F0F0F2;
+    --ink:#141417; --ink-2:#3D3D45; --muted:#6B6B73;
+    --faint:#E3E3E7; --rule:#D6D6DC;
+    --crit:#8A3B3B; --crit-bg:#F6EDED;
+    --warn:#8A6A2F; --warn-bg:#F7F2E8;
+    --ok:#2F6D4D;  --ok-bg:#EBF3EF;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#100F12; --surface:#191820; --surface-2:#201F28;
+      --ink:#F3F2F6; --ink-2:#C9C7D2; --muted:#9997A5;
+      --faint:#2A2833; --rule:#363442;
+      --crit:#E39A9A; --crit-bg:#2B1D1F;
+      --warn:#DCBB7C; --warn-bg:#2A2318;
+      --ok:#86C9A6;  --ok-bg:#17281F;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Arial,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  code,.mono,.eyebrow,.chip,.s-num,td.n{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2);padding:.1em .35em;border-radius:4px;font-size:.87em}
+
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--faint)}
+  .bar-in{max-width:1000px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.1rem;overflow-x:auto;scrollbar-width:none}
+  .bar-in::-webkit-scrollbar{display:none}
+  .bar-mark{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+  .bar-mark span{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--ink);color:var(--ground);font-size:.6rem;font-weight:800}
+  .bar nav{display:flex;gap:.95rem}
+  .bar nav a{color:var(--muted);text-decoration:none;font-size:.75rem;white-space:nowrap;padding:.2rem 0;border-bottom:1.5px solid transparent}
+  .bar nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .bar nav a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+
+  main{max-width:1000px;margin:0 auto;padding:0 1.5rem 5rem}
+  .col{max-width:70ch}
+  header.mast{padding:3rem 0 1.8rem;border-bottom:1px solid var(--rule)}
+  .eyebrow{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,4.6vw,2.7rem);line-height:1.06;letter-spacing:-.035em;font-weight:800;margin:0 0 1rem;text-wrap:balance;max-width:22ch}
+  .stand{font-size:1.02rem;color:var(--ink-2);max-width:64ch;margin:0}
+  .mast-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-top:1.4rem;font-size:.73rem;color:var(--muted)}
+
+  .verdict{margin:1.9rem 0 0;padding:1.45rem;background:var(--ink);color:var(--ground);border-radius:12px}
+  .verdict .eyebrow{color:color-mix(in srgb,var(--ground) 60%,transparent)}
+  .verdict p{margin:0 0 .82rem;font-size:.97rem;line-height:1.58;max-width:64ch}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict strong{color:var(--ground);font-weight:700}
+  .verdict code{background:color-mix(in srgb,var(--ground) 14%,transparent);color:var(--ground)}
+
+  section{padding-top:2.9rem;scroll-margin-top:3.6rem}
+  .s-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.35rem}
+  .s-num{font-size:.73rem;color:var(--muted);font-weight:600;padding-top:.3rem}
+  h2{font-size:clamp(1.35rem,2.6vw,1.7rem);letter-spacing:-.025em;font-weight:750;margin:0;line-height:1.2;text-wrap:balance}
+  .s-sub{color:var(--muted);font-size:.88rem;margin:0 0 1.4rem 2.4rem;max-width:62ch}
+  h3{font-size:.98rem;font-weight:700;margin:2rem 0 .7rem}
+  p{margin:0 0 .9rem}
+  ul,ol{margin:0 0 .9rem;padding-left:1.2rem}
+  li{margin-bottom:.4rem}
+  li::marker{color:var(--muted)}
+
+  .chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.63rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:.18rem .48rem;border-radius:4px;white-space:nowrap}
+  .c-crit{background:var(--crit-bg);color:var(--crit)}
+  .c-warn{background:var(--warn-bg);color:var(--warn)}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-flat{background:var(--surface-2);color:var(--muted)}
+
+  .tw{overflow-x:auto;margin:1rem 0 1.4rem;border:1px solid var(--faint);border-radius:10px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:.855rem;min-width:600px}
+  thead th{text-align:left;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;padding:.7rem 1rem;border-bottom:1px solid var(--rule);background:var(--surface-2);white-space:nowrap}
+  td{padding:.7rem 1rem;border-bottom:1px solid var(--faint);vertical-align:top;line-height:1.48}
+  tbody tr:last-child td{border-bottom:none}
+  td.n{white-space:nowrap;font-size:.79rem}
+
+  .cards{display:grid;gap:.65rem;margin:1rem 0 1.4rem}
+  .card{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:1rem 1.15rem;border-left:3px solid var(--rule)}
+  .card.crit{border-left-color:var(--crit)}
+  .card.warn{border-left-color:var(--warn)}
+  .card.ok{border-left-color:var(--ok)}
+  .card-h{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem}
+  .card-t{font-weight:700;font-size:.92rem;letter-spacing:-.01em}
+  .card p{margin:0;font-size:.885rem;color:var(--ink-2);line-height:1.56}
+  .card p+p{margin-top:.55rem}
+
+  .callout{border:1px solid var(--rule);border-radius:10px;padding:1rem 1.15rem;margin:1.3rem 0;background:var(--surface)}
+  .callout p{margin:0;font-size:.885rem;line-height:1.56}
+  .callout p+p{margin-top:.6rem}
+  .callout .eyebrow{margin-bottom:.4rem}
+  .callout.alarm{background:var(--crit-bg);border-color:var(--crit)}
+
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.65rem;margin:1.3rem 0}
+  .metric{background:var(--surface);border:1px solid var(--faint);border-radius:10px;padding:.85rem}
+  .metric-v{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;line-height:1.1;display:block}
+  .metric-l{font-size:.71rem;color:var(--muted);margin-top:.22rem;display:block;line-height:1.35}
+
+  .stack-diagram{display:flex;flex-direction:column;gap:0;margin:1.2rem 0 1.6rem;border:1px solid var(--faint);border-radius:10px;overflow:hidden}
+  .stack-row{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--faint)}
+  .stack-row:first-child{border-top:none}
+  .stack-label{padding:.7rem .9rem;font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);display:flex;align-items:center}
+  .stack-content{padding:.7rem .9rem;font-size:.84rem;color:var(--ink-2);background:var(--surface);display:flex;align-items:center}
+  .stack-content code{margin-right:.3rem}
+
+  hr.div{border:none;border-top:1px solid var(--rule);margin:2.6rem 0 0}
+  footer{margin-top:2.9rem;padding-top:1.3rem;border-top:1px solid var(--rule);font-size:.77rem;color:var(--muted)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media print{.bar{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-mark"><span>M</span> Evaluación de migración</div>
+  <nav>
+    <a href="#que-es">Qué es hoy</a>
+    <a href="#que-cambia">Qué cambia</a>
+    <a href="#que-no-cambia">Qué no cambia</a>
+    <a href="#riesgos">Riesgos</a>
+    <a href="#tiempo">Tiempo</a>
+    <a href="#alternativa">Alternativa chica</a>
+    <a href="#recomendacion">Recomendación</a>
+  </nav>
+</div></div>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Documento de referencia · sin fecha límite</p>
+  <h1>Sacar Next.js: qué hay, qué cambia y cuánto sale</h1>
+  <p class="stand">
+    Para David. No es urgente y no bloquea el lanzamiento del 17 — es la
+    evaluación técnica para que la decisión se tome con números reales
+    delante, no con la idea de que es "cambiar un framework por otro".
+  </p>
+  <div class="mast-meta">
+    <span>Base: <code>main</code>, commit reciente</span>
+    <span>~13.000 líneas de TypeScript</span>
+    <span>Esfuerzo estimado: <strong>6 a 10 semanas</strong></span>
+  </div>
+</header>
+
+<div class="verdict">
+  <p class="eyebrow">La aclaración que cambia toda la pregunta</p>
+  <p>
+    <strong>Next.js ya corre sobre Node.</strong> No hay "Next" de un lado y "Node" del
+    otro — Next es un framework que se ejecuta con Node como runtime. Ahora
+    mismo, cuando alguien entra al portal, es Node el que procesa ese
+    request, con las reglas de Next puestas encima (rutas por carpeta,
+    Server Components, Server Actions).
+  </p>
+  <p>
+    Así que "pasar de Next a Node" en la práctica es: <strong>sacar el
+    framework Next.js y armar un servidor Node propio (Express o Fastify)
+    con un frontend React aparte</strong>, que le pida datos por HTTP. Es un
+    proyecto real, del tamaño de una reescritura de arquitectura — no un
+    cambio de dependencia en <code>package.json</code>.
+  </p>
+</div>
+
+<!-- 01 -->
+<section id="que-es">
+  <div class="s-head"><span class="s-num">01</span><h2>Qué hay hoy, con números</h2></div>
+  <p class="s-sub">Todo esto depende de piezas que solo existen dentro de Next.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Pieza de Next en uso</th><th>Cuánto</th><th>Qué la reemplaza en Node puro</th></tr></thead>
+    <tbody>
+      <tr><td>Server Actions (<code>"use server"</code>)</td><td class="n">33 funciones, 4 archivos</td><td>Convertirlas en endpoints REST + un cliente HTTP en el frontend</td></tr>
+      <tr><td><code>revalidatePath</code> / <code>revalidateTag</code></td><td class="n">34 usos</td><td>Un sistema de invalidación de caché propio</td></tr>
+      <tr><td>Server Components render-en-request (<code>force-dynamic</code>)</td><td class="n">18 páginas</td><td>Modelo API + SPA, o SSR armado a mano</td></tr>
+      <tr><td>Middleware de Edge (<code>middleware.ts</code>)</td><td class="n">1 archivo, protege <code>/admin</code></td><td>Middleware de Express en runtime Node normal (más simple, en rigor)</td></tr>
+      <tr><td><code>next/navigation</code>, <code>next/headers</code>, <code>next/link</code></td><td class="n">29 imports en componentes</td><td>Lo que use el router del frontend nuevo (React Router, etc.)</td></tr>
+      <tr><td>Cron nativo de Vercel (<code>vercel.json</code>)</td><td class="n">1 job diario</td><td>Cron externo: GitHub Actions o un worker aparte</td></tr>
+      <tr><td>Redirects/headers de <code>next.config.ts</code></td><td class="n">6 headers de seguridad + 1 redirect</td><td>Configurarlos a mano en el servidor Node (Helmet cubre los headers)</td></tr>
+      <tr><td><code>next/font/google</code> (Montserrat)</td><td class="n">1 uso</td><td>Servir la fuente como asset estático propio</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="metrics">
+    <div class="metric"><span class="metric-v">20</span><span class="metric-l">Páginas (rutas)</span></div>
+    <div class="metric"><span class="metric-v">33</span><span class="metric-l">Componentes de UI</span></div>
+    <div class="metric"><span class="metric-v">65</span><span class="metric-l">Funciones de acceso a datos</span></div>
+    <div class="metric"><span class="metric-v">33</span><span class="metric-l">Server Actions a reemplazar</span></div>
+    <div class="metric"><span class="metric-v">8</span><span class="metric-l">Rutas API que YA son HTTP puro</span></div>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">No es que el código esté mal escrito</p>
+    <p>
+      El propio <code>CLAUDE.md</code> lo dice explícito: <em>"Sin ORM ni API REST
+      separada — Server Actions, no endpoints. Los formularios llaman
+      funciones <code>"use server"</code> directamente."</em> Esa es la apuesta
+      arquitectónica central del producto: sin Next, esa apuesta desaparece
+      y hay que reemplazarla por otra (API + frontend separados), que es un
+      patrón distinto de punta a punta, no una variación del mismo.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 02 -->
+<section id="que-cambia">
+  <div class="s-head"><span class="s-num">02</span><h2>Qué hay que cambiar</h2></div>
+  <p class="s-sub">Cinco frentes de trabajo, cada uno con su propio riesgo de romper algo.</p>
+
+  <div class="cards">
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">1</span><span class="card-t">Las 33 Server Actions → endpoints REST</span></div>
+      <p>
+        Hoy un formulario del portal llama directo a una función del
+        servidor. En Node puro hay que envolver cada una en una ruta
+        (<code>POST /api/comercios/:id</code>, etc.), armar el cliente HTTP del
+        lado del frontend, y manejar a mano los estados de carga y error que
+        hoy Next resuelve solo con <code>useTransition</code>.
+      </p>
+      <p><strong>El más grande de los cinco</strong>, en volumen de código a tocar.</p>
+    </div>
+    <div class="card crit">
+      <div class="card-h"><span class="chip c-crit">2</span><span class="card-t">18 páginas dinámicas → modelo API + SPA</span></div>
+      <p>
+        Cada página hoy trae sus datos en el servidor antes de renderizar
+        (así <code>/portal/[codigo]</code> arma todo el HTML con los datos ya
+        adentro). En Node + React puro, el navegador pide el HTML vacío y
+        después pide los datos por separado — más lento en la primera
+        carga, salvo que armes SSR a mano, que es otro proyecto adentro de
+        este.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">3</span><span class="card-t">Middleware, cookies y sesión</span></div>
+      <p>
+        <code>lib/sesion.ts</code> está escrito a propósito para correr en dos
+        runtimes (Node y Edge) con una sola implementación, porque
+        divergir ahí es exactamente el tipo de bug que abre un agujero de
+        seguridad. Sacando Next, todo pasa a Node — en rigor <strong>se
+        simplifica</strong>, pero hay que tocar el archivo más sensible del
+        repo con cuidado.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">4</span><span class="card-t">El cron diario</span></div>
+      <p>
+        Hoy Vercel llama <code>/api/cron/sync-google</code> solo, todos los días.
+        Sin Vercel, hay que armar ese disparador en otro lado (GitHub
+        Actions con un schedule, o un proceso propio) y seguir protegiéndolo
+        con <code>CRON_SECRET</code> como ahora.
+      </p>
+    </div>
+    <div class="card warn">
+      <div class="card-h"><span class="chip c-warn">5</span><span class="card-t">Deploy y hosting</span></div>
+      <p>
+        Se pierde el deploy automático por rama (preview por PR) que da
+        Vercel gratis. Hay que elegir dónde corre el servidor Node
+        (Railway, Render, un VPS propio) y armar ese pipeline de cero.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 03 -->
+<section id="que-no-cambia">
+  <div class="s-head"><span class="s-num">03</span><h2>Lo que NO cambia</h2></div>
+  <p class="s-sub">Vale decirlo porque es lo que hace que esto sea factible y no una locura.</p>
+
+  <div class="cards">
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">Toda la capa de datos</span></div>
+      <p>
+        <code>lib/db.ts</code> y sus 65 funciones son SQL directo contra Postgres,
+        sin nada de Next adentro. Se mueven prácticamente intactas a
+        cualquier backend Node.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">Las 8 rutas de <code>app/api/</code></span></div>
+      <p>
+        Los callbacks de OAuth, el cron y la descarga de QR <strong>ya son
+        HTTP puro</strong> — reciben un <code>Request</code> y devuelven un
+        <code>Response</code>. Se portan a Express casi sin tocar nada.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">Toda la lógica de negocio y seguridad</span></div>
+      <p>
+        PIN con scrypt, cifrado AES-GCM, validación de URLs, rate limit
+        distribuido: nada de eso depende de Next. Los 36 tests de seguridad
+        siguen pasando sin cambios.
+      </p>
+    </div>
+    <div class="card ok">
+      <div class="card-h"><span class="card-t">React, TypeScript, Tailwind</span></div>
+      <p>
+        Los 33 componentes de <code>components/</code> son React normal. Se
+        reusan en el frontend nuevo — cambia cómo reciben los datos (por
+        <code>fetch</code> en vez de props del servidor), no cómo se ven.
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 04 -->
+<section id="riesgos">
+  <div class="s-head"><span class="s-num">04</span><h2>Dónde se puede romper algo</h2></div>
+  <p class="s-sub">Los mismos principios de la sección de refactors del plan de la semana, aplicados a un proyecto más grande.</p>
+
+  <div class="callout alarm">
+    <p class="eyebrow">El riesgo real no es que algo deje de andar</p>
+    <p>
+      Es que <strong>algo siga andando pero mal</strong>, y nadie lo note porque no
+      tira un error — muestra un número equivocado. Al mover 33 Server
+      Actions a endpoints REST, es fácil que un formulario mande el dato
+      viejo mientras el nuevo carga, o que dos requests en paralelo pisen
+      el resultado del otro. Hoy Next lo maneja solo; en Node puro, hay que
+      manejarlo a mano en cada uno de los 33 casos.
+    </p>
+  </div>
+
+  <div class="col">
+    <p><strong>Los puntos más delicados, concretamente:</strong></p>
+    <ul>
+      <li><strong>El star-gate.</strong> El código que manda a todos al mismo link de Google, sin filtrar por calificación, hoy vive en un Server Component simple. Al reescribirlo como endpoint, cualquier cambio en el orden de validación puede reintroducir sin querer un desvío — exactamente lo que el proyecto tiene prohibido por ley de marca.</li>
+      <li><strong>Las cookies de sesión.</strong> <code>lib/sesion.ts</code> firma con HMAC y valida en tiempo constante. Reescribir el guard de Node hay que hacerlo con la misma lógica exacta, o se abre una ventana de sesión inválida aceptada.</li>
+      <li><strong>El rate limit.</strong> Hoy corre igual en el middleware de Edge y en las Server Actions porque comparten una sola implementación. Separado en Node puro, hay que asegurarse de que las dos puntas sigan usando el mismo store de Upstash.</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 05 -->
+<section id="tiempo">
+  <div class="s-head"><span class="s-num">05</span><h2>Cuánto tiempo, con qué hecho antes</h2></div>
+  <p class="s-sub">El rango depende de una sola variable: si hay tests antes de empezar.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Escenario</th><th>Tiempo</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Con la red de tests de negocio ya puesta</strong><br>(la que David está armando esta semana)</td>
+        <td class="n">6 a 8 semanas</td>
+        <td>Se puede mover pieza por pieza y confirmar con los tests que nada cambió de comportamiento en el camino.</td>
+      </tr>
+      <tr>
+        <td><strong>Sin esa red, a pulmón</strong></td>
+        <td class="n">10+ semanas, con riesgo real de bugs silenciosos en producción</td>
+        <td>Cada uno de los 33 endpoints y las 18 páginas se verifica a mano, mirando la pantalla — se pasan por alto los casos borde.</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <p class="col">
+    Con el equipo completo dedicado full-time sería el número de abajo del
+    rango; a medio tiempo, alternando con el trabajo comercial del día a
+    día, el de arriba. En ningún escenario es una tarea de días.
+  </p>
+</section>
+
+<hr class="div">
+
+<!-- 06 -->
+<section id="alternativa">
+  <div class="s-head"><span class="s-num">06</span><h2>Si el objetivo real es otro</h2></div>
+  <p class="s-sub">A veces "sacar Next" es la forma de pedir algo más chico. Vale la pena chequear cuál de estos es el motivo real antes de emprender la reescritura grande.</p>
+
+  <div class="stack-diagram">
+    <div class="stack-row">
+      <div class="stack-label">Motivo</div>
+      <div class="stack-content">"No queremos depender de Vercel"</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label">Solución chica</div>
+      <div class="stack-content"><code>next start</code> en un servidor Node propio (Railway, Render, un VPS). Seguís usando Next — <strong>no se toca una línea de <code>app/</code> ni <code>lib/</code></strong>. Se pierde el cron nativo y el deploy por rama, que se reemplazan con GitHub Actions.</div>
+    </div>
+  </div>
+  <div class="stack-diagram">
+    <div class="stack-row">
+      <div class="stack-label">Motivo</div>
+      <div class="stack-content">"Quiero una API REST separada para conectar otra cosa" (una app móvil, un tercero)</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label">Solución chica</div>
+      <div class="stack-content">Exponer endpoints nuevos en <code>app/api/</code> — que ya es HTTP puro, como muestra la sección 03 — sin tocar las Server Actions existentes. Las dos cosas conviven en el mismo Next.</div>
+    </div>
+  </div>
+  <div class="stack-diagram">
+    <div class="stack-row">
+      <div class="stack-label">Motivo</div>
+      <div class="stack-content">"El equipo se siente más cómodo con Express/Node puro que con las convenciones de Next"</div>
+    </div>
+    <div class="stack-row">
+      <div class="stack-label">Solución chica</div>
+      <div class="stack-content">No hay atajo — es el escenario real de este documento. Pero vale la pena separarlo de los dos de arriba, porque es una preferencia de equipo, no una limitación técnica del producto.</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p class="eyebrow">Antes de empezar cualquiera de los tres</p>
+    <p>
+      Preguntá cuál de los tres es. Los primeros dos se resuelven en días
+      sin abrir este documento. El tercero es este documento entero.
+    </p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- 07 -->
+<section id="recomendacion">
+  <div class="s-head"><span class="s-num">07</span><h2>Recomendación</h2></div>
+
+  <div class="col">
+    <p>
+      Es factible y no hay nada en el código actual que lo impida — la
+      capa de datos, la seguridad y los componentes de UI se llevan casi
+      intactos. Pero es <strong>6 a 10 semanas de un equipo que hoy es de dos
+      personas de código</strong>, en un producto que recién esta semana empieza
+      a vender.
+    </p>
+    <p>
+      Mi sugerencia: <strong>no lo agenden todavía.</strong> Que este documento quede
+      como referencia, y se retome después de que:
+    </p>
+    <ol>
+      <li>El producto tenga sus primeros diez clientes pagando — recién ahí una decisión de arquitectura de dos meses tiene contexto real de qué está funcionando y qué no.</li>
+      <li>La red de tests de negocio esté puesta (la que David arma esta semana) — reduce el escenario de 10+ semanas al de 6-8.</li>
+      <li>Se haya confirmado con quien lo pidió cuál de los tres motivos de la sección 06 es el real — puede que la necesidad concreta se resuelva en días, no en meses.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Números extraídos del código en <code>main</code>: conteos de Server Actions,
+    imports de <code>next/*</code>, páginas <code>force-dynamic</code>, y contenido de
+    <code>middleware.ts</code>, <code>next.config.ts</code> y <code>vercel.json</code> verificados
+    directamente, no estimados.
+  </p>
+</footer>
+
+</main>
+</body>
+</html>
