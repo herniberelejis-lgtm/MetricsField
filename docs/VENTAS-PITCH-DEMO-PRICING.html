@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>MetricsField — Pitch, demo, onboarding y pricing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #ffffff; --fg: #0d0d0d; --muted: #666666; --line: #eaeaea;
+    --card: #f7f7f7; --accent: #000000; --accent-fg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .sub { color: var(--muted); font-size: 1.05rem; margin: 0 0 40px; }
+  h2 {
+    font-size: 1.3rem; font-weight: 700; margin: 56px 0 16px;
+    padding-top: 24px; border-top: 1px solid var(--line);
+  }
+  h2:first-of-type { border-top: none; padding-top: 0; margin-top: 24px; }
+  h3 { font-size: 1.02rem; font-weight: 700; margin: 28px 0 10px; }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .card {
+    background: var(--card); border-radius: 14px; padding: 20px 22px;
+    margin: 16px 0;
+  }
+  .quote {
+    border-left: 3px solid var(--fg); padding: 4px 0 4px 18px; margin: 16px 0;
+    font-style: italic; color: #222;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.94rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 3px 9px; border-radius: 999px; background: #1a1a1a; color: #fff;
+  }
+  .warn { background: #fff8f0; border: 1px solid #f0ddb8; border-radius: 10px; padding: 14px 16px; margin: 16px 0; }
+  .step { display: flex; gap: 12px; margin: 10px 0; }
+  .step .n {
+    flex: none; width: 26px; height: 26px; border-radius: 999px; background: var(--accent); color: var(--accent-fg);
+    display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;
+  }
+  code { background: #f0f0f0; padding: 1px 6px; border-radius: 5px; font-size: 0.9em; }
+  @media (max-width: 600px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 1.6rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Pitch, demo, onboarding y pricing</h1>
+<p class="sub">Para las 60 visitas/llamadas/WhatsApp/mails de esta semana. Todo grounded en lo que el producto realmente hace hoy — nada de lo que sigue promete algo que el código no cumple.</p>
+
+<h2 id="pitch">1 · El pitch</h2>
+
+<h3>Versión de 20 segundos (arranque de cualquier conversación)</h3>
+<div class="quote">
+  "Somos MetricsField. Ponemos un cartel en tu local que manda a tus clientes directo a dejarte reseña en Google — un toque con el celular, sin apps, sin pasos raros. Y del otro lado te damos un panel donde ves todo: cuántos te tocaron, qué dice cada reseña, y qué empleado está generando más movimiento. ¿Tenés 5 minutos?"
+</div>
+
+<h3>El diferencial real — no lo genérico</h3>
+<p>Cualquiera vende "cartelitos de reseñas". Esto es lo que <strong>nosotros</strong> tenemos y la competencia de Córdoba no:</p>
+<div class="card">
+  <ul>
+    <li><strong>Atribución por empleado.</strong> Tarjetas NFC personales por mozo/vendedor: taps exactos por persona (dato 100% real, de la tabla de taps) + qué tan seguido lo nombran en las reseñas (señal de calidad de atención). Ningún competidor local mide esto — es la única forma honesta de saber "quién está generando reseñas de verdad" sin inventar un ranking de calidad falso.</li>
+    <li><strong>Sin desvío de reseñas.</strong> El cartel manda a TODOS al mismo link público de Google, sin filtrar por estrellas. Esto no es solo ético — Google penaliza el "review gating" que hace la mayoría de estos sistemas (mandar solo las buenas a Google y las malas a un formulario privado). Nosotros no tenemos ese riesgo, y se lo podés decir así de directo a un dueño que ya usó algo parecido antes.</li>
+    <li><strong>El dato es del dueño, no nuestro.</strong> El cliente conecta SU PROPIA cuenta de Google Business Profile — nosotros no accedemos con una cuenta de agencia. Si algún día se va, se lleva sus datos y desconecta con un click.</li>
+  </ul>
+</div>
+
+<h3>Objeciones esperables</h3>
+<table>
+  <tr><th>Objeción</th><th>Respuesta</th></tr>
+  <tr><td>"Ya tengo un cartel con QR que hice yo"</td><td>Un QR genérico no te dice nada — no sabés si funcionó, quién lo usó, ni qué dijeron. El nuestro es el mismo gesto para el cliente, pero atrás tenés el panel completo.</td></tr>
+  <tr><td>"¿Y si alguien hace trampa, se auto-reseña?"</td><td>El sistema no genera reseñas, solo lleva a Google — Google decide qué se publica. Tenemos límites de uso (30 taps cada 10 min por tarjeta) para que nadie spamee el link, y estamos armando alertas si un empleado se menciona sospechosamente seguido en poco tiempo.</td></tr>
+  <tr><td>"¿Cuánto cuesta?"</td><td>Ver sección de pricing — no cerrar número en la primera charla si todavía no está 100% validado, usar el rango como ancla y ofrecer mandar la propuesta formal por WhatsApp/mail.</td></tr>
+</table>
+
+<h2 id="demo">2 · Qué mostrar en la demo (10 minutos, en el celular)</h2>
+<p>Orden pensado para que el "momento mágico" (el tap) sea lo primero que vean, no lo último.</p>
+
+<div class="step"><div class="n">1</div><div><strong>El tap en vivo (1 min).</strong> Acercá tu celular al cartel/tarjeta de prueba delante suyo. Sin explicar nada antes — dejá que vean que en un toque están en la página de reseña de Google, cero pantallas intermedias.</div></div>
+<div class="step"><div class="n">2</div><div><strong>El panel — resumen (2 min).</strong> Abrí el portal de un comercio de prueba con datos cargados. Mostrá rating actual, reseñas del mes, taps totales — el "de un vistazo" que van a tener ellos.</div></div>
+<div class="step"><div class="n">3</div><div><strong>Reseñas + respuesta sugerida (2 min).</strong> Mostrá una reseña real cargada y la respuesta que el sistema sugiere — bajarles la fricción de "tengo que responder esto y no sé qué escribir" es un dolor real y visible al toque.</div></div>
+<div class="step"><div class="n">4</div><div><strong>Atribución por empleado (2 min) — EL cierre.</strong> Esta es la parte que ningún competidor tiene. Mostrales la tarjeta de un mozo/vendedora de prueba: sus taps, sus menciones, su rating promedio. "Esto es lo que te dice quién realmente está generando el resultado."</div></div>
+<div class="step"><div class="n">5</div><div><strong>Benchmark de competencia (1 min, si el rubro tiene competidores cargados).</strong> "Así te comparás este mes contra 2-3 competidores tuyos de la zona."</div></div>
+<div class="step"><div class="n">6</div><div><strong>Cierre (2 min).</strong> No preguntes "¿qué te pareció?" — preguntá directo: "¿arrancamos esta semana con tu local?" y explicá el paso siguiente concreto (ver onboarding).</div></div>
+
+<div class="warn"><strong>No mostrar</strong> (no existe o no está prendido todavía): respuesta automática a reseñas sin aprobación humana salvo que el cliente ya configuró el umbral, citaciones en ChatGPT/Copilot/Perplexity si el prospecto va a plan Base (es exclusivo Premium), posición en Google Maps (no existe, se sacó del producto).</div>
+
+<h2 id="onboarding">3 · Alta de cliente — borrador para cerrar con Luis</h2>
+<p>Esto es un <strong>punto de partida</strong>, no el checklist final — la tarea de escribirlo en serio junto con Luis sigue siendo de él (ya está en su lista). Sirve para no salir a vender sin saber qué pasa el día que alguien dice que sí.</p>
+
+<div class="step"><div class="n">1</div><div>Cerrar rubro/zona/plan y cargar el comercio en <code>/admin/clientes/nuevo</code> — genera el código de acceso del portal automáticamente.</div></div>
+<div class="step"><div class="n">2</div><div>Cargar el Google Place ID del negocio (para que el rating/reseñas se sincronicen solos desde el día 1, sin esperar a que conecte su cuenta).</div></div>
+<div class="step"><div class="n">3</div><div>Asignar una pieza de hardware del inventario ya generado (o activar autogestión si vino por el canal de Mercado Libre).</div></div>
+<div class="step"><div class="n">4</div><div>Mandarle el link de su portal (<code>app.metricsfield.com/portal/[código]</code>) con instrucciones de 1 párrafo — no un manual largo.</div></div>
+<div class="step"><div class="n">5</div><div>Guiarlo (por WhatsApp o en persona) a conectar su Google Business Profile desde el portal — sin esto no tiene visitas/llamadas, solo rating.</div></div>
+<div class="step"><div class="n">6</div><div>Si tiene empleados que van a tener tarjeta propia, cargar esos links con el nombre de cada uno.</div></div>
+<div class="step"><div class="n">7</div><div>A los 7 días: primer chequeo — ¿tuvo taps? ¿reconectó Google si venció el permiso (modo Prueba, vence cada semana)? Este seguimiento activo en las primeras 2 semanas es lo que separa un cliente que se prende del que se olvida que tiene el cartel.</div></div>
+
+<h2 id="pricing">4 · Cómo pensar el pricing</h2>
+
+<div class="warn"><strong>Importante:</strong> no hay un número validado todavía — nadie pagó por esto aún. Lo que sigue es un marco para decidir, no un precio para citar como definitivo en la calle esta semana. Para la primera tanda de 60 contactos, mejor no cerrar número en el primer contacto — decir "te mando la propuesta" y usar esa primera semana para calibrar con lo que la gente realmente está dispuesta a pagar.</div>
+
+<h3>Ya existe la estructura en el código: 2 planes</h3>
+<table>
+  <tr><th>Plan</th><th>Qué incluye (ya construido)</th></tr>
+  <tr><td><strong>Base</strong></td><td>Cartel NFC/QR, portal con rating/reseñas/taps, atribución por empleado, checklist SEO, benchmark de competencia, clics "cómo llegar" en vez de citaciones IA.</td></tr>
+  <tr><td><strong>Premium</strong></td><td>Todo lo de Base + seguimiento de citaciones en IA (ChatGPT, Copilot, Perplexity) y Audit GEO — hoy relevado a mano por el equipo, no 100% automático todavía, así que no prometer "tiempo real".</td></tr>
+</table>
+
+<h3>Piso de costo (no vender por debajo de esto sin saberlo)</h3>
+<ul>
+  <li>Costo del hardware por local (el cartel/tarjeta física — pedirle el número exacto a Simón cuando cierre la cotización del lote).</li>
+  <li>Tiempo de alta + seguimiento de las primeras 2 semanas (real, no gratis aunque no se facture aparte).</li>
+  <li>Soporte continuo — aunque sea bajo, no es cero.</li>
+</ul>
+
+<h3>Estructura sugerida para arrancar (a validar, no a jurar)</h3>
+<ul>
+  <li><strong>Cobro único de hardware</strong> al alta (cubre el costo del cartel/tarjetas + instalación) — esto ya lo están armando Simón con los links de Mercado Pago.</li>
+  <li><strong>Suscripción mensual</strong> por el software (Base vs. Premium) — recién arranca a cobrarse una vez que el cliente vio valor real (ej. después del primer mes gratis o del primer resultado visible), no el día 1. Da tiempo a validar el precio con casos reales antes de discutirlo con el siguiente prospecto.</li>
+  <li>Evitar un tercer plan por ahora — dos opciones simples es más fácil de vender en una charla de 5 minutos en la calle que una tabla con 4 tiers.</li>
+</ul>
+
+<h3>Lo que recomiendo NO hacer esta semana</h3>
+<ul>
+  <li>No construir un checkout de pago recurrente automático todavía (no existe, y no hace falta para 60 conversaciones manuales).</li>
+  <li>No prometer un número puertas afuera hasta hablarlo en equipo con los primeros 5-10 "sí" reales — ahí recién se sabe qué está dispuesto a pagar el mercado de verdad.</li>
+</ul>
+
+</div>
+</body>
+</html>
