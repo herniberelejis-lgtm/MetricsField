@@ -483,9 +483,16 @@ async function sincronizarEnLotes<Id, T>(
 }
 
 /** Sincroniza todos los comercios que tengan un place_id cargado — usado
- * por el cron diario. Devuelve cuántos se actualizaron correctamente. */
+ * por el cron diario. Devuelve cuántos se actualizaron correctamente.
+ * Ordenado por google_sync_en (los nunca sincronizados o más viejos primero):
+ * si el cron corta por el timeout de maxDuration a mitad de la lista, al
+ * día siguiente retoma por los que quedaron afuera en vez de repetir
+ * siempre los mismos primeros comercios sin avanzar nunca sobre el resto. */
 export async function sincronizarGoogleTodos(): Promise<{ total: number; actualizados: number }> {
-  const rows = await sql`SELECT id FROM comercios WHERE google_place_id != ''`;
+  const rows = await sql`
+    SELECT id FROM comercios WHERE google_place_id != ''
+    ORDER BY google_sync_en ASC NULLS FIRST
+  `;
   const ids = rows.map((r) => r.id as string);
   const resultados = await sincronizarEnLotes(ids, sincronizarGoogle);
   return { total: ids.length, actualizados: resultados.filter(Boolean).length };
