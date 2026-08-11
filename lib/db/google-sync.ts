@@ -6,6 +6,8 @@ import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from
 import { generarRespuestaSugerida } from "../respuestas";
 import { cifrar } from "../crypto";
 import { alertarResenaMala } from "../alertas";
+import { notificar } from "../monitor";
+import { getAjuste, setAjuste } from "./ajustes";
 import {
   accessTokenGBPComercio,
   resolverLocationGBP,
@@ -126,6 +128,59 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
       clics_como_llegar = EXCLUDED.clics_como_llegar
   `;
   return true;
+}
+
+// Cada cuántos días como máximo se repite el aviso por el MISMO comercio.
+// Sin esto el cron diario avisaría todos los días por el mismo cliente hasta
+// que reconecte, y el canal se vuelve ruido que nadie mira.
+const DIAS_ENTRE_AVISOS = 3;
+
+/**
+ * Avisa por el webhook cuando un comercio que HABÍA conectado su Google dejó
+ * de estarlo. Mientras la app siga sin verificar por Google (modo Prueba), el
+ * permiso vence cada ~7 días y el cliente no se entera solo: su panel deja de
+ * actualizar visitas y llamadas en silencio.
+ *
+ * Detecta la desconexión real —no la fecha— intentando canjear el refresh
+ * token: si Google ya no lo acepta, `accessTokenGBPComercio` devuelve null.
+ *
+ * Se desduplica con la tabla `ajustes` para no necesitar una migración: el
+ * entorno no tiene acceso a Neon y cualquier ALTER TABLE hay que correrlo a
+ * mano (ver CLAUDE.md).
+ */
+export async function avisarGoogleDesconectado(): Promise<{ revisados: number; avisados: number }> {
+  const rows = await sql`
+    SELECT id, nombre, contacto FROM comercios
+    WHERE google_refresh_token != '' AND estado != 'baja'
+  `;
+
+  let avisados = 0;
+  const hoy = new Date();
+
+  for (const row of rows) {
+    const id = row.id as string;
+    const token = await accessTokenGBPComercio(id);
+    if (token) continue; // sigue conectado, nada que avisar
+
+    const clave = `aviso_gbp_desconectado:${id}`;
+    const ultimo = await getAjuste(clave);
+    if (ultimo) {
+      const dias = (hoy.getTime() - new Date(ultimo).getTime()) / (1000 * 60 * 60 * 24);
+      if (dias < DIAS_ENTRE_AVISOS) continue;
+    }
+
+    const nombre = row.nombre as string;
+    const contacto = (row.contacto as string) || "sin WhatsApp cargado";
+    await notificar(
+      "Se desconectó el Google de un cliente",
+      `*${nombre}* dejó de tener el permiso activo — su panel no va a actualizar visitas ni llamadas hasta que reconecte.\n` +
+        `Escribirle al ${contacto} con el texto de reconexión.`,
+    );
+    await setAjuste(clave, hoy.toISOString());
+    avisados += 1;
+  }
+
+  return { revisados: rows.length, avisados };
 }
 
 /** Rendimiento de todos los comercios que tengan su propia cuenta de Google

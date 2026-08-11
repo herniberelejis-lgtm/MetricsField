@@ -29,6 +29,33 @@ function textoDelError(e: unknown): string {
 }
 
 /**
+ * Aviso operativo al mismo webhook, para cosas que NO son fallas del sistema
+ * sino situaciones que alguien del equipo tiene que atender (por ejemplo, un
+ * cliente al que se le venció el permiso de Google). Se separa de
+ * reportarFalla para que un aviso de rutina no se lea como si algo se hubiera
+ * roto, y para poder filtrarlos distinto en el canal.
+ *
+ * No meter secretos acá: esto sale de la aplicación hacia el webhook.
+ */
+export async function notificar(titulo: string, texto: string): Promise<void> {
+  console.info(`[aviso] ${titulo}: ${texto}`);
+  if (!WEBHOOK) return;
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+    await fetch(WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: `🔔 MetricsField · *${titulo}*\n${texto}` }),
+      signal: ctl.signal,
+    });
+    clearTimeout(timer);
+  } catch {
+    // Igual que en reportarFalla: si no podemos avisar, no rompemos el flujo.
+  }
+}
+
+/**
  * Registra una falla y, si hay webhook configurado, la reporta.
  *
  * @param origen  De dónde viene, para poder filtrar después. Ej: "cron/sync-google".
