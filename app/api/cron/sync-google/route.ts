@@ -7,6 +7,7 @@ import {
   sincronizarCompetidoresTodos,
   snapshotCompetenciaMensual,
   enviarResumenesMensuales,
+  avisarGoogleDesconectado,
 } from "@/lib/db";
 
 // Job diario (ver vercel.json) que actualiza rating/reseñas de todos los
@@ -57,5 +58,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const resumenes =
     new Date().getUTCDate() === 1 ? await enviarResumenesMensuales() : { total: 0, enviados: 0 };
 
-  return NextResponse.json({ resenas, rendimiento, resenasDetalle, competidores, competencia, resumenes });
+  // Va al final a propósito: si algo de arriba falla, el aviso de clientes
+  // desconectados no aporta nada todavía. Mientras la app siga en modo Prueba
+  // esto avisa por el webhook cada vez que a un cliente se le vence el permiso.
+  const desconectados = await avisarGoogleDesconectado();
+
+  return NextResponse.json({
+    resenas,
+    rendimiento,
+    resenasDetalle,
+    competidores,
+    competencia,
+    resumenes,
+    desconectados,
+  });
 }
