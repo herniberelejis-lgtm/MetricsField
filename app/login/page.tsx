@@ -97,11 +97,11 @@ export default async function LoginPage({
           ¿Sos cliente? Entrá con el link privado que te mandamos por WhatsApp.
         </p>
         <p className="mt-3 text-center text-xs text-slate-400">
-          <a href="/privacidad" className="underline underline-offset-2 hover:text-slate-600">
+          <a href="/privacy" className="underline underline-offset-2 hover:text-slate-600">
             Privacidad
           </a>
           <span className="mx-2">·</span>
-          <a href="/terminos" className="underline underline-offset-2 hover:text-slate-600">
+          <a href="/terms" className="underline underline-offset-2 hover:text-slate-600">
             Términos
           </a>
         </p>

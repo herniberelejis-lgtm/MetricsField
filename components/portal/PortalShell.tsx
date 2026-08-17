@@ -348,10 +348,10 @@ export default function PortalShell({
         <div className="border-t border-white/60 px-5 py-4 text-[11px] leading-snug text-slate-500">
           Portal privado de <b className="text-slate-700">{clienteNombre}</b>. No compartas este link.
           <div className="mt-2 flex gap-3">
-            <a href="/privacidad" className="underline underline-offset-2 hover:text-slate-700">
+            <a href="/privacy" className="underline underline-offset-2 hover:text-slate-700">
               Privacidad
             </a>
-            <a href="/terminos" className="underline underline-offset-2 hover:text-slate-700">
+            <a href="/terms" className="underline underline-offset-2 hover:text-slate-700">
               Términos
             </a>
           </div>

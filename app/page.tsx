@@ -2,24 +2,25 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Card, IconWave, IconChat, IconZap, btnSecondary, btnGhost } from "@/components/ui";
 
-// Home page pública de app.metricsfield.com — PROVISORIA, a propósito.
-//
-// Por diseño, la landing "de verdad" para vender vive en metricsfield.com
-// (dominio raíz, repo aparte) y este subdominio solo tenía el software
-// (ver el comentario que reemplaza este archivo: antes era un simple
-// `redirect("/admin")`). Se cambia acá porque Google exige que la
-// "Application home page" declarada en la verificación OAuth sea una
-// página pública real que describa el producto y linkee a la política de
-// privacidad — un redirect directo a un login vacío es motivo de rechazo.
-//
-// Si el día de mañana se decide registrar metricsfield.com como home page
-// ante Google (una vez confirmado que esa landing linkea a /privacidad),
-// esta página puede volver a ser un simple redirect. Hasta entonces, es la
-// que Google va a visitar.
+// Home page pública — sirve tanto metricsfield.com como app.metricsfield.com
+// (mismo proyecto de Vercel, mismo deploy). Es la "Application home page"
+// registrada ante Google para la verificación OAuth: tiene que describir el
+// producto y linkear a /privacy. Un redirect directo a un login vacío es
+// motivo de rechazo — así arrancó este archivo, antes era `redirect("/admin")`.
+// Título y OpenGraph en inglés a propósito: es el <title> que ve el
+// revisor de la verificación OAuth de Google, no un cliente. El contenido
+// visible de la página (lo que ve un dueño de comercio) sigue en español.
 export const metadata: Metadata = {
-  title: "MetricsField — Inteligencia de datos para el mundo físico",
+  title: "MetricsField - Reputation Management Platform",
   description:
-    "MetricsField ayuda a comercios locales de Córdoba a conseguir reseñas en Google y a entender el rendimiento de su ficha de Google Business Profile, en un panel propio y privado.",
+    "MetricsField is a reputation management platform for local businesses. Helps businesses get Google reviews and track their Google Business Profile performance.",
+  openGraph: {
+    title: "MetricsField - Reputation Management Platform",
+    siteName: "MetricsField",
+    description:
+      "MetricsField is a reputation management platform for local businesses.",
+    url: "https://metricsfield.com",
+  },
 };
 
 function Isotipo({ size = 56, className = "" }: { size?: number; className?: string }) {
@@ -113,10 +114,10 @@ export default function Home() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-sm text-slate-500 sm:flex-row">
           <p>MetricsField — Córdoba, Argentina</p>
           <div className="flex gap-5">
-            <Link href="/privacidad" className="hover:text-slate-800">
+            <Link href="/privacy" className="hover:text-slate-800">
               Política de privacidad
             </Link>
-            <Link href="/terminos" className="hover:text-slate-800">
+            <Link href="/terms" className="hover:text-slate-800">
               Términos
             </Link>
             <a href="mailto:info@metricsfield.com" className="hover:text-slate-800">
