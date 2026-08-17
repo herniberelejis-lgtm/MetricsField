@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Card, IconWave, IconChat, IconZap, btnSecondary, btnGhost } from "@/components/ui";
+import BrandMark from "@/components/BrandMark";
 
 // Home page pública — sirve tanto metricsfield.com como app.metricsfield.com
 // (mismo proyecto de Vercel, mismo deploy). Es la "Application home page"
@@ -23,35 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-function Isotipo({ size = 56, className = "" }: { size?: number; className?: string }) {
-  // Aproximación del isotipo del manual de marca: 6 hexágonos entrelazados
-  // en forma de flor, trazo (no relleno) — sin el archivo vectorial
-  // original, se reconstruye la geometría a mano en vez de usar un logo
-  // aproximado que después haya que reemplazar igual.
-  const r = 15;
-  const hexes = Array.from({ length: 6 }, (_, i) => {
-    const angle = (i * 60 * Math.PI) / 180;
-    const cx = 32 + r * Math.cos(angle);
-    const cy = 32 + r * Math.sin(angle);
-    const pts = Array.from({ length: 6 }, (_, j) => {
-      const a = (j * 60 * Math.PI) / 180;
-      return `${(cx + 9 * Math.cos(a)).toFixed(2)},${(cy + 9 * Math.sin(a)).toFixed(2)}`;
-    }).join(" ");
-    return <polygon key={i} points={pts} />;
-  });
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinejoin="round" className={className} aria-hidden>
-      {hexes}
-    </svg>
-  );
-}
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <Isotipo size={28} />
+          <BrandMark size={28} />
           <span className="text-lg font-bold tracking-tight">METRICSFIELD</span>
         </div>
         <Link href="/login" className={btnGhost}>
@@ -61,7 +39,7 @@ export default function Home() {
 
       <main>
         <section className="mx-auto max-w-4xl px-6 pb-16 pt-10 text-center">
-          <Isotipo size={72} className="mx-auto mb-8 text-slate-900" />
+          <BrandMark size={72} className="mx-auto mb-8 text-slate-900" />
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
             Inteligencia de datos
             <br />

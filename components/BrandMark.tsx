@@ -1,27 +1,30 @@
-// Isotipo de marca: rosette de 6 hexágonos entrelazados alrededor de uno
-// central (ver Manual de Marca, sección "Isotipo"). Se calcula una sola vez
-// a nivel de módulo — es geometría fija, no depende de props.
+// Isotipo de marca: 6 hexágonos entrelazados en forma de flor (ver Manual
+// de Marca, sección "Isotipo") — misma geometría que app/icon.svg y el
+// logo subido a Google Cloud Console para la verificación OAuth, para que
+// el isotipo sea idéntico en todo el producto (admin, portal, home,
+// favicon) y en lo que Google tiene registrado. Se calcula una sola vez a
+// nivel de módulo — es geometría fija, no depende de props.
+
+const CX = 50;
+const CY = 50;
+const RING_R = 23.4; // distancia del centro a cada hexágono
+const HEX_R = 14.1; // "radio" de cada hexágono individual
 
 function hexPoints(cx: number, cy: number, r: number): string {
   const pts: string[] = [];
-  for (let a = 0; a < 6; a++) {
-    const ang = (Math.PI / 180) * (60 * a - 30);
+  for (let j = 0; j < 6; j++) {
+    const ang = (Math.PI / 180) * (60 * j);
     pts.push(`${(cx + r * Math.cos(ang)).toFixed(2)},${(cy + r * Math.sin(ang)).toFixed(2)}`);
   }
   return pts.join(" ");
 }
 
-const CX = 50;
-const CY = 50;
-const R = 18;
-const HEX_R = 15;
-
-const HEX_CENTERS: Array<[number, number]> = [[CX, CY]];
-for (let k = 0; k < 6; k++) {
-  const ang = (Math.PI / 180) * (60 * k - 90);
-  HEX_CENTERS.push([CX + R * Math.cos(ang), CY + R * Math.sin(ang)]);
-}
-const POLYGONS = HEX_CENTERS.map(([hx, hy]) => hexPoints(hx, hy, HEX_R));
+const POLYGONS = Array.from({ length: 6 }, (_, i) => {
+  const ang = (Math.PI / 180) * (60 * i);
+  const hx = CX + RING_R * Math.cos(ang);
+  const hy = CY + RING_R * Math.sin(ang);
+  return hexPoints(hx, hy, HEX_R);
+});
 
 export default function BrandMark({
   size = 24,
