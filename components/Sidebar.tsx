@@ -21,7 +21,7 @@ export default function Sidebar() {
 
   return (
     <>
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white md:flex">
       <div className="flex items-center gap-2.5 border-b border-slate-200 px-5 py-5">
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
           <BrandMark size={18} strokeWidth={7} />
