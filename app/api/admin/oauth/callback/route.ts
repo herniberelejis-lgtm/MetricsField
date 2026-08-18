@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { canjearCodigo, decodificarIdToken } from "@/lib/google-oauth";
+import { canjearCodigo, decodificarIdToken, origenCanonico } from "@/lib/google-oauth";
 import { crearCookieSesionGoogle, COOKIE_GOOGLE, SESION_MAX_MS } from "@/lib/auth";
 import { esAdminPermitido, registrarAuditoria } from "@/lib/db";
 
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const code = req.nextUrl.searchParams.get("code");
   if (!code) return volver("cancelado");
 
-  const redirectUri = `${req.nextUrl.origin}/api/admin/oauth/callback`;
+  const redirectUri = `${origenCanonico(req.nextUrl.origin)}/api/admin/oauth/callback`;
   const { idToken } = await canjearCodigo(code, redirectUri);
   const datos = idToken ? decodificarIdToken(idToken) : null;
   if (!datos) return volver("google");

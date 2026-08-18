@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { canjearCodigo } from "@/lib/google-oauth";
+import { canjearCodigo, origenCanonico } from "@/lib/google-oauth";
 import { getClientePorCodigo, getCliente, guardarTokenGoogleComercio } from "@/lib/db";
 
 // Callback del OAuth de Google Business Profile por CLIENTE: canjea el code
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const code = req.nextUrl.searchParams.get("code");
   if (!code) return volver("cancelado");
 
-  const redirectUri = `${req.nextUrl.origin}/api/portal/google/oauth/callback`;
+  const redirectUri = `${origenCanonico(req.nextUrl.origin)}/api/portal/google/oauth/callback`;
   const { refreshToken } = await canjearCodigo(code, redirectUri);
   if (!refreshToken) return volver("error");
 

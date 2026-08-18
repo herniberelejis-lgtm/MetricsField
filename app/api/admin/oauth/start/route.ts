@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { oauthConfigurado, urlDeAutorizacion, ADMIN_SCOPE } from "@/lib/google-oauth";
+import { oauthConfigurado, urlDeAutorizacion, origenCanonico, ADMIN_SCOPE } from "@/lib/google-oauth";
 
 // Login del equipo con Google (no confundir con la conexión de Business
 // Profile del cliente): solo pide identidad (openid email profile), no
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const state = crypto.randomBytes(16).toString("hex");
-  const redirectUri = `${req.nextUrl.origin}/api/admin/oauth/callback`;
+  const redirectUri = `${origenCanonico(req.nextUrl.origin)}/api/admin/oauth/callback`;
   const res = NextResponse.redirect(
     urlDeAutorizacion({ redirectUri, state, scope: ADMIN_SCOPE }),
   );

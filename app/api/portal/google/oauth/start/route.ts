@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getClientePorCodigo, getCliente } from "@/lib/db";
-import { oauthConfigurado, urlDeAutorizacion, GBP_SCOPE } from "@/lib/google-oauth";
+import { oauthConfigurado, urlDeAutorizacion, origenCanonico, GBP_SCOPE } from "@/lib/google-oauth";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
 // Arranca la conexión de Google Business Profile del CLIENTE (no de la
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const nonce = crypto.randomBytes(16).toString("hex");
   const state = `${codigo}.${comercioId}.${nonce}`;
-  const redirectUri = `${req.nextUrl.origin}/api/portal/google/oauth/callback`;
+  const redirectUri = `${origenCanonico(req.nextUrl.origin)}/api/portal/google/oauth/callback`;
   const res = NextResponse.redirect(
     urlDeAutorizacion({ redirectUri, state, scope: GBP_SCOPE, offline: true }),
   );
