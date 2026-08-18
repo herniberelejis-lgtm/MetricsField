@@ -1,0 +1,26 @@
+services:
+  metricsfield:
+    build:
+      context: .
+      dockerfile: Dockerfile.migracion
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      SERVE_SPA: "true"
+      PORT: "4000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:4000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

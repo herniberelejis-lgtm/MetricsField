@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+web/node_modules
+*.md
+docs
+app
+components
+lib
+middleware.ts
+test
+.github

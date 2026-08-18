@@ -5,6 +5,15 @@
   "description": "Dashboard de clientes para la agencia de presencia digital (NFC + GEO) — Córdoba",
   "scripts": {
     "dev": "next dev",
+    "dev:api": "node server/index.js",
+    "dev:web": "vite --config web/vite.config.js",
+    "dev:migracion": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "build:web": "vite build --config web/vite.config.js",
+    "build:migracion": "npm run build:web",
+    "start:migracion": "SERVE_SPA=true node server/index.js",
+    "start:prod": "SERVE_SPA=true node server/index.js",
+    "docker:migracion:build": "docker compose -f docker-compose.migracion.yml build",
+    "docker:migracion:up": "docker compose -f docker-compose.migracion.yml up",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -14,6 +23,11 @@
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
     "jszip": "^3.10.1",
     "next": "^15.5.20",
     "nodemailer": "^9.0.3",
@@ -33,10 +47,14 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "10.4.20",
+    "concurrently": "^9.1.2",
     "postcss": "^8.5.10",
+    "react-router-dom": "^7.1.1",
     "tailwindcss": "3.4.17",
     "typescript": "5.7.3",
+    "vite": "^6.0.7",
     "vitest": "^3.2.7"
   }
 }
