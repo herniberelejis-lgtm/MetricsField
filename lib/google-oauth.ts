@@ -21,6 +21,20 @@ export function oauthConfigurado(): boolean {
   );
 }
 
+/** El redirect_uri de cada ruta de OAuth tiene que ser EXACTAMENTE uno de
+ * los que están cargados en Cloud Console (app.metricsfield.com) — a
+ * diferencia del resto del sitio, que ahora también sirve desde
+ * metricsfield.com (dominio raíz, agregado para la verificación de marca).
+ * Si el redirect_uri se arma con el host del request y alguien entra a
+ * loguearse desde metricsfield.com en vez de app.metricsfield.com, Google
+ * responde "redirect_uri_mismatch" porque esa URL nunca se registró. Por
+ * eso, igual que urlPublicaDeTap en lib/qr.ts, se fija siempre al dominio
+ * canónico (NEXT_PUBLIC_BASE_URL) y el host del request queda solo de
+ * fallback para desarrollo local sin la variable configurada. */
+export function origenCanonico(fallbackOrigin: string): string {
+  return (process.env.NEXT_PUBLIC_BASE_URL || fallbackOrigin).replace(/\/+$/, "");
+}
+
 export function urlDeAutorizacion(opts: {
   redirectUri: string;
   state: string;
