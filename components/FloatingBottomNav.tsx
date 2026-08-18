@@ -8,9 +8,10 @@ export type FloatingNavItem = {
   href?: string;
 };
 
-/** Barra de navegación flotante inferior — acceso rápido a las secciones
- * principales, conviviendo con el sidebar (no lo reemplaza). Cada superficie
- * (portal / admin) le pasa SUS propios items; nunca comparten ítems entre sí. */
+/** Barra de navegación flotante inferior — reemplaza al sidebar en pantallas
+ * chicas (md:hidden), acceso rápido a las secciones principales. Cada
+ * superficie (portal / admin) le pasa SUS propios items; nunca comparten
+ * ítems entre sí. */
 export default function FloatingBottomNav({ items }: { items: FloatingNavItem[] }) {
   if (items.length === 0) return null;
   return (
