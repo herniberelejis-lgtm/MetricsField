@@ -4,6 +4,7 @@ import { getInventarioHardware, getClientes } from "@/lib/db";
 import {
   accionGenerarLotePiezas,
   accionAsignarPieza,
+  accionReasignarPieza,
 } from "@/app/actions";
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
@@ -227,9 +228,17 @@ export default async function HardwarePage({
 
       {asignadas.length > 0 && (
         <>
-          <h2 className="mb-3 text-sm font-semibold text-slate-900">
-            Piezas asignadas ({asignadas.length})
-          </h2>
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Piezas asignadas ({asignadas.length})
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              &ldquo;Mover a otro cliente&rdquo; corrige una asignación mal hecha (ej. la imprenta
+              mezcló los números de un lote) sin reimprimir nada — el código ya impreso no cambia,
+              solo a quién pertenece. Los taps que ya tenga la pieza pasan a mostrarse del lado del
+              cliente nuevo, porque son los que de verdad pasaron en ese cartel físico.
+            </p>
+          </div>
           <Card className="overflow-x-auto p-0">
             <table className="w-full text-sm">
               <thead>
@@ -239,11 +248,12 @@ export default async function HardwarePage({
                   <th className="px-4 py-3 font-medium">Etiqueta</th>
                   <th className="px-4 py-3 font-medium">Tipo</th>
                   <th className="px-4 py-3 font-medium">Taps</th>
+                  <th className="px-4 py-3 font-medium">Mover a otro cliente</th>
                 </tr>
               </thead>
               <tbody>
                 {asignadas.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={p.id} className="border-b border-slate-100 last:border-0 align-top">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                     </td>
@@ -260,6 +270,34 @@ export default async function HardwarePage({
                     <td className="px-4 py-3 text-slate-600">{p.etiqueta}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
+                    <td className="px-4 py-3">
+                      <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="id" value={p.id} />
+                        <select name="comercioId" required className={`${inputCls} w-40`}>
+                          <option value="">Elegir cliente…</option>
+                          {clientes
+                            .filter((c) => c.id !== p.comercioId)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.nombre}
+                                {c.comercioPadreId ? " (sucursal)" : ""}
+                              </option>
+                            ))}
+                        </select>
+                        <input
+                          name="etiqueta"
+                          placeholder="Mesa 4, mozo Juan..."
+                          required
+                          className={`${inputCls} w-36`}
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                        >
+                          Mover
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>

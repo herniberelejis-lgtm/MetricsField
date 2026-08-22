@@ -281,6 +281,22 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   redirect("/admin/hardware");
 }
 
+/** Corrige una pieza ya asignada al comercio equivocado (ej. la imprenta
+ * mezcló los números de un lote) — mueve el destino sin tocar el código
+ * físico ya impreso. Ver reasignarPieza en lib/db/links.ts. */
+export async function accionReasignarPieza(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const nuevoComercioId = str(fd, "comercioId");
+  if (!nuevoComercioId) redirect("/admin/hardware?error=sin-cliente");
+  await db.reasignarPieza(id, nuevoComercioId, {
+    etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
+  });
+  await auditar("reasignar_pieza_hardware", `${id} → ${nuevoComercioId}`);
+  revalidatePath("/", "layout");
+  redirect("/admin/hardware");
+}
+
 // ---------- CRM: reseñas ----------
 
 export async function accionCrearResena(fd: FormData): Promise<void> {

@@ -294,6 +294,37 @@ export async function asignarPiezaACliente(
   return l;
 }
 
+/** Mueve una pieza YA asignada a otro cliente — a diferencia de
+ * asignarPiezaACliente (que exige que esté libre), esta no lo pide: existe
+ * para corregir una asignación mal hecha (ej. la imprenta mezcló los
+ * números de un lote y una pieza terminó en el comercio que no era) sin
+ * reimprimir nada — el código de la pieza no cambia, solo a quién
+ * pertenece. Reinicia nombreEmpleado (la tarjeta personal de un mozo del
+ * comercio anterior no tiene sentido en el nuevo) y, sin urlDestino
+ * explícita, borra la que tuviera cargada para que caiga en la reseña de
+ * Google del comercio nuevo — nunca deja una pieza reasignada apuntando
+ * por accidente al negocio anterior. */
+export async function reasignarPieza(
+  id: string,
+  nuevoComercioId: string,
+  datos: { etiqueta: string; destino?: DestinoLink; urlDestino?: string | null },
+): Promise<LinkNFC> {
+  const rows = await sql`
+    UPDATE links_nfc SET
+      comercio_id = ${nuevoComercioId},
+      etiqueta = ${datos.etiqueta},
+      destino = ${datos.destino ?? "resena"},
+      url_destino = ${limpiarUrl(datos.urlDestino ?? null)},
+      nombre_empleado = ''
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  if (rows.length === 0) throw new Error(`Pieza no encontrada: ${id}`);
+  const l = await getLink(id);
+  if (!l) throw new Error(`Pieza no encontrada: ${id}`);
+  return l;
+}
+
 export async function registrarTap(linkId: string, userAgent: string | null): Promise<void> {
   await sql`INSERT INTO taps (link_id, user_agent) VALUES (${linkId}, ${userAgent})`;
 }
