@@ -295,6 +295,10 @@ export async function accionReasignarPieza(fd: FormData): Promise<void> {
     // Si el campo trae algo (precargado con lo que la pieza ya tenía), se
     // conserva tal cual en vez de perderse al reasignar.
     urlDestino: str(fd, "urlDestino") || null,
+    // Precargado con el destino actual de la pieza (campo oculto en el
+    // form) — sin esto, reasignarPieza lo pisaba siempre a "resena" aunque
+    // la URL preservada fuera de otro tipo (menú, Instagram, promo).
+    destino: (str(fd, "destino") || "resena") as DestinoLink,
   });
   await auditar("reasignar_pieza_hardware", `${id} → ${nuevoComercioId}`);
   revalidatePath("/", "layout");
