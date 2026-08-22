@@ -294,16 +294,21 @@ export async function asignarPiezaACliente(
   return l;
 }
 
-/** Mueve una pieza YA asignada a otro cliente — a diferencia de
- * asignarPiezaACliente (que exige que esté libre), esta no lo pide: existe
- * para corregir una asignación mal hecha (ej. la imprenta mezcló los
- * números de un lote y una pieza terminó en el comercio que no era) sin
- * reimprimir nada — el código de la pieza no cambia, solo a quién
- * pertenece. Reinicia nombreEmpleado (la tarjeta personal de un mozo del
- * comercio anterior no tiene sentido en el nuevo) y, sin urlDestino
- * explícita, borra la que tuviera cargada para que caiga en la reseña de
- * Google del comercio nuevo — nunca deja una pieza reasignada apuntando
- * por accidente al negocio anterior. */
+/** Pone una pieza bajo un cliente de agencia, sin importar el estado en el
+ * que estuviera antes — a diferencia de asignarPiezaACliente (que exige
+ * que esté libre y nunca autogestionada), esta cubre dos correcciones:
+ * 1. Ya asignada al comercio equivocado (ej. la imprenta mezcló los
+ *    números de un lote) — se mueve al correcto.
+ * 2. Alguien tocó el cartel y completó por error el formulario de
+ *    autoactivación (canal Mercado Libre) de una pieza que en realidad es
+ *    de un cliente de agencia — se "desautogestiona": limpia el PIN y el
+ *    nombre de negocio que haya cargado esa persona, para que no pueda
+ *    seguir editándola desde /t/<id>/editar con ese PIN.
+ * En los dos casos, el código de la pieza (y por lo tanto el QR/NFC ya
+ * impreso) nunca cambia, solo a quién pertenece. Reinicia nombreEmpleado
+ * (la tarjeta personal de un mozo del dueño anterior no tiene sentido acá)
+ * y, sin urlDestino explícita, borra la que tuviera cargada para que caiga
+ * en la reseña de Google del cliente nuevo. */
 export async function reasignarPieza(
   id: string,
   nuevoComercioId: string,
@@ -315,7 +320,11 @@ export async function reasignarPieza(
       etiqueta = ${datos.etiqueta},
       destino = ${datos.destino ?? "resena"},
       url_destino = ${limpiarUrl(datos.urlDestino ?? null)},
-      nombre_empleado = ''
+      nombre_empleado = '',
+      autogestionado = FALSE,
+      nombre_negocio = '',
+      pin_hash = NULL,
+      pin_salt = NULL
     WHERE id = ${id}
     RETURNING id
   `;

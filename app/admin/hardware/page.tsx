@@ -195,7 +195,10 @@ export default async function HardwarePage({
           <p className="mb-3 -mt-2 text-xs text-slate-500">
             Canal Mercado Libre: el propio comprador las activó desde{" "}
             <code className="rounded bg-slate-100 px-1">/t/&lt;código&gt;</code>. Sin cliente en el
-            CRM ni portal — el destino lo edita él mismo con su PIN.
+            CRM ni portal — el destino lo edita él mismo con su PIN. Si alguien completó este
+            formulario por error en una pieza que en realidad es de un cliente de agencia (mismo
+            error que la imprenta con los números), usá &ldquo;Asignar a cliente&rdquo; para
+            corregirlo — limpia el PIN cargado y deja la pieza como cualquier otra asignada.
           </p>
           <Card className="mb-8 overflow-x-auto p-0">
             <table className="w-full text-sm">
@@ -205,11 +208,12 @@ export default async function HardwarePage({
                   <th className="px-4 py-3 font-medium">Negocio</th>
                   <th className="px-4 py-3 font-medium">Destino actual</th>
                   <th className="px-4 py-3 font-medium">Taps</th>
+                  <th className="px-4 py-3 font-medium">Asignar a cliente</th>
                 </tr>
               </thead>
               <tbody>
                 {autogestionadas.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={p.id} className="border-b border-slate-100 last:border-0 align-top">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                     </td>
@@ -218,6 +222,32 @@ export default async function HardwarePage({
                       {p.urlDestino ?? "—"}
                     </td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
+                    <td className="px-4 py-3">
+                      <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="id" value={p.id} />
+                        <select name="comercioId" required className={`${inputCls} w-40`}>
+                          <option value="">Elegir cliente…</option>
+                          {clientes.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.nombre}
+                              {c.comercioPadreId ? " (sucursal)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          name="etiqueta"
+                          placeholder="Mesa 4, mozo Juan..."
+                          required
+                          className={`${inputCls} w-36`}
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                        >
+                          Asignar
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>
