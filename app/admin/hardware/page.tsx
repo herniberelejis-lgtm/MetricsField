@@ -240,6 +240,12 @@ export default async function HardwarePage({
                           required
                           className={`${inputCls} w-36`}
                         />
+                        <input
+                          name="urlDestino"
+                          defaultValue={p.urlDestino ?? ""}
+                          placeholder="URL de destino (vacío = reseña del cliente)"
+                          className={`${inputCls} w-56`}
+                        />
                         <button
                           type="submit"
                           className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
@@ -319,6 +325,12 @@ export default async function HardwarePage({
                           placeholder="Mesa 4, mozo Juan..."
                           required
                           className={`${inputCls} w-36`}
+                        />
+                        <input
+                          name="urlDestino"
+                          defaultValue={p.urlDestino ?? ""}
+                          placeholder="URL de destino (vacío = reseña del cliente)"
+                          className={`${inputCls} w-56`}
                         />
                         <button
                           type="submit"
