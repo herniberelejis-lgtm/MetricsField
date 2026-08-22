@@ -225,6 +225,7 @@ export default async function HardwarePage({
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="destino" value={p.destino} />
                         <select name="comercioId" required className={`${inputCls} w-40`}>
                           <option value="">Elegir cliente…</option>
                           {clientes.map((c) => (
@@ -309,6 +310,7 @@ export default async function HardwarePage({
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="destino" value={p.destino} />
                         <select name="comercioId" required className={`${inputCls} w-40`}>
                           <option value="">Elegir cliente…</option>
                           {clientes
