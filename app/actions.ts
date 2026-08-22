@@ -291,6 +291,10 @@ export async function accionReasignarPieza(fd: FormData): Promise<void> {
   if (!nuevoComercioId) redirect("/admin/hardware?error=sin-cliente");
   await db.reasignarPieza(id, nuevoComercioId, {
     etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
+    // Vacío = a propósito: cae en la reseña de Google del cliente nuevo.
+    // Si el campo trae algo (precargado con lo que la pieza ya tenía), se
+    // conserva tal cual en vez de perderse al reasignar.
+    urlDestino: str(fd, "urlDestino") || null,
   });
   await auditar("reasignar_pieza_hardware", `${id} → ${nuevoComercioId}`);
   revalidatePath("/", "layout");
