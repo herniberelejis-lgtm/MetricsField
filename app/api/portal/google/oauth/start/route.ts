@@ -1,7 +1,13 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getClientePorCodigo, getCliente } from "@/lib/db";
-import { oauthConfigurado, urlDeAutorizacion, origenCanonico, GBP_SCOPE } from "@/lib/google-oauth";
+import {
+  oauthConfigurado,
+  urlDeAutorizacion,
+  origenCanonico,
+  dominioCookieOauth,
+  GBP_SCOPE,
+} from "@/lib/google-oauth";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
 // Arranca la conexión de Google Business Profile del CLIENTE (no de la
@@ -47,6 +53,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
+    domain: dominioCookieOauth(),
     maxAge: 600,
     path: "/",
   });

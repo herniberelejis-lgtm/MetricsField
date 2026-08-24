@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { canjearCodigo, origenCanonico } from "@/lib/google-oauth";
+import { canjearCodigo, origenCanonico, dominioCookieOauth } from "@/lib/google-oauth";
 import { getClientePorCodigo, getCliente, guardarTokenGoogleComercio } from "@/lib/db";
 
 // Callback del OAuth de Google Business Profile por CLIENTE: canjea el code
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const [codigo, comercioIdState] = state.split(".");
 
   const limpiar = (res: NextResponse) => {
-    res.cookies.delete("portal_oauth_state");
+    res.cookies.delete({ name: "portal_oauth_state", domain: dominioCookieOauth(), path: "/" });
     return res;
   };
 
