@@ -1,6 +1,12 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { oauthConfigurado, urlDeAutorizacion, origenCanonico, ADMIN_SCOPE } from "@/lib/google-oauth";
+import {
+  oauthConfigurado,
+  urlDeAutorizacion,
+  origenCanonico,
+  dominioCookieOauth,
+  ADMIN_SCOPE,
+} from "@/lib/google-oauth";
 
 // Login del equipo con Google (no confundir con la conexión de Business
 // Profile del cliente): solo pide identidad (openid email profile), no
@@ -19,6 +25,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
+    domain: dominioCookieOauth(),
     maxAge: 600,
     path: "/",
   });

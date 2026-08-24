@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { canjearCodigo, decodificarIdToken, origenCanonico } from "@/lib/google-oauth";
+import { canjearCodigo, decodificarIdToken, origenCanonico, dominioCookieOauth } from "@/lib/google-oauth";
 import { crearCookieSesionGoogle, COOKIE_GOOGLE, SESION_MAX_MS } from "@/lib/auth";
 import { esAdminPermitido, registrarAuditoria } from "@/lib/db";
 
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const cookieState = req.cookies.get("admin_oauth_state")?.value;
 
   const limpiar = (res: NextResponse) => {
-    res.cookies.delete("admin_oauth_state");
+    res.cookies.delete({ name: "admin_oauth_state", domain: dominioCookieOauth(), path: "/" });
     return res;
   };
   const volver = (error: string) =>

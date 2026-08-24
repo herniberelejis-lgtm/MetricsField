@@ -35,6 +35,19 @@ export function origenCanonico(fallbackOrigin: string): string {
   return (process.env.NEXT_PUBLIC_BASE_URL || fallbackOrigin).replace(/\/+$/, "");
 }
 
+/** Dominio para la cookie de estado (anti-CSRF) del vaivén con Google —
+ * SIEMPRE tiene que viajar de /start a /callback aunque origenCanonico haya
+ * forzado el callback a un host distinto de donde arrancó el flujo (ej.
+ * alguien entra por metricsfield.com, pero el callback siempre aterriza en
+ * app.metricsfield.com). Una cookie sin `domain` explícito queda atada al
+ * host exacto que la puso — con `.metricsfield.com` (el punto inicial
+ * cubre todos los subdominios) sirve para cualquier combinación de los
+ * nuestros. `undefined` en desarrollo local: un dominio con punto no es
+ * válido para "localhost", el navegador directamente descarta la cookie. */
+export function dominioCookieOauth(): string | undefined {
+  return process.env.NODE_ENV === "production" ? ".metricsfield.com" : undefined;
+}
+
 export function urlDeAutorizacion(opts: {
   redirectUri: string;
   state: string;
