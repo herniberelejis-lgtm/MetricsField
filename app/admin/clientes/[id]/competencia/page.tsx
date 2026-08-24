@@ -14,6 +14,11 @@ import GooglePlaceIdField from "@/components/GooglePlaceIdField";
 
 export const dynamic = "force-dynamic";
 
+const ERRORES: Record<string, string> = {
+  "sync-competidor":
+    "No se pudo sincronizar con Google — revisá que el competidor tenga un Place ID correcto y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -25,10 +30,13 @@ export async function generateMetadata({
 
 export default async function CompetenciaPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const [c, competidores] = await Promise.all([getCliente(id), getCompetidores(id)]);
   if (!c) notFound();
 
@@ -40,6 +48,11 @@ export default async function CompetenciaPage({
 
   return (
     <div>
+      {error && (
+        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          {ERRORES[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
+        </div>
+      )}
       <div className="mb-4 text-sm">
         <Link href={`/admin/clientes/${c.id}`} className="text-slate-500 hover:text-brand-fg">
           ← {c.nombre}
