@@ -129,9 +129,11 @@ export async function accionSincronizarGoogle(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   const ok = await db.sincronizarGoogle(id);
   if (!ok) {
-    throw new Error(
-      "No se pudo sincronizar — revisá que el comercio tenga Google Place ID cargado y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.",
-    );
+    // Un Place ID inválido (o la API key sin configurar) no puede tirar
+    // abajo toda la página con un error sin manejar — vuelve con un
+    // parámetro y la página muestra un aviso, en vez de la pantalla en
+    // blanco de "Application error" de Next.js.
+    redirect(`/admin/clientes/${id}?error=sync-google`);
   }
   // Rendimiento (visitas/llamadas): best-effort — depende de que la cuenta
   // de Google esté conectada y administre esta ficha. Si falta algo, el
@@ -385,9 +387,7 @@ export async function accionSincronizarCompetidor(fd: FormData): Promise<void> {
   const comercioId = str(fd, "comercioId");
   const ok = await db.sincronizarCompetidor(id);
   if (!ok) {
-    throw new Error(
-      "No se pudo sincronizar — revisá que el competidor tenga Google Place ID cargado y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.",
-    );
+    redirect(`/admin/clientes/${comercioId}/competencia?error=sync-competidor`);
   }
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${comercioId}/competencia`);
