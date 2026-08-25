@@ -126,7 +126,7 @@ export function ingresoNFC(c: Cliente): number {
 // ---------- Fase 1+: captación, CRM, SEO/GEO ----------
 // "comercio" en la base de datos es el mismo concepto que "Cliente" acá.
 
-export type DestinoLink = "resena" | "menu" | "instagram" | "promo" | "url_custom";
+export type DestinoLink = "resena" | "menu" | "instagram" | "promo" | "url_custom" | "loyalty";
 
 /** Qué soporte físico usa este link: chip NFC, sticker/impreso con QR, o un
  * standee que trae los dos apuntando al mismo lugar. Sirve para saber, sin
@@ -248,3 +248,21 @@ export const CHECKLIST_SEO_ITEMS: { key: string; label: string }[] = [
   { key: "qa", label: "Preguntas y respuestas frecuentes cargadas" },
   { key: "schema", label: "Schema LocalBusiness instalado en el sitio (si tiene web)" },
 ];
+
+// ---------- Loyalty (módulo aditivo detrás de LOYALTY_ENABLED) ----------
+// Tipos del módulo de fidelización vía Google/Apple Wallet. Viven acá en vez
+// de en lib/types/loyalty.ts (como proponía el brief original) porque
+// lib/types.ts todavía es un archivo único, no una carpeta partida por
+// dominio — el mismo criterio que ya usa el resto del proyecto: Loyalty se
+// adapta a las convenciones reales del repo, no a las que tenía el brief.
+
+/** Programa de fidelización de un comercio — uno solo por comercio en el
+ * wedge (sin multi-programa todavía). */
+export interface ProgramaLoyalty {
+  comercioId: string;
+  googleClassId: string;
+  applePassTypeId: string;
+  puntosBienvenida: number;
+  activo: boolean;
+}
+

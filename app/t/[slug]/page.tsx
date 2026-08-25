@@ -81,6 +81,19 @@ export default async function TapPage({
     return <ActivarCartel slug={slug} />;
   }
 
+  // Loyalty: pieza dedicada a fidelización (ej. "sumá puntos" en caja, en
+  // vez del cartel que pide reseña). Requiere el flag global Y que el
+  // comercio tenga el entitlement — si falta cualquiera de los dos, cae al
+  // comportamiento de siempre (reseña de Google) en vez de un callejón sin
+  // salida. Módulo aditivo: esta es la ÚNICA rama nueva en esta página.
+  if (
+    link.destino === "loyalty" &&
+    comercio.tieneLoyalty &&
+    process.env.LOYALTY_ENABLED === "true"
+  ) {
+    redirect(`/l/${comercio.id}`);
+  }
+
   // Sin URL propia cargada: todo cartel va derecho a la reseña pública de
   // Google del comercio, para todo el mundo — sin pantallas intermedias.
   // El tap ya quedó contado arriba.

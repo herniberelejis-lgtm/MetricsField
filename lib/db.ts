@@ -192,14 +192,14 @@ export interface DatosTap {
     LinkNFC,
     "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio"
   >;
-  comercio: { id: string; nombre: string; rubro: Rubro; googleReviewUrl: string } | null;
+  comercio: { id: string; nombre: string; rubro: Rubro; googleReviewUrl: string; tieneLoyalty: boolean } | null;
 }
 
 export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   const rows = await sql`
     SELECT l.id, l.destino, l.url_destino, l.activo,
            l.autogestionado, l.nombre_negocio,
-           co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url
+           co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url, co.tiene_loyalty
     FROM links_nfc l
     LEFT JOIN comercios co ON co.id = l.comercio_id
     WHERE l.id = ${slug}
@@ -222,6 +222,7 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
           nombre: r.nombre as string,
           rubro: r.rubro as Rubro,
           googleReviewUrl: r.google_review_url as string,
+          tieneLoyalty: Boolean(r.tiene_loyalty),
         }
       : null,
   };
