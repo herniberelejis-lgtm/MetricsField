@@ -136,7 +136,9 @@ autenticado con `Bearer CRON_SECRET`). El "enchufe" a la API de Anthropic existe
 el código pero está sin usar (audits/respuestas hoy son manuales o por plantilla).
 
 **Rutas públicas** (no pasan por auth de admin): `/` (landing), `/t/[slug]`
-(star-gate del tap NFC), `/portal/[codigo]`, `/login`, `/privacidad`.
+(star-gate del tap NFC), `/portal/[codigo]`, `/login`, `/privacidad`,
+`/l/[codigo]` (landing de Loyalty — detrás de `LOYALTY_ENABLED`, ver
+`lib/db/loyalty.ts`).
 
 ## Variables de entorno
 

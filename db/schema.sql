@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS comercios (
   auto_responder_umbral    INTEGER NOT NULL DEFAULT 4 CHECK (auto_responder_umbral IN (4, 5)), -- a partir de cuántas estrellas se responde sola
   resenas_sync_en          TIMESTAMPTZ,                -- última sincronización de reseñas vía Google Reviews API
   email_notificaciones     TEXT NOT NULL DEFAULT '',   -- a dónde mandar la alerta de reseña mala y el resumen mensual; vacío = no se manda nada
+  tiene_loyalty            BOOLEAN NOT NULL DEFAULT FALSE, -- entitlement del módulo Loyalty — un comercio puede ser Reviews-only, Loyalty-only o pack
+  lat                      NUMERIC,                    -- para el control de geolocalización blanda de Loyalty (ver eventos_loyalty)
+  lng                      NUMERIC,
   -- Multi-sucursal: NULL = esta fila es una cuenta (comportamiento de
   -- siempre, un solo local). No NULL = esta fila es una sucursal que
   -- cuelga de la cuenta apuntada — codigo_acceso/plan/fee/contacto/
@@ -220,3 +223,108 @@ CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(come
 -- las detecta, te dice cuántas filas tienen y trae los DROP comentados con el
 -- comando de export al lado. Ojo con `prospectos`: si tiene datos es pipeline
 -- de venta real, exportalo antes de borrar nada.
+
+-- ============================================================
+-- Loyalty — módulo aditivo detrás de LOYALTY_ENABLED. Si se revierte,
+-- Reviews queda exactamente igual. Ver db/migrations/011_loyalty_fundaciones.sql
+-- para el detalle de cada decisión (por qué append-only, por qué ip_hash
+-- y no IP, por qué clientes_finales es global y no por comercio, etc.).
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS clientes_finales (
+  id             TEXT PRIMARY KEY,
+  telefono       TEXT UNIQUE NOT NULL,
+  nombre         TEXT NOT NULL DEFAULT '',
+  email          TEXT NOT NULL DEFAULT '',
+  cookie_sesion  TEXT UNIQUE,
+  creado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS consentimientos (
+  id                BIGSERIAL PRIMARY KEY,
+  cliente_final_id  TEXT NOT NULL REFERENCES clientes_finales(id) ON DELETE CASCADE,
+  comercio_id       TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  version           TEXT NOT NULL,
+  datos             BOOLEAN NOT NULL DEFAULT FALSE,
+  marketing         BOOLEAN NOT NULL DEFAULT FALSE,
+  wallet            BOOLEAN NOT NULL DEFAULT FALSE,
+  creado_en         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_consentimientos_cliente ON consentimientos(cliente_final_id, comercio_id);
+
+CREATE TABLE IF NOT EXISTS programas_loyalty (
+  comercio_id          TEXT PRIMARY KEY REFERENCES comercios(id) ON DELETE CASCADE,
+  google_class_id      TEXT NOT NULL DEFAULT '',
+  apple_pass_type_id   TEXT NOT NULL DEFAULT '',
+  puntos_bienvenida    INTEGER NOT NULL DEFAULT 100,
+  activo               BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en            TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS membresias (
+  id                    TEXT PRIMARY KEY,
+  cliente_final_id      TEXT NOT NULL REFERENCES clientes_finales(id) ON DELETE CASCADE,
+  comercio_id           TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  google_object_id      TEXT NOT NULL DEFAULT '',
+  apple_serial_number   TEXT NOT NULL DEFAULT '',
+  estado_google         TEXT NOT NULL DEFAULT 'pendiente',
+  estado_apple          TEXT NOT NULL DEFAULT 'pendiente',
+  creado_en             TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (cliente_final_id, comercio_id)
+);
+CREATE INDEX IF NOT EXISTS idx_membresias_comercio ON membresias(comercio_id);
+
+CREATE TABLE IF NOT EXISTS misiones (
+  id            TEXT PRIMARY KEY,
+  comercio_id   TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  tipo          TEXT NOT NULL,
+  puntos        INTEGER NOT NULL DEFAULT 0,
+  verificacion  TEXT NOT NULL DEFAULT 'autodeclarada',
+  activa        BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_misiones_comercio ON misiones(comercio_id);
+
+CREATE TABLE IF NOT EXISTS beneficios (
+  id            TEXT PRIMARY KEY,
+  comercio_id   TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  nombre        TEXT NOT NULL,
+  costo_puntos  INTEGER NOT NULL,
+  activo        BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_beneficios_comercio ON beneficios(comercio_id);
+
+CREATE TABLE IF NOT EXISTS movimientos_puntos (
+  id            BIGSERIAL PRIMARY KEY,
+  membresia_id  TEXT NOT NULL REFERENCES membresias(id) ON DELETE CASCADE,
+  delta         INTEGER NOT NULL,
+  motivo        TEXT NOT NULL,
+  mision_id     TEXT REFERENCES misiones(id) ON DELETE SET NULL,
+  idem_clave    TEXT NOT NULL UNIQUE,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_movimientos_membresia ON movimientos_puntos(membresia_id, creado_en);
+
+CREATE TABLE IF NOT EXISTS canjes (
+  id            TEXT PRIMARY KEY,
+  membresia_id  TEXT NOT NULL REFERENCES membresias(id) ON DELETE CASCADE,
+  beneficio_id  TEXT NOT NULL REFERENCES beneficios(id),
+  validado      BOOLEAN NOT NULL DEFAULT FALSE,
+  validado_en   TIMESTAMPTZ,
+  admin_email   TEXT NOT NULL DEFAULT '',
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_canjes_membresia ON canjes(membresia_id);
+
+CREATE TABLE IF NOT EXISTS eventos_loyalty (
+  id                 BIGSERIAL PRIMARY KEY,
+  comercio_id        TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  cliente_final_id   TEXT REFERENCES clientes_finales(id) ON DELETE SET NULL,
+  tipo               TEXT NOT NULL,
+  ip_hash            TEXT,
+  detalle            TEXT NOT NULL DEFAULT '',
+  creado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_comercio_fecha ON eventos_loyalty(comercio_id, creado_en);
+CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_cooldown ON eventos_loyalty(cliente_final_id, comercio_id, tipo, creado_en);
