@@ -56,7 +56,7 @@
         scroll: 2.0, linger: 0.45,
         eyebrow: 'El final del viaje',
         title: 'Y aterriza acá.',
-        body: 'Taps por día y por hora, reseñas nuevas, rating contra el mes anterior, ranking por colaborador y respuestas sugeridas listas para publicar. Todo lo que pasó en el mostrador, medido.',
+        body: 'Taps por día y por hora, reseñas nuevas, visitas al perfil y llamadas que te llegan desde Google, rating contra el mes anterior y respuestas sugeridas listas para publicar. Todo lo que pasó en el mostrador, medido.',
         cta: {
           primary: { label: 'Pedir demo presencial gratis', href: WA + '?text=Hola!%20Quiero%20una%20demo%20presencial%20gratis%20de%20MetricsField' },
           secondary: { label: 'Ver el panel por dentro', href: '#panel' },
@@ -89,11 +89,20 @@
   });
 
   // La navbar arranca sobre el mundo (oscuro) y se vuelve sólida recién al
-  // entrar en la página de venta, que es blanca.
+  // entrar en la página de venta, que es blanca. El isotipo tiene que
+  // cambiar de versión junto con el fondo: claro sobre el mundo oscuro,
+  // oscuro sobre la navbar blanca.
   var sales = $('#sales');
+  var navMark = $('#nav-mark');
+  var navSolid = false;
   function onScroll() {
     var y = window.scrollY || window.pageYOffset;
-    nav.classList.toggle('is-solid', y > sales.offsetTop - 80);
+    var solid = y > sales.offsetTop - 80;
+    nav.classList.toggle('is-solid', solid);
+    if (solid !== navSolid) {
+      navSolid = solid;
+      if (navMark) navMark.src = 'assets/img/logo-icon-' + (solid ? 'dark' : 'light') + '.webp';
+    }
 
     var doc = document.documentElement;
     var max = doc.scrollHeight - window.innerHeight;

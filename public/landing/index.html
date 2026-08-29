@@ -10,7 +10,7 @@
 <meta property="og:title" content="MetricsField — La reputación de tu local, trabajando sola">
 <meta property="og:description" content="Equipamos tu mostrador con hardware NFC/QR. Tus clientes acercan el celular y van directo a calificar en Google.">
 <meta property="og:locale" content="es_AR">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2309090B'/%3E%3Cpath d='M8 23V9h3.4l4.6 8 4.6-8H24v14h-3.1v-8.6L16.6 22h-1.2l-4.3-7.6V23z' fill='%2310B981'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
 <link rel="preload" href="assets/fonts/montserrat-700-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -42,8 +42,7 @@
 <header class="nav" id="nav">
   <div class="nav-in">
     <a class="nav-logo" href="#top" aria-label="MetricsField, ir al inicio">
-      <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/MetFi-Logo-FondoNegro-VXninT2kgNlqkeXES1iroVUxvUhSVp.png"
-           alt="MetricsField" data-fallback="assets/img/logo-white.svg">
+      <img id="nav-mark" src="assets/img/logo-icon-light.webp" alt="" width="26" height="26">
       <span class="wordmark">MetricsField</span>
     </a>
     <nav class="nav-links" id="nav-links" aria-label="Secciones">
@@ -102,7 +101,7 @@
         <article class="tri-c reveal" data-d="1">
           <span class="tri-n">Software</span>
           <h3>Un portal privado por cliente</h3>
-          <p>Taps por día, hora y pieza; reseñas nuevas con borrador de respuesta; rating contra el mes anterior; tus competidores de la zona. Se entra por un link, sin usuario ni contraseña.</p>
+          <p>Taps por día, hora y pieza; reseñas nuevas con borrador de respuesta; rating contra el mes anterior; visitas al perfil y llamadas que llegan desde tu ficha de Google; tus competidores de la zona. Se entra por un link, sin usuario ni contraseña.</p>
           <a class="tri-a" href="#panel">Probar el panel acá abajo →</a>
         </article>
         <article class="tri-c reveal" data-d="2">
@@ -403,6 +402,37 @@
     </div>
   </section>
 
+  <!-- RESULTADOS -->
+  <section class="section" id="resultados">
+    <div class="wrap">
+      <div class="head reveal">
+        <p class="eyebrow">Resultados</p>
+        <h2 class="h">Así se ve una cuenta en funcionamiento</h2>
+        <p class="lede">Los tres locales de una cuenta activa hoy, con MetricsField instalado desde hace algunos meses. Son datos operativos reales del panel, no citas de cliente.</p>
+      </div>
+
+      <div class="results">
+        <article class="rescard reveal">
+          <p class="rescard-loc">Restaurante / Bar · Nueva Córdoba</p>
+          <p class="rescard-jump">4.1★ <span class="arrow">→</span> 4.8★</p>
+          <p class="rescard-detail">+106 reseñas nuevas desde la instalación</p>
+        </article>
+        <article class="rescard reveal" data-d="1">
+          <p class="rescard-loc">Restaurante / Bar · Güemes</p>
+          <p class="rescard-jump">3.9★ <span class="arrow">→</span> 4.5★</p>
+          <p class="rescard-detail">+45 reseñas nuevas desde la instalación</p>
+        </article>
+        <article class="rescard reveal" data-d="2">
+          <p class="rescard-loc">Restaurante / Bar · Cerro de las Rosas</p>
+          <p class="rescard-jump">3.8★ <span class="arrow">→</span> 4.5★</p>
+          <p class="rescard-detail">+28 reseñas nuevas desde la instalación</p>
+        </article>
+      </div>
+
+      <p class="under-note reveal">¿Tenés un caso propio y querés que lo sumemos con tu nombre? <a href="mailto:hola@metricsfield.com">Escribinos</a>.</p>
+    </div>
+  </section>
+
   <!-- COMPARATIVA -->
   <section class="section" id="comparativa">
     <div class="wrap mid">
@@ -507,6 +537,21 @@
     </div>
   </section>
 
+  <!-- LOYALTY (en desarrollo) -->
+  <section class="section" id="loyalty">
+    <div class="wrap narrow">
+      <div class="loyalty-card reveal">
+        <span class="loyalty-badge">En desarrollo</span>
+        <h2 class="h" style="margin-top:14px">Lo que viene: MetricsField Loyalty</h2>
+        <p class="lede">
+          Reviews consigue que un cliente hable bien de vos en Google. Loyalty va a conseguir que ese mismo cliente vuelva — y que sepas quién es.
+          Una tarjeta de fidelización que vive en la billetera que el celular ya tiene instalada (Apple Wallet / Google Wallet). Sin apps nuevas para descargar, sin plástico que perder.
+        </p>
+        <p class="loyalty-note">Usa el mismo cartel que ya tenés instalado. Todavía no está a la venta — si te interesa ser de los primeros en probarlo, <a href="mailto:hola@metricsfield.com?subject=Quiero%20saber%20más%20de%20MetricsField%20Loyalty">avisanos</a>.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- FAQ -->
   <section class="section" id="faq">
     <div class="wrap narrow">
@@ -565,7 +610,10 @@
     <div class="wrap">
       <div class="foot-grid">
         <div>
-          <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/MetFi-Logo-FondoNegro-VXninT2kgNlqkeXES1iroVUxvUhSVp.png" alt="MetricsField" data-fallback="assets/img/logo-dark.svg">
+          <div class="foot-brand">
+            <img src="assets/img/logo-icon-light.webp" alt="" width="26" height="26">
+            <span>MetricsField</span>
+          </div>
           <p>Hardware NFC/QR + SaaS para la reputación online de locales en Argentina.</p>
           <p>Córdoba, Argentina</p>
         </div>
@@ -577,7 +625,9 @@
             <li><a href="#panel">El panel</a></li>
             <li><a href="#como-funciona">Puesta en marcha</a></li>
             <li><a href="#roi">Simulador</a></li>
+            <li><a href="#resultados">Resultados</a></li>
             <li><a href="#planes">Planes</a></li>
+            <li><a href="#loyalty">Loyalty (en desarrollo)</a></li>
           </ul>
         </div>
         <div>

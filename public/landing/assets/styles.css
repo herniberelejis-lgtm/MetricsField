@@ -15,6 +15,9 @@
   --g400:#A1A1AA; --g500:#71717A; --g600:#52525B; --g700:#3F3F46;
   --g800:#27272A; --g900:#18181B;
   --green:#10B981; --green-d:#059669; --blue:#2563EB; --amber:#FBBF24; --red:#EF4444;
+  /* Acentos secundarios del manual de marca: niebla azul y verde suave,
+     "tonos fríos y tecnológicos que complementan la paleta monocromática". */
+  --mist:#C8D8E8; --soft-green:#C8DDD0;
   --nav-h:64px;
   --radius:16px;
   --shadow-sm:0 10px 25px rgba(9,9,11,.10);
@@ -342,6 +345,18 @@ input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:3p
 .rcard.light small{color:var(--g500)}
 .roi-note{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--g200);font-size:.7rem;color:var(--g400)}
 
+/* ---------- resultados ---------- */
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.rescard{background:var(--white);border:1px solid var(--g200);border-radius:var(--radius);padding:26px;
+  text-align:center;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s,border-color .3s}
+.rescard:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--g300)}
+.rescard-loc{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--g400);margin:0 0 14px}
+.rescard-jump{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;margin:0 0 10px;
+  font-variant-numeric:tabular-nums}
+.rescard-jump .arrow{color:var(--green-d);font-weight:400;margin:0 2px}
+.rescard-detail{font-size:.85rem;color:var(--g500);margin:0}
+
 /* ---------- comparativa ---------- */
 .cmp-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--g200)}
 .cmp{min-width:760px;width:100%;border-collapse:collapse;font-size:.86rem}
@@ -418,7 +433,9 @@ input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:3p
 .foot{background:var(--ink);color:var(--g400);border-top:1px solid var(--g800);
   padding:56px 24px calc(40px + env(safe-area-inset-bottom))}
 .foot-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:36px;margin-bottom:40px}
-.foot img{height:30px;margin-bottom:16px}
+.foot-brand{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+.foot-brand img{height:26px;width:26px}
+.foot-brand span{font-weight:800;letter-spacing:-.02em;font-size:1.05rem;color:var(--white)}
 .foot p{font-size:.8rem;line-height:1.6;margin:0 0 10px;max-width:24ch}
 .foot h4{color:var(--white);font-size:.7rem;font-weight:700;text-transform:uppercase;
   letter-spacing:.12em;margin:0 0 16px}
@@ -585,6 +602,14 @@ input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:3p
 .pill.on{background:rgba(16,185,129,.14);color:var(--green-d)}
 .pill.off{background:var(--g100);color:var(--g400)}
 .foot-n{font-size:.72rem;color:var(--g400);margin:11px 0 0}
+
+/* ---------- loyalty (en desarrollo) ---------- */
+.loyalty-card{background:var(--g50);border:1px dashed var(--g300);border-radius:var(--radius);
+  padding:36px;text-align:center}
+.loyalty-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--mist);
+  border-radius:999px;font-size:.68rem;font-weight:700;color:#2c4a6b;letter-spacing:.08em;text-transform:uppercase}
+.loyalty-note{font-size:.85rem;color:var(--g500);margin:18px 0 0}
+.loyalty-note a{color:var(--ink);font-weight:600}
 
 .spark{background:var(--white);border:1px solid var(--g200);border-radius:11px;padding:15px}
 .spark svg{width:100%;height:120px;display:block}

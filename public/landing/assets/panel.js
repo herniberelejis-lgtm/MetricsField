@@ -29,9 +29,9 @@
 
   var KPIS = [
     { v: 1576, l: 'Taps del cartel', i: 'wifi' },
-    { v: 0, l: 'Reseñas hoy', i: 'star' },
     { v: 38, l: 'Reseñas este mes', i: 'star' },
     { v: 1180, l: 'Visitas al perfil', i: 'eye' },
+    { v: 47, l: 'Llamadas desde Google', i: 'phone' },
     { v: 140, l: 'Reseñas totales', i: 'trend' },
   ];
 
@@ -69,6 +69,7 @@
     trend: '<polyline points="3,17 9,11 13,15 21,6"/><polyline points="15,6 21,6 21,12"/>',
     search: '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
     chart: '<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="18" y1="20" x2="18" y2="15"/>',
+    phone: '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.7 21 3 13.3 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z"/>',
   };
   function icon(name, size) {
     return '<svg class="pi" viewBox="0 0 24 24" width="' + (size || 16) + '" height="' + (size || 16) +
@@ -216,7 +217,8 @@
       return '<p class="sec-l">Junio 2026 · los tres locales</p>' +
         '<div class="two"><div class="mini-c"><p>Taps</p><b>1.576</b></div>' +
         '<div class="mini-c"><p>Reseñas nuevas</p><b>38</b></div>' +
-        '<div class="mini-c"><p>Visitas al perfil</p><b>1.180</b></div></div>' +
+        '<div class="mini-c"><p>Visitas al perfil</p><b>1.180</b></div>' +
+        '<div class="mini-c"><p>Llamadas</p><b>47</b></div></div>' +
         '<p class="foot-n">Se manda solo por mail el primero de cada mes, en PDF.</p>';
     },
   };
