@@ -87,7 +87,7 @@ function mountScrollWorld(container, config) {
     stage.appendChild(scene);
 
     Object.assign(s, {
-      el: scene, frame, img, video: null, hasClip: false,
+      el: scene, frame, img, video: null, hasClip: false, painted: false,
       loading: false, ready: false, cur: 0, target: 0, visible: false,
     });
   });
@@ -166,8 +166,12 @@ function mountScrollWorld(container, config) {
         v.addEventListener('loadedmetadata', () => { s.ready = true; read(); });
         // Recién se oculta el poster cuando pintó un frame de verdad. En iOS un
         // video muted que nunca se reprodujo queda en blanco, y ocultar el still
-        // en `loadedmetadata` mostraría una escena vacía.
-        v.addEventListener('seeked', () => { s.el.classList.add('has-clip'); }, { once: true });
+        // en `loadedmetadata` mostraría una escena vacía. `s.painted` (no
+        // `s.hasClip`, que ya es true desde que se creó el <video>, mucho antes
+        // de tener un frame real) es lo único que debe frenar la animación del
+        // still — si se corta antes, el still queda congelado mientras el
+        // video sigue sin aparecer, y el swap final se ve como un salto.
+        v.addEventListener('seeked', () => { s.painted = true; s.el.classList.add('has-clip'); }, { once: true });
         v.addEventListener('loadeddata', () => { try { v.pause(); } catch (e) {} if (userReady) primeVideo(v); });
         s.frame.appendChild(v);
         s.video = v;
@@ -184,7 +188,12 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      // 0.9vh de antelación, no 1.6: con beats de ~1-1.7vh de largo, una
+      // ventana más ancha dispara varios videos a la vez apenas se monta la
+      // página, y en una conexión real todos compiten por el mismo ancho de
+      // banda — el primer beat, que es lo único que hace falta ver ya, tarda
+      // más por la competencia y no por su propio peso.
+      if (y > s.start - 0.9 * vh && y < s.end + 0.9 * vh) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = s.linger ? lingerEase(local, s.linger) : local;
 
@@ -195,7 +204,7 @@ function mountScrollWorld(container, config) {
       s.el.style.opacity = op;
       s.visible = op > 0.001;
       s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
-      if (!s.hasClip || !s.ready) {
+      if (!s.painted) {
         const sc = reduce ? 1 : 1.02 + local * 0.08;
         s.img.style.transform = `scale(${sc.toFixed(3)})`;
       }
@@ -307,9 +316,10 @@ function injectCSS() {
     height:min(78vh,640px);aspect-ratio:9/16;border-radius:26px;overflow:hidden;
     background:#000;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .sw-scene__still{will-change:transform;}
+  .sw-scene__still{will-change:transform;transition:opacity .45s ease}
   .sw-scene.has-clip .sw-scene__still{opacity:0;}
-  .sw-scene__video{z-index:1;}
+  .sw-scene__video{z-index:1;opacity:0;transition:opacity .45s ease}
+  .sw-scene.has-clip .sw-scene__video{opacity:1;}
 
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(62vw,860px);
