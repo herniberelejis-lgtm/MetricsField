@@ -313,11 +313,10 @@
     }
     return TICK_DEFS[TICK_DEFS.length - 1];
   }
-  function bumpKpi(idx, showDelta) {
-    var kpiEl = body.querySelectorAll('.kpis .kpi')[idx];
+  function bumpKpiEl(kpiEl, val, showDelta) {
     if (!kpiEl) return;
     var b = kpiEl.querySelector('b');
-    b.textContent = ar(KPIS[idx].v);
+    b.textContent = ar(val);
     b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
     setTimeout(function () { b.classList.remove('bump'); }, 500);
     if (showDelta) {
@@ -335,21 +334,79 @@
     var delta = def.min + Math.floor(Math.random() * (def.max - def.min + 1));
     KPIS[def.i].v += delta;
     if (def.i === 1) KPIS[4].v += delta;   // reseñas este mes también suman al total
-    if (currentView !== 'resumen' || document.hidden) return;  // el valor ya quedó actualizado para la próxima vez
-    bumpKpi(def.i, delta);
-    if (def.i === 1) bumpKpi(4, null);
+    if (document.hidden) return;
+    if (currentView === 'resumen') {
+      var els = body.querySelectorAll('.kpis .kpi');
+      bumpKpiEl(els[def.i], KPIS[def.i].v, delta);
+      if (def.i === 1) bumpKpiEl(els[4], KPIS[4].v, null);
+    }
+    if (heroKpiEls) {
+      bumpKpiEl(heroKpiEls[def.i], KPIS[def.i].v, delta);
+      if (def.i === 1) bumpKpiEl(heroKpiEls[4], KPIS[4].v, null);
+    }
   }
-  var tickTimer = null;
+  var tickTimer = null, tickStarted = false;
   function scheduleTick() {
     if (reduce) return;
     tickTimer = setTimeout(function () { tick(); scheduleTick(); }, 4200 + Math.random() * 5200);
+  }
+  // El tick es uno solo: lo puede arrancar el portal real (más abajo en la
+  // página) o la mini-vista del hero (que aparece antes en el scroll) —
+  // lo que pase primero. Sin este guard, si el hero la arranca, el portal
+  // real la volvería a arrancar por duplicado al llegar a su turno.
+  function startTicking() {
+    if (tickStarted) return;
+    tickStarted = true;
+    scheduleTick();
   }
 
   // Arranca cuando el portal entra en pantalla, no antes.
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (es) {
-      if (es[0].isIntersecting) { animate(); scheduleTick(); io.disconnect(); }
+      if (es[0].isIntersecting) { animate(); startTicking(); io.disconnect(); }
     }, { threshold: 0.25 });
     io.observe(mount);
-  } else { animate(); scheduleTick(); }
+  } else { animate(); startTicking(); }
+
+  /* ══════════ la mini-vista viva del beat final del hero ══════════
+     El "aterriza acá" del hero disuelve a esto en vez de a una captura
+     fija: el mismo Resumen, con los mismos 5 KPIs (mismo array, misma
+     fuente de datos), contando hacia arriba y después recibiendo los
+     mismos ticks que el panel real de más abajo. scroll-world.js llama a
+     este hook apenas el reveal empieza a hacerse visible — no antes,
+     porque #mf-hero-preview es fixed y por lo tanto "visible" para
+     cualquier detector geométrico desde el primer frame, aunque su
+     opacidad sea 0. */
+  var heroKpiEls = null;
+  function mountHeroPreview() {
+    var host = document.getElementById('mf-hero-preview');
+    if (!host || heroKpiEls) return;
+    host.innerHTML =
+      '<div class="hp-brand"><span class="pmark">M</span>METRICSFIELD</div>' +
+      '<div class="kpis">' + KPIS.map(function (k) {
+        return '<div class="kpi"><span class="kpi-i">' + icon(k.i, 14) + '</span>' +
+          '<span class="kpi-n"><b data-to="' + k.v + '">0</b><i class="kpi-trend" aria-hidden="true">' + icon('trend', 10) + '</i></span>' +
+          '<span class="kpi-l">' + k.l + '</span></div>';
+      }).join('') + '</div>' +
+      '<div class="locs">' + localCard(LOCALES[0]) + '</div>';
+    heroKpiEls = host.querySelectorAll('.kpis .kpi');
+    startTicking();
+    host.querySelectorAll('[data-to]').forEach(function (el) {
+      var to = Number(el.getAttribute('data-to'));
+      if (reduce || !to) { el.textContent = ar(to); return; }
+      var t0 = performance.now();
+      (function step(now) {
+        var p = Math.min(1, (now - t0) / 1100);
+        el.textContent = ar(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      })(t0);
+    });
+    var ringV = host.querySelector('.ring-v');
+    if (ringV) {
+      var off = ringV.getAttribute('data-off');
+      if (reduce) ringV.style.strokeDashoffset = off;
+      else requestAnimationFrame(function () { ringV.style.strokeDashoffset = off; });
+    }
+  }
+  window.mountMetricsFieldHeroPreview = mountHeroPreview;
 })();

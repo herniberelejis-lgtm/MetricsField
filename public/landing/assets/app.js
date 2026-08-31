@@ -53,7 +53,7 @@
         id: 'panel', label: 'El panel', accent: '#2563EB',
         still: 'assets/img/beat-panel.webp',
         clip: 'assets/vid/panel.mp4', clipMobile: 'assets/vid/panel-m.mp4',
-        reveal: 'assets/img/beat-panel-reveal.webp', revealMobile: 'assets/img/beat-panel-reveal-m.webp',
+        reveal: true,
         scroll: 2.0, linger: 0.45,
         eyebrow: 'El final del viaje',
         title: 'Y aterriza acá.',

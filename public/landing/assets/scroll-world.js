@@ -47,7 +47,7 @@ function mountScrollWorld(container, config) {
   const SEGMENTS = SECTIONS.map((s, i) => {
     const seg = {
       si: i, clip: s.clip, clipM: s.clipMobile, still: s.still,
-      reveal: s.reveal, revealM: s.revealMobile,
+      reveal: s.reveal,
       accent: s.accent, w: s.scroll || DIVE_W, linger: s.linger || 0,
     };
     s._seg = seg;
@@ -85,17 +85,14 @@ function mountScrollWorld(container, config) {
     if (s.still) img.src = s.still;
     frame.appendChild(img);
 
-    // Beat final: el video de tránsito disuelve a una captura real del panel,
-    // no a otro clip. Se arma en el montaje inicial (no en loadClip) porque no
-    // depende de red: es liviana y tiene que estar lista para cuando el scroll
-    // llegue a la cola del beat.
+    // Beat final: el video de tránsito disuelve al panel real, no a otro
+    // clip ni a una captura fija. El contenido lo arma panel.js (que ya
+    // conoce los datos de la cuenta demo) apenas este div empieza a
+    // hacerse visible — ver el hook en read(), más abajo.
     let revealWrap = null;
     if (s.reveal) {
       revealWrap = el('div', 'sw-scene__reveal');
-      const revealImg = el('img');
-      revealImg.alt = ''; revealImg.decoding = 'async'; revealImg.loading = 'lazy';
-      revealImg.src = (isMobile() && s.revealM) ? s.revealM : s.reveal;
-      revealWrap.appendChild(revealImg);
+      revealWrap.id = 'mf-hero-preview';
       frame.appendChild(revealWrap);
     }
     scene.appendChild(frame);
@@ -233,7 +230,17 @@ function mountScrollWorld(container, config) {
       // parpadeo — aparece y se apaga en el mismo instante.
       if (s.revealEl) {
         const REVEAL_FROM = 0.5, REVEAL_TO = 0.85;
-        s.revealEl.style.opacity = smooth((local - REVEAL_FROM) / (REVEAL_TO - REVEAL_FROM));
+        const ro = smooth((local - REVEAL_FROM) / (REVEAL_TO - REVEAL_FROM));
+        s.revealEl.style.opacity = ro;
+        // panel.js expone este hook y arma el contenido recién acá: si se
+        // montara al cargar la página, el conteo ascendente (que dura ~1s)
+        // ya habría terminado mucho antes de que el usuario llegue a verlo,
+        // porque `#mf-hero-preview` es fixed y por lo tanto "visible" para un
+        // IntersectionObserver desde el primer frame, aunque su opacidad sea 0.
+        if (ro > 0.02 && !s.revealTriggered) {
+          s.revealTriggered = true;
+          if (window.mountMetricsFieldHeroPreview) window.mountMetricsFieldHeroPreview();
+        }
       }
     }
 
@@ -243,7 +250,13 @@ function mountScrollWorld(container, config) {
       const before = y < seg.start, after = y > seg.end;
       let cop;
       if (i === 0) cop = after ? 0 : smooth(1 - pr / 0.62);          // saluda al aterrizar
-      else if (i === N - 1) cop = before ? 0 : smooth(pr / 0.4);     // sostiene el CTA al final
+      else if (i === N - 1) {
+        // Sostiene el CTA mientras dura el beat, pero tiene que apagarse
+        // después: `pr` queda clamped en 1 en cuanto `after` es true, así que
+        // sin este caso el copy (título, CTA) se queda pegado en opacidad 1
+        // para siempre y tapa la landing de venta que sigue debajo.
+        cop = before ? 0 : (after ? smooth(1 - (y - seg.end) / fade) : smooth(pr / 0.4));
+      }
       else cop = (before || after) ? 0 : smooth(1 - Math.abs(pr - 0.5) / 0.5);
       const c = copies[i];
       c.style.opacity = cop;
@@ -347,8 +360,10 @@ function injectCSS() {
   .sw-scene.has-clip .sw-scene__still{opacity:0;}
   .sw-scene__video{z-index:1;opacity:0;transition:opacity .45s ease}
   .sw-scene.has-clip .sw-scene__video{opacity:1;}
-  .sw-scene__reveal{position:absolute;inset:0;z-index:2;opacity:0;overflow:hidden;background:#F4F4F5;}
-  .sw-scene__reveal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;}
+  .sw-scene__reveal{position:absolute;inset:0;z-index:2;opacity:0;overflow:hidden;background:#F4F4F5;
+    color:#09090B;display:flex;flex-direction:column;gap:14px;padding:26px 20px 20px;}
+  .sw-scene__reveal .hp-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.92rem;
+    color:#09090B;letter-spacing:-.01em;flex-shrink:0;}
 
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(62vw,860px);
