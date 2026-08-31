@@ -25,9 +25,9 @@
         clip: 'assets/vid/local.mp4', clipMobile: 'assets/vid/local-m.mp4',
         scroll: 1.7, linger: 0.35,
         eyebrow: 'El problema',
-        title: 'Tu mejor mesa no deja rastro.',
-        body: 'Comieron bien, los atendieron bien, se van. Mañana en Google no va a figurar nada. No es que no quieran dejar reseña: es que hay que acordarse, buscar el local y escribir, y eso pasa en el estacionamiento o nunca.',
-        tags: ['El pedido llega tarde o no llega'],
+        title: 'Tu mejor mesa no deja rastro. La peor, sí.',
+        body: 'Comieron bien, los atendieron bien, se van, y mañana en Google no va a figurar nada. No es que no quieran dejar reseña: es que hay que acordarse, buscar el local y escribir, y eso pasa en el estacionamiento o nunca. Al que le fue mal, en cambio, sí se acuerda — y ese es el que escribe.',
+        tags: ['Una queja pesa más que diez elogios'],
       },
       {
         id: 'gesto', label: 'El gesto', accent: '#10B981',
