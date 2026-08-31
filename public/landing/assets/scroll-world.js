@@ -47,6 +47,7 @@ function mountScrollWorld(container, config) {
   const SEGMENTS = SECTIONS.map((s, i) => {
     const seg = {
       si: i, clip: s.clip, clipM: s.clipMobile, still: s.still,
+      reveal: s.reveal, revealM: s.revealMobile,
       accent: s.accent, w: s.scroll || DIVE_W, linger: s.linger || 0,
     };
     s._seg = seg;
@@ -83,11 +84,26 @@ function mountScrollWorld(container, config) {
     img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
     if (s.still) img.src = s.still;
     frame.appendChild(img);
+
+    // Beat final: el video de tránsito disuelve a una captura real del panel,
+    // no a otro clip. Se arma en el montaje inicial (no en loadClip) porque no
+    // depende de red: es liviana y tiene que estar lista para cuando el scroll
+    // llegue a la cola del beat.
+    let revealWrap = null;
+    if (s.reveal) {
+      revealWrap = el('div', 'sw-scene__reveal');
+      const revealImg = el('img');
+      revealImg.alt = ''; revealImg.decoding = 'async'; revealImg.loading = 'lazy';
+      revealImg.src = (isMobile() && s.revealM) ? s.revealM : s.reveal;
+      revealWrap.appendChild(revealImg);
+      frame.appendChild(revealWrap);
+    }
     scene.appendChild(frame);
     stage.appendChild(scene);
 
     Object.assign(s, {
       el: scene, frame, img, video: null, hasClip: false, painted: false,
+      revealEl: revealWrap,
       loading: false, ready: false, cur: 0, target: 0, visible: false,
     });
   });
@@ -208,6 +224,17 @@ function mountScrollWorld(container, config) {
         const sc = reduce ? 1 : 1.02 + local * 0.08;
         s.img.style.transform = `scale(${sc.toFixed(3)})`;
       }
+      // Sobre la cola del beat, el clip disuelve a la captura real del panel:
+      // "aterriza acá" queda ilustrado con el dashboard de verdad, no con una
+      // animación abstracta que ya cumplió su función de transición. Tiene que
+      // llegar a opacidad 1 bastante antes de local=1: ahí mismo empieza el
+      // fundido de salida de toda la escena (outside/fade, más arriba), y si
+      // el reveal terminara de aparecer justo en ese punto se vería un
+      // parpadeo — aparece y se apaga en el mismo instante.
+      if (s.revealEl) {
+        const REVEAL_FROM = 0.5, REVEAL_TO = 0.85;
+        s.revealEl.style.opacity = smooth((local - REVEAL_FROM) / (REVEAL_TO - REVEAL_FROM));
+      }
     }
 
     for (let i = 0; i < N; i++) {
@@ -320,6 +347,8 @@ function injectCSS() {
   .sw-scene.has-clip .sw-scene__still{opacity:0;}
   .sw-scene__video{z-index:1;opacity:0;transition:opacity .45s ease}
   .sw-scene.has-clip .sw-scene__video{opacity:1;}
+  .sw-scene__reveal{position:absolute;inset:0;z-index:2;opacity:0;overflow:hidden;background:#F4F4F5;}
+  .sw-scene__reveal img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;}
 
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(62vw,860px);
@@ -389,6 +418,10 @@ function injectCSS() {
     .sw-scene__bg{display:none;}
     .sw-scene__frame{position:absolute;inset:0;top:0;right:0;transform:none;height:100%;width:100%;
       aspect-ratio:auto;border-radius:0;box-shadow:none;}
+    /* La captura del panel es clara; sin este velo, el texto blanco del copy
+       (pensado para ir sobre un fondo de video oscuro) se pierde encima. */
+    .sw-scene__reveal::after{content:"";position:absolute;inset:0;
+      background:linear-gradient(180deg,rgba(9,9,11,.74) 0%,rgba(9,9,11,.3) 26%,rgba(9,9,11,.16) 48%,rgba(9,9,11,.58) 76%,rgba(9,9,11,.94) 100%);}
     .sw-copylayer::before{width:100%;height:64%;top:auto;bottom:0;
       background:linear-gradient(0deg,var(--sw-bg) 6%,color-mix(in srgb,var(--sw-bg) 78%,transparent) 44%,transparent 100%);}
     .sw-copy{left:clamp(18px,5vw,64px);right:clamp(18px,5vw,64px);top:auto;
