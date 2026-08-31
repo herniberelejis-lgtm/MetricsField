@@ -113,7 +113,8 @@
           '<span class="attn-n">2</span></div>' +
         '<div class="kpis">' + KPIS.map(function (k) {
           return '<div class="kpi">' + '<span class="kpi-i">' + icon(k.i, 15) + '</span>' +
-            '<b data-to="' + k.v + '">0</b><span class="kpi-l">' + k.l + '</span></div>';
+            '<span class="kpi-n"><b data-to="' + k.v + '">0</b><i class="kpi-trend" aria-hidden="true">' + icon('trend', 11) + '</i></span>' +
+            '<span class="kpi-l">' + k.l + '</span></div>';
         }).join('') + '</div>' +
         '<p class="sec-l">Rendimiento · 3 locales</p>' +
         '<div class="locs">' + LOCALES.map(localCard).join('') + '</div>';
@@ -275,11 +276,13 @@
     });
   }
 
+  var currentView = 'resumen';
   mount.addEventListener('click', function (ev) {
     var btn = ev.target.closest('.pnav-i');
     if (!btn) return;
     var id = btn.getAttribute('data-view');
     if (!VIEWS[id]) return;
+    currentView = id;
     mount.querySelectorAll('.pnav-i').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
     title.textContent = btn.querySelector('span').textContent;
     expl.textContent = EXPLAIN[id] || '';
@@ -290,11 +293,63 @@
     animate();
   });
 
+  /* ══════════ el panel se siente vivo ══════════
+     Cada tanto entra un tap o una visita más: el número sube, flashea en
+     verde y suelta un +N que se eleva y se apaga. Nada de esto inventa una
+     reseña o un dato nuevo — son los mismos 5 KPIs de la cuenta demo
+     creciendo de a poco, para que el panel no se sienta una foto fija. */
+  var TICK_DEFS = [
+    { i: 0, min: 1, max: 3, weight: 5 },  // taps del cartel: lo más frecuente
+    { i: 2, min: 1, max: 2, weight: 3 },  // visitas al perfil
+    { i: 3, min: 1, max: 1, weight: 1 },  // llamadas desde Google
+    { i: 1, min: 1, max: 1, weight: 1 },  // reseñas este mes (arrastra el total)
+  ];
+  function pickTick() {
+    var total = TICK_DEFS.reduce(function (a, d) { return a + d.weight; }, 0);
+    var r = Math.random() * total;
+    for (var k = 0; k < TICK_DEFS.length; k++) {
+      if (r < TICK_DEFS[k].weight) return TICK_DEFS[k];
+      r -= TICK_DEFS[k].weight;
+    }
+    return TICK_DEFS[TICK_DEFS.length - 1];
+  }
+  function bumpKpi(idx, showDelta) {
+    var kpiEl = body.querySelectorAll('.kpis .kpi')[idx];
+    if (!kpiEl) return;
+    var b = kpiEl.querySelector('b');
+    b.textContent = ar(KPIS[idx].v);
+    b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+    setTimeout(function () { b.classList.remove('bump'); }, 500);
+    if (showDelta) {
+      var old = kpiEl.querySelector('.kpi-delta');
+      if (old) old.remove();
+      var chip = document.createElement('i');
+      chip.className = 'kpi-delta';
+      chip.textContent = '+' + showDelta;
+      kpiEl.appendChild(chip);
+      chip.addEventListener('animationend', function () { chip.remove(); });
+    }
+  }
+  function tick() {
+    var def = pickTick();
+    var delta = def.min + Math.floor(Math.random() * (def.max - def.min + 1));
+    KPIS[def.i].v += delta;
+    if (def.i === 1) KPIS[4].v += delta;   // reseñas este mes también suman al total
+    if (currentView !== 'resumen' || document.hidden) return;  // el valor ya quedó actualizado para la próxima vez
+    bumpKpi(def.i, delta);
+    if (def.i === 1) bumpKpi(4, null);
+  }
+  var tickTimer = null;
+  function scheduleTick() {
+    if (reduce) return;
+    tickTimer = setTimeout(function () { tick(); scheduleTick(); }, 4200 + Math.random() * 5200);
+  }
+
   // Arranca cuando el portal entra en pantalla, no antes.
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (es) {
-      if (es[0].isIntersecting) { animate(); io.disconnect(); }
+      if (es[0].isIntersecting) { animate(); scheduleTick(); io.disconnect(); }
     }, { threshold: 0.25 });
     io.observe(mount);
-  } else { animate(); }
+  } else { animate(); scheduleTick(); }
 })();
