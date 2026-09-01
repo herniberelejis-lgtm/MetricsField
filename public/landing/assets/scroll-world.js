@@ -79,9 +79,21 @@ function mountScrollWorld(container, config) {
     if (s.still) bg.style.backgroundImage = `url("${s.still}")`;
     scene.appendChild(bg);
 
+    // El marco nunca tiene que quedar en negro puro mientras el <img> o el
+    // <video> todavía no pintaron nada (blob en camino, seek en curso): el
+    // mismo still va también de fondo CSS del propio frame, así que si por
+    // lo que sea ninguno de los dos hijos pintó todavía, igual se ve algo.
     const frame = el('div', 'sw-scene__frame');
+    if (s.still) {
+      frame.style.backgroundImage = `url("${s.still}")`;
+      frame.style.backgroundSize = 'cover';
+      frame.style.backgroundPosition = 'center';
+    }
     const img = el('img', 'sw-scene__still');
-    img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    // Sin lazy: este <img> vive dentro de un contenedor fixed que geométricamente
+    // siempre está "en viewport", así que el lazy-loading nativo no ahorra
+    // nada y solo suma riesgo de que tarde en pintar justo cuando hace falta.
+    img.alt = ''; img.decoding = 'async';
     if (s.still) img.src = s.still;
     frame.appendChild(img);
 
