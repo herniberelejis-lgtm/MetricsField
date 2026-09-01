@@ -281,7 +281,14 @@ function mountScrollWorld(container, config) {
       }
       const c = copies[i];
       c.style.opacity = cop;
-      c.style.transform = reduce ? 'none' : `translateY(${(0.5 - pr) * 4}vh)`;
+      // Este transform se pisa en cada frame de scroll, así que el -50% de
+      // centrado vertical (el de la hoja de estilos) nunca llegaba a
+      // aplicarse una vez que arrancaba el scroll: el copy quedaba con el
+      // borde superior clavado en el 'top' del CSS en vez de centrado ahí,
+      // por eso se veía "más abajo" que el video (que sí conserva su
+      // transform de CSS porque nada lo toca por JS). Ahora el -50% va
+      // adentro del mismo transform, junto con el drift chiquito de scroll.
+      c.style.transform = reduce ? 'translateY(-50%)' : `translateY(calc(-50% + ${(0.5 - pr) * 4}vh))`;
       c.style.pointerEvents = cop > 0.5 ? 'auto' : 'none';
     }
 
@@ -387,12 +394,9 @@ function injectCSS() {
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__bg{position:absolute;inset:-8%;background-size:cover;background-position:center;
     filter:blur(52px) saturate(1.35);opacity:.42;transform:scale(1.08);}
-  /* El video es el acompañamiento, no el protagonista -- el texto es lo
-     primero que tiene que leerse. Por eso el marco es más chico que antes
-     (antes ocupaba casi todo el alto de pantalla, compitiéndole al copy). */
-  .sw-scene__frame{position:absolute;top:50%;left:calc(50% + var(--sw-gap-half));transform:translateY(-50%);
-    height:min(56vh,460px);aspect-ratio:9/16;border-radius:24px;overflow:hidden;
-    background:#000;box-shadow:0 30px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);}
+  .sw-scene__frame{position:absolute;top:44%;left:calc(50% + var(--sw-gap-half));transform:translateY(-50%);
+    height:min(80vh,660px);aspect-ratio:9/16;border-radius:26px;overflow:hidden;
+    background:#000;box-shadow:0 36px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .sw-scene__still{will-change:transform;transition:opacity .45s ease}
   .sw-scene.has-clip .sw-scene__still{opacity:0;}
@@ -409,7 +413,7 @@ function injectCSS() {
   /* El texto es la primera plana: la columna es más ancha y la tipografía
      más grande que antes, para que llene el espacio en vez de quedar como
      una nota al margen del video. */
-  .sw-copy{position:absolute;right:calc(50% + var(--sw-gap-half));top:50%;transform:translateY(-50%);
+  .sw-copy{position:absolute;right:calc(50% + var(--sw-gap-half));top:44%;transform:translateY(-50%);
     width:min(46vw,580px);opacity:0;will-change:opacity,transform;}
   .sw-copy__num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;
     letter-spacing:.14em;color:var(--sw-ink-soft);}
@@ -467,7 +471,7 @@ function injectCSS() {
      dos sin que ninguno quede apretado contra el borde. */
   @media (max-width:1080px){
     .sw-root{--sw-gap-half:20px;}
-    .sw-scene__frame{height:min(46vh,380px);}
+    .sw-scene__frame{height:min(64vh,520px);}
     .sw-copy{width:min(50vw,420px);}
     .sw-copy__title{font-size:clamp(1.9rem,4.4vw,2.8rem);}
   }
