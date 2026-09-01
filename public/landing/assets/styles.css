@@ -183,6 +183,10 @@ h2.h{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:700;letter-spacing:-.03em;
 .specs li{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--g800);
   font-size:.88rem;color:var(--g300)}
 .specs li svg{color:var(--green);flex-shrink:0}
+.hw-price{display:flex;align-items:baseline;gap:10px;padding:14px 16px;background:var(--g900);
+  border:1px solid var(--g800);border-radius:12px;margin-bottom:18px}
+.hw-price b{font-size:1.3rem;font-weight:700}
+.hw-price span{font-size:.78rem;color:var(--g500)}
 /* ---------- panel (screenshots reales) ---------- */
 #panel{background:var(--g100)}
 .browser{border-radius:18px;overflow:hidden;border:1px solid var(--g200);background:var(--white);
