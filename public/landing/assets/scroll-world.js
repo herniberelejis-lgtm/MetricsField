@@ -317,11 +317,13 @@ function mountScrollWorld(container, config) {
   }
 
   function raf() {
-    // Con todos los clips all-intra (cada frame es su propio keyframe, ver
-    // el re-encode de los .mp4) cada seek es barato: no hace falta decodear
-    // frames intermedios para llegar a uno cualquiera. Por eso el paso puede
-    // ser fino sin arriesgar que el seek no llegue a tiempo al siguiente rAF.
-    const eps = isMobile() ? 0.012 : 0.005;
+    // Todos los clips son all-intra (cada frame es su propio keyframe), así
+    // que un seek no tiene que decodear frames de más para llegar a uno
+    // cualquiera -- pero desde que el video pasó a 720x1280 (antes 540x960,
+    // ver el re-encode de calidad) cada seek decodea ~1.8x más píxeles. Un
+    // paso más fino que este le pide seeks a un ritmo que el decoder no
+    // llega a resolver, y el scrub se ve trabado en vez de fluido.
+    const eps = isMobile() ? 0.02 : 0.008;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
