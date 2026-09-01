@@ -244,20 +244,41 @@ function mountScrollWorld(container, config) {
       }
     }
 
+    // El copy de cada beat se sostiene en opacidad 1 durante casi todo su
+    // recorrido, y solo cruza rápido (COPY_FADE = 12% del ancho del beat) al
+    // entrar y al salir. Antes cada copy era un triángulo que solo tocaba 1
+    // en el punto medio exacto (`1 - |pr-0.5|/0.5`), así que pasaba la mitad
+    // de cada beat con el texto ya apagándose — y justo en la costura entre
+    // dos beats, los dos lados llegan a 0 a la vez: eso es la pantalla en
+    // blanco que se ve al scrollear (el cliente cree que se rompió la
+    // página). Con el "hold" ancho, el swap de un texto al otro pasa en un
+    // tramo corto de scroll en vez de una zona muerta grande.
+    // Ventana FIJA en píxeles, no un porcentaje del beat: un beat largo
+    // (el primero mide 1.7vh, ~1500px en un monitor típico) con un 12%
+    // de fundido todavía deja una costura de >150px con las dos tapas
+    // cerca de 0 a la vez. `fade` (CROSSFADE*vh, la misma que ya usa el
+    // video) es angosta sin importar cuánto dure el beat.
     for (let i = 0; i < N; i++) {
       const seg = SECTIONS[i]._seg;
       const pr = clamp((y - seg.start) / (seg.end - seg.start), 0, 1);
       const before = y < seg.start, after = y > seg.end;
+      const distStart = y - seg.start, distEnd = seg.end - y;
       let cop;
-      if (i === 0) cop = after ? 0 : smooth(1 - pr / 0.62);          // saluda al aterrizar
-      else if (i === N - 1) {
-        // Sostiene el CTA mientras dura el beat, pero tiene que apagarse
-        // después: `pr` queda clamped en 1 en cuanto `after` es true, así que
-        // sin este caso el copy (título, CTA) se queda pegado en opacidad 1
-        // para siempre y tapa la landing de venta que sigue debajo.
-        cop = before ? 0 : (after ? smooth(1 - (y - seg.end) / fade) : smooth(pr / 0.4));
+      if (i === 0) {
+        // Ya arranca a la vista (nada antes del primer beat): solo se apaga
+        // rápido cerca del final, al ceder paso al siguiente.
+        cop = after ? 0 : (distEnd < fade ? smooth(distEnd / fade) : 1);
+      } else if (i === N - 1) {
+        // Entra rápido, se sostiene, y recién se apaga después de `seg.end`
+        // (con el mismo fundido de la escena) para no taparle la página al
+        // scroll que sigue — ver el comentario en el bug original más abajo.
+        cop = before ? 0 : (after ? smooth(1 - (y - seg.end) / fade)
+          : (distStart < fade ? smooth(distStart / fade) : 1));
+      } else {
+        cop = (before || after) ? 0
+          : (distStart < fade ? smooth(distStart / fade)
+          : (distEnd < fade ? smooth(distEnd / fade) : 1));
       }
-      else cop = (before || after) ? 0 : smooth(1 - Math.abs(pr - 0.5) / 0.5);
       const c = copies[i];
       c.style.opacity = cop;
       c.style.transform = reduce ? 'none' : `translateY(${(0.5 - pr) * 4}vh)`;
@@ -277,7 +298,11 @@ function mountScrollWorld(container, config) {
   }
 
   function raf() {
-    const eps = isMobile() ? 0.02 : 0.008;   // paso de seek más grueso en celu = menos decodes
+    // Con todos los clips all-intra (cada frame es su propio keyframe, ver
+    // el re-encode de los .mp4) cada seek es barato: no hace falta decodear
+    // frames intermedios para llegar a uno cualquiera. Por eso el paso puede
+    // ser fino sin arriesgar que el seek no llegue a tiempo al siguiente rAF.
+    const eps = isMobile() ? 0.012 : 0.005;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
@@ -348,7 +373,13 @@ function injectCSS() {
                radial-gradient(60% 45% at 20% 75%,color-mix(in srgb,#2563EB 14%,transparent),transparent 70%);
     transition:background .6s;}
 
-  .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;}
+  /* En pantallas muy anchas, texto y video quedaban cada uno pegado a su
+     borde del viewport -- cuanto más ancha la ventana, más lejos uno del
+     otro, hasta el punto de no poder mirar los dos a la vez. Con el stage
+     tapado a 1360px (el mismo orden de magnitud que .wrap en el resto del
+     sitio) y centrado, el left/right de más abajo miden contra ese borde
+     en vez del borde real de una ventana de cualquier ancho. */
+  .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;max-width:1360px;margin:0 auto;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__bg{position:absolute;inset:-8%;background-size:cover;background-position:center;
     filter:blur(52px) saturate(1.35);opacity:.42;transform:scale(1.08);}
@@ -365,7 +396,7 @@ function injectCSS() {
   .sw-scene__reveal .hp-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.92rem;
     color:#09090B;letter-spacing:-.01em;flex-shrink:0;}
 
-  .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
+  .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;max-width:1360px;margin:0 auto;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(62vw,860px);
     background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 88%,transparent) 38%,color-mix(in srgb,var(--sw-bg) 45%,transparent) 68%,transparent 100%);}
   .sw-copy{position:absolute;left:clamp(20px,6vw,88px);top:50%;transform:translateY(-50%);
@@ -437,11 +468,19 @@ function injectCSS() {
        (pensado para ir sobre un fondo de video oscuro) se pierde encima. */
     .sw-scene__reveal::after{content:"";position:absolute;inset:0;
       background:linear-gradient(180deg,rgba(9,9,11,.74) 0%,rgba(9,9,11,.3) 26%,rgba(9,9,11,.16) 48%,rgba(9,9,11,.58) 76%,rgba(9,9,11,.94) 100%);}
-    .sw-copylayer::before{width:100%;height:64%;top:auto;bottom:0;
-      background:linear-gradient(0deg,var(--sw-bg) 6%,color-mix(in srgb,var(--sw-bg) 78%,transparent) 44%,transparent 100%);}
+    /* Más oscuro y con más recorrido que antes: el video de fondo tiene
+       zonas claras (luces del local, mostrador) y con un velo más tenue el
+       texto competía contra eso y se leía mal. */
+    .sw-copylayer::before{width:100%;height:78%;top:auto;bottom:0;
+      background:linear-gradient(0deg,var(--sw-bg) 16%,color-mix(in srgb,var(--sw-bg) 88%,transparent) 46%,transparent 100%);}
     .sw-copy{left:clamp(18px,5vw,64px);right:clamp(18px,5vw,64px);top:auto;
       bottom:clamp(64px,14vh,120px);transform:none;width:auto;max-width:560px;}
     .sw-copy{bottom:calc(clamp(56px,12dvh,110px) + env(safe-area-inset-bottom));}
+    /* El velo ya hace la mayor parte del trabajo, pero una sombra dura
+       asegura que el texto se lea incluso si el frame de abajo es claro
+       justo donde cae una palabra. */
+    .sw-copy__title,.sw-copy__body{text-shadow:0 2px 18px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.9);}
+    .sw-copy__body{color:#E4E4E7;}
     .sw-copy__title{font-size:clamp(1.9rem,7.5vw,2.6rem);}
     .sw-copy__body{max-width:none;font-size:clamp(.96rem,3.6vw,1.06rem);}
     .sw-hint{bottom:calc(18px + env(safe-area-inset-bottom));}
