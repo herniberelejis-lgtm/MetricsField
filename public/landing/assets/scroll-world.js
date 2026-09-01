@@ -373,17 +373,21 @@ function injectCSS() {
                radial-gradient(60% 45% at 20% 75%,color-mix(in srgb,#2563EB 14%,transparent),transparent 70%);
     transition:background .6s;}
 
-  /* En pantallas muy anchas, texto y video quedaban cada uno pegado a su
-     borde del viewport -- cuanto más ancha la ventana, más lejos uno del
-     otro, hasta el punto de no poder mirar los dos a la vez. Con el stage
-     tapado a 1360px (el mismo orden de magnitud que .wrap en el resto del
-     sitio) y centrado, el left/right de más abajo miden contra ese borde
-     en vez del borde real de una ventana de cualquier ancho. */
-  .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;max-width:1360px;margin:0 auto;}
+  /* Texto y video posicionados contra el centro real de la pantalla, no
+     contra cada borde -- antes cada uno tenía su propio left/right medido
+     desde el borde del viewport, así que en una ventana ancha quedaban
+     cada vez más lejos entre sí (un tope de ancho máximo no alcanza:
+     acerca los bordes exteriores, pero no achica la distancia real entre
+     el texto y el video, que es lo que se ve como "cortado a un costado"
+     con un vacío enorme en el medio). Con --sw-gap-half fijo, la pareja
+     texto+video queda centrada como una sola unidad, con el mismo espacio
+     chico entre ambos sin importar el ancho de pantalla. */
+  .sw-root{--sw-gap-half:32px;}
+  .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__bg{position:absolute;inset:-8%;background-size:cover;background-position:center;
     filter:blur(52px) saturate(1.35);opacity:.42;transform:scale(1.08);}
-  .sw-scene__frame{position:absolute;top:50%;right:clamp(24px,7vw,120px);transform:translateY(-50%);
+  .sw-scene__frame{position:absolute;top:50%;left:calc(50% + var(--sw-gap-half));transform:translateY(-50%);
     height:min(78vh,640px);aspect-ratio:9/16;border-radius:26px;overflow:hidden;
     background:#000;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -396,11 +400,11 @@ function injectCSS() {
   .sw-scene__reveal .hp-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.92rem;
     color:#09090B;letter-spacing:-.01em;flex-shrink:0;}
 
-  .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;max-width:1360px;margin:0 auto;}
-  .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(62vw,860px);
+  .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
+  .sw-copylayer::before{content:"";position:absolute;inset:0;width:calc(50% - var(--sw-gap-half));
     background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 88%,transparent) 38%,color-mix(in srgb,var(--sw-bg) 45%,transparent) 68%,transparent 100%);}
-  .sw-copy{position:absolute;left:clamp(20px,6vw,88px);top:50%;transform:translateY(-50%);
-    width:min(44vw,480px);opacity:0;will-change:opacity,transform;}
+  .sw-copy{position:absolute;right:calc(50% + var(--sw-gap-half));top:50%;transform:translateY(-50%);
+    width:min(38vw,460px);opacity:0;will-change:opacity,transform;}
   .sw-copy__num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;
     letter-spacing:.14em;color:var(--sw-ink-soft);}
   .sw-copy__eyebrow{display:block;margin-top:16px;font-weight:700;font-size:.74rem;
@@ -452,10 +456,13 @@ function injectCSS() {
   /* El mundo terminó: se apaga todo lo fijo para que la landing quede limpia. */
   .sw-root.is-done .sw-sky,.sw-root.is-done .sw-route,.sw-root.is-done .sw-hint{opacity:0;visibility:hidden;}
 
-  /* Franja intermedia: el marco vertical y el copy compiten por el ancho. */
+  /* Franja intermedia: el marco vertical y el copy compiten por el ancho,
+     así que se acercan más al centro (gap más chico) para que entren los
+     dos sin que ninguno quede apretado contra el borde. */
   @media (max-width:1080px){
-    .sw-scene__frame{height:min(66vh,520px);right:clamp(18px,4vw,48px);}
-    .sw-copy{width:min(46vw,400px);}
+    .sw-root{--sw-gap-half:20px;}
+    .sw-scene__frame{height:min(66vh,520px);}
+    .sw-copy{width:min(42vw,380px);}
     .sw-copy__title{font-size:clamp(1.7rem,3.8vw,2.5rem);}
   }
 
