@@ -387,9 +387,12 @@ function injectCSS() {
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__bg{position:absolute;inset:-8%;background-size:cover;background-position:center;
     filter:blur(52px) saturate(1.35);opacity:.42;transform:scale(1.08);}
+  /* El video es el acompañamiento, no el protagonista -- el texto es lo
+     primero que tiene que leerse. Por eso el marco es más chico que antes
+     (antes ocupaba casi todo el alto de pantalla, compitiéndole al copy). */
   .sw-scene__frame{position:absolute;top:50%;left:calc(50% + var(--sw-gap-half));transform:translateY(-50%);
-    height:min(78vh,640px);aspect-ratio:9/16;border-radius:26px;overflow:hidden;
-    background:#000;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);}
+    height:min(56vh,460px);aspect-ratio:9/16;border-radius:24px;overflow:hidden;
+    background:#000;box-shadow:0 30px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .sw-scene__still{will-change:transform;transition:opacity .45s ease}
   .sw-scene.has-clip .sw-scene__still{opacity:0;}
@@ -403,16 +406,19 @@ function injectCSS() {
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:calc(50% - var(--sw-gap-half));
     background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 88%,transparent) 38%,color-mix(in srgb,var(--sw-bg) 45%,transparent) 68%,transparent 100%);}
+  /* El texto es la primera plana: la columna es más ancha y la tipografía
+     más grande que antes, para que llene el espacio en vez de quedar como
+     una nota al margen del video. */
   .sw-copy{position:absolute;right:calc(50% + var(--sw-gap-half));top:50%;transform:translateY(-50%);
-    width:min(38vw,460px);opacity:0;will-change:opacity,transform;}
+    width:min(46vw,580px);opacity:0;will-change:opacity,transform;}
   .sw-copy__num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;
     letter-spacing:.14em;color:var(--sw-ink-soft);}
   .sw-copy__eyebrow{display:block;margin-top:16px;font-weight:700;font-size:.74rem;
     letter-spacing:.16em;text-transform:uppercase;color:var(--sw-accent);}
-  .sw-copy__title{font-weight:700;color:var(--sw-ink);font-size:clamp(2rem,4.2vw,3.4rem);
-    line-height:1.04;margin:12px 0 0;letter-spacing:-.03em;text-wrap:balance;}
-  .sw-copy__body{margin-top:18px;font-size:clamp(1rem,1.2vw,1.12rem);line-height:1.58;
-    color:var(--sw-ink-soft);max-width:42ch;}
+  .sw-copy__title{font-weight:700;color:var(--sw-ink);font-size:clamp(2.3rem,5vw,4.3rem);
+    line-height:1.03;margin:12px 0 0;letter-spacing:-.03em;text-wrap:balance;}
+  .sw-copy__body{margin-top:20px;font-size:clamp(1.05rem,1.35vw,1.24rem);line-height:1.58;
+    color:var(--sw-ink-soft);max-width:48ch;}
   .sw-copy__tags{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 0;padding:0;}
   .sw-copy__tags li{font-size:.78rem;font-weight:600;color:var(--sw-accent);padding:6px 13px;
     border-radius:999px;background:color-mix(in srgb,var(--sw-accent) 12%,transparent);
@@ -461,9 +467,9 @@ function injectCSS() {
      dos sin que ninguno quede apretado contra el borde. */
   @media (max-width:1080px){
     .sw-root{--sw-gap-half:20px;}
-    .sw-scene__frame{height:min(66vh,520px);}
-    .sw-copy{width:min(42vw,380px);}
-    .sw-copy__title{font-size:clamp(1.7rem,3.8vw,2.5rem);}
+    .sw-scene__frame{height:min(46vh,380px);}
+    .sw-copy{width:min(50vw,420px);}
+    .sw-copy__title{font-size:clamp(1.9rem,4.4vw,2.8rem);}
   }
 
   @media (max-width:860px){
