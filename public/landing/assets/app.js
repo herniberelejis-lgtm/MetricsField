@@ -125,37 +125,18 @@
   }, { passive: true });
   onScroll();
 
-  /* ══════════ reveals + contadores ══════════ */
-  var counted = new WeakSet();
-  function countUp(el) {
-    if (counted.has(el)) return;
-    counted.add(el);
-    var target = Number(el.getAttribute('data-count'));
-    var prefix = el.getAttribute('data-prefix') || '';
-    if (reduce) { el.textContent = prefix + target.toLocaleString('es-AR'); return; }
-    var t0 = performance.now(), dur = 1400;
-    (function step(now) {
-      var p = clamp((now - t0) / dur, 0, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = prefix + Math.round(target * eased).toLocaleString('es-AR');
-      if (p < 1) requestAnimationFrame(step);
-    })(t0);
-  }
-
+  /* ══════════ reveals al entrar en pantalla ══════════ */
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (!e.isIntersecting) return;
         e.target.classList.add('is-in');
-        $$('[data-count]', e.target).forEach(countUp);
-        if (e.target.hasAttribute('data-count')) countUp(e.target);
         io.unobserve(e.target);
       });
     }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
     $$('.reveal').forEach(function (el) { io.observe(el); });
   } else {
     $$('.reveal').forEach(function (el) { el.classList.add('is-in'); });
-    $$('[data-count]').forEach(countUp);
   }
 
   /* ══════════ tabs de hardware ══════════ */
