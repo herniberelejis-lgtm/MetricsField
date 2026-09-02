@@ -18,5 +18,6 @@ export * from "./db/checklist";
 export * from "./db/audits";
 export * from "./db/competencia";
 export * from "./db/admins";
+export * from "./db/portal-usuarios";
 export * from "./db/auditoria";
 export * from "./db/resumen";

@@ -197,6 +197,29 @@ export async function accionRegenerarCodigo(fd: FormData): Promise<void> {
   redirect(`/admin/clientes/${id}`);
 }
 
+// ---------- Login con Google del portal (por comercio) ----------
+
+export async function accionAgregarUsuarioPortal(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const email = str(fd, "email");
+  const nombre = str(fd, "nombre");
+  await db.agregarUsuarioPortal(id, email, nombre);
+  await auditar("agregar_usuario_portal", `${id}: ${email}`);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${id}`);
+}
+
+export async function accionQuitarUsuarioPortal(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const email = str(fd, "email");
+  await db.quitarUsuarioPortal(id, email);
+  await auditar("quitar_usuario_portal", `${id}: ${email}`);
+  revalidatePath("/", "layout");
+  redirect(`/admin/clientes/${id}`);
+}
+
 // ---------- Links NFC ----------
 
 export async function accionCrearLink(fd: FormData): Promise<void> {

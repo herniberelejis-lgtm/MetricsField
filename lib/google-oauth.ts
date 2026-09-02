@@ -1,19 +1,24 @@
 import "server-only";
 
-// OAuth de Google, con dos usos distintos que comparten el mismo client
+// OAuth de Google, con tres usos distintos que comparten el mismo client
 // ID/secret pero piden scopes diferentes:
-// - GBP_SCOPE: cada CLIENTE autoriza con su propia cuenta de Google para
-//   que Taply lea las métricas de SU ficha de Business Profile (visitas,
-//   llamadas). Refresh token guardado por comercio.
+// - GBP_SCOPE: histórico — conectar Business Profile sin identidad (ya no
+//   se usa solo, ver PORTAL_SCOPE).
 // - ADMIN_SCOPE: cada persona del EQUIPO inicia sesión en el panel con su
 //   cuenta de Google. No hace falta refresh token acá, solo confirmar de
 //   una vez quién es (id_token) — la sesión del panel se maneja con cookie
 //   propia después, como con la contraseña.
+// - PORTAL_SCOPE: cada CLIENTE entra a SU portal y conecta su Business
+//   Profile en el mismo click — un solo consentimiento pide identidad
+//   (id_token, para chequear contra la allowlist de portal_usuarios) y
+//   acceso a su ficha (refresh token, para leer métricas). Ver
+//   lib/portal-auth.ts y app/api/portal/google/oauth/*.
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const GBP_SCOPE = "https://www.googleapis.com/auth/business.manage";
 export const ADMIN_SCOPE = "openid email profile";
+export const PORTAL_SCOPE = `${ADMIN_SCOPE} ${GBP_SCOPE}`;
 
 export function oauthConfigurado(): boolean {
   return Boolean(
