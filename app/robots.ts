@@ -12,5 +12,6 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ["/admin", "/portal", "/t"],
     },
     host: "https://metricsfield.com",
+    sitemap: "https://metricsfield.com/sitemap.xml",
   };
 }

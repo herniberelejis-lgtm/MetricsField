@@ -4,6 +4,7 @@ import LangSwitch from "@/components/legal/LangSwitch";
 export const metadata: Metadata = {
   title: "Términos de servicio — MetricsField",
   description: "Condiciones de uso de la plataforma y el hardware de MetricsField.",
+  alternates: { canonical: "https://metricsfield.com/terms" },
 };
 
 // Página requerida por la verificación OAuth de Google (junto con

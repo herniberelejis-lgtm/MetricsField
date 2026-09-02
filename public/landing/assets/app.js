@@ -238,8 +238,8 @@
   /* ══════════ varios ══════════ */
   $('#year').textContent = String(new Date().getFullYear());
 
-  // Las fotos de producto se sirven desde Vercel Blob. Si el host no responde,
-  // se cae a un frame del video de demo que está en el repo.
+  // La foto del sticker es la única que sigue en Vercel Blob (no hay foto
+  // propia todavía). Si ese host no responde, se cae al isotipo de marca.
   $$('img[data-fallback]').forEach(function (img) {
     img.addEventListener('error', function once() {
       img.removeEventListener('error', once);

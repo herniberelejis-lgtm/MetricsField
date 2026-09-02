@@ -4,6 +4,7 @@ import LangSwitch from "@/components/legal/LangSwitch";
 export const metadata: Metadata = {
   title: "Política de privacidad — MetricsField",
   description: "Cómo MetricsField usa los datos de Google Business Profile de sus clientes.",
+  alternates: { canonical: "https://metricsfield.com/privacy" },
 };
 
 // Página requerida por la verificación OAuth de Google: tiene que estar
