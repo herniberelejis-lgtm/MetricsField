@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
   // de borrarlo. Solo el dominio exacto de producción — no toca los
   // *.vercel.app de cada preview de rama, que tienen que seguir sirviendo
   // su propio contenido para poder probarlas.
+  //
+  // app.metricsfield.com es el subdominio de producto: sin sesión, "/" tiene
+  // que mandar directo a /login en vez de la landing de venta.
   async redirects() {
     return [
       {
@@ -35,7 +38,35 @@ const nextConfig: NextConfig = {
         destination: "https://app.metricsfield.com/:path*",
         permanent: true,
       },
+      {
+        source: "/",
+        has: [{ type: "host", value: "app.metricsfield.com" }],
+        destination: "/login",
+        permanent: false,
+      },
     ];
+  },
+  // metricsfield.com y www muestran la landing de venta (estática, vive en
+  // public/landing/) en la raíz del dominio, sin cambiar la URL que ve el
+  // visitante. app.metricsfield.com no entra acá: ya se resuelve antes, en
+  // redirects(), así que nunca llega a este rewrite.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          has: [{ type: "host", value: "metricsfield.com" }],
+          destination: "/landing/index.html",
+        },
+        {
+          source: "/",
+          has: [{ type: "host", value: "www.metricsfield.com" }],
+          destination: "/landing/index.html",
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
   },
 };
 
