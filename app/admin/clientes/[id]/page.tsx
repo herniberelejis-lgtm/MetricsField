@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCliente, getResenas, getSucursales } from "@/lib/db";
+import { getCliente, getResenas, getSucursales, getUsuariosPortal } from "@/lib/db";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
   accionSincronizarGoogle,
   accionDesconectarGoogleComercio,
+  accionAgregarUsuarioPortal,
+  accionQuitarUsuarioPortal,
 } from "@/app/actions";
 import {
   metricaActual,
@@ -60,9 +62,10 @@ export default async function ClienteDetallePage({
   // listarlas acá. Si es una sucursal, traemos la cuenta raíz para el
   // breadcrumb y para no mostrarle código/facturación propios (viven en la
   // raíz — ver resolverCuenta en lib/db.ts).
-  const [sucursales, cuentaRaiz] = await Promise.all([
+  const [sucursales, cuentaRaiz, usuariosPortal] = await Promise.all([
     c.comercioPadreId ? Promise.resolve([]) : getSucursales(c.id),
     c.comercioPadreId ? getCliente(c.comercioPadreId) : Promise.resolve(undefined),
+    c.comercioPadreId ? Promise.resolve([]) : getUsuariosPortal(c.id),
   ]);
 
   const gbpConfigurable = oauthConfigurado();
@@ -172,6 +175,66 @@ export default async function ClienteDetallePage({
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Login con Google del portal — vive en la cuenta raíz, igual que el
+          código de acceso. En cuanto hay un email cargado, el link deja de
+          alcanzar solo: ese email tiene que loguearse con Google para ver
+          el portal (ver lib/portal-auth.ts). */}
+      {!c.comercioPadreId && (
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Login con Google del portal
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {usuariosPortal.length > 0
+              ? "El portal exige loguearse con una de estas cuentas de Google además del link."
+              : "Sin ningún email cargado, el portal sigue abriendo solo con el link (como siempre)."}
+          </p>
+
+          {usuariosPortal.length > 0 && (
+            <ul className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-100">
+              {usuariosPortal.map((u) => (
+                <li key={u.email} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <span>
+                    {u.email}
+                    {u.nombre && <span className="ml-2 text-slate-400">({u.nombre})</span>}
+                  </span>
+                  <form action={accionQuitarUsuarioPortal}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <input type="hidden" name="email" value={u.email} />
+                    <button type="submit" className="text-xs text-rose-600 hover:underline">
+                      Quitar
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form action={accionAgregarUsuarioPortal} className="mt-3 flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={c.id} />
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="email@delcliente.com"
+              className="min-w-[220px] flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+            />
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre (opcional)"
+              className="w-40 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+            />
+            <button
+              type="submit"
+              className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+            >
+              Agregar
+            </button>
+          </form>
         </div>
       )}
 

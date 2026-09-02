@@ -54,6 +54,20 @@ CREATE TABLE IF NOT EXISTS admins (
   creado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Cuentas de Google admitidas para entrar al PORTAL de un comercio (allowlist
+-- por cliente, no del equipo — ver `admins`). Siempre contra la cuenta raíz
+-- (comercio_id nunca es una sucursal, igual que codigo_acceso). Un comercio
+-- sin ninguna fila acá sigue abriendo su portal solo con el código, como
+-- siempre: el login con Google se activa recién cuando se carga el primer
+-- email, así no se traba de golpe a los clientes activos.
+CREATE TABLE IF NOT EXISTS portal_usuarios (
+  comercio_id  TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  email        TEXT NOT NULL,
+  nombre       TEXT NOT NULL DEFAULT '',
+  creado_en    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (comercio_id, email)
+);
+
 -- Registro de acciones del equipo dentro del panel — qué se hizo y quién
 -- (si entró con Google; si entró con la contraseña compartida queda como
 -- "equipo (sin identificar)").

@@ -12,6 +12,8 @@ import {
   getResenas,
   getBenchmarkMensual,
 } from "@/lib/db";
+import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
+import PortalGateGoogle from "./_components/PortalGateGoogle";
 import { metricaActual, metricaAnterior } from "@/lib/types";
 import { fmtMes } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
@@ -58,6 +60,16 @@ export default async function PortalPage({
 
   const c = await getClientePorCodigo(codigo);
   if (!c || c.estado === "baja") notFound();
+
+  // Gate de Google: solo si el ADMIN cargó al menos un email autorizado
+  // para este comercio (portal_usuarios) — sin ninguno, el portal sigue
+  // abriendo solo con el código, como siempre. Siempre contra la cuenta
+  // raíz `c` (una sucursal nunca tiene su propio gate).
+  if (await portalRequiereLoginGoogle(c.id)) {
+    if (!(await tieneAccesoPortal(c.id))) {
+      return <PortalGateGoogle codigo={codigo} error={google} />;
+    }
+  }
 
   // Multi-sucursal: `c` es siempre la CUENTA (identidad del portal, código
   // de acceso, plan, facturación) — y también, ella misma, el local

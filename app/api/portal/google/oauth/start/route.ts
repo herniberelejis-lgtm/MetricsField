@@ -6,17 +6,21 @@ import {
   urlDeAutorizacion,
   origenCanonico,
   dominioCookieOauth,
-  GBP_SCOPE,
+  PORTAL_SCOPE,
 } from "@/lib/google-oauth";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
-// Arranca la conexión de Google Business Profile del CLIENTE (no de la
-// agencia): cada comercio autoriza con su propia cuenta desde su portal.
-// El código de acceso del portal ya funciona como credencial — no hace
-// falta sesión de admin acá. El state lleva el código + a qué comercio
-// corresponde (la cuenta o una de sus sucursales — multi-sucursal: cada
-// local tiene su propia ficha de Google) + un nonce anti-CSRF, y se
-// verifica contra la cookie en el callback.
+// Arranca el login + conexión de Google Business Profile del CLIENTE (no de
+// la agencia): un solo consentimiento pide identidad (para chequear contra
+// portal_usuarios, si el comercio exige login) Y acceso a su ficha de
+// Business Profile — ver PORTAL_SCOPE. El código de acceso del portal sigue
+// siendo necesario para llegar hasta acá (identifica DE QUÉ comercio es este
+// login), pero ya no alcanza solo con eso si el comercio tiene emails
+// cargados: el callback exige además que la cuenta de Google esté en esa
+// allowlist. El state lleva el código + a qué comercio corresponde (la
+// cuenta o una de sus sucursales — multi-sucursal: cada local tiene su
+// propia ficha de Google) + un nonce anti-CSRF, y se verifica contra la
+// cookie en el callback.
 export async function GET(req: NextRequest): Promise<NextResponse> {
   limpiarVencidos();
   const ip = ipDelRequest(req.headers);
@@ -47,7 +51,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const state = `${codigo}.${comercioId}.${nonce}`;
   const redirectUri = `${origenCanonico(req.nextUrl.origin)}/api/portal/google/oauth/callback`;
   const res = NextResponse.redirect(
-    urlDeAutorizacion({ redirectUri, state, scope: GBP_SCOPE, offline: true }),
+    urlDeAutorizacion({ redirectUri, state, scope: PORTAL_SCOPE, offline: true }),
   );
   res.cookies.set("portal_oauth_state", state, {
     httpOnly: true,
