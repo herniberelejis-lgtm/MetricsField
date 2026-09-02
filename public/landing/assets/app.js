@@ -8,7 +8,7 @@
   var $  = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var clamp = function (x, a, b) { return Math.min(b, Math.max(a, x)); };
-  var WA = 'https://wa.me/5493513480773';
+  var WA = 'https://wa.me/5493515191716';
 
   /* ══════════ ACTO 1 · el mundo ══════════
      Los cuatro beats salen de un mismo film cortado en los cortes reales de su
