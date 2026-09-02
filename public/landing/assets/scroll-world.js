@@ -28,7 +28,14 @@
    ========================================================================== */
 
 function mountScrollWorld(container, config) {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // El hero scrubbeado por scroll es el corazón de esta landing de venta:
+  // siempre anima, sin importar prefers-reduced-motion. Antes lo respetaba
+  // (dejaba solo los stills, sin video ni zoom) y eso se leyó repetidas
+  // veces como "la animación no funciona" en máquinas con esa preferencia
+  // activada en el sistema (Windows: "Mostrar animaciones" apagado; macOS:
+  // "Reducir movimiento") — un ajuste de accesibilidad que casi nadie
+  // prende a propósito ni sabe que tiene.
+  const reduce = false;
   const coarse = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const smallMQ = window.matchMedia('(max-width: 860px)');
   const isMobile = () => coarse || smallMQ.matches;
