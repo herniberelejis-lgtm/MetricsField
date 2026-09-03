@@ -113,6 +113,13 @@ export default async function HardwarePage({
               >
                 Descargar todos los QR libres (.zip)
               </a>
+              <a
+                href="/api/admin/hardware/qr-lote?estado=libre&formato=links"
+                target="_blank"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
+              >
+                Ver lista de links (para mandar al proveedor)
+              </a>
               {lotes.map((l) => (
                 <a
                   key={l}
@@ -120,6 +127,16 @@ export default async function HardwarePage({
                   className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
                 >
                   Solo lote &ldquo;{l}&rdquo;
+                </a>
+              ))}
+              {lotes.map((l) => (
+                <a
+                  key={`links-${l}`}
+                  href={`/api/admin/hardware/qr-lote?estado=libre&lote=${encodeURIComponent(l)}&formato=links`}
+                  target="_blank"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
+                >
+                  Links del lote &ldquo;{l}&rdquo;
                 </a>
               ))}
             </div>
