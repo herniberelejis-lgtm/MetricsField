@@ -324,13 +324,13 @@ function mountScrollWorld(container, config) {
   }
 
   function raf() {
-    // Todos los clips son all-intra (cada frame es su propio keyframe), así
-    // que un seek no tiene que decodear frames de más para llegar a uno
-    // cualquiera -- pero desde que el video pasó a 720x1280 (antes 540x960,
-    // ver el re-encode de calidad) cada seek decodea ~1.8x más píxeles. Un
-    // paso más fino que este le pide seeks a un ritmo que el decoder no
-    // llega a resolver, y el scrub se ve trabado en vez de fluido.
-    const eps = isMobile() ? 0.02 : 0.008;
+    // Mismo paso de seek en desktop y mobile. El video de desktop es más
+    // grande (720px vs 560px de ancho) y encima pedía seeks 2.5x más
+    // seguido (0.008 vs 0.02) -- entre las dos cosas, el decoder de una PC
+    // sin GPU potente no llegaba a resolver cada seek a tiempo y el scrub
+    // se sentía trabado (reportado en producción: fluido en celular, no
+    // en PC). Se empareja al valor de mobile, que ya se sabe fluido.
+    const eps = 0.02;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
