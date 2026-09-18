@@ -149,7 +149,22 @@ export async function accessTokenGBPComercio(id: string): Promise<string | null>
   const rows = await sql`SELECT google_refresh_token FROM comercios WHERE id = ${id}`;
   const refresh = rows[0]?.google_refresh_token as string | undefined;
   if (!refresh) return null;
-  return accessTokenDesdeRefresh(descifrar(refresh));
+
+  let refreshDescifrado: string;
+  try {
+    refreshDescifrado = descifrar(refresh);
+  } catch (error) {
+    // Un refresh token cifrado con una TOKEN_ENCRYPTION_KEY distinta a la
+    // actual (rotada, o corrupta) no se puede recuperar por software — la
+    // única salida es que el cliente reconecte su cuenta de Google. Hasta
+    // entonces, tratarlo como "no conectado" (igual que un token que Google
+    // ya no acepta) en vez de tirar abajo la página entera con un error sin
+    // manejar.
+    void reportarFalla("token-cifrado", error, { comercio: id });
+    return null;
+  }
+
+  return accessTokenDesdeRefresh(refreshDescifrado);
 }
 
 /** Resuelve (y cachea en la fila del comercio) el resource name de su ficha
