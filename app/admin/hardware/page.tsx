@@ -188,6 +188,7 @@ export default async function HardwarePage({
                         </select>
                         <input
                           name="etiqueta"
+                          aria-label="Nombre o ubicación del dispositivo"
                           placeholder="Mesa 4, mozo Juan..."
                           required
                           className={`${inputCls} w-36`}
@@ -262,6 +263,7 @@ export default async function HardwarePage({
                         </select>
                         <input
                           name="etiqueta"
+                          aria-label="Nombre o ubicación del dispositivo"
                           placeholder="Mesa 4, mozo Juan..."
                           required
                           className={`${inputCls} w-36`}
@@ -269,6 +271,7 @@ export default async function HardwarePage({
                         <input
                           name="urlDestino"
                           defaultValue={p.urlDestino ?? ""}
+                          aria-label="URL de destino personalizada"
                           placeholder="URL de destino (vacío = reseña del cliente)"
                           className={`${inputCls} w-56`}
                         />
@@ -350,6 +353,7 @@ export default async function HardwarePage({
                         </select>
                         <input
                           name="etiqueta"
+                          aria-label="Nombre o ubicación del dispositivo"
                           placeholder="Mesa 4, mozo Juan..."
                           required
                           className={`${inputCls} w-36`}
@@ -357,6 +361,7 @@ export default async function HardwarePage({
                         <input
                           name="urlDestino"
                           defaultValue={p.urlDestino ?? ""}
+                          aria-label="URL de destino personalizada"
                           placeholder="URL de destino (vacío = reseña del cliente)"
                           className={`${inputCls} w-56`}
                         />

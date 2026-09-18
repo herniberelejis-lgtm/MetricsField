@@ -17,6 +17,9 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   eliminar_prospecto: "Eliminó un prospecto",
   agregar_admin: "Agregó un administrador",
   eliminar_admin: "Quitó un administrador",
+  generar_lote_piezas: "Generó un lote de piezas de hardware",
+  asignar_pieza_hardware: "Asignó una pieza de hardware",
+  reasignar_pieza_hardware: "Reasignó una pieza de hardware",
 };
 
 export default async function ActividadPage() {
