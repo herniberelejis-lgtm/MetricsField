@@ -260,6 +260,27 @@ export async function sincronizarResenasGoogle(
   return { nuevas, autoRespondidas };
 }
 
+/** Publica la respuesta a UNA reseña puntual en Google — usado desde
+ * "Aprobar respuesta" en el portal del cliente (accionAprobarResenaPortal),
+ * no solo desde el auto-responder de sincronizarResenasGoogle. Antes, ese
+ * botón solo guardaba la respuesta en el CRM y le pedía al dueño que la
+ * copie y pegue a mano SIEMPRE, aunque la Reviews API ya estuviera
+ * habilitada y la reseña viniera de Google — ahora publica de una en cuanto
+ * estén dadas las tres condiciones. Devuelve false sin tirar excepción si
+ * falta cualquiera (API sin habilitar, sin token válido, Google la
+ * rechaza) — quien llama cae al comportamiento de siempre: guardarla para
+ * copiar y pegar. */
+export async function responderResenaEnGoogle(
+  comercioId: string,
+  origenGoogleId: string,
+  respuesta: string,
+): Promise<boolean> {
+  if (!resenasApiHabilitada()) return false;
+  const token = await accessTokenGBPComercio(comercioId);
+  if (!token) return false;
+  return responderResenaGoogle(token, origenGoogleId, respuesta);
+}
+
 /** Reseñas de todos los comercios con Google conectado — para el cron diario. */
 export async function sincronizarResenasGoogleTodos(): Promise<{
   total: number;

@@ -143,7 +143,12 @@ export default async function HardwarePage({
           </div>
 
           <Card className="mb-8 overflow-x-auto p-0">
-            <table className="w-full text-sm">
+            {/* min-w fijo: el formulario de "Asignar/Mover" (select + inputs + botón)
+                mide más que una pantalla de celular — sin esto, `w-full` lo obliga
+                a entrar en ese ancho angosto y flex-wrap apila cada campo en su
+                propia línea, dejando filas altísimas en vez de dejar que este
+                contenedor (overflow-x-auto) scrollee horizontal. */}
+            <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 font-medium">Código</th>
@@ -170,7 +175,7 @@ export default async function HardwarePage({
                     <td className="px-4 py-3 text-xs text-slate-500">{p.lote || "—"}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3">
-                      <form action={accionAsignarPieza} className="flex flex-wrap items-center gap-2">
+                      <form action={accionAsignarPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
                         <select name="comercioId" required className={`${inputCls} w-40`}>
                           <option value="">Elegir cliente…</option>
@@ -218,7 +223,10 @@ export default async function HardwarePage({
             corregirlo — limpia el PIN cargado y deja la pieza como cualquier otra asignada.
           </p>
           <Card className="mb-8 overflow-x-auto p-0">
-            <table className="w-full text-sm">
+            {/* min-w fijo, mismo motivo que la tabla de libres: el formulario
+                con urlDestino (w-56) es todavía más ancho — sin esto se
+                apila en varias líneas por fila en vez de scrollear. */}
+            <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 font-medium">Código</th>
@@ -240,7 +248,7 @@ export default async function HardwarePage({
                     </td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
                     <td className="px-4 py-3">
-                      <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
+                      <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
                         <input type="hidden" name="destino" value={p.destino} />
                         <select name="comercioId" required className={`${inputCls} w-40`}>
@@ -294,7 +302,8 @@ export default async function HardwarePage({
             </p>
           </div>
           <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
+            {/* min-w fijo, mismo motivo que las otras dos tablas de esta página. */}
+            <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 font-medium">Código</th>
@@ -325,7 +334,7 @@ export default async function HardwarePage({
                     <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
                     <td className="px-4 py-3">
-                      <form action={accionReasignarPieza} className="flex flex-wrap items-center gap-2">
+                      <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
                         <input type="hidden" name="destino" value={p.destino} />
                         <select name="comercioId" required className={`${inputCls} w-40`}>

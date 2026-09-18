@@ -8,10 +8,12 @@ import { btnSuccess, btnSecondary, btnGhost, IconCheck } from "@/components/ui";
 
 // Gestión de reseñas desde el portal del cliente: el dueño ve sus reseñas
 // pendientes, edita/regenera la respuesta sugerida (gratis, sin IA paga —
-// mismo generador por reglas que usa el equipo interno) y la aprueba. Como
-// todavía no hay API de Google para publicar solo, "aprobar" guarda la
-// respuesta final acá y le pide que la copie y pegue en Google — nunca se
-// promete una publicación automática que hoy no existe.
+// mismo generador por reglas que usa el equipo interno) y la aprueba.
+// "Aprobar" intenta publicar directo en la ficha de Google (requiere que la
+// reseña haya venido del sync y que la Reviews API ya esté habilitada); si
+// falta cualquiera de las dos, cae a copiar la respuesta al portapapeles
+// para que el dueño la pegue él mismo — nunca se promete una publicación
+// que no pasó de verdad.
 
 const COLOR_BADGE: Record<number, string> = {
   1: "bg-slate-100 text-slate-500",
@@ -41,13 +43,11 @@ function TarjetaResena({
   resena,
   tonoMarca,
   codigo,
-  comercioId,
   onResuelta,
 }: {
   resena: ResenaCRM;
   tonoMarca: TonoMarca;
   codigo: string;
-  comercioId: string;
   onResuelta: (id: number) => void;
 }) {
   const [intento, setIntento] = useState(0);
@@ -56,6 +56,7 @@ function TarjetaResena({
   );
   const [saliendo, setSaliendo] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [resultado, setResultado] = useState<"publicada" | "copiada" | null>(null);
   const [pendiente, startTransition] = useTransition();
 
   function regenerar() {
@@ -74,20 +75,26 @@ function TarjetaResena({
   function aprobar() {
     const fd = new FormData();
     fd.set("codigo", codigo);
-    fd.set("comercioId", comercioId);
+    fd.set("comercioId", resena.comercioId);
     fd.set("id", String(resena.id));
     fd.set("respuesta", respuesta);
     startTransition(async () => {
-      await accionAprobarResenaPortal(fd);
-      setSaliendo(true);
-      setTimeout(() => onResuelta(resena.id), 300);
+      const { publicada } = await accionAprobarResenaPortal(fd);
+      if (!publicada) {
+        navigator.clipboard.writeText(respuesta).catch(() => {});
+      }
+      setResultado(publicada ? "publicada" : "copiada");
+      setTimeout(() => {
+        setSaliendo(true);
+        setTimeout(() => onResuelta(resena.id), 300);
+      }, 1400);
     });
   }
 
   function descartar() {
     const fd = new FormData();
     fd.set("codigo", codigo);
-    fd.set("comercioId", comercioId);
+    fd.set("comercioId", resena.comercioId);
     fd.set("id", String(resena.id));
     startTransition(async () => {
       await accionDescartarResenaPortal(fd);
@@ -109,7 +116,13 @@ function TarjetaResena({
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{resena.autor}</div>
-            <div className="text-xs text-slate-400">{fechaConHora(resena)}</div>
+            {/* suppressHydrationWarning: toLocaleDateString/toLocaleTimeString pueden
+                usar un espacio distinto antes de "a. m./p. m." según la versión de
+                ICU del motor (Node del server vs. el navegador) — mismo texto visible,
+                pero React lo marca como mismatch y re-renderiza el árbol entero. */}
+            <div className="text-xs text-slate-400" suppressHydrationWarning>
+              {fechaConHora(resena)}
+            </div>
           </div>
         </div>
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
@@ -141,26 +154,36 @@ function TarjetaResena({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button type="button" disabled={pendiente} onClick={aprobar} className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}>
-          <IconCheck size={13} /> Aprobar respuesta
-        </button>
-        <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
-          {copiado ? "¡Copiada!" : "Copiar texto"}
-        </button>
-        <button
-          type="button"
-          disabled={pendiente}
-          onClick={descartar}
-          className={`${btnGhost} ml-auto !text-xs hover:!text-slate-900`}
-        >
-          Descartar
-        </button>
-      </div>
-      <p className="mt-2 text-[11px] text-slate-400">
-        Al aprobar, guardamos esta respuesta acá. Todavía no podemos publicarla sola en Google —
-        copiala y pegala vos como respuesta de la reseña.
-      </p>
+      {resultado ? (
+        <p className="mt-3 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white">
+          {resultado === "publicada"
+            ? "✓ Publicada en tu ficha de Google."
+            : "✓ Copiada al portapapeles — pegala vos como respuesta de la reseña en Google."}
+        </p>
+      ) : (
+        <>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button type="button" disabled={pendiente} onClick={aprobar} className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}>
+              <IconCheck size={13} /> Aprobar respuesta
+            </button>
+            <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
+              {copiado ? "¡Copiada!" : "Copiar texto"}
+            </button>
+            <button
+              type="button"
+              disabled={pendiente}
+              onClick={descartar}
+              className={`${btnGhost} ml-auto !text-xs hover:!text-slate-900`}
+            >
+              Descartar
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400">
+            Si ya tenemos acceso a tu ficha de Google, aprobar la publica directo. Si todavía no, la
+            copiamos para que la pegues vos como respuesta de la reseña.
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -169,28 +192,79 @@ export default function GestionResenas({
   resenasIniciales,
   tonoMarca,
   codigo,
-  comercioId,
 }: {
   resenasIniciales: ResenaCRM[];
   tonoMarca: TonoMarca;
   codigo: string;
-  comercioId: string;
 }) {
   const [pendientes, setPendientes] = useState(resenasIniciales);
+  const [aprobandoTodas, startAprobarTodas] = useTransition();
+  const [resumenBulk, setResumenBulk] = useState<{ publicadas: number; total: number } | null>(null);
 
   if (pendientes.length === 0) {
     return (
       <div className="rounded-3xl border border-white/60 bg-white/65 p-5 text-sm text-slate-500 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-        No tenés reseñas pendientes de responder por ahora.
+        {resumenBulk ? (
+          resumenBulk.publicadas === resumenBulk.total ? (
+            <>✓ Se publicaron las {resumenBulk.total} respuestas directo en Google.</>
+          ) : (
+            <>
+              ✓ Aprobadas las {resumenBulk.total}: {resumenBulk.publicadas} se publicaron directo en Google, el
+              resto quedó guardado en el CRM para copiar y pegar a mano (todavía no tenemos acceso a esa ficha
+              o no vinieron sincronizadas desde Google).
+            </>
+          )
+        ) : (
+          "No tenés reseñas pendientes de responder por ahora."
+        )}
       </div>
     );
   }
 
+  // Aprobar todas de una: usa la respuesta sugerida tal cual quedó para cada
+  // una (la que ya trae generada, o la que se haya editado a mano en su
+  // propia tarjeta no se ve reflejada acá — cada tarjeta mantiene su propio
+  // estado de edición). Cada reseña se publica directo en Google si vino
+  // sincronizada de ahí y la Reviews API ya está habilitada; el resto queda
+  // guardado en el CRM para copiar y pegar a mano — resumenBulk le muestra
+  // al dueño cuántas de cada.
+  function aprobarTodas() {
+    startAprobarTodas(async () => {
+      const resultados = await Promise.all(
+        pendientes.map((r) => {
+          const fd = new FormData();
+          fd.set("codigo", codigo);
+          fd.set("comercioId", r.comercioId);
+          fd.set("id", String(r.id));
+          fd.set("respuesta", r.respuestaSugerida || generarRespuestaSugerida(r.autor, r.estrellas, r.texto, tonoMarca, 0));
+          return accionAprobarResenaPortal(fd);
+        }),
+      );
+      setResumenBulk({
+        publicadas: resultados.filter((r) => r.publicada).length,
+        total: resultados.length,
+      });
+      setPendientes([]);
+    });
+  }
+
   return (
     <div>
-      <p className="mb-3 text-xs text-slate-500">
-        {pendientes.length} reseña{pendientes.length === 1 ? "" : "s"} esperando respuesta.
-      </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-slate-500">
+          {pendientes.length} reseña{pendientes.length === 1 ? "" : "s"} esperando respuesta.
+        </p>
+        {pendientes.length > 1 && (
+          <button
+            type="button"
+            disabled={aprobandoTodas}
+            onClick={aprobarTodas}
+            className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}
+          >
+            <IconCheck size={13} /> {aprobandoTodas ? "Aprobando…" : "Aprobar todas"}
+          </button>
+        )}
+      </div>
       <div className="space-y-3">
         {pendientes.map((r) => (
           <TarjetaResena
@@ -198,7 +272,6 @@ export default function GestionResenas({
             resena={r}
             tonoMarca={tonoMarca}
             codigo={codigo}
-            comercioId={comercioId}
             onResuelta={(id) => setPendientes((prev) => prev.filter((x) => x.id !== id))}
           />
         ))}

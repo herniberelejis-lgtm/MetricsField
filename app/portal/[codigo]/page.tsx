@@ -6,13 +6,20 @@ import {
   getClientePorCodigo,
   getSucursales,
   getTapsPorDiaPorSoporte,
+  getTapsPorHoraSemana,
+  getPiezaMasUsadaSemana,
   getLinks,
   getChecklist,
   getAudits,
   getResenas,
   getBenchmarkMensual,
+  getCompetidores,
+  sincronizarCompetidoresDeComercio,
+  type TapsPorHoraDia,
+  type TopPiezaSemana,
 } from "@/lib/db";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
+import { oauthVerificado } from "@/lib/google-oauth";
 import PortalGateGoogle from "./_components/PortalGateGoogle";
 import { metricaActual, metricaAnterior } from "@/lib/types";
 import { fmtMes } from "@/lib/format";
@@ -29,7 +36,6 @@ import PortalShell, { type PortalNavEntry } from "@/components/portal/PortalShel
 import { heroDeCalificacion, MENSAJE_GOOGLE, construirNav } from "./_lib";
 import PanelResumen from "./_components/PanelResumen";
 import PanelResenas from "./_components/PanelResenas";
-import PanelSucursales from "./_components/PanelSucursales";
 import PanelDispositivos from "./_components/PanelDispositivos";
 import PanelEscaneos from "./_components/PanelEscaneos";
 import PanelRating from "./_components/PanelRating";
@@ -75,26 +81,36 @@ export default async function PortalPage({
   // de acceso, plan, facturación) — y también, ella misma, el local
   // original (así nació antes de tener sucursales: su propio Google Place
   // ID, historial, reseñas). Las sucursales son locales nuevos que cuelgan
-  // de esa cuenta. `ubicaciones` junta ambas cosas para el selector; sin
-  // `?sucursal=` en la URL, `activo` es siempre la cuenta (comportamiento
-  // de siempre, sin sorpresas) — recién cambia si el cliente elige
-  // explícitamente otro local.
+  // de esa cuenta. `ubicaciones` junta ambas cosas para el selector.
+  //
+  // Con más de un local, el estado por defecto (sin `?sucursal=`, o con
+  // `?sucursal=todos`) es el COMBINADO de todos — antes el default caía en
+  // la cuenta raíz sola, y no había forma de ver el total sin ir clic a
+  // clic por cada local. Elegir un local puntual (`?sucursal=<id>`,
+  // cualquiera, incluida la cuenta raíz) hace drill-down a su detalle,
+  // exactamente como antes.
   const sucursales = await getSucursales(c.id);
   const ubicaciones = [c, ...sucursales];
-  const activo = sucursalParam
-    ? (ubicaciones.find((u) => u.id === sucursalParam) ?? c)
-    : c;
+  const modoTodos = sucursales.length > 0 && (!sucursalParam || sucursalParam === "todos");
+  const activo = modoTodos
+    ? c
+    : (ubicaciones.find((u) => u.id === sucursalParam) ?? c);
 
   const gbpConectado = Boolean(activo.googleConectadoEn);
   const diasConectado = activo.googleConectadoEn
     ? Math.floor((Date.now() - new Date(activo.googleConectadoEn).getTime()) / (1000 * 60 * 60 * 24))
     : null;
-  const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
+  // Sin oauthVerificado(), la app sigue en modo Prueba de Google y el
+  // refresh token vence de verdad cada ~7 días — con la verificación hecha,
+  // este aviso ya no aplica nunca, sin importar cuántos días pasaron.
+  const gbpPorVencer = !oauthVerificado() && diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
-  const [tapsPorDiaSoporte, links, checklist, audits, resenas, benchmark] =
+  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark] =
     await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
+      getTapsPorHoraSemana(activo.id),
+      getPiezaMasUsadaSemana(activo.id),
       getLinks(activo.id),
       getChecklist(activo.id),
       getAudits(activo.id),
@@ -128,14 +144,7 @@ export default async function PortalPage({
     };
   }
 
-  const resenasPendientes = resenas.filter((r) => r.estado === "nueva");
   const resenasAutomaticas = resenas.filter((r) => r.publicadaAutomaticamente).slice(0, 5);
-
-  // Resumen de "cómo van las reseñas": distribución por estrellas, si la
-  // tendencia reciente mejora o empeora, y qué se repite en las quejas —
-  // sobre TODAS las reseñas, no solo las pendientes de responder. resenas
-  // viene ordenado por fecha DESC (getResenas): lo primero es lo más nuevo.
-  const resumenResenas = calcularResumenResenas(resenas);
 
   // Personal: taps reales de cada tarjeta NFC personal (links.nombreEmpleado)
   // + menciones de su nombre en el texto de las reseñas de este local. Los
@@ -181,7 +190,6 @@ export default async function PortalPage({
   const qrPorDia = diasConTaps.map((d) => tapsPorDiaSoporte.find((x) => x.fecha === d)?.qr ?? 0);
 
   const linksConTaps = [...links].sort((a, b) => b.taps - a.taps);
-  const totalTapsHistorico = links.reduce((acc, l) => acc + l.taps, 0);
   const totalTapsNfc = links.filter((l) => l.tipo === "nfc").reduce((acc, l) => acc + l.taps, 0);
   const totalTapsQr = links.filter((l) => l.tipo === "qr" || l.tipo === "ambos").reduce((acc, l) => acc + l.taps, 0);
   const tieneSoporteQr = links.some((l) => l.tipo === "qr" || l.tipo === "ambos");
@@ -190,7 +198,90 @@ export default async function PortalPage({
   // contra la fecha de hoy en el mismo formato que ya usa fechaISO() en
   // lib/db.ts, para que "hoy" siempre coincida con lo que guardó el sync.
   const hoyISO = new Date().toISOString().slice(0, 10);
-  const resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
+
+  // `totalTapsHistorico` (de acá para abajo) queda SIEMPRE scopeado a
+  // `activo` — lo usan Dispositivos y Escaneos, que siguen siendo detalle
+  // de un solo local aunque el Resumen esté en modo combinado (si no, el
+  // número de arriba de esas pestañas no coincidiría con la tabla de abajo,
+  // que sigue mostrando solo los dispositivos de `activo`).
+  const totalTapsHistorico = links.reduce((acc, l) => acc + l.taps, 0);
+
+  // Totales SOLO para el Resumen: en modo combinado, se suman taps/reseñas
+  // de TODOS los locales — reseñas nuevas salen de `historico` que cada
+  // Cliente ya trae cargado (sin queries extra); taps y "reseñas hoy" sí
+  // necesitan traer los links/reseñas de cada sucursal aparte.
+  let totalTapsCombinado = totalTapsHistorico;
+  let resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
+  let resenasNuevasMesTotal = m?.resenasNuevas ?? 0;
+
+  // Alcance en Google (Business Profile Performance API): visitas al
+  // perfil, llamadas y clics "cómo llegar" del mes en curso — solo existe
+  // por local si ESE local conectó su propia cuenta (ver
+  // sincronizarRendimiento en lib/db/google-sync.ts). En combinado se suma
+  // lo que haya de cada uno; `conexionGoogle` es true si AL MENOS uno de
+  // los locales conectó, para decidir si mostrar los números o la
+  // invitación a conectar.
+  let visitasPerfilTotal = m?.visitasPerfil ?? 0;
+  let llamadasTotal = m?.llamadas ?? 0;
+  let comoLlegarTotal = m?.clicsComoLlegar ?? 0;
+
+  // Reseñas combinadas: en modo "Todos" la pestaña Reseñas (y el resumen de
+  // quejas del Resumen) tienen que ver TODAS las reseñas de la cuenta, no
+  // solo las de la cuenta raíz — antes de esto, un cliente con reseñas
+  // cargadas únicamente en una sucursal veía la pestaña Reseñas directamente
+  // desaparecida al mirar el combinado (ver el `if` que la ocultaba más
+  // abajo, ahora sacado). Reordenamos por fecha DESC después de concatenar
+  // porque cada array llega ordenado por su cuenta, no en conjunto.
+  let resenasCombinadas = resenas;
+
+  // Taps por hora (heatmap) y "pieza más usada": igual que todo lo de
+  // arriba, en combinado se suman/comparan entre todos los locales. La
+  // grilla hora×día se suma celda a celda (misma fecha, mismo huso ya
+  // resuelto en la consulta); la mejor pieza se elige por mayor taps de la
+  // semana, con el nombre del local para desambiguar si hay más de uno.
+  let horasSemanaCombinado = horasSemana;
+  let mejorPieza: (TopPiezaSemana & { local?: string }) | null = piezaMasUsada;
+
+  if (modoTodos && sucursales.length > 0) {
+    const deLasSucursales = await Promise.all(
+      sucursales.map(async (s) => {
+        const [linksS, resenasS, horasS, piezaS] = await Promise.all([
+          getLinks(s.id),
+          getResenas(s.id),
+          getTapsPorHoraSemana(s.id),
+          getPiezaMasUsadaSemana(s.id),
+        ]);
+        return { s, linksS, resenasS, horasS, piezaS };
+      }),
+    );
+    if (mejorPieza) mejorPieza = { ...mejorPieza, local: activo.nombre };
+    for (const { s, linksS, resenasS, horasS, piezaS } of deLasSucursales) {
+      totalTapsCombinado += linksS.reduce((acc, l) => acc + l.taps, 0);
+      resenasHoy += resenasS.filter((r) => r.fecha === hoyISO).length;
+      resenasNuevasMesTotal += metricaActual(s)?.resenasNuevas ?? 0;
+      const ms = metricaActual(s);
+      visitasPerfilTotal += ms?.visitasPerfil ?? 0;
+      llamadasTotal += ms?.llamadas ?? 0;
+      comoLlegarTotal += ms?.clicsComoLlegar ?? 0;
+      resenasCombinadas = resenasCombinadas.concat(resenasS);
+      horasSemanaCombinado = horasSemanaCombinado.map((dia) => {
+        const diaS = horasS.find((x) => x.fecha === dia.fecha);
+        return diaS ? { fecha: dia.fecha, horas: dia.horas.map((v, h) => v + diaS.horas[h]) } : dia;
+      });
+      if (piezaS && (!mejorPieza || piezaS.taps > mejorPieza.taps)) {
+        mejorPieza = { ...piezaS, local: s.nombre };
+      }
+    }
+    resenasCombinadas = [...resenasCombinadas].sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }
+
+  const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
+  const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
+  const resumenResenasCombinado = calcularResumenResenas(resenasCombinadas);
+
+  const conexionGoogle = modoTodos
+    ? ubicaciones.some((u) => Boolean(u.googleConectadoEn))
+    : gbpConectado;
 
   // Promedio de reseñas nuevas por mes, sobre todo el histórico cargado —
   // para "Evolución mes a mes", así el número no depende de mirar mes por
@@ -202,17 +293,46 @@ export default async function PortalPage({
   const {
     rating: ratingHero,
     totalResenas: resenasHero,
-    deltaRating: deltaRatingHero,
     deltaResenas: deltaResenasHero,
   } = heroDeCalificacion(activo);
+
+  // Reseñas totales combinadas: suma del total "en vivo" de cada local
+  // (mismo dato que ya usa cada card de "Rendimiento"), sin queries extra.
+  const resenasTotalesTotal = modoTodos
+    ? ubicaciones.reduce((acc, u) => acc + heroDeCalificacion(u).totalResenas, 0)
+    : resenasHero;
+
+  // Competencia cargada para ESTE local — no tiene sentido combinarla entre
+  // locales (la competencia de un barrio no es la de otro), así que solo se
+  // trae cuando se está viendo un local puntual. Se sincroniza acá mismo
+  // (on-demand, cuando el cliente entra a ver su portal) en vez de depender
+  // únicamente del cron diario — sincronizarCompetidoresDeComercio no vuelve
+  // a pegarle a Google si ya se actualizó hace poco, así que entrar varias
+  // veces seguidas no gasta cuota de más.
+  const competidoresLive = modoTodos
+    ? []
+    : await (async () => {
+        await sincronizarCompetidoresDeComercio(activo.id);
+        return getCompetidores(activo.id);
+      })();
+
+  const posicionCompetencia = (() => {
+    if (modoTodos || ratingHero === null) return null;
+    const ratingsCompetencia = competidoresLive
+      .map((comp) => comp.rating)
+      .filter((r): r is number => r !== null);
+    if (ratingsCompetencia.length === 0) return null;
+    const mejores = ratingsCompetencia.filter((r) => r > ratingHero).length;
+    return { puesto: mejores + 1, total: ratingsCompetencia.length + 1 };
+  })();
 
   // Lo que corre arriba de todo: acciones pendientes reales del dueño,
   // ordenadas por urgencia. Todo lo demás del portal es "mirar" — esto es
   // lo único que hay que "hacer", así que va primero pase lo que pase.
   const prioridades: Prioridad[] = [];
-  if (resenasPendientes.length > 0) {
+  if (resenasPendientesCombinadas.length > 0) {
     prioridades.push({
-      texto: `${resenasPendientes.length} reseña${resenasPendientes.length === 1 ? "" : "s"} esperando tu respuesta`,
+      texto: `${resenasPendientesCombinadas.length} reseña${resenasPendientesCombinadas.length === 1 ? "" : "s"} esperando tu respuesta`,
       href: "#resenas",
       tono: "urgente",
     });
@@ -233,9 +353,7 @@ export default async function PortalPage({
   }
 
   const nav: PortalNavEntry[] = construirNav({
-    resenasPendientes: resenasPendientes.length,
-    sucursales: sucursales.length,
-    ubicaciones: ubicaciones.length,
+    resenasPendientes: resenasPendientesCombinadas.length,
   });
 
   const panels: Record<string, ReactNode> = {};
@@ -243,62 +361,58 @@ export default async function PortalPage({
   panels.resumen = (
     <PanelResumen
       mensajeGoogle={mensajeGoogle}
-      prioridades={prioridades}
-      totalTapsHistorico={totalTapsHistorico}
+      modoTodos={modoTodos}
+      totalTapsHistorico={totalTapsCombinado}
       resenasHoy={resenasHoy}
-      resenasNuevasMes={m?.resenasNuevas ?? 0}
-      visitasPerfilMes={m?.visitasPerfil ?? 0}
-      resenasTotales={resenasHero}
+      resenasNuevasMes={resenasNuevasMesTotal}
+      resenasTotales={resenasTotalesTotal}
+      resenasNegativas={resenasNegativasTotal}
+      horasSemana={horasSemanaCombinado}
+      piezaMasUsada={mejorPieza}
+      posicionCompetencia={posicionCompetencia}
+      visitasPerfil={visitasPerfilTotal}
+      llamadas={llamadasTotal}
+      comoLlegar={comoLlegarTotal}
+      conexionGoogle={conexionGoogle}
       ubicaciones={ubicaciones}
       activoId={activo.id}
+      activoNombre={activo.nombre}
       codigoAcceso={c.codigoAcceso}
-      cuentaId={c.id}
       diasConTaps={diasConTaps}
       labelsTaps={labelsTaps}
       nfcPorDia={nfcPorDia}
       qrPorDia={qrPorDia}
       tieneSoporteQr={tieneSoporteQr}
-      resenasRecientes={resenas.slice(0, 3)}
-      temasRecurrentes={resumenResenas.temasRecurrentes}
+      temasRecurrentes={resumenResenasCombinado.temasRecurrentes}
     />
   );
 
-  // Gestión de reseñas: el dueño edita/aprueba la respuesta sugerida para
-  // sus reseñas de Google, sin depender del equipo de MetricsField. Personal
-  // vive acá también (antes era su propio ítem de menú): son menciones
-  // dentro del texto de las reseñas, tiene más sentido leerlas junto a ellas
-  // que en una sección aparte.
-  if (resenas.length > 0 || personalEmpleados.length > 0) {
-    panels.resenas = (
-      <PanelResenas
-        resenas={resenas}
-        resenasPendientes={resenasPendientes}
-        resenasAutomaticas={resenasAutomaticas}
-        resumenResenas={resumenResenas}
-        personalEmpleados={personalEmpleados}
-        codigoAcceso={c.codigoAcceso}
-        comercioId={activo.id}
-        autoResponderPositivas={activo.autoResponderPositivas}
-        autoResponderUmbral={activo.autoResponderUmbral}
-        tonoMarca={c.tonoMarca}
-      />
-    );
-  }
-
-  panels.sucursales = (
-    <PanelSucursales
-      sucursalesLength={sucursales.length}
+  // Gestión de reseñas: el dueño edita/aprueba (o aprueba todas de una) la
+  // respuesta sugerida para sus reseñas de Google, sin depender del equipo
+  // de MetricsField. Siempre se arma, aunque no haya ninguna reseña
+  // cargada todavía — antes desaparecía del menú en ese caso (pasaba de
+  // verdad con clientes reales sin reseñas tipeadas a mano en el CRM), lo
+  // cual confundía más que mostrar el estado vacío. En modo combinado
+  // muestra las reseñas de TODOS los locales (resenasCombinadas), con el
+  // mismo selector de local que Resumen para poder acotar a uno solo.
+  // Personal vive acá también (antes era su propio ítem de menú): son
+  // menciones dentro del texto de las reseñas.
+  panels.resenas = (
+    <PanelResenas
+      resenas={resenasCombinadas}
+      resenasPendientes={resenasPendientesCombinadas}
+      resenasAutomaticas={resenasAutomaticas}
+      resumenResenas={resumenResenasCombinado}
+      personalEmpleados={personalEmpleados}
+      modoTodos={modoTodos}
       ubicaciones={ubicaciones}
       activoId={activo.id}
-      codigoAcceso={c.codigoAcceso}
-      cuentaId={c.id}
-      ratingHero={ratingHero}
-      resenasHero={resenasHero}
-      deltaRatingHero={deltaRatingHero}
-      deltaResenasHero={deltaResenasHero}
       activoNombre={activo.nombre}
-      activoRubro={activo.rubro}
-      activoZona={activo.zona}
+      codigoAcceso={c.codigoAcceso}
+      comercioId={activo.id}
+      autoResponderPositivas={activo.autoResponderPositivas}
+      autoResponderUmbral={activo.autoResponderUmbral}
+      tonoMarca={c.tonoMarca}
     />
   );
 
@@ -339,15 +453,28 @@ export default async function PortalPage({
       resenasGoogle={activo.resenasGoogle}
       ratingHero={ratingHero}
       resenasHero={resenasHero}
-      deltaRatingHero={deltaRatingHero}
       deltaResenasHero={deltaResenasHero}
       resenas={resenas}
+      historico={activo.historico}
+      zona={activo.zona}
     />
   );
 
-  if (benchmark.length > 0) {
+  if (competidoresLive.length > 0 || benchmark.length > 0) {
     panels.competidores = (
-      <PanelCompetidores benchmark={benchmark} crecimientoVsCompetencia={crecimientoVsCompetencia} />
+      <PanelCompetidores
+        competidores={competidoresLive}
+        nombreLocal={activo.nombre}
+        ratingLocal={ratingHero}
+        resenasLocal={resenasHero}
+        posicion={posicionCompetencia}
+        benchmark={benchmark}
+        crecimientoVsCompetencia={crecimientoVsCompetencia}
+        modoTodos={modoTodos}
+        ubicaciones={ubicaciones}
+        activoId={activo.id}
+        codigoAcceso={c.codigoAcceso}
+      />
     );
   }
 
@@ -370,7 +497,9 @@ export default async function PortalPage({
   return (
     <PortalShell
       clienteNombre={c.nombre}
-      clienteSub={`${activo.rubro} · ${activo.zona}${sucursales.length > 0 ? ` · ${activo.nombre}` : ""}${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
+      clienteSub={`${activo.rubro} · ${activo.zona}${
+        sucursales.length > 0 ? ` · ${modoTodos ? `Todos los locales (${ubicaciones.length})` : activo.nombre}` : ""
+      }${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
       planBadge={<PlanBadge plan={c.plan} mono />}
       google={{
         conectado: gbpConectado,
@@ -378,6 +507,7 @@ export default async function PortalPage({
         perfilPanelId: "rating",
       }}
       whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
+      prioridades={prioridades}
       nav={nav}
       panels={panels}
       defaultPanel="resumen"

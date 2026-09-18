@@ -26,6 +26,7 @@ function FilaDispositivo({
   iconoDispositivo: ReactNode;
 }) {
   const [editando, setEditando] = useState(false);
+  const [nombre, setNombre] = useState(link.etiqueta ?? "");
   const [valor, setValor] = useState(link.urlDestino ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pendiente, startTransition] = useTransition();
@@ -36,6 +37,7 @@ function FilaDispositivo({
     fd.set("codigo", codigo);
     fd.set("comercioId", comercioId);
     fd.set("linkId", link.id);
+    fd.set("etiqueta", nombre);
     fd.set("urlDestino", valor);
     startTransition(async () => {
       const r = await accionActualizarUrlLinkPortal(fd);
@@ -89,14 +91,26 @@ function FilaDispositivo({
       {editando && (
         <tr className="border-t border-slate-100 bg-slate-50/60">
           <td colSpan={tieneSoporteQr ? 5 : 4} className="px-4 py-4">
-            <label className="block text-xs font-medium text-slate-600">
-              ¿A dónde manda &ldquo;{link.etiqueta || "este dispositivo"}&rdquo;?
-            </label>
+            <label className="block text-xs font-medium text-slate-600">Nombre del dispositivo</label>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              Para identificarlo como quieras: por mozo, por caja, por mesa, por sucursal.
+            </p>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              maxLength={60}
+              placeholder="Ej: Mesa 4, Caja, Juan"
+              className="mt-2 w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+              disabled={pendiente}
+            />
+
+            <label className="mt-4 block text-xs font-medium text-slate-600">¿A dónde manda?</label>
             <p className="mt-0.5 text-[11px] text-slate-400">
               Dejalo vacío para que mande a tu reseña de Google. El cartel impreso no cambia — solo cambia a dónde
               redirige.
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="mt-2 flex flex-nowrap items-center gap-2">
               <input
                 type="url"
                 value={valor}
@@ -112,6 +126,7 @@ function FilaDispositivo({
                 type="button"
                 onClick={() => {
                   setEditando(false);
+                  setNombre(link.etiqueta ?? "");
                   setValor(link.urlDestino ?? "");
                   setError(null);
                 }}

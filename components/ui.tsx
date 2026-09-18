@@ -157,14 +157,18 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">
           {title}
         </h1>
         {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
       </div>
-      {actions}
+      {/* min-w-0 para que un `actions` ancho (ej. varios chips de filtro) no
+          empuje el header entero fuera de pantalla en mobile — el propio
+          contenido de `actions` decide si scrollea o hace wrap adentro de
+          este ancho. */}
+      {actions && <div className="min-w-0 max-w-full">{actions}</div>}
     </div>
   );
 }

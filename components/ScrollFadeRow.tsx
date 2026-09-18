@@ -39,8 +39,13 @@ export default function ScrollFadeRow({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="relative">
-      <div ref={ref} className="flex gap-2 overflow-x-auto pb-1">
+    <div className="relative -mx-1">
+      {/* px-1 + -mx-1 en el wrapper: sin este margen, el anillo (box-shadow)
+          de un chip sin foco pegado al borde del contenedor scrolleable
+          queda tapado por el propio overflow-x-auto — se ve como un borde
+          cortado a la mitad en el primer/último chip en vez de un anillo
+          completo. */}
+      <div ref={ref} className="flex gap-2 overflow-x-auto px-1 pb-1">
         {children}
       </div>
       {/* Viñeta con negro a baja opacidad, no un color sólido a matchear

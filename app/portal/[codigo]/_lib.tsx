@@ -20,13 +20,24 @@ export function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
 }
 
-// Link para elegir un local: siempre manda a la sección "Mis Sucursales"
+// Link para elegir un local puntual: siempre manda al Resumen de ESE local
 // (hash incluido) — esta es una page.tsx server component, así que cada
 // click es una navegación de página completa; sin el hash, PortalShell
-// arrancaría de nuevo en Resumen en vez de quedarse en el detalle.
-export function hrefSucursal(codigoAcceso: string, cuentaId: string, s: { id: string }): string {
-  const base = s.id === cuentaId ? `/portal/${codigoAcceso}` : `/portal/${codigoAcceso}?sucursal=${s.id}`;
-  return `${base}#sucursales`;
+// arrancaría siempre en el panel por default. Elegir un local debe llevar
+// directo a su resumen (con el selector de locales arriba de todo para
+// poder saltar a otro sin ir y volver a la pestaña Sucursales) en vez de
+// dejarte parado en la pestaña Sucursales viendo una sola tarjeta. Todo
+// local (incluida la cuenta raíz) usa ?sucursal=<id> — sin eso, no hay
+// forma de distinguir "quiero ver la cuenta raíz sola" de "quiero el
+// combinado de todos" (ver hrefTodos).
+export function hrefSucursal(codigoAcceso: string, s: { id: string }): string {
+  return `/portal/${codigoAcceso}?sucursal=${s.id}#resumen`;
+}
+
+// Vuelve a la vista combinada (todos los locales sumados) — es el estado
+// por defecto del portal cuando el cliente tiene más de un local.
+export function hrefTodos(codigoAcceso: string): string {
+  return `/portal/${codigoAcceso}#resumen`;
 }
 
 // Hero de calificación de un local: preferimos el snapshot mensual (misma
@@ -64,19 +75,18 @@ export const MENSAJE_GOOGLE: Record<string, { texto: string; tono: "ok" | "error
 };
 
 // Menú simplificado: 3 secciones reales (antes eran 9). Todo lo
-// relacionado con "cómo va mi negocio" (locales, dispositivos, escaneos,
-// rating de Google, competencia, resumen del mes) vive junto adentro de
-// "Mi Negocio" — Personal se mudó adentro de Reseñas (son menciones de
-// reseñas) — y Ayuda ya no ocupa un ítem propio: el botón de WhatsApp del
-// header alcanza.
+// relacionado con "cómo va mi negocio" (dispositivos, escaneos, rating de
+// Google, competencia, resumen del mes) vive junto adentro de "Mi Negocio"
+// — Personal se mudó adentro de Reseñas (son menciones de reseñas) — y
+// Ayuda ya no ocupa un ítem propio: el botón de WhatsApp del header
+// alcanza. "Sucursales" se sacó del menú: elegir un local puntual ya se
+// hace desde el selector de chips que vive arriba de Resumen y de Reseñas
+// (ver SelectorSucursales) — la pestaña aparte solo repetía una sola
+// tarjeta sin agregar nada que esas dos no tuvieran ya.
 export function construirNav({
   resenasPendientes,
-  sucursales,
-  ubicaciones,
 }: {
   resenasPendientes: number;
-  sucursales: number;
-  ubicaciones: number;
 }): PortalNavEntry[] {
   return [
     { type: "leaf", id: "resumen", label: "Resumen", icon: <IconGrid size={18} /> },
@@ -98,25 +108,6 @@ export function construirNav({
       label: "Mi Negocio",
       icon: <IconBuilding size={18} />,
       items: [
-        {
-          type: "leaf",
-          id: "sucursales",
-          label: "Sucursales",
-          icon: <IconBuilding size={16} />,
-          badge:
-            sucursales === 0 ? (
-              <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-slate-400">
-                Pronto
-              </span>
-            ) : (
-              // Total de locales (cuenta + sucursales), no solo las
-              // sucursales hijas — mismo número que "Rendimiento · N
-              // locales" en Resumen.
-              <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
-                {ubicaciones}
-              </span>
-            ),
-        },
         { type: "leaf", id: "dispositivos", label: "Dispositivos", icon: <IconDevice size={16} /> },
         { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconWave size={16} /> },
         { type: "leaf", id: "rating", label: "Mi Rating en Google", icon: <IconStarNav size={16} /> },

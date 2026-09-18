@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCliente, getResenas, getSucursales, getUsuariosPortal } from "@/lib/db";
-import { oauthConfigurado } from "@/lib/google-oauth";
+import { oauthConfigurado, oauthVerificado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
   accionSincronizarGoogle,
@@ -74,9 +74,11 @@ export default async function ClienteDetallePage({
     ? Math.floor((Date.now() - new Date(c.googleConectadoEn).getTime()) / (1000 * 60 * 60 * 24))
     : null;
   // App todavía en modo Testing de Google: el permiso vence ~7 días
-  // después de conectar y hay que reconectar. Cuando esté verificada esto
-  // deja de aplicar y el aviso desaparece solo (diasConectado ya no importa).
-  const gbpPorVencer = diasConectado !== null && diasConectado >= 6;
+  // después de conectar y hay que reconectar. oauthVerificado() es el
+  // flag a mano (GOOGLE_OAUTH_VERIFIED) que se prende el día que llegue esa
+  // verificación — recién ahí el aviso deja de aplicar, sin importar
+  // diasConectado.
+  const gbpPorVencer = !oauthVerificado() && diasConectado !== null && diasConectado >= 6;
 
   const m = metricaActual(c);
   const prev = metricaAnterior(c);

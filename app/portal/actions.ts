@@ -7,6 +7,7 @@ import {
   getResenas,
   actualizarResena,
   actualizarAutomatizacionResenas,
+  responderResenaEnGoogle,
   getTapsPorHora,
   desconectarGoogleComercio,
   getLink,
@@ -42,20 +43,31 @@ async function reseñaDelComercio(codigo: string, comercioId: string, resenaId: 
   return { comercio, resena };
 }
 
-export async function accionAprobarResenaPortal(fd: FormData): Promise<void> {
+export async function accionAprobarResenaPortal(fd: FormData): Promise<{ publicada: boolean }> {
   const codigo = String(fd.get("codigo") ?? "");
   const comercioId = String(fd.get("comercioId") ?? "");
   const id = Number(fd.get("id"));
   const respuesta = String(fd.get("respuesta") ?? "").trim().slice(0, 2000);
-  await reseñaDelComercio(codigo, comercioId, id);
+  const { resena } = await reseñaDelComercio(codigo, comercioId, id);
   if (!respuesta) throw new Error("La respuesta no puede quedar vacía.");
+
+  // Si la reseña vino sincronizada de Google y ya tenemos acceso a la
+  // Reviews API, "aprobar" la publica de una en la ficha real — antes
+  // quedaba SIEMPRE en modo copiar y pegar, incluso el día que Google
+  // apruebe el acceso. Sin esas dos condiciones (o si Google la rechaza),
+  // cae al comportamiento de siempre; el llamador (portal) le muestra al
+  // dueño cuál de los dos pasó.
+  const publicada = resena.origenGoogleId
+    ? await responderResenaEnGoogle(comercioId, resena.origenGoogleId, respuesta)
+    : false;
 
   await actualizarResena(id, {
     respuestaSugerida: respuesta,
-    respuestaPublicada: true,
+    respuestaPublicada: publicada,
     estado: "respondida",
   });
   revalidatePath(`/portal/${codigo}`);
+  return { publicada };
 }
 
 export async function accionDescartarResenaPortal(fd: FormData): Promise<void> {
@@ -93,14 +105,19 @@ export async function accionDesconectarGoogleComercioPortal(fd: FormData): Promi
   revalidatePath(`/portal/${codigo}`);
 }
 
-/** Autogestión del enlace de un dispositivo desde el portal: el dueño
- * cambia a dónde manda su cartel/tarjeta sin depender del equipo interno.
- * Solo toca `urlDestino` (el QR/NFC impreso no cambia — ver arquitectura en
- * app/t/[slug]/page.tsx: "urlDestino" manda siempre si está cargada). No
- * usa throw+redirect para el error de URL inválida porque esta acción se
- * llama directo desde un componente cliente (no un <form action=>) y un
- * throw sin capturar tumbaría el panel entero — se devuelve un resultado
- * explícito en cambio. */
+/** Autogestión de un dispositivo desde el portal: el dueño cambia su nombre
+ * (para poder identificarlo por mozo, caja, mesa, lo que sea) y/o a dónde
+ * manda, sin depender del equipo interno. El QR/NFC impreso nunca cambia —
+ * ver arquitectura en app/t/[slug]/page.tsx: "urlDestino" manda siempre si
+ * está cargada. `etiqueta` es independiente de `nombreEmpleado`: esta acción
+ * solo toca la primera (el rótulo visible del dispositivo) — el campo de
+ * empleado sigue siendo cosa del equipo interno, porque además dispara la
+ * búsqueda de menciones en el texto de las reseñas (ver lib/empleados.ts) y
+ * cambiarlo sin avisar rompería esa correlación en silencio.
+ *
+ * No usa throw+redirect para los errores porque esta acción se llama directo
+ * desde un componente cliente (no un <form action=>) y un throw sin capturar
+ * tumbaría el panel entero — se devuelve un resultado explícito en cambio. */
 export async function accionActualizarUrlLinkPortal(
   fd: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
@@ -108,6 +125,7 @@ export async function accionActualizarUrlLinkPortal(
   const comercioId = String(fd.get("comercioId") ?? "");
   const linkId = String(fd.get("linkId") ?? "");
   const nuevaUrl = String(fd.get("urlDestino") ?? "").trim();
+  const nuevaEtiqueta = String(fd.get("etiqueta") ?? "").trim().slice(0, 60);
 
   const comercio = await comercioAutorizado(codigo, comercioId);
   const link = await getLink(linkId);
@@ -115,8 +133,12 @@ export async function accionActualizarUrlLinkPortal(
     throw new Error("Ese dispositivo no pertenece a este portal.");
   }
 
+  if (!nuevaEtiqueta) {
+    return { ok: false, error: "El nombre no puede quedar vacío." };
+  }
+
   if (!nuevaUrl) {
-    await actualizarLink(linkId, { urlDestino: null });
+    await actualizarLink(linkId, { etiqueta: nuevaEtiqueta, urlDestino: null });
     revalidatePath(`/portal/${codigo}`);
     return { ok: true };
   }
@@ -126,7 +148,7 @@ export async function accionActualizarUrlLinkPortal(
     return { ok: false, error: "Esa URL no parece válida — revisala e intentá de nuevo." };
   }
 
-  await actualizarLink(linkId, { urlDestino: limpia });
+  await actualizarLink(linkId, { etiqueta: nuevaEtiqueta, urlDestino: limpia });
   revalidatePath(`/portal/${codigo}`);
   return { ok: true };
 }

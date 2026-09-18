@@ -26,6 +26,16 @@ export function oauthConfigurado(): boolean {
   );
 }
 
+/** true solo cuando alguien prendió el flag a mano el día que Google verificó
+ * la pantalla de consentimiento OAuth — nunca se auto-detecta (Google no
+ * avisa por API). Mientras esté en false, los avisos de "este permiso vence
+ * cada 7 días" siguen mostrándose (modo Testing real); una vez en true,
+ * desaparecen de una porque el refresh token ya no vence por eso. Mismo
+ * patrón que GOOGLE_REVIEWS_API_ENABLED — ver lib/google-reviews.ts. */
+export function oauthVerificado(): boolean {
+  return process.env.GOOGLE_OAUTH_VERIFIED === "true";
+}
+
 /** El redirect_uri de cada ruta de OAuth tiene que ser EXACTAMENTE uno de
  * los que están cargados en Cloud Console (app.metricsfield.com) — a
  * diferencia del resto del sitio, que ahora también sirve desde

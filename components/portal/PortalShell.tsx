@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { IconChat } from "@/components/ui";
 import BrandMark from "@/components/BrandMark";
 import FloatingBottomNav from "@/components/FloatingBottomNav";
+import PrioridadesPanel, { type Prioridad } from "./PrioridadesPanel";
 
 // Cascarón de navegación del portal del cliente: sidebar oscuro con
 // paneles (en vez del scroll único de antes), forma tomada de la maqueta
@@ -159,6 +160,7 @@ export default function PortalShell({
   logo,
   google,
   whatsappHref,
+  prioridades,
   nav,
   panels,
   defaultPanel = "resumen",
@@ -169,6 +171,10 @@ export default function PortalShell({
   logo?: ReactNode;
   google?: PortalGoogleEstado;
   whatsappHref?: string | null;
+  /** Lo único que requiere una acción del dueño — vive en el costado, visible
+   * en cualquier pestaña, no solo en Resumen (antes estaba metido arriba del
+   * todo del contenido y competía con la información de un vistazo). */
+  prioridades: Prioridad[];
   nav: PortalNavEntry[];
   panels: Record<string, ReactNode>;
   defaultPanel?: string;
@@ -281,6 +287,12 @@ export default function PortalShell({
           </div>
         </div>
 
+        {prioridades.length > 0 && (
+          <div className="px-3">
+            <PrioridadesPanel prioridades={prioridades} />
+          </div>
+        )}
+
         <nav aria-label="Navegación del portal" className="flex flex-1 flex-col gap-0.5 px-3 py-2">
           {nav.map((entry) => {
             if (entry.type === "leaf") {
@@ -359,7 +371,13 @@ export default function PortalShell({
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/50 bg-white/70 px-5 py-4 backdrop-blur-xl lg:px-8 lg:pl-8">
+        {/* bg-white/95 (no /70): con menos opacidad, cualquier chip o
+            tarjeta que quede justo debajo al scrollear un poco se ve
+            "rebanado" a través del blur en vez de desaparecer limpio detrás
+            del header — pasaba con el selector de sucursales apenas se
+            scrolleaba, porque ahora es lo primero del contenido (antes
+            "Necesita tu atención" ocupaba ese primer tramo). */}
+        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/50 bg-white/95 px-5 py-4 backdrop-blur-xl lg:px-8 lg:pl-8">
           <h1 className="truncate pl-11 text-lg font-semibold tracking-tight text-slate-900 lg:pl-0">
             {activeLeaf?.label ?? "Resumen"}
           </h1>

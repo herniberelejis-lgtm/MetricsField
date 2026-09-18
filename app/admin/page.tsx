@@ -83,7 +83,7 @@ export default async function DashboardPage({
         title="Panel"
         subtitle="Métricas clave de la cartera"
         actions={
-          <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white p-1">
             {PERIODOS.map((p) => (
               <Link
                 key={p.key}
@@ -91,8 +91,8 @@ export default async function DashboardPage({
                 aria-current={p.key === periodo.key ? "true" : undefined}
                 className={
                   p.key === periodo.key
-                    ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
-                    : "rounded-full px-3 py-1 text-xs text-slate-600 hover:bg-slate-100"
+                    ? "shrink-0 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                    : "shrink-0 rounded-full px-3 py-1 text-xs text-slate-600 hover:bg-slate-100"
                 }
               >
                 {p.label}

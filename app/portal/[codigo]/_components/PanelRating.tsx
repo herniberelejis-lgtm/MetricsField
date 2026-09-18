@@ -1,7 +1,8 @@
-import type { ResenaCRM } from "@/lib/types";
+import type { MetricaMensual, ResenaCRM } from "@/lib/types";
 import { Card, Stars, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
+import RatingSerieChart from "@/components/RatingSerieChart";
 
 const COLOR_ESTRELLA: Record<number, string> = {
   5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
@@ -21,9 +22,10 @@ export default function PanelRating({
   resenasGoogle,
   ratingHero,
   resenasHero,
-  deltaRatingHero,
   deltaResenasHero,
   resenas,
+  historico,
+  zona,
 }: {
   gbpConectado: boolean;
   diasConectado: number | null;
@@ -35,10 +37,15 @@ export default function PanelRating({
   resenasGoogle: number | null;
   ratingHero: number | null;
   resenasHero: number;
-  deltaRatingHero: number | null;
   deltaResenasHero: number | null;
   resenas: ResenaCRM[];
+  historico: MetricaMensual[];
+  zona: string;
 }) {
+  // "Al instalar": la primera foto mensual que tenemos (arranque del
+  // servicio) — si todavía no hay ni un mes cargado, no hay piso con qué
+  // comparar y no mostramos el dato en vez de inventarlo.
+  const ratingAlInstalar = historico[0]?.ratingPromedio ?? null;
   // Distribución de reseñas por estrella — para la barra 5★..1★ del panel
   // "Mi Rating en Google". Sobre TODAS las reseñas conocidas (no solo las
   // pendientes), igual que resumenResenas en el panel de Resumen.
@@ -117,24 +124,36 @@ export default function PanelRating({
       )}
 
       {ratingHero !== null && (
-        <Card variant="glass" className="mb-4 max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Calificación</p>
-          <div className="mt-2 text-4xl font-bold tracking-tight text-slate-900 tabular-nums">{ratingHero.toFixed(1)}</div>
-          <Stars rating={ratingHero} mono />
-          <p className="mt-1 text-xs text-slate-500">{fmtNum(resenasHero)} reseñas totales</p>
-          {deltaRatingHero !== null && deltaResenasHero !== null && (
-            <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-100 pt-3 text-xs font-semibold">
-              <span className={deltaRatingHero >= 0 ? "text-slate-900" : "text-slate-400"}>
-                {deltaRatingHero >= 0 ? "+" : ""}
-                {deltaRatingHero.toFixed(1)}★
-              </span>
-              <span className={deltaResenasHero >= 0 ? "text-slate-900" : "text-slate-400"}>
-                {deltaResenasHero >= 0 ? "+" : ""}
-                {fmtNum(deltaResenasHero)} reseñas
-              </span>
+        <>
+          {historico.length > 0 && (
+            <div className="mb-4">
+              <RatingSerieChart historico={historico} zona={zona} />
             </div>
           )}
-        </Card>
+
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Card variant="glass">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Al instalar</p>
+              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+                {ratingAlInstalar === null ? "—" : `${ratingAlInstalar.toFixed(1)}★`}
+              </div>
+            </Card>
+            <Card variant="glass">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hoy</p>
+              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+                {ratingHero.toFixed(1)}★
+              </div>
+              <Stars rating={ratingHero} mono />
+            </Card>
+            <Card variant="glass">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Reseñas sumadas</p>
+              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+                {deltaResenasHero === null ? fmtNum(resenasHero) : `${deltaResenasHero >= 0 ? "+" : ""}${fmtNum(deltaResenasHero)}`}
+              </div>
+              <p className="mt-1 text-xs text-slate-500">{fmtNum(resenasHero)} reseñas totales</p>
+            </Card>
+          </div>
+        </>
       )}
 
       {resenas.length > 0 && (

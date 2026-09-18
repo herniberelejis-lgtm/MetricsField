@@ -47,15 +47,28 @@ export interface GooglePlaceResultado {
   direccion: string;
 }
 
+/** Por qué no hay resultados — antes esto era un `null` que tapaba dos
+ * causas completamente distintas (la env var no está cargada vs. Google
+ * rechazó la key) bajo el mismo mensaje "Falta configurar
+ * GOOGLE_PLACES_API_KEY", que llevó a un rato perdido buscando la variable
+ * cuando el problema real era una key con "Places API (New)" sin habilitar.
+ * "rechazada" incluye el status HTTP para poder distinguir 403 (permiso/
+ * facturación/restricción) de otros códigos. */
+export type SearchGooglePlaceResultado =
+  | { ok: true; resultados: GooglePlaceResultado[] }
+  | { ok: false; motivo: "sin-key" }
+  | { ok: false; motivo: "rechazada"; status: number };
+
 /** Busca lugares por texto libre (nombre + zona) — para que el equipo
  * encuentre el place_id de un cliente sin salir del panel ni pelearse con
  * la herramienta de Google (que Google bloquea si se intenta automatizar
  * desde afuera). Google no deja usar esto desde el navegador del cliente
  * final por CORS, así que corre server-side y el panel lo consume por
  * /api/places-search. */
-export async function searchGooglePlace(query: string): Promise<GooglePlaceResultado[] | null> {
+export async function searchGooglePlace(query: string): Promise<SearchGooglePlaceResultado> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey || !query.trim()) return null;
+  if (!query.trim()) return { ok: true, resultados: [] };
+  if (!apiKey) return { ok: false, motivo: "sin-key" };
 
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
@@ -70,16 +83,19 @@ export async function searchGooglePlace(query: string): Promise<GooglePlaceResul
 
   if (!res.ok) {
     console.error(`Places API (searchText) respondió ${res.status}`);
-    return null;
+    return { ok: false, motivo: "rechazada", status: res.status };
   }
 
   const data = (await res.json()) as {
     places?: { id: string; displayName?: { text: string }; formattedAddress?: string }[];
   };
 
-  return (data.places ?? []).map((p) => ({
-    placeId: p.id,
-    nombre: p.displayName?.text ?? "(sin nombre)",
-    direccion: p.formattedAddress ?? "",
-  }));
+  return {
+    ok: true,
+    resultados: (data.places ?? []).map((p) => ({
+      placeId: p.id,
+      nombre: p.displayName?.text ?? "(sin nombre)",
+      direccion: p.formattedAddress ?? "",
+    })),
+  };
 }

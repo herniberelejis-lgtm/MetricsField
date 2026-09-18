@@ -410,6 +410,83 @@ export async function getTapsPorHora(comercioId: string, fecha: string): Promise
   return Array.from({ length: 24 }, (_, hora) => ({ hora, taps: porHora.get(hora) ?? 0 }));
 }
 
+export interface TapsPorHoraDia {
+  fecha: string; // YYYY-MM-DD, hora local del comercio
+  horas: number[]; // 24 valores (hora 0..23)
+}
+
+/** Grilla día×hora de los últimos `dias` días (semana por default) — mapa de
+ * calor de "a qué hora te tocan el cartel" en el Resumen del portal. A
+ * diferencia de getTapsPorHora (un día puntual, a pedido al hacer click),
+ * esto trae la semana entera en una sola consulta. El rango de días y el
+ * cero-relleno se arman con generate_series del lado de la base (no en JS)
+ * para que "hoy" quede calculado en el mismo huso horario del comercio que
+ * usa el resto del archivo — mezclar Date de Node (UTC) con fechas ya
+ * agrupadas en America/Argentina/Cordoba desalinea el último día cerca de
+ * la medianoche. */
+export async function getTapsPorHoraSemana(comercioId: string, dias = 7): Promise<TapsPorHoraDia[]> {
+  const rows = await sql`
+    WITH dias AS (
+      SELECT (now() AT TIME ZONE ${TZ_COMERCIO})::date - offset_dias AS fecha
+      FROM generate_series(0, ${dias - 1}) AS offset_dias
+    ),
+    horas AS (
+      SELECT generate_series(0, 23) AS hora
+    ),
+    conteo AS (
+      SELECT
+        (t.creado_en AT TIME ZONE ${TZ_COMERCIO})::date AS fecha,
+        EXTRACT(HOUR FROM t.creado_en AT TIME ZONE ${TZ_COMERCIO})::int AS hora,
+        COUNT(*)::int AS taps
+      FROM taps t
+      JOIN links_nfc l ON l.id = t.link_id
+      WHERE l.comercio_id = ${comercioId}
+        AND t.creado_en >= now() - (${dias}::text || ' days')::interval
+      GROUP BY 1, 2
+    )
+    SELECT
+      to_char(d.fecha, 'YYYY-MM-DD') AS fecha,
+      h.hora,
+      COALESCE(c.taps, 0)::int AS taps
+    FROM dias d
+    CROSS JOIN horas h
+    LEFT JOIN conteo c ON c.fecha = d.fecha AND c.hora = h.hora
+    ORDER BY d.fecha ASC, h.hora ASC
+  `;
+
+  const porFecha = new Map<string, number[]>();
+  for (const r of rows) {
+    const fecha = r.fecha as string;
+    if (!porFecha.has(fecha)) porFecha.set(fecha, Array(24).fill(0));
+    porFecha.get(fecha)![Number(r.hora)] = Number(r.taps);
+  }
+  return Array.from(porFecha.entries()).map(([fecha, horas]) => ({ fecha, horas }));
+}
+
+export interface TopPiezaSemana {
+  etiqueta: string;
+  taps: number;
+}
+
+/** La pieza (cartel/tarjeta) con más taps en los últimos `dias` — el
+ * highlight rápido de "qué está funcionando ahora" sin tener que entrar a
+ * la tabla completa de Dispositivos (que ordena por taps de TODA la vida,
+ * no por actividad reciente). null si no hubo ningún tap en el período. */
+export async function getPiezaMasUsadaSemana(comercioId: string, dias = 7): Promise<TopPiezaSemana | null> {
+  const rows = await sql`
+    SELECT l.etiqueta, COUNT(*)::int AS taps
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    WHERE l.comercio_id = ${comercioId}
+      AND t.creado_en >= now() - (${dias}::text || ' days')::interval
+    GROUP BY l.id, l.etiqueta
+    ORDER BY taps DESC
+    LIMIT 1
+  `;
+  if (rows.length === 0) return null;
+  return { etiqueta: (rows[0].etiqueta as string) || "Sin etiqueta", taps: Number(rows[0].taps) };
+}
+
 export interface TapsResumenPeriodo {
   nfc: number;
   qr: number; // incluye tipo 'ambos' — ver nota en getTapsPorDiaPorSoporte

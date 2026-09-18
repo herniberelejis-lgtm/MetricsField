@@ -94,6 +94,27 @@ export async function sincronizarCompetidoresTodos(): Promise<{ total: number; a
   return { total: ids.length, actualizados: resultados.filter(Boolean).length };
 }
 
+/** Sincroniza los competidores de UN comercio puntual — se dispara cuando
+ * el cliente entra a ver su portal (ver pestaña Competidores en
+ * app/portal/[codigo]/page.tsx), no depende de esperar al cron diario. Solo
+ * pega contra Places API si hace más de `minHoras` que no se actualiza cada
+ * competidor, para no gastar cuota ni sumar latencia si alguien recarga la
+ * página varias veces seguidas. */
+export async function sincronizarCompetidoresDeComercio(
+  comercioId: string,
+  minHoras = 6,
+): Promise<void> {
+  const rows = await sql`
+    SELECT id FROM competidores
+    WHERE comercio_id = ${comercioId}
+      AND google_place_id IS NOT NULL AND google_place_id != ''
+      AND (actualizado_en IS NULL OR actualizado_en < now() - (${minHoras}::text || ' hours')::interval)
+  `;
+  const ids = rows.map((r) => Number(r.id));
+  if (ids.length === 0) return;
+  await sincronizarEnLotes(ids, sincronizarCompetidor);
+}
+
 // ---------- Benchmarking histórico (fotos mensuales de competencia) ----------
 
 function mesActual(): string {

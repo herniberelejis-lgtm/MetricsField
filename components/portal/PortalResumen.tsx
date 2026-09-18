@@ -1,14 +1,13 @@
 import type { ReactNode } from "react";
-import type { ResenaCRM } from "@/lib/types";
 import { fmtNum } from "@/lib/format";
 import RatingGauge from "@/components/RatingGauge";
 
 // Piezas visuales propias del portal del cliente (no se comparten con
-// /admin): chips de actividad con ícono de color, la card grande de
-// calificación de Google y el listado de reseñas recientes con avatar. Van
-// aparte de components/ui.tsx a propósito — ui.tsx es el sistema compartido
-// de todo el panel interno y no debe cambiar de aspecto por un pedido que es
-// solo para la cara que ve el cliente.
+// /admin): chips de actividad con ícono de color y la card grande de
+// calificación de Google. Van aparte de components/ui.tsx a propósito —
+// ui.tsx es el sistema compartido de todo el panel interno y no debe
+// cambiar de aspecto por un pedido que es solo para la cara que ve el
+// cliente.
 
 function IconBase({ children, size = 18, className = "" }: { children: ReactNode; size?: number; className?: string }) {
   return (
@@ -37,15 +36,6 @@ function IconStarChip({ size, className }: { size?: number; className?: string }
   );
 }
 
-function IconEye({ size, className }: { size?: number; className?: string }) {
-  return (
-    <IconBase size={size} className={className}>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </IconBase>
-  );
-}
-
 function IconTrendingUp({ size, className }: { size?: number; className?: string }) {
   return (
     <IconBase size={size} className={className}>
@@ -64,7 +54,39 @@ function IconPin({ size, className }: { size?: number; className?: string }) {
   );
 }
 
-export { IconEye as IconVisitas, IconTrendingUp as IconCrecimiento, IconStarChip };
+function IconEyeChip({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
+      <circle cx="12" cy="12" r="3" />
+    </IconBase>
+  );
+}
+
+function IconPhoneChip({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M4.5 3.5h3.2l1.6 4-2 1.3a11.5 11.5 0 0 0 5.4 5.4l1.3-2 4 1.6v3.2a1.8 1.8 0 0 1-2 1.8C9.5 18.3 4.7 13.5 3.7 7A1.8 1.8 0 0 1 4.5 3.5z" />
+    </IconBase>
+  );
+}
+
+function IconDirectionsChip({ size, className }: { size?: number; className?: string }) {
+  return (
+    <IconBase size={size} className={className}>
+      <path d="M4 4v7a4 4 0 0 0 4 4h11" />
+      <path d="M14 11l5 4-5 4" />
+    </IconBase>
+  );
+}
+
+export {
+  IconTrendingUp as IconCrecimiento,
+  IconStarChip,
+  IconEyeChip,
+  IconPhoneChip,
+  IconDirectionsChip,
+};
 
 /** Card chica: ícono de color + número grande + etiqueta. Fila de "de un
  * vistazo" arriba del todo, antes de entrar en el detalle de cada sección. */
@@ -168,67 +190,3 @@ export function CalificacionGoogleCard({
   );
 }
 
-const COLORES_AVATAR = [
-  "bg-slate-100 text-slate-700",
-  "bg-slate-800 text-white",
-  "bg-slate-200 text-slate-800",
-  "bg-slate-900 text-white",
-];
-
-function inicial(nombre: string): string {
-  return nombre.trim().charAt(0).toUpperCase() || "?";
-}
-
-/** `fecha` en `resenas` es DATE (sin hora, ver db/schema.sql) — todo lo que
- * viene de la base ya perdió la hora del día, así que acá solo trabajamos en
- * días completos. Nada de "hace 12 min": esa precisión no existe en el dato. */
-function tiempoRelativo(fechaISO: string): string {
-  const fecha = new Date(`${fechaISO}T00:00:00Z`);
-  const hoy = new Date();
-  const hoyUTC = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate());
-  const dias = Math.round((hoyUTC - fecha.getTime()) / 86_400_000);
-  if (dias <= 0) return "hoy";
-  if (dias === 1) return "ayer";
-  if (dias < 30) return `hace ${dias} días`;
-  return fecha.toLocaleDateString("es-AR", { timeZone: "UTC" });
-}
-
-/** Últimas reseñas, de un vistazo — con avatar de inicial en vez de la fila
- * de texto plano que ya usan las secciones de gestión más abajo. Es la única
- * vista "para mirar y listo", sin acciones: responder sigue siendo en
- * Gestión de reseñas. */
-export function ResenasRecientesCard({ resenas }: { resenas: ResenaCRM[] }) {
-  return (
-    <div className="rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-      <p className="text-sm font-semibold text-slate-800">Reseñas recientes</p>
-      {resenas.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">Todavía no hay reseñas cargadas de este local.</p>
-      ) : (
-        <div className="mt-3.5 space-y-4">
-          {resenas.map((r, i) => (
-            <div key={r.id} className="flex gap-3">
-              <span
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${COLORES_AVATAR[i % COLORES_AVATAR.length]}`}
-              >
-                {inicial(r.autor)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                  <span className="truncate text-sm font-medium text-slate-800">{r.autor}</span>
-                  <span className="shrink-0 text-[11px] text-slate-400">{tiempoRelativo(r.fecha)}</span>
-                </div>
-                <span className="text-xs text-slate-900" aria-hidden>
-                  {"★".repeat(r.estrellas)}
-                  <span className="text-slate-200">{"★".repeat(5 - r.estrellas)}</span>
-                </span>
-                {r.texto.trim() && (
-                  <p className="mt-1 line-clamp-2 text-xs text-slate-600">&ldquo;{r.texto}&rdquo;</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
