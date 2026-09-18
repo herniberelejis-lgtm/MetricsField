@@ -240,7 +240,7 @@ CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(come
 
 -- ============================================================
 -- Loyalty — módulo aditivo detrás de LOYALTY_ENABLED. Si se revierte,
--- Reviews queda exactamente igual. Ver db/migrations/011_loyalty_fundaciones.sql
+-- Reviews queda exactamente igual. Ver db/migrations/012_loyalty_fundaciones.sql
 -- para el detalle de cada decisión (por qué append-only, por qué ip_hash
 -- y no IP, por qué clientes_finales es global y no por comercio, etc.).
 -- ============================================================

@@ -505,7 +505,7 @@ eso existe el corte.
 
 | Necesito... | Está en |
 |---|---|
-| Las 9 tablas nuevas | `db/migrations/011_loyalty_fundaciones.sql` |
+| Las 9 tablas nuevas | `db/migrations/012_loyalty_fundaciones.sql` |
 | El esquema canónico completo | `db/schema.sql` |
 | Ledger, membresías, eventos | `lib/db/loyalty.ts` |
 | Cooldown y hash de IP | `lib/loyalty-antifraude.ts` |
