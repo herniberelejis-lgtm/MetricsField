@@ -11,6 +11,14 @@ import BrandMark from "@/components/BrandMark";
 // Título y OpenGraph en inglés a propósito: es el <title> que ve el
 // revisor de la verificación OAuth de Google, no un cliente. El contenido
 // visible de la página (lo que ve un dueño de comercio) sigue en español.
+// Renderizado dinámico (no estático): la CSP con nonce por request
+// (middleware.ts) necesita que cada página se renderice de nuevo en cada
+// visita para que el script de hidratación de Next lleve el nonce correcto
+// — una página pregenerada en el build tendría siempre el mismo nonce
+// "viejo", que nunca coincide con el de la respuesta real. Costo extra
+// insignificante para una página de bajo tráfico como esta.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "MetricsField - Reputation Management Platform",
   description:

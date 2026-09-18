@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Ver la nota en app/page.tsx: renderizado dinámico para que el nonce de la
+// CSP (middleware.ts) coincida en cada visita.
+export const dynamic = "force-dynamic";
+
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center">

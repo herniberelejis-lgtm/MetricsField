@@ -8,6 +8,7 @@ import {
   getTapsPorDiaPorSoporte,
   getTapsPorHoraSemana,
   getPiezaMasUsadaSemana,
+  getResenasPorHoraSemana,
   getLinks,
   getChecklist,
   getAudits,
@@ -106,7 +107,7 @@ export default async function PortalPage({
   const gbpPorVencer = !oauthVerificado() && diasConectado !== null && diasConectado >= 6;
   const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
 
-  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark] =
+  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark, resenasPorHora] =
     await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
@@ -116,6 +117,7 @@ export default async function PortalPage({
       getAudits(activo.id),
       getResenas(activo.id),
       getBenchmarkMensual(activo.id),
+      getResenasPorHoraSemana(activo.id),
     ]);
 
   const m = metricaActual(activo);
@@ -457,6 +459,7 @@ export default async function PortalPage({
       resenas={resenas}
       historico={activo.historico}
       zona={activo.zona}
+      resenasPorHora={resenasPorHora}
     />
   );
 

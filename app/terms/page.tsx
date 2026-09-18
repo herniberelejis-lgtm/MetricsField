@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import LangSwitch from "@/components/legal/LangSwitch";
 
+// Ver la nota en app/page.tsx: renderizado dinámico para que el nonce de la
+// CSP (middleware.ts) coincida en cada visita.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Términos de servicio — MetricsField",
   description: "Condiciones de uso de la plataforma y el hardware de MetricsField.",

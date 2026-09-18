@@ -28,6 +28,24 @@ export const INK = {
   goodText: "#006300",
 } as const;
 
+// Escala de calificación (1★..5★), rojo→verde — la única excepción al mono-
+// croma del portal del cliente. Semáforo de calidad a propósito: es la
+// convención universal de "reseña mala/buena" y acá el color SÍ es el dato
+// (a diferencia de un mapa de calor de volumen, que solo necesita una
+// tinta). Ojo con la accesibilidad: un rango rojo→verde de 5 pasos no puede
+// pasar el chequeo de daltonismo par-a-par que sí pasan las paletas
+// categóricas de esta app (protanopía/deuteranopía confunden precisamente
+// rojo y verde) — por eso cada celda que use esta escala tiene que ir
+// SIEMPRE acompañada del número real (tooltip y vista Tabla), nunca color
+// solo. No reusar esto para nada que no sea "calificación 1-5".
+export const RATING_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: "#d64545",
+  2: "#e8834a",
+  3: "#d9b525",
+  4: "#7fb241",
+  5: "#1f8a3d",
+};
+
 /** Ticks "lindos" para un eje 0..max: devuelve [0, paso, 2·paso, …]. */
 export function niceTicks(max: number, count = 4): number[] {
   if (max <= 0) return [0, 1];

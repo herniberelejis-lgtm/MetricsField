@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
-// Cabeceras de seguridad para TODAS las respuestas. Lo más importante:
-// frame-ancestors 'none' — nadie puede meter /login ni /portal en un iframe
-// (clickjacking), reforzado por X-Frame-Options: DENY para navegadores que
-// todavía no soportan CSP. Una CSP completa (script-src etc.) queda para más
-// adelante: requiere trabajo aparte por los estilos inline de Next/Tailwind.
+// Cabeceras de seguridad para TODAS las respuestas — salvo Content-Security-
+// Policy, que NO va acá: necesita un nonce distinto en cada request (para
+// permitir los scripts de hidratación de Next.js sin caer en 'unsafe-inline',
+// que anularía la protección real contra un XSS futuro), y headers() de
+// next.config.ts no puede generar un valor distinto por request. Esa vive en
+// middleware.ts, que ahora corre en todas las rutas.
 const cabecerasSeguridad = [
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },

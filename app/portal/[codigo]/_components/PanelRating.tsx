@@ -1,8 +1,10 @@
 import type { MetricaMensual, ResenaCRM } from "@/lib/types";
+import type { ResenasPorHoraDia } from "@/lib/db";
 import { Card, Stars, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import RatingSerieChart from "@/components/RatingSerieChart";
+import RatingPorHoraChart from "@/components/RatingPorHoraChart";
 
 const COLOR_ESTRELLA: Record<number, string> = {
   5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
@@ -26,6 +28,7 @@ export default function PanelRating({
   resenas,
   historico,
   zona,
+  resenasPorHora,
 }: {
   gbpConectado: boolean;
   diasConectado: number | null;
@@ -41,6 +44,7 @@ export default function PanelRating({
   resenas: ResenaCRM[];
   historico: MetricaMensual[];
   zona: string;
+  resenasPorHora: ResenasPorHoraDia[];
 }) {
   // "Al instalar": la primera foto mensual que tenemos (arranque del
   // servicio) — si todavía no hay ni un mes cargado, no hay piso con qué
@@ -155,6 +159,10 @@ export default function PanelRating({
           </div>
         </>
       )}
+
+      <div className="mb-4">
+        <RatingPorHoraChart dias={resenasPorHora} />
+      </div>
 
       {resenas.length > 0 && (
         <Card variant="glass">
