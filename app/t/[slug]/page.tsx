@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getDatosTap, registrarTap } from "@/lib/db";
@@ -14,6 +15,29 @@ export const dynamic = "force-dynamic";
 // in-app de WhatsApp con una persona real no lleva ese token en el UA), y
 // "bot" ya cubre TelegramBot, Twitterbot, Googlebot, etc.
 const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp\/|slurp|curl/i;
+
+const DESCRIPCION_RESENA = "Tu reseña nos ayuda muchísimo. Gracias por confiar en nosotros 🙏";
+
+// Sin esto, el bot de preview de WhatsApp (y de cualquier otro mensajero)
+// sigue el redirect de abajo hasta el destino final (la reseña de Google) y
+// arma la miniatura del link con LO QUE SEA que tenga esa página — casi
+// nunca algo útil. generateMetadata corre siempre, pero solo importa cuando
+// la página realmente renderiza en vez de redirigir (ver más abajo).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const datos = await getDatosTap(slug);
+  const nombre = datos?.comercio?.nombre || datos?.link.nombreNegocio || undefined;
+  const titulo = nombre ? `${nombre} — Dejanos tu opinión` : "Dejanos tu opinión";
+  return {
+    title: titulo,
+    description: DESCRIPCION_RESENA,
+    openGraph: { title: titulo, description: DESCRIPCION_RESENA, images: ["/og-resena.png"] },
+  };
+}
 
 // La URL corta que va en el cartel NFC: taply.app/t/<slug>. El comercio
 // nunca cambia esta URL — el destino se administra desde el panel
@@ -32,6 +56,7 @@ export default async function TapPage({
 
   const h = await headers();
   const userAgent = h.get("user-agent") ?? "";
+  const esCrawler = UA_BOT.test(userAgent);
   const esPrefetch =
     h.get("purpose") === "prefetch" || h.get("next-router-prefetch") === "1";
   // Límite generoso por IP+cartel: deja pasar tráfico real de un local
@@ -41,7 +66,7 @@ export default async function TapPage({
   limpiarVencidos();
   const ip = ipDelRequest(h);
   const dentroDelLimite = await permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
-  if (!esPrefetch && !UA_BOT.test(userAgent) && dentroDelLimite) {
+  if (!esPrefetch && !esCrawler && dentroDelLimite) {
     await registrarTap(slug, userAgent || null);
   }
 
@@ -71,6 +96,7 @@ export default async function TapPage({
       // editarla.
       return <RedireccionSuave url={url} slug={slug} />;
     }
+    if (esCrawler) return <VistaPreviaResena url={url} />;
     redirect(url);
   }
 
@@ -86,5 +112,20 @@ export default async function TapPage({
   // El tap ya quedó contado arriba.
   const urlResena = urlSegura(comercio.googleReviewUrl);
   if (!urlResena) notFound();
+  if (esCrawler) return <VistaPreviaResena url={urlResena} />;
   redirect(urlResena);
+}
+
+// Único caso en el que el bot de preview llega hasta acá (ver generateMetadata
+// arriba): no importa el contenido — el bot no ejecuta JS ni mira el body,
+// solo lee <head> — pero si alguna vez un humano real cae en esta rama por
+// compartir un user-agent parecido, que al menos tenga un link tocable.
+function VistaPreviaResena({ url }: { url: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white px-6 text-center">
+      <a href={url} className="text-sm text-slate-500 underline">
+        Tocá acá para dejar tu opinión
+      </a>
+    </div>
+  );
 }
