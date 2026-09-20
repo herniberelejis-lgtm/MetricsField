@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getComercioLoyalty, getProgramaLoyalty } from "@/lib/db/loyalty";
+import { getComercioLoyalty, getProgramaPorCuenta } from "@/lib/db/loyalty";
 import { Card } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function LoyaltyLandingPage({
   const comercio = await getComercioLoyalty(codigo);
   if (!comercio || !comercio.tieneLoyalty) notFound();
 
-  const programa = await getProgramaLoyalty(comercio.id);
+  const programa = await getProgramaPorCuenta(comercio.id);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-6">

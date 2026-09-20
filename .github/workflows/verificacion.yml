@@ -7,8 +7,10 @@ name: Verificación
 #
 # No necesita ningún secreto: el build de Next no se conecta a la base
 # (todas las páginas son force-dynamic, se renderizan en request) y los
-# tests son de lógica pura. DATABASE_URL se pasa en falso solo porque
-# lib/sql.ts corta el arranque si la variable no existe.
+# tests son de lógica pura. DATABASE_URL y LOYALTY_DATABASE_URL se pasan
+# en falso solo porque lib/sql.ts y lib/sql-loyalty.ts cortan el arranque
+# si la variable no existe — ninguna de las dos intenta conectar de
+# verdad durante el build.
 
 on:
   pull_request:
@@ -40,6 +42,7 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: postgres://build:build@localhost:5432/build
+          LOYALTY_DATABASE_URL: postgres://build:build@localhost:5432/build
           ADMIN_PASSWORD: build-no-se-usa
 
       - name: Vulnerabilidades en dependencias
