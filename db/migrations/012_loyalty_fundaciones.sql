@@ -1,152 +1,237 @@
--- Loyalty — PR A1: fundaciones del módulo (migración, nada de código en
--- este archivo). Módulo aditivo detrás de LOYALTY_ENABLED: si se revierte
--- este PR y el A2, Reviews queda exactamente igual, sin ninguna fila de
--- comercios/links_nfc/taps tocada salvo el ALTER puntual de abajo.
+-- Loyalty — fundaciones, reescritas (septiembre 2026).
 --
--- Correr a mano en el SQL Editor de Neon (o psql local) — no se auto-aplica.
--- Ver docs/CONTEXTO-Y-PROGRESO.md y el brief de Loyalty en la carpeta de
--- research del proyecto para el diseño completo.
+-- Reemplaza por completo la versión anterior de este archivo (PR #90,
+-- mergeado a `desarrollo` pero NUNCA CORRIDO en Neon — no hay una sola fila
+-- de estas tablas en la base real). Por eso se reescribe el archivo entero
+-- en vez de agregar una migración correctiva: no hay datos que migrar.
+--
+-- Qué cambia respecto de la versión anterior y por qué, en
+-- docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §4 y §11:
+--   · Esquema propio `loyalty` (no `public`) — permite un rol de base con
+--     permisos mínimos (ver db/migrations/013_loyalty_rol.sql).
+--   · La MEMBRESÍA es la credencial del cliente final (token de 256 bits,
+--     se guarda su hash), no el teléfono. El teléfono es un dato de
+--     contacto cifrado, con índice ciego para poder buscar por él.
+--   · Identidad por PROGRAMA (por comercio), nunca global entre comercios.
+--   · `saldo` denormalizado en `membresias` con CHECK >= 0: Postgres hace
+--     cumplir el invariante, no la aplicación. El ledger sigue siendo
+--     append-only y es la fuente de la verdad para reconciliar.
+--   · `programas.id` (no `comercios.id`, que es un slug editable) es lo
+--     que se usa como base del `classId` de Google Wallet — esas clases
+--     no se pueden borrar nunca.
+--   · Sin columnas `lat`/`lng` en `comercios`: la geolocalización blanda
+--     como antifraude quedó descartada (ver §3, "entrada laxa, salida
+--     estricta" — el control fuerte va en el canje, no en la visita).
+--
+-- Correr a mano en el SQL Editor de Neon:
+--   psql "<DATABASE_URL>" -f db/migrations/012_loyalty_fundaciones.sql
+-- Idempotente. Después correr db/migrations/013_loyalty_rol.sql (rol propio
+-- con permisos mínimos) — ver ese archivo para el detalle.
 
--- Entitlement: un comercio puede ser Reviews-only, Loyalty-only o las dos
--- ("pack") con el mismo id — no hace falta panel nuevo para decidirlo.
-ALTER TABLE comercios ADD COLUMN IF NOT EXISTS tiene_loyalty BOOLEAN NOT NULL DEFAULT FALSE;
+BEGIN;
 
--- lat/lng: no existían en comercios. Hacen falta para el control de
--- geolocalización blanda del antifraude de Loyalty (comparar contra el
--- radio del comercio al reclamar puntos) — deterrente barato, no prueba
--- criptográfica, documentado en el diseño de antifraude del proyecto.
-ALTER TABLE comercios ADD COLUMN IF NOT EXISTS lat NUMERIC;
-ALTER TABLE comercios ADD COLUMN IF NOT EXISTS lng NUMERIC;
+CREATE SCHEMA IF NOT EXISTS loyalty;
 
--- Identidad del cliente final (4to sistema de acceso del proyecto, además
--- de portal/admin/conexión-GBP). Global por teléfono, no por comercio: la
--- misma persona puede tener membresías en varios comercios sin recargar
--- sus datos cada vez.
-CREATE TABLE IF NOT EXISTS clientes_finales (
-  id             TEXT PRIMARY KEY,
-  telefono       TEXT UNIQUE NOT NULL,
-  nombre         TEXT NOT NULL DEFAULT '',
-  email          TEXT NOT NULL DEFAULT '',
-  cookie_sesion  TEXT UNIQUE,               -- credencial de sesión propia, mismo patrón que el código privado del portal
-  creado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
+-- Entitlement: vive en la tabla núcleo porque el router del tap
+-- (app/t/[slug]/page.tsx) lo consulta en cada request.
+ALTER TABLE public.comercios
+  ADD COLUMN IF NOT EXISTS tiene_loyalty BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ---------------------------------------------------------------
+-- Programa: un ID propio e inmutable, uno por cuenta de comercio.
+-- No se reusa comercios.id (es un slug editable) porque las clases de
+-- Google Wallet NO SE PUEDEN BORRAR NUNCA: si el slug cambiara, la clase
+-- quedaría huérfana para siempre. cuenta_id referencia siempre la fila
+-- raíz de una cuenta (nunca una sucursal) — ver comercio_padre_id y
+-- resolverCuenta() en lib/db.ts: todas las sucursales de una cuenta
+-- comparten un solo programa.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.programas (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cuenta_id          TEXT NOT NULL UNIQUE REFERENCES public.comercios(id) ON DELETE CASCADE,
+  codigo_publico     TEXT NOT NULL UNIQUE,          -- segmento de /l/<codigo>
+  google_class_id    TEXT NOT NULL DEFAULT '',
+  apple_pass_type_id TEXT NOT NULL DEFAULT '',
+  puntos_bienvenida  INTEGER NOT NULL DEFAULT 100 CHECK (puntos_bienvenida >= 0),
+  activo             BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Consentimiento versionado (Ley 25.326) — append-only a propósito: nunca
--- se actualiza una fila existente, se inserta una nueva cada vez que el
--- cliente vuelve a aceptar. Así queda historial completo de qué aceptó y
--- cuándo, no solo el estado actual.
-CREATE TABLE IF NOT EXISTS consentimientos (
-  id                BIGSERIAL PRIMARY KEY,
-  cliente_final_id  TEXT NOT NULL REFERENCES clientes_finales(id) ON DELETE CASCADE,
-  comercio_id       TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  version           TEXT NOT NULL,           -- versión del texto legal aceptado; si el texto cambia, se vuelve a pedir
-  datos             BOOLEAN NOT NULL DEFAULT FALSE,
-  marketing         BOOLEAN NOT NULL DEFAULT FALSE,
-  wallet            BOOLEAN NOT NULL DEFAULT FALSE,
-  creado_en         TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ---------------------------------------------------------------
+-- Cliente final. Alcance POR PROGRAMA, nunca global: la misma persona en
+-- dos comercios son dos filas distintas. Es más datos duplicados, y es
+-- correcto — sin padrón cruzado de consumidores, cada comercio sigue
+-- siendo el responsable del tratamiento de sus propios datos (Ley
+-- 25.326) y MetricsField su encargado, no un responsable con una base
+-- propia de consumidores.
+--
+-- Teléfono con índice ciego: telefono_hmac es HMAC-SHA256(E.164,
+-- LOYALTY_PII_KEY) — permite el UNIQUE y la búsqueda por igualdad sin
+-- guardar el valor en claro ni con cifrado determinístico (que filtraría
+-- igualdad directamente en el ciphertext). telefono_cif es el valor real,
+-- cifrado con AES-256-GCM, para poder mostrarlo/usarlo cuando hace falta.
+-- Normalizar SIEMPRE a E.164 antes de hashear (lib/loyalty/identidad.ts) o
+-- el UNIQUE no sirve: "351 555 1234", "+543515551234" y "03515551234"
+-- tienen que dar el mismo resultado.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.clientes (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  programa_id    UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  telefono_hmac  BYTEA NOT NULL,
+  telefono_cif   BYTEA NOT NULL,
+  nombre_cif     BYTEA NOT NULL,
+  email_cif      BYTEA,
+  clave_version  SMALLINT NOT NULL DEFAULT 1,       -- permite rotar LOYALTY_PII_KEY sin migrar todo de golpe
+  creado_en      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (programa_id, telefono_hmac)
 );
-CREATE INDEX IF NOT EXISTS idx_consentimientos_cliente ON consentimientos(cliente_final_id, comercio_id);
 
--- Espejo local de la LoyaltyClass (Google) / Pass Type (Apple). Uno por
--- comercio en el wedge — sin multi-programa todavía, no hace falta.
-CREATE TABLE IF NOT EXISTS programas_loyalty (
-  comercio_id          TEXT PRIMARY KEY REFERENCES comercios(id) ON DELETE CASCADE,
-  google_class_id      TEXT NOT NULL DEFAULT '',
-  apple_pass_type_id   TEXT NOT NULL DEFAULT '',
-  puntos_bienvenida    INTEGER NOT NULL DEFAULT 100,
-  activo               BOOLEAN NOT NULL DEFAULT TRUE,
-  creado_en            TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ---------------------------------------------------------------
+-- Membresía = LA CREDENCIAL del cliente final (token_hash), no el
+-- teléfono. Como una tarjeta de plástico: quien tiene el token, la usa.
+-- Elimina la clase entera de robo de cuenta por teléfono ajeno.
+--
+-- `saldo` denormalizado con CHECK (saldo >= 0): el invariante "nunca
+-- negativo" lo hace cumplir Postgres, no la aplicación (ver
+-- lib/db/loyalty.ts::registrarMovimiento — actualiza este campo y el
+-- ledger en la misma transacción).
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.membresias (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  cliente_id        UUID NOT NULL REFERENCES loyalty.clientes(id) ON DELETE CASCADE,
+  programa_id       UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  token_hash        BYTEA NOT NULL UNIQUE,          -- SHA-256 de un token aleatorio de 256 bits; el token nunca se guarda
+  saldo             INTEGER NOT NULL DEFAULT 0 CHECK (saldo >= 0),
+  google_object_id  TEXT NOT NULL DEFAULT '',
+  apple_serial      UUID NOT NULL DEFAULT gen_random_uuid(),
+  estado_google     TEXT NOT NULL DEFAULT 'pendiente'
+                      CHECK (estado_google IN ('pendiente','emitido','error')),
+  estado_apple      TEXT NOT NULL DEFAULT 'pendiente'
+                      CHECK (estado_apple IN ('pendiente','emitido','error')),
+  visitas           INTEGER NOT NULL DEFAULT 0 CHECK (visitas >= 0),
+  ultima_visita_en  TIMESTAMPTZ,
+  creado_en         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (cliente_id, programa_id)
 );
+CREATE INDEX IF NOT EXISTS idx_membresias_programa ON loyalty.membresias(programa_id);
 
--- Espejo local del LoyaltyObject (Google) / pase individual (Apple). La
--- base propia es la fuente de verdad — si la API de Google o Apple cae, la
--- membresía queda con estado 'pendiente' y un cron reintenta (Fase B).
-CREATE TABLE IF NOT EXISTS membresias (
-  id                    TEXT PRIMARY KEY,
-  cliente_final_id      TEXT NOT NULL REFERENCES clientes_finales(id) ON DELETE CASCADE,
-  comercio_id           TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  google_object_id      TEXT NOT NULL DEFAULT '',
-  apple_serial_number   TEXT NOT NULL DEFAULT '',
-  estado_google         TEXT NOT NULL DEFAULT 'pendiente',  -- 'pendiente'|'emitido'|'error'
-  estado_apple          TEXT NOT NULL DEFAULT 'pendiente',  -- Apple entra en Fase A como pase estático (ver decisión del proyecto)
-  creado_en             TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (cliente_final_id, comercio_id)
-);
-CREATE INDEX IF NOT EXISTS idx_membresias_comercio ON membresias(comercio_id);
-
--- Misiones configurables por comercio. `verificacion` documenta el nivel
--- real: solo 'referido' puede ser 'automatica' sin pedir OAuth nuevo de
--- terceros (fuera de alcance actual) — reseña de Google y redes sociales
--- quedan 'autodeclarada' (sistema de honor), igual que hace la competencia
--- directa con la misma misión.
-CREATE TABLE IF NOT EXISTS misiones (
-  id            TEXT PRIMARY KEY,
-  comercio_id   TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  tipo          TEXT NOT NULL,                          -- 'resena_google'|'seguir_redes'|'referido'|'retorno_activo'|'cumpleanos'|'compra_minima'
-  puntos        INTEGER NOT NULL DEFAULT 0,
-  verificacion  TEXT NOT NULL DEFAULT 'autodeclarada',  -- 'automatica'|'autodeclarada'
-  activa        BOOLEAN NOT NULL DEFAULT TRUE,
+-- ---------------------------------------------------------------
+-- Ledger append-only. `saldo_despues` deja la traza de qué saldo dejó
+-- cada movimiento, para poder reconciliar contra membresias.saldo y
+-- detectar cualquier deriva (ver la query de reconciliación en
+-- docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §5).
+--
+-- `idem_clave` hace DOS trabajos a la vez: idempotencia (un reintento con
+-- la misma clave no duplica el movimiento — ON CONFLICT DO NOTHING en el
+-- código) y cooldown de visitas (la clave de una visita incluye la
+-- ventana horaria: dos intentos en la misma ventana chocan solos, sin
+-- Redis ni ninguna tabla aparte).
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.movimientos (
+  id            BIGSERIAL PRIMARY KEY,
+  membresia_id  UUID NOT NULL REFERENCES loyalty.membresias(id) ON DELETE CASCADE,
+  delta         INTEGER NOT NULL CHECK (delta <> 0),
+  saldo_despues INTEGER NOT NULL CHECK (saldo_despues >= 0),
+  motivo        TEXT NOT NULL
+                  CHECK (motivo IN ('bienvenida','visita','mision','canje','ajuste_manual')),
+  idem_clave    TEXT NOT NULL UNIQUE,
+  actor         TEXT NOT NULL DEFAULT '',           -- email del empleado/admin, solo en movimientos manuales
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_misiones_comercio ON misiones(comercio_id);
+CREATE INDEX IF NOT EXISTS idx_movimientos_membresia ON loyalty.movimientos(membresia_id, creado_en DESC);
 
--- Catálogo de canje, autogestionado por cada comercio.
-CREATE TABLE IF NOT EXISTS beneficios (
-  id            TEXT PRIMARY KEY,
-  comercio_id   TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  nombre        TEXT NOT NULL,
-  costo_puntos  INTEGER NOT NULL,
+-- ---------------------------------------------------------------
+-- Catálogo de canje, autogestionado por cada comercio desde su portal.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.beneficios (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  programa_id   UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  nombre        TEXT NOT NULL CHECK (length(nombre) BETWEEN 1 AND 80),
+  costo_puntos  INTEGER NOT NULL CHECK (costo_puntos > 0),
   activo        BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_beneficios_comercio ON beneficios(comercio_id);
+CREATE INDEX IF NOT EXISTS idx_beneficios_programa ON loyalty.beneficios(programa_id);
 
--- Ledger append-only: el saldo de una membresía es SUM(delta), nunca se
--- sobreescribe una fila. `idem_clave` evita que un doble click duplique
--- ESTE movimiento puntual — no evita que alguien repita la acción completa
--- (eso lo cubre el rate limit de eventos_loyalty, con lib/ratelimit.ts que
--- ya usa el resto del repo).
-CREATE TABLE IF NOT EXISTS movimientos_puntos (
-  id            BIGSERIAL PRIMARY KEY,
-  membresia_id  TEXT NOT NULL REFERENCES membresias(id) ON DELETE CASCADE,
-  delta         INTEGER NOT NULL,                -- positivo = suma, negativo = canje
-  motivo        TEXT NOT NULL,                    -- 'bienvenida'|'mision'|'canje'|'ajuste_manual'
-  mision_id     TEXT REFERENCES misiones(id) ON DELETE SET NULL,
-  idem_clave    TEXT NOT NULL UNIQUE,
-  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ---------------------------------------------------------------
+-- Canje. Se pide en 'pendiente' (sin descontar puntos) y se confirma
+-- desde un dispositivo DEL COMERCIO — nunca desde el teléfono del
+-- cliente, que es quien tiene el incentivo de falsificar la confirmación
+-- (ver §6 del documento de arquitectura). `programa_id` está
+-- desnormalizado A PROPÓSITO: la pantalla del comercio filtra por él, así
+-- un canje de un comercio no puede confirmarse desde el portal de otro.
+-- `costo_puntos` queda congelado al pedirlo, por si el comercio cambia el
+-- precio del beneficio mientras el canje está pendiente.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.canjes (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  membresia_id   UUID NOT NULL REFERENCES loyalty.membresias(id) ON DELETE CASCADE,
+  programa_id    UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  beneficio_id   UUID NOT NULL REFERENCES loyalty.beneficios(id),
+  costo_puntos   INTEGER NOT NULL CHECK (costo_puntos > 0),
+  estado         TEXT NOT NULL DEFAULT 'pendiente'
+                   CHECK (estado IN ('pendiente','entregado','vencido','cancelado')),
+  expira_en      TIMESTAMPTZ NOT NULL,
+  confirmado_en  TIMESTAMPTZ,
+  confirmado_por TEXT NOT NULL DEFAULT '',          -- email del empleado del comercio que confirmó la entrega
+  creado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_movimientos_membresia ON movimientos_puntos(membresia_id, creado_en);
+CREATE INDEX IF NOT EXISTS idx_canjes_pendientes ON loyalty.canjes(programa_id, creado_en DESC)
+  WHERE estado = 'pendiente';
 
--- Canje en mostrador: nonce de un solo uso. `id` es el propio código del
--- QR que se muestra en el celular del cliente y valida el empleado.
-CREATE TABLE IF NOT EXISTS canjes (
-  id            TEXT PRIMARY KEY,
-  membresia_id  TEXT NOT NULL REFERENCES membresias(id) ON DELETE CASCADE,
-  beneficio_id  TEXT NOT NULL REFERENCES beneficios(id),
-  validado      BOOLEAN NOT NULL DEFAULT FALSE,
-  validado_en   TIMESTAMPTZ,
-  admin_email   TEXT NOT NULL DEFAULT '',        -- quién lo validó, mismo patrón que auditoria.admin_email
-  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ---------------------------------------------------------------
+-- Consentimiento versionado (Ley 25.326, art. 5 y 6). Append-only a
+-- propósito: nunca se actualiza una fila existente, se inserta una nueva
+-- cada vez que el cliente vuelve a aceptar — así queda historial completo
+-- de qué aceptó y cuándo. `texto_hash` guarda el hash del texto EXACTO
+-- que se aceptó: sin eso no se puede probar qué aceptó la persona si el
+-- texto legal cambió después. `edad_declarada` es la declaración de tener
+-- 16 años o más (edad mínima del programa).
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.consentimientos (
+  id             BIGSERIAL PRIMARY KEY,
+  cliente_id     UUID NOT NULL REFERENCES loyalty.clientes(id) ON DELETE CASCADE,
+  programa_id    UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  version        TEXT NOT NULL,
+  texto_hash     BYTEA NOT NULL,
+  datos          BOOLEAN NOT NULL DEFAULT FALSE,
+  wallet         BOOLEAN NOT NULL DEFAULT FALSE,
+  marketing      BOOLEAN NOT NULL DEFAULT FALSE,
+  edad_declarada BOOLEAN NOT NULL DEFAULT FALSE,
+  user_agent     TEXT NOT NULL DEFAULT '',
+  ip_hmac        BYTEA,
+  creado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_canjes_membresia ON canjes(membresia_id);
+CREATE INDEX IF NOT EXISTS idx_consentimientos_cliente ON loyalty.consentimientos(cliente_id, creado_en DESC);
 
--- Log de eventos desde el día 1: los KPIs del piloto (tap→wallet, retorno a
--- 30 días) son queries sobre esta tabla, no algo que se calcule aparte. Es
--- también la base del antifraude Nivel 1 (cooldown, señal de anomalía) —
--- guarda ip_hash, nunca la IP en texto plano. Esto corrige a propósito una
--- limitación ya documentada de la tabla `taps` (no guarda IP ni nada que
--- permita revisar un patrón días después) — ver
--- docs/REGLAS-INTEGRIDAD-TAPS-RESENAS.html, sección 05.
-CREATE TABLE IF NOT EXISTS eventos_loyalty (
-  id                 BIGSERIAL PRIMARY KEY,
-  comercio_id        TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
-  cliente_final_id   TEXT REFERENCES clientes_finales(id) ON DELETE SET NULL,
-  tipo               TEXT NOT NULL,               -- 'tap'|'registro'|'wallet_guardada'|'mision_completada'|'canje_validado'|'cooldown_bloqueado'
-  ip_hash            TEXT,
-  detalle            TEXT NOT NULL DEFAULT '',
-  creado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
+-- ---------------------------------------------------------------
+-- Log de eventos desde el día uno: los KPIs del piloto (tap→wallet,
+-- retorno a 30 días) son queries sobre esta tabla, no un cálculo aparte
+-- que hay que mantener sincronizado.
+--
+-- `plataforma` es OBLIGATORIA porque el piloto exige medir tap→wallet
+-- separado por Android/iPhone (mirar solo el agregado no permite saber
+-- si Apple realmente aportó o si Android sostenía el promedio) — sin esta
+-- columna esa medición es imposible después.
+--
+-- `ip_hmac` usa HMAC con clave secreta (LOYALTY_IP_PEPPER), NO un SHA-256
+-- pelado: el espacio completo de direcciones IPv4 se revierte por fuerza
+-- bruta en segundos con una GPU, así que un hash sin clave no es dato
+-- disociado.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS loyalty.eventos (
+  id           BIGSERIAL PRIMARY KEY,
+  programa_id  UUID NOT NULL REFERENCES loyalty.programas(id) ON DELETE CASCADE,
+  membresia_id UUID REFERENCES loyalty.membresias(id) ON DELETE SET NULL,
+  tipo         TEXT NOT NULL CHECK (tipo IN (
+                 'tap','registro','wallet_guardada','visita','canje_pedido',
+                 'canje_confirmado','canje_vencido','cooldown_bloqueado')),
+  plataforma   TEXT NOT NULL DEFAULT 'otro' CHECK (plataforma IN ('android','ios','otro')),
+  ip_hmac      BYTEA,
+  detalle      JSONB NOT NULL DEFAULT '{}'::jsonb,
+  creado_en    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_comercio_fecha ON eventos_loyalty(comercio_id, creado_en);
--- Índice pensado directamente para el chequeo de cooldown del antifraude:
--- "¿este cliente ya sumó un tap en este comercio en las últimas 20h?"
-CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_cooldown ON eventos_loyalty(cliente_final_id, comercio_id, tipo, creado_en);
+CREATE INDEX IF NOT EXISTS idx_eventos_programa_fecha ON loyalty.eventos(programa_id, creado_en DESC);
+CREATE INDEX IF NOT EXISTS idx_eventos_tipo ON loyalty.eventos(programa_id, tipo, creado_en DESC);
+
+COMMIT;
