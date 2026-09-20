@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS loyalty.programas (
   google_class_id    TEXT NOT NULL DEFAULT '',
   apple_pass_type_id TEXT NOT NULL DEFAULT '',
   puntos_bienvenida  INTEGER NOT NULL DEFAULT 100 CHECK (puntos_bienvenida >= 0),
+  -- Puntos que otorga CADA visita repetida (motivo 'visita' en el ledger,
+  -- sujeta al cooldown de 20h — ver lib/db/loyalty.ts::registrarVisita).
+  -- Default bajo a propósito respecto de puntos_bienvenida: el primer
+  -- sello tiene que sentirse valioso sin volver el programa gratis. Es
+  -- autogestionable por el comercio (L6/L7, sección de admin) — no es
+  -- una regla de negocio fija en código.
+  puntos_por_visita  INTEGER NOT NULL DEFAULT 10 CHECK (puntos_por_visita >= 0),
   activo             BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
