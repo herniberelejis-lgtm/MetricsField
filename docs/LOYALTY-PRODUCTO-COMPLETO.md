@@ -1,9 +1,17 @@
 # MetricsField Loyalty — el producto completo
 
-> **Este documento es la fuente de verdad de Loyalty.** Reemplaza a los cinco
-> archivos sueltos que había antes (brief técnico de julio, addendum de Apple
-> Wallet, auditoría, análisis estratégico, base técnica). Si algo de esos
-> contradice a esto, vale esto.
+> **Este documento es la fuente de verdad del PRODUCTO de Loyalty**: qué es, para
+> quién, por qué, y cómo se mide. Reemplaza a los cinco archivos sueltos que había
+> antes (brief técnico de julio, addendum de Apple Wallet, auditoría, análisis
+> estratégico, base técnica). Si algo de esos contradice a esto, vale esto.
+>
+> ⚠️ **La parte técnica de este documento quedó desactualizada (septiembre 2026).**
+> El *cómo* se construye — modelo de identidad, esquema de datos, integridad del
+> saldo, canje, antifraude y seguridad — está definido en
+> **`docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md`**, que manda sobre las secciones
+> 5, 6, 7, 10, 11, 12 y 13 de acá. Ese documento tiene en su §11 la tabla exacta
+> de qué cambió y por qué. El plan de construcción está en
+> `docs/LOYALTY-PLAN-IMPLEMENTACION.md`.
 >
 > Última actualización: agosto 2026 · Estado: **pre-producto, en desarrollo**
 
@@ -474,10 +482,11 @@ Honestidad sobre los huecos abiertos:
    Postgres, construir login, hostear) es un proyecto en sí mismo, comparable en
    tamaño a todo lo que ya se construyó ahí. **No es "un ratito antes de
    Loyalty".**
-5. **Nadie pidió esto todavía.** No hay un comercio concreto esperando Loyalty.
-   Es la tarea más importante de todas y no es de desarrollo: **conseguir que un
-   dueño real diga "esto lo necesito"** antes de terminar las seis PRs que
-   faltan.
+5. ~~**Nadie pidió esto todavía.**~~ **Resuelto (septiembre 2026): ya hay
+   comercio(s) comprometido(s) para el piloto.** Eso cambia el cálculo: el piloto
+   va con consumidores reales, así que el paquete legal y el hardening de
+   seguridad pasaron de "deuda para después" a **bloqueantes de lanzamiento**.
+   Ver `docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md` §9.
 
 ---
 
