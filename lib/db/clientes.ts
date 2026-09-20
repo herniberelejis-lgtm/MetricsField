@@ -118,6 +118,40 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   };
 }
 
+// ---------- Logo del comercio (miniatura de WhatsApp) ----------
+
+export interface LogoComercio {
+  datos: Buffer;
+  contentType: string;
+}
+
+export async function getLogoComercio(comercioId: string): Promise<LogoComercio | null> {
+  const rows = await sql`
+    SELECT datos, content_type FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return { datos: rows[0].datos as Buffer, contentType: rows[0].content_type as string };
+}
+
+export async function guardarLogoComercio(
+  comercioId: string,
+  datos: Buffer,
+  contentType: string,
+): Promise<void> {
+  await sql`
+    INSERT INTO comercio_logos (comercio_id, datos, content_type)
+    VALUES (${comercioId}, ${datos}, ${contentType})
+    ON CONFLICT (comercio_id) DO UPDATE SET
+      datos = EXCLUDED.datos,
+      content_type = EXCLUDED.content_type,
+      actualizado_en = now()
+  `;
+}
+
+export async function eliminarLogoComercio(comercioId: string): Promise<void> {
+  await sql`DELETE FROM comercio_logos WHERE comercio_id = ${comercioId}`;
+}
+
 // ---------- Escritura: clientes ----------
 
 export function generarCodigo(): string {

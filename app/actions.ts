@@ -115,6 +115,38 @@ export async function accionEliminarCliente(fd: FormData): Promise<void> {
   redirect("/admin/clientes");
 }
 
+const LOGO_TIPOS_ACEPTADOS = ["image/png", "image/jpeg", "image/webp"];
+const LOGO_TAMANO_MAXIMO = 2 * 1024 * 1024; // 2 MB — de sobra para un isotipo
+
+export async function accionSubirLogoComercio(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const archivo = fd.get("logo");
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-vacio`);
+  }
+  if (!LOGO_TIPOS_ACEPTADOS.includes(archivo.type)) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-formato`);
+  }
+  if (archivo.size > LOGO_TAMANO_MAXIMO) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-tamano`);
+  }
+  const datos = Buffer.from(await archivo.arrayBuffer());
+  await db.guardarLogoComercio(id, datos, archivo.type);
+  await auditar("subir_logo_comercio", id);
+  revalidatePath(`/admin/clientes/${id}/editar`);
+  redirect(`/admin/clientes/${id}/editar`);
+}
+
+export async function accionEliminarLogoComercio(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await db.eliminarLogoComercio(id);
+  await auditar("eliminar_logo_comercio", id);
+  revalidatePath(`/admin/clientes/${id}/editar`);
+  redirect(`/admin/clientes/${id}/editar`);
+}
+
 export async function accionDesconectarGoogleComercio(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
