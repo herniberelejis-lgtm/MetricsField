@@ -35,7 +35,14 @@ export async function generateMetadata({
   return {
     title: titulo,
     description: DESCRIPCION_RESENA,
-    openGraph: { title: titulo, description: DESCRIPCION_RESENA, images: ["/og-resena.png"] },
+    openGraph: {
+      title: titulo,
+      description: DESCRIPCION_RESENA,
+      // Ruta dinámica en vez del PNG estático: usa el logo real del comercio
+      // si lo cargó desde /admin (ver app/api/og-resena/[slug]), y cae sola
+      // en el genérico de MetricsField si no.
+      images: [`/api/og-resena/${slug}`],
+    },
   };
 }
 
