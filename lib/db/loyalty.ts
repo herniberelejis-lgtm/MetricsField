@@ -6,6 +6,41 @@ import { claveIdempotenciaVisita } from "../loyalty/cooldown";
 
 export { claveIdempotenciaVisita };
 
+// =================================================================
+// CONEXIONES — este es el archivo hub de todo el módulo: casi nada
+// escribe en la base de Loyalty sin pasar por acá.
+//
+//   Depende de:
+//     - lib/sql.ts        → esquema `public` (SOLO getComercioLoyalty:
+//                            lee comercios.id/nombre/tiene_loyalty,
+//                            rol admin, mismo cliente que usa Reviews)
+//     - lib/sql-loyalty.ts → esquema `loyalty` (todo lo demás, rol
+//                            app_loyalty de permisos mínimos — ver
+//                            db/migrations/013_loyalty_rol.sql)
+//     - lib/loyalty/identidad.ts  → hashToken (para resolver membresías)
+//     - lib/loyalty/cooldown.ts   → claveIdempotenciaVisita (re-exportada)
+//
+//   Tablas que tocan las funciones de este archivo (esquema `loyalty`,
+//   salvo donde se indica):
+//     programas, clientes, membresias, movimientos, beneficios, canjes,
+//     consentimientos, eventos · public.comercios (solo lectura)
+//
+//   Lo usan:
+//     - app/(loyalty)/l/[codigo]/actions.ts  → registro público (L4)
+//     - app/(loyalty)/l/[codigo]/page.tsx    → landing (lectura de programa)
+//     - app/(loyalty)/tarjeta/*              → sesión del cliente (L4/L5)
+//     - app/portal/[codigo]/canjes/*         → confirmación de canje (L5)
+//     - test/loyalty-ledger.test.ts          → SOLO claveIdempotenciaVisita
+//       (todo lo demás de este archivo requiere una base real — ver la
+//       nota de "no verificado" en el commit de L3)
+//
+//   Por qué NO vive acá: claveIdempotenciaVisita, hashToken, y el resto
+//   de lib/loyalty/*.ts son funciones PURAS (sin import de lib/sql.ts ni
+//   lib/sql-loyalty.ts) — mezclarlas en este archivo las volvería
+//   intestables sin una base real, porque ambos clientes Postgres tiran
+//   apenas se importan si falta su variable de entorno.
+// =================================================================
+
 // Capa de datos del módulo Loyalty — reescrita completa (L3, motor de
 // puntos). Ver docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §5 y §6 para el
 // razonamiento de cada decisión. El bug que esto corrige: la versión
@@ -57,6 +92,7 @@ export interface Programa {
   id: string;
   cuentaId: string;
   codigoPublico: string;
+  googleClassId: string;
   puntosBienvenida: number;
   puntosPorVisita: number;
   activo: boolean;
@@ -68,7 +104,7 @@ export interface Programa {
  * L4). */
 export async function getProgramaPorCuenta(cuentaId: string): Promise<Programa | null> {
   const rows = await sqlLoyalty`
-    SELECT id, cuenta_id, codigo_publico, puntos_bienvenida, puntos_por_visita, activo
+    SELECT id, cuenta_id, codigo_publico, google_class_id, puntos_bienvenida, puntos_por_visita, activo
     FROM loyalty.programas
     WHERE cuenta_id = ${cuentaId}
   `;
@@ -78,6 +114,7 @@ export async function getProgramaPorCuenta(cuentaId: string): Promise<Programa |
     id: r.id as string,
     cuentaId: r.cuenta_id as string,
     codigoPublico: r.codigo_publico as string,
+    googleClassId: r.google_class_id as string,
     puntosBienvenida: Number(r.puntos_bienvenida),
     puntosPorVisita: Number(r.puntos_por_visita),
     activo: Boolean(r.activo),
@@ -89,7 +126,7 @@ export async function getProgramaPorCuenta(cuentaId: string): Promise<Programa |
  * conoce el `comercio.id` y busca por getProgramaPorCuenta). */
 export async function getProgramaPorCodigoPublico(codigoPublico: string): Promise<Programa | null> {
   const rows = await sqlLoyalty`
-    SELECT id, cuenta_id, codigo_publico, puntos_bienvenida, puntos_por_visita, activo
+    SELECT id, cuenta_id, codigo_publico, google_class_id, puntos_bienvenida, puntos_por_visita, activo
     FROM loyalty.programas
     WHERE codigo_publico = ${codigoPublico}
   `;
@@ -99,6 +136,7 @@ export async function getProgramaPorCodigoPublico(codigoPublico: string): Promis
     id: r.id as string,
     cuentaId: r.cuenta_id as string,
     codigoPublico: r.codigo_publico as string,
+    googleClassId: r.google_class_id as string,
     puntosBienvenida: Number(r.puntos_bienvenida),
     puntosPorVisita: Number(r.puntos_por_visita),
     activo: Boolean(r.activo),
@@ -323,4 +361,116 @@ export async function registrarEvento(datos: {
       ${sqlLoyalty.json(datos.detalle ?? {})}
     )
   `;
+}
+
+// ---------- Consentimiento (Ley 25.326) ----------
+
+/** Append-only: SIEMPRE se inserta una fila nueva, nunca se actualiza una
+ * existente — es la única forma de poder probar después qué aceptó la
+ * persona y cuándo, sea alta nueva o recuperación de una membresía ya
+ * existente (ver §9 del documento de arquitectura). */
+export async function registrarConsentimiento(datos: {
+  clienteId: string;
+  programaId: string;
+  version: string;
+  textoHash: Buffer;
+  datos: boolean;
+  wallet: boolean;
+  marketing: boolean;
+  edadDeclarada: boolean;
+  userAgent: string;
+  ipHmac?: Buffer;
+}): Promise<void> {
+  await sqlLoyalty`
+    INSERT INTO loyalty.consentimientos
+      (cliente_id, programa_id, version, texto_hash, datos, wallet, marketing, edad_declarada, user_agent, ip_hmac)
+    VALUES (
+      ${datos.clienteId}, ${datos.programaId}, ${datos.version}, ${datos.textoHash},
+      ${datos.datos}, ${datos.wallet}, ${datos.marketing}, ${datos.edadDeclarada},
+      ${datos.userAgent}, ${datos.ipHmac ?? null}
+    )
+  `;
+}
+
+// ---------- Estado de emisión en las wallets ----------
+// La base propia es la fuente de verdad: si Google o Apple no responden,
+// la membresía queda con estado 'error' o 'pendiente' y el registro no
+// falla por eso (ver §11 del documento de producto — nunca se pierde un
+// punto por una caída externa de un tercero).
+
+/** Se llama una sola vez por programa, la primera vez que hace falta
+ * emitir un pase de Google (alta lazy de la clase — no hay todavía un
+ * flujo de admin que la cree por adelantado). Idempotente por columna:
+ * si el programa ya tenía un google_class_id, esto lo pisa con el mismo
+ * valor sin efecto. */
+export async function actualizarClaseGoogle(programaId: string, googleClassId: string): Promise<void> {
+  await sqlLoyalty`UPDATE loyalty.programas SET google_class_id = ${googleClassId} WHERE id = ${programaId}`;
+}
+
+export async function marcarWalletGoogleEmitida(membresiaId: string, googleObjectId: string): Promise<void> {
+  await sqlLoyalty`
+    UPDATE loyalty.membresias
+       SET google_object_id = ${googleObjectId}, estado_google = 'emitido'
+     WHERE id = ${membresiaId}
+  `;
+}
+
+export async function marcarWalletGoogleError(membresiaId: string): Promise<void> {
+  await sqlLoyalty`UPDATE loyalty.membresias SET estado_google = 'error' WHERE id = ${membresiaId}`;
+}
+
+// ---------- Resolución de sesión: membresía a partir del token ----------
+
+export interface MembresiaCompleta {
+  id: string;
+  saldo: number;
+  visitas: number;
+  clienteId: string;
+  /** Buffer cifrado (AES-256-GCM) — descifrar con lib/loyalty/identidad.ts
+   * antes de mostrar. Deliberadamente no se descifra acá: esta capa no
+   * decide para qué se va a usar el nombre (mostrar en pantalla, armar el
+   * pkpass, etc.), así que no vale la pena importar identidad.ts en el
+   * archivo que ya de por sí es el más sensible del módulo. */
+  nombreCifrado: Buffer;
+  programaId: string;
+  cuentaId: string;
+  nombreComercio: string;
+  googleObjectId: string;
+  googleClassId: string;
+  appleSerial: string;
+}
+
+/** Resuelve la membresía a partir del HASH del token de la cookie de
+ * sesión (hashToken() en lib/loyalty/identidad.ts — el token crudo nunca
+ * llega a la base). Es la única forma de "iniciar sesión" en Loyalty: no
+ * hay búsqueda por teléfono ni por nombre desde el lado público. */
+export async function obtenerMembresiaPorTokenHash(tokenHash: Buffer): Promise<MembresiaCompleta | null> {
+  const filas = await sqlLoyalty`
+    SELECT
+      m.id, m.saldo, m.visitas, m.cliente_id, c.nombre_cif,
+      m.programa_id, p.cuenta_id, p.google_class_id,
+      m.google_object_id, m.apple_serial
+    FROM loyalty.membresias m
+    JOIN loyalty.clientes c ON c.id = m.cliente_id
+    JOIN loyalty.programas p ON p.id = m.programa_id
+    WHERE m.token_hash = ${tokenHash}
+  `;
+  if (filas.length === 0) return null;
+  const r = filas[0];
+
+  const comercio = await getComercioLoyalty(r.cuenta_id as string);
+
+  return {
+    id: r.id as string,
+    saldo: Number(r.saldo),
+    visitas: Number(r.visitas),
+    clienteId: r.cliente_id as string,
+    nombreCifrado: r.nombre_cif as Buffer,
+    programaId: r.programa_id as string,
+    cuentaId: r.cuenta_id as string,
+    nombreComercio: comercio?.nombre ?? "",
+    googleObjectId: r.google_object_id as string,
+    googleClassId: r.google_class_id as string,
+    appleSerial: r.apple_serial as string,
+  };
 }

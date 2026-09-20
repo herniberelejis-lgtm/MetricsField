@@ -11,6 +11,20 @@ import crypto from "node:crypto";
 // módulo nuevo, no hay dato viejo en texto plano con el que ser
 // compatible, así que no existe un modo "sin cifrar" tolerado. Ver
 // docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §4 y §8.
+//
+// CONEXIONES
+//   Depende de:  LOYALTY_PII_KEY, LOYALTY_IP_PEPPER (env vars, leídas
+//                perezosamente — importar este archivo NO tira si
+//                faltan, solo LLAMAR a cifrar/hmacTelefono/hmacIp)
+//   No depende de ninguna base — es la razón de que exista separado de
+//   lib/db/loyalty.ts.
+//   Lo usan:
+//     - lib/db/loyalty.ts (hashToken, para resolver membresías por su
+//       hash)
+//     - app/(loyalty)/l/[codigo]/actions.ts (todo lo demás: generarToken,
+//       normalizarTelefono, hmacTelefono, cifrar, hmacIp — al registrar
+//       un cliente)
+//     - test/loyalty-identidad.test.ts
 
 function claveDesdeEnv(nombreVar: string): Buffer {
   const b64 = process.env[nombreVar];
