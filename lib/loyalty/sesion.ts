@@ -14,6 +14,16 @@
 // (loyalty.membresias.token_hash) — esa consulta vive en lib/db/loyalty.ts
 // (L3), no acá: este archivo no toca la base a propósito, para poder
 // testearse sin DATABASE_URL.
+//
+// CONEXIONES
+//   Depende de:  nada (ni env vars ni base) — puro cálculo de strings.
+//   Lo usan:
+//     - app/(loyalty)/l/[codigo]/actions.ts → escribe la cookie con
+//       `cookies().set(NOMBRE_COOKIE_MEMBRESIA, token, opcionesCookieMembresia())`
+//       tras crear/recuperar la membresía
+//     - app/(loyalty)/tarjeta/*  (L4/L5) → lee la cookie con
+//       `tokenConFormaValida(...)` antes de hashearla y consultar
+//       lib/db/loyalty.ts::obtenerMembresiaPorTokenHash
 
 export const NOMBRE_COOKIE_MEMBRESIA = "loyalty_membresia";
 

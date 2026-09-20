@@ -17,12 +17,34 @@ import JSZip from "jszip";
 //   APPLE_PASS_CERT     — certificado del Pass Type ID, PEM
 //   APPLE_PASS_KEY      — clave privada de ese certificado, PEM
 //   APPLE_WWDR_CERT     — certificado intermedio Apple WWDR, PEM
+//
+// CONEXIONES
+//   Se conecta a: nada por red — todo se genera localmente (a diferencia
+//                 de lib/wallet/google.ts). El "Pass Type ID" es UNO
+//                 SOLO para todo MetricsField (no uno por programa, a
+//                 diferencia de la loyaltyClass de Google): lo que
+//                 distingue un pase de otro es `serialNumber`
+//                 (membresia.id), no el Pass Type ID.
+//   Depende de:   APPLE_TEAM_ID/_PASS_TYPE_ID/_PASS_CERT/_PASS_KEY/_WWDR_CERT
+//                 · un icon.png real (bloqueante — ver AssetsPaseApple)
+//   Lo usa:       app/(loyalty)/tarjeta/pase.pkpass/route.ts — el Route
+//                 Handler que sirve el .pkpass a pedido, resolviendo la
+//                 sesión por la cookie de lib/loyalty/sesion.ts. Ese
+//                 route devuelve 503 (no un ícono falso) si falta
+//                 public/loyalty/icon.png — gap de producto, no de código.
 
 export interface DatosPaseApple {
   serialNumber: string; // membresia.id
   nombreComercio: string;
   nombreCliente: string;
-  saldo: number;
+  // Link a la tarjeta web viva (app/(loyalty)/tarjeta) — ahí SÍ está el
+  // saldo real y actualizado. Deliberadamente no hay un campo de puntos
+  // en este pase (ver más abajo): un pase estático nunca se actualiza
+  // solo, así que un número impreso queda desactualizado apenas el
+  // cliente vuelve a sumar o canjear, y un saldo desactualizado es peor
+  // que no mostrar ninguno — genera el reclamo "dice 100 y tengo 300"
+  // (ver docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §7).
+  urlTarjeta: string;
 }
 
 /** icon.png (mínimo obligatorio por la spec de Apple) y opcionalmente
@@ -55,17 +77,25 @@ function construirPassJson(datos: DatosPaseApple): Record<string, unknown> {
     organizationName: datos.nombreComercio,
     description: `Tarjeta de fidelidad — ${datos.nombreComercio}`,
     // Pase estático (Fase A): sin webServiceURL ni authenticationToken, por
-    // lo tanto Apple nunca intenta empujar actualizaciones — el saldo que
-    // ve el cliente es el del momento en que guardó el pase. Fase B agrega
-    // el Web Service + push por APNs, ver el addendum.
+    // lo tanto Apple nunca intenta empujar actualizaciones. Por eso NO hay
+    // campo de puntos acá — el saldo real vive en la tarjeta web
+    // (urlTarjeta), que sí está siempre actualizada. Fase B agrega el
+    // Web Service + push por APNs (ver §7 del documento de arquitectura),
+    // y ahí sí el saldo puede volver a mostrarse en el pase mismo.
     storeCard: {
-      headerFields: [{ key: "puntos", label: "PUNTOS", value: String(datos.saldo) }],
+      headerFields: [{ key: "comercio", label: "COMERCIO", value: datos.nombreComercio }],
       primaryFields: [{ key: "cliente", label: "MIEMBRO", value: datos.nombreCliente }],
+      auxiliaryFields: [{ key: "aviso", label: "TUS PUNTOS", value: "Ver en tu tarjeta online" }],
       backFields: [
         {
           key: "info",
           label: "Sobre esta tarjeta",
-          value: "Pase estático — actualizá tu saldo tocando el cartel en el local.",
+          value: "Pase estático: no se actualiza solo. Mirá tu saldo real y tus beneficios en el link de abajo.",
+        },
+        {
+          key: "link",
+          label: "Tu tarjeta online",
+          value: datos.urlTarjeta,
         },
       ],
     },

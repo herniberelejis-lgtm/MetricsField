@@ -11,6 +11,21 @@ import postgres from "postgres";
 //
 // LOYALTY_DATABASE_URL: postgres://app_loyalty:password@host:5432/basededatos
 // En Neon agregá "?sslmode=require" al final de la URL.
+//
+// CONEXIONES
+//   Depende de:  LOYALTY_DATABASE_URL (env var, obligatoria)
+//   Se conecta a: esquema `loyalty` en Neon, como el rol `app_loyalty`
+//                 (creado por db/migrations/013_loyalty_rol.sql)
+//   Lo usa:       lib/db/loyalty.ts — es el ÚNICO archivo que importa
+//                 `sqlLoyalty` directamente. Nada más en el repo debería
+//                 hacerlo (si necesitás una query nueva, agregala como
+//                 función en lib/db/loyalty.ts, no importes esto desde
+//                 un componente o una action).
+//   ⚠️ Efecto secundario al importar: si falta LOYALTY_DATABASE_URL, esta
+//   línea TIRA apenas el módulo se carga (throw a nivel de módulo, no
+//   dentro de una función) — por eso ningún archivo que necesite ser
+//   testeable sin base real puede importar esto ni transitivamente
+//   (ver lib/loyalty/*.ts, que evitan importar lib/db/loyalty.ts).
 
 const connectionString = process.env.LOYALTY_DATABASE_URL;
 

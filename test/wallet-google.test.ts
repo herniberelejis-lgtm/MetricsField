@@ -39,9 +39,7 @@ describe("sin credenciales configuradas", () => {
   });
 
   it("falla fuerte en vez de generar un link roto", () => {
-    expect(() =>
-      generarLinkGuardar({ classId: "x.y", objectId: "x.z", nombreCliente: "Julieta", saldo: 100 })
-    ).toThrow(/GOOGLE_WALLET_ISSUER_ID/);
+    expect(() => generarLinkGuardar({ objectId: "x.z" })).toThrow(/GOOGLE_WALLET_ISSUER_ID/);
   });
 });
 
@@ -53,39 +51,34 @@ describe("con credenciales de prueba", () => {
   });
 
   it("arma un JWT de 3 partes apuntando a pay.google.com", () => {
-    const link = generarLinkGuardar({
-      classId: "3388000000012345.nemo-cafe",
-      objectId: "3388000000012345.membresia-1",
-      nombreCliente: "Julieta Reyes",
-      saldo: 100,
-    });
+    const link = generarLinkGuardar({ objectId: "3388000000012345.membresia-1" });
     expect(link.startsWith("https://pay.google.com/gp/v/save/")).toBe(true);
     const jwt = link.split("/save/")[1];
     expect(jwt.split(".")).toHaveLength(3);
   });
 
-  it("el header y el payload son JSON válido con los datos correctos", () => {
-    const link = generarLinkGuardar({
-      classId: "3388000000012345.nemo-cafe",
-      objectId: "3388000000012345.membresia-1",
-      nombreCliente: "Julieta Reyes",
-      saldo: 250,
-    });
+  it("el header y el payload son JSON válido, referenciando el objeto SOLO por id", () => {
+    const link = generarLinkGuardar({ objectId: "3388000000012345.membresia-1" });
     const [encabezado, cuerpo] = link.split("/save/")[1].split(".");
     const header = JSON.parse(Buffer.from(encabezado, "base64url").toString("utf-8"));
     const payload = JSON.parse(Buffer.from(cuerpo, "base64url").toString("utf-8"));
     expect(header).toEqual({ alg: "RS256", typ: "JWT" });
     expect(payload.typ).toBe("savetowallet");
-    expect(payload.payload.loyaltyObjects[0].loyaltyPoints.balance.int).toBe(250);
+    // Sin payload inline (nombre/puntos): solo el id — así el link nunca
+    // se acerca al límite práctico de ~1800 caracteres de Google.
+    expect(payload.payload.loyaltyObjects[0]).toEqual({ id: "3388000000012345.membresia-1" });
+  });
+
+  it("el link queda bien por debajo del límite práctico de ~1800 caracteres de Google", () => {
+    // La firma RSA-2048 en base64url ya pesa ~340 caracteres fijos, sin
+    // importar el payload — lo que importa es que NO crezca con el largo
+    // del nombre del cliente o del comercio (que ya no viajan acá).
+    const link = generarLinkGuardar({ objectId: "3388000000012345.membresia-1" });
+    expect(link.length).toBeLessThan(900);
   });
 
   it("la firma verifica contra la clave pública del par de prueba", () => {
-    const link = generarLinkGuardar({
-      classId: "3388000000012345.nemo-cafe",
-      objectId: "3388000000012345.membresia-1",
-      nombreCliente: "Julieta Reyes",
-      saldo: 100,
-    });
+    const link = generarLinkGuardar({ objectId: "3388000000012345.membresia-1" });
     const [encabezado, cuerpo, firma] = link.split("/save/")[1].split(".");
     const verificador = crypto.createVerify("RSA-SHA256");
     verificador.update(`${encabezado}.${cuerpo}`);

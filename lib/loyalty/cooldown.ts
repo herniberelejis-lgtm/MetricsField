@@ -5,6 +5,13 @@
 // LOYALTY_DATABASE_URL apenas se importan — poner esta función pura ahí
 // la volvía imposible de testear sin una base configurada. Mismo motivo
 // por el que hashearIp vivía separado en el extinto lib/loyalty-antifraude.ts.
+//
+// CONEXIONES
+//   Depende de:  nada.
+//   Lo usan:     lib/db/loyalty.ts (registrarVisita, la reexporta) ·
+//                test/loyalty-ledger.test.ts (directo, sin pasar por
+//                lib/db/loyalty.ts — así el test no necesita
+//                LOYALTY_DATABASE_URL).
 
 const VENTANA_COOLDOWN_SEGUNDOS = 20 * 60 * 60; // 20h
 

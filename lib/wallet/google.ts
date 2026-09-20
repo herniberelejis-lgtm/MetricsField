@@ -14,6 +14,19 @@ import crypto from "node:crypto";
 // Sin las tres cargadas, toda función acá tira — no hay modo degradado
 // silencioso posible (a diferencia de SMTP o Places): sin esto no hay
 // Wallet, y fallar ruidoso es mejor que un botón "Guardar" que no hace nada.
+//
+// CONEXIONES
+//   Se conecta a: walletobjects.googleapis.com (API real de Google, HTTP)
+//                 y oauth2.googleapis.com (para el access token)
+//   Depende de:   GOOGLE_WALLET_ISSUER_ID/_SERVICE_ACCOUNT_EMAIL/_KEY
+//   Lo usa:       app/(loyalty)/l/[codigo]/actions.ts — crearClase (una
+//                 vez por programa, lazy) → crearOActualizarObjeto (una
+//                 vez por membresía) → generarLinkGuardar (el botón que
+//                 ve el cliente). Nada de esto se llama desde ningún otro
+//                 lugar del repo (Reviews no lo toca).
+//   No se conecta a la base — quien persiste el resultado (google_class_id
+//   en loyalty.programas, google_object_id/estado_google en
+//   loyalty.membresias) es el llamador, vía lib/db/loyalty.ts.
 
 const WALLET_API = "https://walletobjects.googleapis.com/walletobjects/v1";
 const SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer";
@@ -110,16 +123,22 @@ async function crearOActualizar(recurso: string, id: string, cuerpo: Record<stri
   }
 }
 
-/** Da de alta (o actualiza) la LoyaltyClass de un comercio — una por
- * comercio, reusada por todas sus membresías. Idempotente: se puede llamar
- * en cada alta de comercio sin duplicar nada. */
-export async function crearClase(comercio: { id: string; nombre: string }): Promise<string> {
+/** Da de alta (o actualiza) la LoyaltyClass de un programa — una por
+ * programa, reusada por todas sus membresías. Idempotente: se puede
+ * llamar en cada alta de programa sin duplicar nada.
+ *
+ * El id se arma con `programa.id` (UUID de loyalty.programas), NUNCA con
+ * el id/slug del comercio: las clases de Google Wallet no se pueden
+ * borrar jamás, así que si se usara un slug editable y alguien lo
+ * cambiara, la clase quedaría huérfana para siempre (ver
+ * docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §7). */
+export async function crearClase(programa: { id: string; nombreComercio: string }): Promise<string> {
   const { issuerId } = credenciales();
-  const classId = `${issuerId}.${comercio.id}`;
+  const classId = `${issuerId}.${programa.id}`;
   await crearOActualizar("loyaltyClass", classId, {
     id: classId,
-    issuerName: comercio.nombre,
-    programName: `${comercio.nombre} — Fidelización`,
+    issuerName: programa.nombreComercio,
+    programName: `${programa.nombreComercio} — Fidelización`,
     reviewStatus: "UNDER_REVIEW",
   });
   return classId;
@@ -151,16 +170,15 @@ export async function crearOActualizarObjeto(datos: {
 export const actualizarPuntos = crearOActualizarObjeto;
 
 /** Link firmado "Agregar a Google Wallet" — el botón que ve el cliente en
- * la landing. No requiere que el objeto ya exista en el servidor de Google
- * (el JWT trae el objeto inline), pero llamamos crearOActualizarObjeto
- * antes igual para que el saldo quede sincronizado del lado de Google
- * incluso si el cliente nunca vuelve a tocar el botón. */
-export function generarLinkGuardar(datos: {
-  classId: string;
-  objectId: string;
-  nombreCliente: string;
-  saldo: number;
-}): string {
+ * la landing. REQUIERE que el objeto ya exista en el servidor de Google
+ * (llamar crearOActualizarObjeto antes) porque el JWT solo lo REFERENCIA
+ * por id, sin el payload inline: Google documenta un límite práctico de
+ * ~1800 caracteres para la URL de guardado en el navegador, y el payload
+ * inline con nombre + puntos puede pisar ese límite. Referenciar por id
+ * mantiene el link corto siempre, sin importar cuánto crezca el nombre
+ * del cliente o del comercio (ver
+ * docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §7). */
+export function generarLinkGuardar(datos: { objectId: string }): string {
   const { email, clavePrivada } = credenciales();
   const ahora = Math.floor(Date.now() / 1000);
   const jwt = firmarJwtRS256(
@@ -170,15 +188,7 @@ export function generarLinkGuardar(datos: {
       typ: "savetowallet",
       iat: ahora,
       payload: {
-        loyaltyObjects: [
-          {
-            id: datos.objectId,
-            classId: datos.classId,
-            state: "ACTIVE",
-            accountName: datos.nombreCliente,
-            loyaltyPoints: { balance: { int: datos.saldo }, label: "Puntos" },
-          },
-        ],
+        loyaltyObjects: [{ id: datos.objectId }],
       },
     },
     clavePrivada
