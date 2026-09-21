@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import * as db from "@/lib/db";
 import { requireAdmin, emailAdminActual } from "@/lib/auth";
 import { alertarResenaMala } from "@/lib/alertas";
+import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -132,7 +133,17 @@ export async function accionSubirLogoComercio(fd: FormData): Promise<void> {
     redirect(`/admin/clientes/${id}/editar?error=logo-tamano`);
   }
   const datos = Buffer.from(await archivo.arrayBuffer());
-  await db.guardarLogoComercio(id, datos, archivo.type);
+  // Se compone acá, una sola vez — nunca en cada visita del bot de preview
+  // de WhatsApp (ver app/api/og-resena/[slug]). Si falla (formato raro,
+  // satori atragantado con algo puntual), queda sin miniatura propia y esa
+  // ruta sirve la genérica — el logo en sí se guarda igual.
+  let miniatura: Buffer | null = null;
+  try {
+    miniatura = await componerMiniaturaLogo(datos, archivo.type);
+  } catch {
+    miniatura = null;
+  }
+  await db.guardarLogoComercio(id, datos, archivo.type, miniatura);
   await auditar("subir_logo_comercio", id);
   revalidatePath(`/admin/clientes/${id}/editar`);
   redirect(`/admin/clientes/${id}/editar`);
