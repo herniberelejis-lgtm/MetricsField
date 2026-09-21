@@ -21,38 +21,37 @@ import postgres from "postgres";
 //                 hacerlo (si necesitás una query nueva, agregala como
 //                 función en lib/db/loyalty.ts, no importes esto desde
 //                 un componente o una action).
-//   ⚠️ Efecto secundario al importar: si falta LOYALTY_DATABASE_URL, esta
-//   línea TIRA apenas el módulo se carga (throw a nivel de módulo, no
-//   dentro de una función) — por eso ningún archivo que necesite ser
-//   testeable sin base real puede importar esto ni transitivamente
-//   (ver lib/loyalty/*.ts, que evitan importar lib/db/loyalty.ts).
+//   La conexión se crea en el PRIMER USO, no al importar. Si falta
+//   LOYALTY_DATABASE_URL el error salta recién cuando alguien consulta
+//   Loyalty — nunca durante el build. Antes tiraba al importar el módulo,
+//   y un ambiente sin la variable (un Preview, un entorno nuevo) rompía el
+//   build ENTERO de la app, incluido todo Reviews, que no depende de esto.
 
-const connectionString = process.env.LOYALTY_DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error(
-    "Falta la variable de entorno LOYALTY_DATABASE_URL. Ver .env.example y " +
-      "db/migrations/013_loyalty_rol.sql para crear el rol app_loyalty.",
-  );
-}
-
-if (connectionString.includes("neon.tech") && !connectionString.includes("-pooler")) {
-  console.warn(
-    "LOYALTY_DATABASE_URL apunta a Neon SIN pooler (falta '-pooler' en el host). " +
-      "En producción serverless usá la connection string 'Pooled' de Neon.",
-  );
-}
+type ClienteLoyalty = ReturnType<typeof postgres>;
 
 declare global {
   // eslint-disable-next-line no-var
-  var __taplySqlLoyalty: ReturnType<typeof postgres> | undefined;
+  var __taplySqlLoyalty: ClienteLoyalty | undefined;
 }
 
-// En dev, Next.js recarga módulos en cada cambio de archivo: reusar la
-// conexión global evita abrir cientos de conexiones nuevas.
-export const sqlLoyalty =
-  globalThis.__taplySqlLoyalty ??
-  postgres(connectionString, {
+function crearCliente(): ClienteLoyalty {
+  const connectionString = process.env.LOYALTY_DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error(
+      "Falta la variable de entorno LOYALTY_DATABASE_URL. Ver .env.example y " +
+        "db/migrations/013_loyalty_rol.sql para crear el rol app_loyalty.",
+    );
+  }
+
+  if (connectionString.includes("neon.tech") && !connectionString.includes("-pooler")) {
+    console.warn(
+      "LOYALTY_DATABASE_URL apunta a Neon SIN pooler (falta '-pooler' en el host). " +
+        "En producción serverless usá la connection string 'Pooled' de Neon.",
+    );
+  }
+
+  return postgres(connectionString, {
     ssl: connectionString.includes("neon.tech") ? "require" : undefined,
     max: 2,
     idle_timeout: 20,
@@ -61,7 +60,21 @@ export const sqlLoyalty =
     // lleva bien los prepared statements con nombre.
     prepare: false,
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__taplySqlLoyalty = sqlLoyalty;
 }
+
+let instancia: ClienteLoyalty | undefined;
+
+function cliente(): ClienteLoyalty {
+  // En dev, Next.js recarga módulos en cada cambio de archivo: reusar la
+  // conexión global evita abrir cientos de conexiones nuevas.
+  instancia ??= globalThis.__taplySqlLoyalty ?? crearCliente();
+  if (process.env.NODE_ENV !== "production") globalThis.__taplySqlLoyalty = instancia;
+  return instancia;
+}
+
+// Se usa igual que el cliente de postgres (sqlLoyalty`...`, .begin, .json),
+// pero delega en `cliente()` recién al primer uso.
+export const sqlLoyalty: ClienteLoyalty = new Proxy((() => undefined) as unknown as ClienteLoyalty, {
+  apply: (_objetivo, _this, args: unknown[]) => Reflect.apply(cliente() as unknown as (...a: unknown[]) => unknown, undefined, args),
+  get: (_objetivo, propiedad) => Reflect.get(cliente(), propiedad),
+});
