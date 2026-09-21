@@ -28,9 +28,14 @@ import { cookiePasswordValida, leerCookieSesionGoogle } from "@/lib/sesion";
 const PROTEGIDAS = /^\/admin(\/|$)/;
 
 function construirCsp(nonce: string): string {
+  // `next dev` necesita eval() (source maps y React Refresh): sin esto el
+  // navegador bloquea TODO el JS del cliente y los formularios con
+  // handlers de React ni siquiera se hidratan. Solo en desarrollo; el
+  // build de producción no usa eval y conserva la política estricta.
+  const evalDev = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${evalDev}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
