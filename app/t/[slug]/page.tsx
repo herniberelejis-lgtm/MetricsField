@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { getDatosTap, getLogoActualizadoEn, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
@@ -18,11 +18,10 @@ const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp\/|slurp|
 
 const DESCRIPCION_RESENA = "Tu reseña nos ayuda muchísimo. Gracias por confiar en nosotros 🙏";
 
-// Sin esto, el bot de preview de WhatsApp (y de cualquier otro mensajero)
-// sigue el redirect de abajo hasta el destino final (la reseña de Google) y
-// arma la miniatura del link con LO QUE SEA que tenga esa página — casi
-// nunca algo útil. generateMetadata corre siempre, pero solo importa cuando
-// la página realmente renderiza en vez de redirigir (ver más abajo).
+// generateMetadata corre en cada visita a esta ruta, haya o no un logo — el
+// body de abajo (TapPage) nunca hace un redirect() de servidor, así que este
+// <head> es siempre lo que termina leyendo cualquier generador de preview,
+// se identifique o no como bot (ver el comentario largo en TapPage).
 export async function generateMetadata({
   params,
 }: {
@@ -98,6 +97,17 @@ export default async function TapPage({
     );
   }
 
+  // Nunca un redirect() de servidor de acá para abajo: un 3xx no tiene body
+  // que un generador de preview pueda leer, y UA_BOT (de arriba) no cubre
+  // todos los casos — WhatsApp Web/Desktop pide este link con un User-Agent
+  // de navegador común, indistinguible de una persona real, así que "esCrawler"
+  // daría false y un redirect() lo mandaría derecho al destino sin que nadie
+  // viera jamás el <head> con la miniatura. RedireccionSuave sirve siempre
+  // 200 con la metadata ya puesta (generateMetadata arriba) y hace el salto
+  // real en el cliente con location.replace() — imperceptible para una
+  // persona, y para cualquier bot (no ejecuta JS) el body que lee ya trae
+  // todo lo necesario.
+
   // Si la pieza tiene una URL propia cargada, manda ahí siempre — sin
   // importar el "Destino" elegido (incluido "Reseña de Google"). Quien
   // administra la pieza decide a qué apunta cada una; el Destino es solo
@@ -107,15 +117,12 @@ export default async function TapPage({
   if (link.urlDestino) {
     const url = urlSegura(link.urlDestino);
     if (!url) notFound();
-    if (link.autogestionado) {
-      // Deja un link visible de vuelta a /t/<slug>/editar — un redirect()
-      // de servidor no renderiza nada, y es la única forma de que el
-      // dueño de una pieza autogestionada (sin cuenta ni portal) vuelva a
-      // editarla.
-      return <RedireccionSuave url={url} slug={slug} />;
-    }
-    if (esCrawler) return <VistaPreviaResena url={url} />;
-    redirect(url);
+    // El link de vuelta a /t/<slug>/editar solo tiene sentido en una pieza
+    // autogestionada (sin cuenta ni portal) — es la única forma de que su
+    // dueño vuelva a editarla.
+    return (
+      <RedireccionSuave url={url} editarHref={link.autogestionado ? `/t/${slug}/editar` : undefined} />
+    );
   }
 
   // Sin URL propia y sin comercio de agencia: pieza libre que nadie activó
@@ -130,20 +137,5 @@ export default async function TapPage({
   // El tap ya quedó contado arriba.
   const urlResena = urlSegura(comercio.googleReviewUrl);
   if (!urlResena) notFound();
-  if (esCrawler) return <VistaPreviaResena url={urlResena} />;
-  redirect(urlResena);
-}
-
-// Único caso en el que el bot de preview llega hasta acá (ver generateMetadata
-// arriba): no importa el contenido — el bot no ejecuta JS ni mira el body,
-// solo lee <head> — pero si alguna vez un humano real cae en esta rama por
-// compartir un user-agent parecido, que al menos tenga un link tocable.
-function VistaPreviaResena({ url }: { url: string }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-6 text-center">
-      <a href={url} className="text-sm text-slate-500 underline">
-        Tocá acá para dejar tu opinión
-      </a>
-    </div>
-  );
+  return <RedireccionSuave url={urlResena} />;
 }
