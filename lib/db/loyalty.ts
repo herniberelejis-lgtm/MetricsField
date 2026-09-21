@@ -3,6 +3,12 @@ import { sql } from "../sql";
 import { sqlLoyalty } from "../sql-loyalty";
 import { hashToken } from "../loyalty/identidad";
 import { claveIdempotenciaVisita } from "../loyalty/cooldown";
+import {
+  calcularExpiracionCanje,
+  claveIdempotenciaCanje,
+  type MotivoFalloConfirmacion,
+} from "../loyalty/canje";
+import type { TransactionSql } from "postgres";
 
 export { claveIdempotenciaVisita };
 
@@ -189,29 +195,7 @@ export async function registrarMovimiento(datos: {
   actor?: string;
 }): Promise<ResultadoMovimiento> {
   try {
-    return await sqlLoyalty.begin(async (tx) => {
-      const filas = await tx`
-        UPDATE loyalty.membresias
-           SET saldo = saldo + ${datos.delta}
-         WHERE id = ${datos.membresiaId}
-           AND saldo + ${datos.delta} >= 0
-        RETURNING saldo
-      `;
-      if (filas.length === 0) throw new SaldoInsuficiente(datos.membresiaId);
-
-      const mov = await tx`
-        INSERT INTO loyalty.movimientos (membresia_id, delta, saldo_despues, motivo, idem_clave, actor)
-        VALUES (
-          ${datos.membresiaId}, ${datos.delta}, ${filas[0].saldo as number},
-          ${datos.motivo}, ${datos.idemClave}, ${datos.actor ?? ""}
-        )
-        ON CONFLICT (idem_clave) DO NOTHING
-        RETURNING id
-      `;
-      if (mov.length === 0) throw new MovimientoDuplicado(datos.idemClave);
-
-      return { saldo: Number(filas[0].saldo), aplicado: true };
-    });
+    return await sqlLoyalty.begin((tx) => aplicarMovimientoEnTx(tx, datos));
   } catch (error) {
     if (error instanceof MovimientoDuplicado) {
       const actual = await sqlLoyalty`SELECT saldo FROM loyalty.membresias WHERE id = ${datos.membresiaId}`;
@@ -220,6 +204,38 @@ export async function registrarMovimiento(datos: {
     }
     throw error;
   }
+}
+
+/** El UPDATE condicional + INSERT del ledger, SIN abrir transacción propia:
+ * corre dentro de la que le pasa quien llama. Existe para que confirmarCanje
+ * pueda marcar el canje y descontar los puntos en una única transacción
+ * (si el descuento falla, la confirmación se revierte sola). Lanza
+ * SaldoInsuficiente o MovimientoDuplicado — quien llama decide qué hacer. */
+async function aplicarMovimientoEnTx(
+  tx: TransactionSql,
+  datos: { membresiaId: string; delta: number; motivo: Motivo; idemClave: string; actor?: string },
+): Promise<ResultadoMovimiento> {
+  const filas = await tx`
+    UPDATE loyalty.membresias
+       SET saldo = saldo + ${datos.delta}
+     WHERE id = ${datos.membresiaId}
+       AND saldo + ${datos.delta} >= 0
+    RETURNING saldo
+  `;
+  if (filas.length === 0) throw new SaldoInsuficiente(datos.membresiaId);
+
+  const mov = await tx`
+    INSERT INTO loyalty.movimientos (membresia_id, delta, saldo_despues, motivo, idem_clave, actor)
+    VALUES (
+      ${datos.membresiaId}, ${datos.delta}, ${filas[0].saldo as number},
+      ${datos.motivo}, ${datos.idemClave}, ${datos.actor ?? ""}
+    )
+    ON CONFLICT (idem_clave) DO NOTHING
+    RETURNING id
+  `;
+  if (mov.length === 0) throw new MovimientoDuplicado(datos.idemClave);
+
+  return { saldo: Number(filas[0].saldo), aplicado: true };
 }
 
 export async function obtenerSaldo(membresiaId: string): Promise<number> {
@@ -473,4 +489,211 @@ export async function obtenerMembresiaPorTokenHash(tokenHash: Buffer): Promise<M
     googleClassId: r.google_class_id as string,
     appleSerial: r.apple_serial as string,
   };
+}
+
+// ---------- Canje (§6 del documento de arquitectura) ----------
+
+export interface Beneficio {
+  id: string;
+  nombre: string;
+  costoPuntos: number;
+}
+
+/** Beneficios activos de un programa, del más barato al más caro. */
+export async function listarBeneficios(programaId: string): Promise<Beneficio[]> {
+  const filas = await sqlLoyalty`
+    SELECT id, nombre, costo_puntos
+    FROM loyalty.beneficios
+    WHERE programa_id = ${programaId} AND activo
+    ORDER BY costo_puntos ASC, nombre ASC
+  `;
+  return filas.map((r) => ({
+    id: r.id as string,
+    nombre: r.nombre as string,
+    costoPuntos: Number(r.costo_puntos),
+  }));
+}
+
+export async function crearBeneficio(datos: {
+  programaId: string;
+  nombre: string;
+  costoPuntos: number;
+}): Promise<void> {
+  await sqlLoyalty`
+    INSERT INTO loyalty.beneficios (programa_id, nombre, costo_puntos)
+    VALUES (${datos.programaId}, ${datos.nombre}, ${datos.costoPuntos})
+  `;
+}
+
+/** Baja lógica: los canjes ya pedidos conservan su costo congelado y su
+ * FK, así que nunca se borra la fila. Acotado por programa_id. */
+export async function desactivarBeneficio(programaId: string, beneficioId: string): Promise<void> {
+  await sqlLoyalty`
+    UPDATE loyalty.beneficios SET activo = FALSE
+    WHERE id = ${beneficioId} AND programa_id = ${programaId}
+  `;
+}
+
+export type ResultadoPedirCanje =
+  | { ok: true; canjeId: string; expiraEn: Date }
+  | { ok: false; motivo: "beneficio_invalido" | "saldo_insuficiente" | "ya_pendiente" };
+
+/** Crea un canje 'pendiente' con vigencia de 5 minutos. NO descuenta
+ * puntos (se descuenta al confirmar, ver confirmarCanje). Chequea saldo
+ * solo como cortesía al cliente — la garantía real es el UPDATE
+ * condicional de la confirmación. El beneficio se busca acotado al
+ * programa de la membresía: un beneficio_id de otro comercio no existe
+ * para este cliente. Un solo canje pendiente por membresía. */
+export async function pedirCanje(datos: {
+  membresiaId: string;
+  programaId: string;
+  beneficioId: string;
+}): Promise<ResultadoPedirCanje> {
+  return sqlLoyalty.begin(async (tx): Promise<ResultadoPedirCanje> => {
+    const beneficio = await tx`
+      SELECT id, costo_puntos FROM loyalty.beneficios
+      WHERE id = ${datos.beneficioId} AND programa_id = ${datos.programaId} AND activo
+    `;
+    if (beneficio.length === 0) return { ok: false, motivo: "beneficio_invalido" };
+    const costo = Number(beneficio[0].costo_puntos);
+
+    // El FOR UPDATE serializa los pedidos de una misma membresía: el
+    // chequeo de "ya hay uno pendiente" de más abajo no compite con otro
+    // pedido simultáneo.
+    const membresia = await tx`
+      SELECT saldo FROM loyalty.membresias
+      WHERE id = ${datos.membresiaId} AND programa_id = ${datos.programaId}
+      FOR UPDATE
+    `;
+    if (membresia.length === 0) return { ok: false, motivo: "beneficio_invalido" };
+    if (Number(membresia[0].saldo) < costo) return { ok: false, motivo: "saldo_insuficiente" };
+
+    const pendiente = await tx`
+      SELECT 1 FROM loyalty.canjes
+      WHERE membresia_id = ${datos.membresiaId} AND estado = 'pendiente' AND expira_en > now()
+    `;
+    if (pendiente.length > 0) return { ok: false, motivo: "ya_pendiente" };
+
+    const expiraEn = calcularExpiracionCanje();
+    const fila = await tx`
+      INSERT INTO loyalty.canjes (membresia_id, programa_id, beneficio_id, costo_puntos, expira_en)
+      VALUES (${datos.membresiaId}, ${datos.programaId}, ${datos.beneficioId}, ${costo}, ${expiraEn})
+      RETURNING id
+    `;
+    return { ok: true, canjeId: fila[0].id as string, expiraEn };
+  });
+}
+
+export interface CanjePendiente {
+  id: string;
+  beneficioNombre: string;
+  costoPuntos: number;
+  /** Cifrado (AES-256-GCM): lo descifra la capa de arriba, igual que en la tarjeta. */
+  nombreCifrado: Buffer;
+  expiraEn: Date;
+}
+
+/** Canjes vivos de un programa para la pantalla del comercio. */
+export async function listarCanjesPendientes(programaId: string): Promise<CanjePendiente[]> {
+  const filas = await sqlLoyalty`
+    SELECT ca.id, ca.costo_puntos, ca.expira_en, b.nombre AS beneficio_nombre, c.nombre_cif
+    FROM loyalty.canjes ca
+    JOIN loyalty.beneficios b ON b.id = ca.beneficio_id
+    JOIN loyalty.membresias m ON m.id = ca.membresia_id
+    JOIN loyalty.clientes c ON c.id = m.cliente_id
+    WHERE ca.programa_id = ${programaId} AND ca.estado = 'pendiente' AND ca.expira_en > now()
+    ORDER BY ca.creado_en ASC
+  `;
+  return filas.map((r) => ({
+    id: r.id as string,
+    beneficioNombre: r.beneficio_nombre as string,
+    costoPuntos: Number(r.costo_puntos),
+    nombreCifrado: r.nombre_cif as Buffer,
+    expiraEn: new Date(r.expira_en as string),
+  }));
+}
+
+/** El canje pendiente vigente de una membresía, si tiene — para que la
+ * tarjeta muestre "mostrale esto al mozo" en vez de dejar pedir otro. */
+export async function obtenerCanjePendienteDeMembresia(
+  membresiaId: string,
+): Promise<{ id: string; beneficioNombre: string; expiraEn: Date } | null> {
+  const filas = await sqlLoyalty`
+    SELECT ca.id, ca.expira_en, b.nombre AS beneficio_nombre
+    FROM loyalty.canjes ca
+    JOIN loyalty.beneficios b ON b.id = ca.beneficio_id
+    WHERE ca.membresia_id = ${membresiaId} AND ca.estado = 'pendiente' AND ca.expira_en > now()
+    ORDER BY ca.creado_en DESC
+    LIMIT 1
+  `;
+  if (filas.length === 0) return null;
+  return {
+    id: filas[0].id as string,
+    beneficioNombre: filas[0].beneficio_nombre as string,
+    expiraEn: new Date(filas[0].expira_en as string),
+  };
+}
+
+export type ResultadoConfirmarCanje =
+  | { ok: true; saldo: number }
+  | { ok: false; motivo: MotivoFalloConfirmacion };
+
+/** Confirma la entrega y descuenta los puntos en UNA transacción. El
+ * UPDATE con todas las condiciones en el WHERE (estado, vigencia y
+ * programa_id) es la verificación Y la escritura a la vez: nunca se lee
+ * primero para decidir después. Cero filas = ya entregado, vencido o de
+ * otro comercio, y se informa con el mismo motivo a propósito. Si el
+ * descuento falla por saldo, la excepción revierte también la
+ * confirmación y el canje queda 'pendiente'. */
+export async function confirmarCanje(datos: {
+  canjeId: string;
+  programaId: string;
+  confirmadoPor: string;
+}): Promise<ResultadoConfirmarCanje> {
+  try {
+    return await sqlLoyalty.begin(async (tx): Promise<ResultadoConfirmarCanje> => {
+      const filas = await tx`
+        UPDATE loyalty.canjes
+           SET estado = 'entregado', confirmado_en = now(), confirmado_por = ${datos.confirmadoPor}
+         WHERE id = ${datos.canjeId}
+           AND programa_id = ${datos.programaId}
+           AND estado = 'pendiente'
+           AND expira_en > now()
+        RETURNING membresia_id, costo_puntos
+      `;
+      if (filas.length === 0) return { ok: false, motivo: "no_disponible" };
+
+      const { saldo } = await aplicarMovimientoEnTx(tx, {
+        membresiaId: filas[0].membresia_id as string,
+        delta: -Number(filas[0].costo_puntos),
+        motivo: "canje",
+        idemClave: claveIdempotenciaCanje(datos.canjeId),
+        actor: datos.confirmadoPor,
+      });
+      return { ok: true, saldo };
+    });
+  } catch (error) {
+    if (error instanceof SaldoInsuficiente) return { ok: false, motivo: "saldo_insuficiente" };
+    if (error instanceof MovimientoDuplicado) return { ok: false, motivo: "no_disponible" };
+    throw error;
+  }
+}
+
+/** Marca como 'vencido' los canjes pendientes cuya vigencia pasó. Solo
+ * higiene y métricas: confirmarCanje ya rechaza los vencidos por su
+ * cuenta, con o sin este job. Devuelve cuántos marcó. */
+export async function vencerCanjes(): Promise<number> {
+  const filas = await sqlLoyalty`
+    UPDATE loyalty.canjes SET estado = 'vencido'
+    WHERE estado = 'pendiente' AND expira_en <= now()
+    RETURNING programa_id, membresia_id
+  `;
+  for (const f of filas) {
+    await registrarEvento({
+      programaId: f.programa_id as string,
+      membresiaId: f.membresia_id as string,
+      tipo: "canje_vencido",
+    });
+  }
+  return filas.length;
 }
