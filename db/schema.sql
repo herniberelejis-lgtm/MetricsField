@@ -233,6 +233,11 @@ CREATE TABLE IF NOT EXISTS comercio_logos (
   comercio_id    TEXT PRIMARY KEY REFERENCES comercios(id) ON DELETE CASCADE,
   datos          BYTEA NOT NULL,
   content_type   TEXT NOT NULL,
+  -- Miniatura de WhatsApp ya compuesta (logo + texto, 1200×630), calculada
+  -- una sola vez al subir el logo — nunca al vuelo en cada visita del bot
+  -- de preview, que resultó demasiado lento. NULL si la composición falló
+  -- al subir (queda sirviendo la genérica hasta que se reintente).
+  miniatura      BYTEA,
   actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

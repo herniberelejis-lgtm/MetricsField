@@ -137,19 +137,33 @@ export async function guardarLogoComercio(
   comercioId: string,
   datos: Buffer,
   contentType: string,
+  miniatura: Buffer | null,
 ): Promise<void> {
   await sql`
-    INSERT INTO comercio_logos (comercio_id, datos, content_type)
-    VALUES (${comercioId}, ${datos}, ${contentType})
+    INSERT INTO comercio_logos (comercio_id, datos, content_type, miniatura)
+    VALUES (${comercioId}, ${datos}, ${contentType}, ${miniatura})
     ON CONFLICT (comercio_id) DO UPDATE SET
       datos = EXCLUDED.datos,
       content_type = EXCLUDED.content_type,
+      miniatura = EXCLUDED.miniatura,
       actualizado_en = now()
   `;
 }
 
 export async function eliminarLogoComercio(comercioId: string): Promise<void> {
   await sql`DELETE FROM comercio_logos WHERE comercio_id = ${comercioId}`;
+}
+
+/** La única consulta que usa /api/og-resena/[slug] — trae solo los bytes
+ * ya compuestos, sin tocar `datos` (el logo crudo, más pesado y que esa
+ * ruta no necesita). NULL si nunca se compuso o falló al subir: la ruta
+ * cae en la genérica. */
+export async function getMiniaturaLogoComercio(comercioId: string): Promise<Buffer | null> {
+  const rows = await sql`
+    SELECT miniatura FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return (rows[0].miniatura as Buffer | null) ?? null;
 }
 
 // ---------- Escritura: clientes ----------
