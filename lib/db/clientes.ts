@@ -166,6 +166,21 @@ export async function getMiniaturaLogoComercio(comercioId: string): Promise<Buff
   return (rows[0].miniatura as Buffer | null) ?? null;
 }
 
+/** Solo el timestamp, para el cache-busting de la URL de imagen en
+ * generateMetadata de /t/[slug] (ver ahí). WhatsApp cachea cada URL de
+ * imagen para siempre y no tiene forma de invalidarla a pedido — sin un
+ * query param que cambie con cada logo nuevo, una miniatura cacheada como
+ * "rota" en un intento fallido queda pegada ahí por más que se vuelva a
+ * subir el logo. Consulta aparte (no `getMiniaturaLogoComercio`) porque
+ * esta la necesita generateMetadata, que no toca los bytes de la imagen. */
+export async function getLogoActualizadoEn(comercioId: string): Promise<number | null> {
+  const rows = await sql`
+    SELECT actualizado_en FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return new Date(rows[0].actualizado_en as string).getTime();
+}
+
 // ---------- Escritura: clientes ----------
 
 export function generarCodigo(): string {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { getDatosTap, registrarTap } from "@/lib/db";
+import { getDatosTap, getLogoActualizadoEn, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { urlSegura } from "@/lib/url";
 import ActivarCartel from "@/components/tap/ActivarCartel";
@@ -32,6 +32,17 @@ export async function generateMetadata({
   const datos = await getDatosTap(slug);
   const nombre = datos?.comercio?.nombre || datos?.link.nombreNegocio || undefined;
   const titulo = nombre ? `${nombre} — Dejanos tu opinión` : "Dejanos tu opinión";
+  // WhatsApp cachea la miniatura por URL de imagen, para siempre y sin forma
+  // de invalidarla a pedido. Si esa URL nunca cambia, un logo resubido nunca
+  // se ve — sigue apuntando al mismo lugar que WhatsApp ya cacheó (incluso
+  // si esa primera vez salió mal). El "?t=" con el timestamp del último
+  // logo subido hace que cada logo nuevo tenga su propia URL de imagen.
+  const actualizadoEn = datos?.comercio?.id
+    ? await getLogoActualizadoEn(datos.comercio.id)
+    : null;
+  const imagenOg = actualizadoEn
+    ? `/api/og-resena/${slug}?t=${actualizadoEn}`
+    : `/api/og-resena/${slug}`;
   return {
     title: titulo,
     description: DESCRIPCION_RESENA,
@@ -41,7 +52,7 @@ export async function generateMetadata({
       // Ruta dinámica en vez del PNG estático: usa el logo real del comercio
       // si lo cargó desde /admin (ver app/api/og-resena/[slug]), y cae sola
       // en el genérico de MetricsField si no.
-      images: [`/api/og-resena/${slug}`],
+      images: [imagenOg],
     },
   };
 }
