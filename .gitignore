@@ -9,3 +9,5 @@ next-env.d.ts
 npm-debug.log*
 /.claude/worktrees
 .gstack/
+.vercel
+.env*
