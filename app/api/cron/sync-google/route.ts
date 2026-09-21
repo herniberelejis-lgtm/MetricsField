@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   sincronizarGoogleTodos,
@@ -9,6 +8,7 @@ import {
   enviarResumenesMensuales,
   avisarGoogleDesconectado,
 } from "@/lib/db";
+import { verificarCron } from "@/lib/cron-auth";
 
 // Job diario (ver vercel.json) que actualiza rating/reseñas de todos los
 // comercios con Google Place ID cargado. Vercel Cron llama esta ruta con
@@ -22,21 +22,8 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    // En producción, sin secreto configurado el endpoint queda cerrado:
-    // abierto sería una puerta para que cualquiera queme cuota de la API.
-    if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "Falta configurar CRON_SECRET" }, { status: 503 });
-    }
-  } else {
-    const esperado = Buffer.from(`Bearer ${secret}`);
-    const recibido = Buffer.from(req.headers.get("authorization") ?? "");
-    const ok = recibido.length === esperado.length && crypto.timingSafeEqual(recibido, esperado);
-    if (!ok) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-  }
+  const rechazo = verificarCron(req);
+  if (rechazo) return rechazo;
 
   const resenas = await sincronizarGoogleTodos();
   const rendimiento = await sincronizarRendimientoTodos();

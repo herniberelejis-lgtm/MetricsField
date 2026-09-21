@@ -71,26 +71,25 @@ afterAll(() => {
 const iconFalso = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]); // firma PNG, contenido no importa acá
 
 describe("generarPkpass", () => {
+  const datosBase = {
+    serialNumber: "m1",
+    nombreComercio: "Nemo Café",
+    nombreCliente: "Julieta Reyes",
+    urlTarjeta: "https://app.metricsfield.com/tarjeta",
+  };
+
   it("rechaza sin icon.png — Apple lo exige", async () => {
-    await expect(
-      generarPkpass({ serialNumber: "m1", nombreComercio: "Nemo Café", nombreCliente: "Julieta", saldo: 100 }, {})
-    ).rejects.toThrow(/icon\.png/);
+    await expect(generarPkpass({ ...datosBase, nombreCliente: "Julieta" }, {})).rejects.toThrow(/icon\.png/);
   });
 
   it("arma un zip con pass.json, manifest.json y signature", async () => {
-    const buf = await generarPkpass(
-      { serialNumber: "m1", nombreComercio: "Nemo Café", nombreCliente: "Julieta Reyes", saldo: 100 },
-      { "icon.png": iconFalso }
-    );
+    const buf = await generarPkpass(datosBase, { "icon.png": iconFalso });
     const zip = await JSZip.loadAsync(buf);
     expect(Object.keys(zip.files).sort()).toEqual(["icon.png", "manifest.json", "pass.json", "signature"]);
   });
 
   it("el manifest tiene el SHA-1 correcto de cada archivo", async () => {
-    const buf = await generarPkpass(
-      { serialNumber: "m1", nombreComercio: "Nemo Café", nombreCliente: "Julieta Reyes", saldo: 100 },
-      { "icon.png": iconFalso }
-    );
+    const buf = await generarPkpass(datosBase, { "icon.png": iconFalso });
     const zip = await JSZip.loadAsync(buf);
     const manifest = JSON.parse(await zip.file("manifest.json")!.async("string"));
     const passJsonBuf = Buffer.from(await zip.file("pass.json")!.async("nodebuffer"));
@@ -98,16 +97,22 @@ describe("generarPkpass", () => {
     expect(manifest["icon.png"]).toBe(crypto.createHash("sha1").update(iconFalso).digest("hex"));
   });
 
-  it("pass.json trae el saldo y el nombre del cliente correctos", async () => {
-    const buf = await generarPkpass(
-      { serialNumber: "m1", nombreComercio: "Nemo Café", nombreCliente: "Julieta Reyes", saldo: 250 },
-      { "icon.png": iconFalso }
-    );
+  it("pass.json trae el nombre del cliente y el link a la tarjeta online, SIN saldo", async () => {
+    const buf = await generarPkpass(datosBase, { "icon.png": iconFalso });
     const zip = await JSZip.loadAsync(buf);
     const pass = JSON.parse(await zip.file("pass.json")!.async("string"));
     expect(pass.serialNumber).toBe("m1");
-    expect(pass.storeCard.headerFields[0].value).toBe("250");
     expect(pass.storeCard.primaryFields[0].value).toBe("Julieta Reyes");
+    expect(pass.storeCard.backFields.some((f: { value: string }) => f.value === datosBase.urlTarjeta)).toBe(true);
+    // Ningún campo del pase muestra un número de puntos — ver
+    // docs/LOYALTY-ARQUITECTURA-Y-SEGURIDAD.md §7: un pase estático con
+    // saldo impreso queda desactualizado apenas el cliente vuelve a sumar.
+    const camposConValorNumerico = [
+      ...pass.storeCard.headerFields,
+      ...pass.storeCard.primaryFields,
+      ...pass.storeCard.auxiliaryFields,
+    ].filter((f: { value: string }) => /^\d+$/.test(f.value));
+    expect(camposConValorNumerico).toHaveLength(0);
   });
 
   it("la firma es un PKCS#7 detached válido sobre el manifest (verificado con OpenSSL, no con forge)", async () => {
@@ -118,10 +123,7 @@ describe("generarPkpass", () => {
     // ubuntu-latest, donde viene preinstalado (ver .github/workflows) —
     // por eso acá se lo invoca directo en vez de reimplementar a mano la
     // verificación de SignedAttributes.
-    const buf = await generarPkpass(
-      { serialNumber: "m1", nombreComercio: "Nemo Café", nombreCliente: "Julieta Reyes", saldo: 100 },
-      { "icon.png": iconFalso }
-    );
+    const buf = await generarPkpass(datosBase, { "icon.png": iconFalso });
     const zip = await JSZip.loadAsync(buf);
     const manifestBuf = Buffer.from(await zip.file("manifest.json")!.async("nodebuffer"));
     const firmaBuf = Buffer.from(await zip.file("signature")!.async("nodebuffer"));
