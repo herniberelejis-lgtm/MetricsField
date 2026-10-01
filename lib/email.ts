@@ -1,5 +1,5 @@
 import "server-only";
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 import { reportarFalla } from "./monitor";
 
 // Envío de email por SMTP genérico — funciona con Gmail/Google Workspace
@@ -12,9 +12,9 @@ export function emailHabilitado(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter | null = null;
 
-function getTransporter(): nodemailer.Transporter {
+function getTransporter(): Transporter {
   if (!transporter) {
     const port = Number(process.env.SMTP_PORT ?? 587);
     transporter = nodemailer.createTransport({

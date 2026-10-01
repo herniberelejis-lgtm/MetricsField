@@ -149,7 +149,9 @@ export function decodificarIdToken(idToken: string): { email: string; nombre: st
     if (!payload) return null;
     const json = Buffer.from(payload, "base64url").toString("utf-8");
     const data = JSON.parse(json) as { email?: string; email_verified?: boolean; name?: string };
-    if (!data.email || data.email_verified === false) return null;
+    // Exigimos email_verified === true explícito (no solo "no false"): el
+    // email es lo que se chequea contra las allowlists de admins y del portal.
+    if (!data.email || data.email_verified !== true) return null;
     return { email: data.email.toLowerCase(), nombre: data.name ?? "" };
   } catch {
     return null;
