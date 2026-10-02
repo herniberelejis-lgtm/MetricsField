@@ -35,6 +35,7 @@ export default function AutomatizacionResenas({
   const [activaLocal, setActivaLocal] = useState(activa);
   const [umbralLocal, setUmbralLocal] = useState<4 | 5>(umbral);
   const [guardado, setGuardado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pendiente, startTransition] = useTransition();
 
   function guardar(siguienteActiva: boolean, siguienteUmbral: 4 | 5) {
@@ -43,8 +44,14 @@ export default function AutomatizacionResenas({
     fd.set("comercioId", comercioId);
     if (siguienteActiva) fd.set("autoResponderPositivas", "on");
     fd.set("autoResponderUmbral", String(siguienteUmbral));
+    setError(null);
     startTransition(async () => {
-      await accionActualizarAutomatizacionResenasPortal(fd);
+      try {
+        await accionActualizarAutomatizacionResenasPortal(fd);
+      } catch {
+        setError("No se pudo guardar. Probá de nuevo en un rato.");
+        return;
+      }
       setGuardado(true);
       setTimeout(() => setGuardado(false), 2000);
     });
@@ -104,6 +111,7 @@ export default function AutomatizacionResenas({
           </span>
         )}
       </div>
+      {error && <p className="mt-2 text-xs font-bold text-slate-900">⚠ {error}</p>}
 
       <div className="mt-3 border-t border-slate-100 pt-3">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">

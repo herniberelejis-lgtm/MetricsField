@@ -57,6 +57,7 @@ function TarjetaResena({
   const [saliendo, setSaliendo] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [resultado, setResultado] = useState<"publicada" | "copiada" | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pendiente, startTransition] = useTransition();
 
   function regenerar() {
@@ -78,8 +79,17 @@ function TarjetaResena({
     fd.set("comercioId", resena.comercioId);
     fd.set("id", String(resena.id));
     fd.set("respuesta", respuesta);
+    setError(null);
     startTransition(async () => {
-      const { publicada } = await accionAprobarResenaPortal(fd);
+      // Sin este try, un error del servidor (límite de intentos, sesión
+      // vencida) quedaba sin capturar y tumbaba el panel entero.
+      let publicada: boolean;
+      try {
+        ({ publicada } = await accionAprobarResenaPortal(fd));
+      } catch {
+        setError("No se pudo guardar la respuesta. Probá de nuevo en un rato.");
+        return;
+      }
       if (!publicada) {
         navigator.clipboard.writeText(respuesta).catch(() => {});
       }
@@ -96,8 +106,14 @@ function TarjetaResena({
     fd.set("codigo", codigo);
     fd.set("comercioId", resena.comercioId);
     fd.set("id", String(resena.id));
+    setError(null);
     startTransition(async () => {
-      await accionDescartarResenaPortal(fd);
+      try {
+        await accionDescartarResenaPortal(fd);
+      } catch {
+        setError("No se pudo descartar la reseña. Probá de nuevo en un rato.");
+        return;
+      }
       setSaliendo(true);
       setTimeout(() => onResuelta(resena.id), 300);
     });
@@ -182,6 +198,7 @@ function TarjetaResena({
             Si ya tenemos acceso a tu ficha de Google, aprobar la publica directo. Si todavía no, la
             copiamos para que la pegues vos como respuesta de la reseña.
           </p>
+          {error && <p className="mt-2 text-xs font-bold text-slate-900">⚠ {error}</p>}
         </>
       )}
     </div>

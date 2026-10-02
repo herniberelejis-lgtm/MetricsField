@@ -81,7 +81,7 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
     d && d.dir !== "flat" ? ` (${d.valor >= 0 ? "+" : ""}${d.valor} vs mes anterior)` : "";
 
   const cuerpo = `
-    <p style="font-size:14px;">Así estuvo ${cliente.nombre} en ${fmtMes(m.mes)}:</p>
+    <p style="font-size:14px;">Así estuvo ${escapeHtml(cliente.nombre)} en ${fmtMes(m.mes)}:</p>
     <ul style="font-size:14px;padding-left:18px;">
       <li>${fmtNum(m.resenasNuevas)} reseñas nuevas${filaDelta(dResenas)} — ${fmtNum(m.resenasTotal)} en total</li>
       <li>Rating promedio: ${m.ratingPromedio.toFixed(1)}★</li>

@@ -5,6 +5,10 @@
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+# Cualquier .env con valores reales; solo .env.example se versiona.
+.env
+.env.*
+!.env.example
 .DS_Store
 npm-debug.log*
 /.claude/worktrees

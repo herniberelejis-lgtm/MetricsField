@@ -1,5 +1,5 @@
 import "server-only";
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 import { reportarFalla } from "./monitor";
 
 // Envío de email por SMTP genérico — funciona con Gmail/Google Workspace
@@ -12,9 +12,9 @@ export function emailHabilitado(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter | null = null;
 
-function getTransporter(): nodemailer.Transporter {
+function getTransporter(): Transporter {
   if (!transporter) {
     const port = Number(process.env.SMTP_PORT ?? 587);
     transporter = nodemailer.createTransport({
@@ -46,7 +46,15 @@ export async function enviarEmail(opts: {
   } catch (e) {
     // El envío de email falla en silencio a propósito (nunca tumba el flujo
     // que lo llamó), así que el reporte es la única forma de enterarse.
-    void reportarFalla("email", e, { para: opts.to });
+    // El destinatario va enmascarado: el reporte sale a un webhook externo
+    // y alcanza con el dominio + primera letra para saber a quién era.
+    void reportarFalla("email", e, { para: enmascararEmail(opts.to) });
     return false;
   }
+}
+
+function enmascararEmail(email: string): string {
+  const [usuario, dominio] = email.split("@");
+  if (!dominio) return "***";
+  return `${usuario.slice(0, 1)}***@${dominio}`;
 }
