@@ -42,6 +42,16 @@ function iguales(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// ---------- ¿Se puede entrar con la contraseña compartida? ----------
+// En PRODUCCIÓN no: el panel es solo con Google — cada acción queda a nombre
+// de quien la hizo, y sacar a alguien del equipo es borrarlo de la lista de
+// administradores, sin cambiarle la clave a todos. En previews (protegidas
+// por Vercel Authentication y sin OAuth configurado) y en tu PC sí, para
+// poder seguir probando el panel.
+export function loginConPasswordPermitido(): boolean {
+  return process.env.VERCEL_ENV !== "production";
+}
+
 // ---------- Cookie por contraseña compartida: "exp.firma" ----------
 // No lleva la contraseña ni su hash: lleva un vencimiento firmado por HMAC
 // usando la contraseña como clave. Capturar la cookie no permite deducirla

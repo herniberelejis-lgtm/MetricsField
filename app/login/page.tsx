@@ -1,5 +1,6 @@
 import { accionLogin } from "./actions";
 import { oauthConfigurado } from "@/lib/google-oauth";
+import { loginConPasswordPermitido } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ const ERRORES: Record<string, string> = {
   cancelado: "Cancelaste el inicio de sesión con Google.",
   google: "Google no devolvió los datos esperados. Probá de nuevo.",
   "google-no-configurado": "El login con Google todavía no está configurado en el servidor.",
+  "solo-google": "El panel se usa solo con Google: entrá con tu cuenta.",
 };
 
 export default async function LoginPage({
@@ -19,8 +21,11 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  // En producción no hay contraseña compartida: solo Google (ver
+  // loginConPasswordPermitido). En previews y en tu PC, las dos.
+  const conPassword = loginConPasswordPermitido();
   const sinPassword =
-    process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD;
+    conPassword && process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD;
   const googleDisponible = oauthConfigurado();
   const mensajeError = error ? (ERRORES[error] ?? "Algo salió mal. Probá de nuevo.") : null;
 
@@ -56,15 +61,25 @@ export default async function LoginPage({
               </svg>
               Entrar con Google
             </a>
-            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-400">
-              <div className="h-px flex-1 bg-slate-200" />
-              o
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
+            {conPassword && (
+              <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-400">
+                <div className="h-px flex-1 bg-slate-200" />
+                o
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+            )}
           </>
         )}
 
-        {sinPassword ? (
+        {!conPassword ? (
+          !googleDisponible && (
+            <p className="text-sm text-slate-600">
+              El login con Google no está configurado en el servidor (faltan{" "}
+              <code className="rounded bg-slate-100 px-1">GOOGLE_OAUTH_CLIENT_ID</code> /{" "}
+              <code className="rounded bg-slate-100 px-1">GOOGLE_OAUTH_CLIENT_SECRET</code>).
+            </p>
+          )
+        ) : sinPassword ? (
           <p className="text-sm text-slate-600">
             El panel está bloqueado porque falta configurar la variable de
             entorno <code className="rounded bg-slate-100 px-1">ADMIN_PASSWORD</code>{" "}
