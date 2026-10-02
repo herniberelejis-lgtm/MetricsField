@@ -125,6 +125,69 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   };
 }
 
+// ---------- Logo del comercio (miniatura de WhatsApp) ----------
+
+export interface LogoComercio {
+  datos: Buffer;
+  contentType: string;
+}
+
+export async function getLogoComercio(comercioId: string): Promise<LogoComercio | null> {
+  const rows = await sql`
+    SELECT datos, content_type FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return { datos: rows[0].datos as Buffer, contentType: rows[0].content_type as string };
+}
+
+export async function guardarLogoComercio(
+  comercioId: string,
+  datos: Buffer,
+  contentType: string,
+  miniatura: Buffer | null,
+): Promise<void> {
+  await sql`
+    INSERT INTO comercio_logos (comercio_id, datos, content_type, miniatura)
+    VALUES (${comercioId}, ${datos}, ${contentType}, ${miniatura})
+    ON CONFLICT (comercio_id) DO UPDATE SET
+      datos = EXCLUDED.datos,
+      content_type = EXCLUDED.content_type,
+      miniatura = EXCLUDED.miniatura,
+      actualizado_en = now()
+  `;
+}
+
+export async function eliminarLogoComercio(comercioId: string): Promise<void> {
+  await sql`DELETE FROM comercio_logos WHERE comercio_id = ${comercioId}`;
+}
+
+/** La única consulta que usa /api/og-resena/[slug] — trae solo los bytes
+ * ya compuestos, sin tocar `datos` (el logo crudo, más pesado y que esa
+ * ruta no necesita). NULL si nunca se compuso o falló al subir: la ruta
+ * cae en la genérica. */
+export async function getMiniaturaLogoComercio(comercioId: string): Promise<Buffer | null> {
+  const rows = await sql`
+    SELECT miniatura FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return (rows[0].miniatura as Buffer | null) ?? null;
+}
+
+/** Solo el timestamp, para el cache-busting de la URL de imagen en
+ * generateMetadata de /t/[slug] (ver ahí). WhatsApp cachea cada URL de
+ * imagen para siempre y no tiene forma de invalidarla a pedido — sin un
+ * query param que cambie con cada logo nuevo, una miniatura cacheada como
+ * "rota" en un intento fallido queda pegada ahí por más que se vuelva a
+ * subir el logo. Consulta aparte (no `getMiniaturaLogoComercio`) porque
+ * esta la necesita generateMetadata, que no toca los bytes de la imagen. */
+export async function getLogoActualizadoEn(comercioId: string): Promise<number | null> {
+  const rows = await sql`
+    SELECT actualizado_en FROM comercio_logos WHERE comercio_id = ${comercioId}
+  `;
+  if (rows.length === 0) return null;
+  return new Date(rows[0].actualizado_en as string).getTime();
+}
+
 // ---------- Escritura: clientes ----------
 
 export function generarCodigo(): string {

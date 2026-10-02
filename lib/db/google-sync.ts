@@ -23,11 +23,24 @@ import { actualizarResena, crearResena } from "./resenas";
 // aunque la agencia no administre la ficha, y queda listo para funcionar
 // sin fricción el día que la app esté verificada por Google.
 
+// Un local real no gana más de esto en reseñas orgánicas en un solo mes
+// (el propio "resultado" que mostramos como destacado en la landing es
+// +106 repartido en varios MESES). Un salto más grande que esto entre un
+// mes y el siguiente no es que llovieron reseñas: es un place_id que
+// estaba mal cargado (o recién cargado) y se corrigió, o una lectura
+// vieja incompleta — no "reseñas nuevas" de verdad. Sin este techo, esa
+// corrección aparece en el portal del cliente como "1.405 reseñas nuevas
+// este mes", que es peor que no mostrar nada.
+const MAX_RESENAS_NUEVAS_MES = 150;
+
 /** Trae rating/reseñas actuales de Google Places API y los guarda — tanto
  * en el snapshot "en vivo" (comercios.rating_google/resenas_google) como
  * en la métrica del mes en curso, para que "Detalle mensual" y el gráfico
  * de evolución dejen de depender de una carga manual aparte. "Reseñas
- * nuevas" se calcula solo, comparando contra el total del mes anterior.
+ * nuevas" se calcula solo, comparando contra el total del mes anterior —
+ * salvo que el salto sea implausible (ver MAX_RESENAS_NUEVAS_MES), en cuyo
+ * caso se toma como una corrección de base (place_id arreglado, primera
+ * carga real, etc.) y no como reseñas nuevas de verdad.
  * Visitas/llamadas no se tocan acá — eso lo hace sincronizarRendimiento. */
 export async function sincronizarGoogle(id: string): Promise<boolean> {
   const rows = await sql`SELECT google_place_id FROM comercios WHERE id = ${id}`;
@@ -51,7 +64,8 @@ export async function sincronizarGoogle(id: string): Promise<boolean> {
     ORDER BY mes DESC LIMIT 1
   `;
   const totalAnterior = anteriores[0] ? Number(anteriores[0].resenas_total) : stats.totalReseñas;
-  const resenasNuevas = Math.max(0, stats.totalReseñas - totalAnterior);
+  const salto = Math.max(0, stats.totalReseñas - totalAnterior);
+  const resenasNuevas = salto > MAX_RESENAS_NUEVAS_MES ? 0 : salto;
 
   await sql`
     INSERT INTO metricas_mensuales (comercio_id, mes, resenas_nuevas, resenas_total, rating_promedio)

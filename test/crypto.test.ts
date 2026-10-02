@@ -9,10 +9,13 @@ import { cifrar, descifrar } from "@/lib/crypto";
 
 const CLAVE = crypto.randomBytes(32).toString("hex");
 const original = process.env.TOKEN_ENCRYPTION_KEY;
+const originalAnterior = process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR;
 
 afterEach(() => {
   if (original === undefined) delete process.env.TOKEN_ENCRYPTION_KEY;
   else process.env.TOKEN_ENCRYPTION_KEY = original;
+  if (originalAnterior === undefined) delete process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR;
+  else process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR = originalAnterior;
 });
 
 describe("con TOKEN_ENCRYPTION_KEY configurada", () => {
@@ -72,5 +75,34 @@ describe("sin TOKEN_ENCRYPTION_KEY (compatibilidad hacia atrás)", () => {
     const c = cifrar("token");
     delete process.env.TOKEN_ENCRYPTION_KEY;
     expect(() => descifrar(c)).toThrow(/falta TOKEN_ENCRYPTION_KEY/);
+  });
+});
+
+describe("rotación de clave (TOKEN_ENCRYPTION_KEY_ANTERIOR)", () => {
+  it("un token cifrado con la clave vieja se sigue leyendo después de rotar", () => {
+    const vieja = crypto.randomBytes(32).toString("hex");
+    process.env.TOKEN_ENCRYPTION_KEY = vieja;
+    const c = cifrar("token-cifrado-antes-de-rotar");
+
+    process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
+    process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR = vieja;
+    expect(descifrar(c)).toBe("token-cifrado-antes-de-rotar");
+  });
+
+  it("después de rotar, cifrar usa la clave nueva (no la anterior)", () => {
+    const nueva = crypto.randomBytes(32).toString("hex");
+    process.env.TOKEN_ENCRYPTION_KEY = nueva;
+    process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR = crypto.randomBytes(32).toString("hex");
+    const c = cifrar("token-nuevo");
+    delete process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR;
+    expect(descifrar(c)).toBe("token-nuevo");
+  });
+
+  it("sin la clave correcta en ninguna de las dos, sigue fallando", () => {
+    process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
+    const c = cifrar("token");
+    process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString("hex");
+    process.env.TOKEN_ENCRYPTION_KEY_ANTERIOR = crypto.randomBytes(32).toString("hex");
+    expect(() => descifrar(c)).toThrow();
   });
 });

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import * as db from "@/lib/db";
 import { requireAdmin, emailAdminActual } from "@/lib/auth";
 import { alertarResenaMala } from "@/lib/alertas";
+import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -113,6 +114,48 @@ export async function accionEliminarCliente(fd: FormData): Promise<void> {
   await auditar("eliminar_cliente", `${cliente.nombre} (${id})`);
   revalidatePath("/", "layout");
   redirect("/admin/clientes");
+}
+
+const LOGO_TIPOS_ACEPTADOS = ["image/png", "image/jpeg", "image/webp"];
+const LOGO_TAMANO_MAXIMO = 2 * 1024 * 1024; // 2 MB — de sobra para un isotipo
+
+export async function accionSubirLogoComercio(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const archivo = fd.get("logo");
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-vacio`);
+  }
+  if (!LOGO_TIPOS_ACEPTADOS.includes(archivo.type)) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-formato`);
+  }
+  if (archivo.size > LOGO_TAMANO_MAXIMO) {
+    redirect(`/admin/clientes/${id}/editar?error=logo-tamano`);
+  }
+  const datos = Buffer.from(await archivo.arrayBuffer());
+  // Se compone acá, una sola vez — nunca en cada visita del bot de preview
+  // de WhatsApp (ver app/api/og-resena/[slug]). Si falla (formato raro,
+  // satori atragantado con algo puntual), queda sin miniatura propia y esa
+  // ruta sirve la genérica — el logo en sí se guarda igual.
+  let miniatura: Buffer | null = null;
+  try {
+    miniatura = await componerMiniaturaLogo(datos, archivo.type);
+  } catch {
+    miniatura = null;
+  }
+  await db.guardarLogoComercio(id, datos, archivo.type, miniatura);
+  await auditar("subir_logo_comercio", id);
+  revalidatePath(`/admin/clientes/${id}/editar`);
+  redirect(`/admin/clientes/${id}/editar`);
+}
+
+export async function accionEliminarLogoComercio(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await db.eliminarLogoComercio(id);
+  await auditar("eliminar_logo_comercio", id);
+  revalidatePath(`/admin/clientes/${id}/editar`);
+  redirect(`/admin/clientes/${id}/editar`);
 }
 
 export async function accionDesconectarGoogleComercio(fd: FormData): Promise<void> {

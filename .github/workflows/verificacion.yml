@@ -15,6 +15,11 @@ on:
     branches: [main, desarrollo]
   push:
     branches: [main, desarrollo]
+  # Una vez por semana aunque nadie pushee: los avisos de seguridad de
+  # dependencias se publican solos (así apareció el de nodemailer), y sin
+  # esto recién se veían en el próximo PR. Lunes 9:17 hora de Córdoba.
+  schedule:
+    - cron: "17 12 * * 1"
 
 jobs:
   verificar:
@@ -33,6 +38,9 @@ jobs:
       - name: Chequeo de tipos
         run: npx tsc --noEmit
 
+      - name: Lint
+        run: npm run lint
+
       - name: Tests
         run: npm test
 
@@ -42,5 +50,8 @@ jobs:
           DATABASE_URL: postgres://build:build@localhost:5432/build
           ADMIN_PASSWORD: build-no-se-usa
 
+      # Igual que `npm audit --audit-level=high`, pero con excepciones
+      # explícitas y con vencimiento (ver el script) para avisos sin parche
+      # que verificamos que no nos afectan.
       - name: Vulnerabilidades en dependencias
-        run: npm audit --audit-level=high
+        run: node scripts/auditar-dependencias.mjs

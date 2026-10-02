@@ -12,6 +12,10 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  // Sin esto, las URLs relativas de metadata (openGraph.images, etc.) se
+  // resuelven contra localhost en producción — rompe la miniatura de
+  // cualquier link compartido por WhatsApp/Telegram/etc. (ver /t/[slug]).
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://app.metricsfield.com"),
   title: "MetricsField — Panel de clientes",
   description:
     "Dashboard de presencia digital para pymes de Córdoba: reseñas, posición en Google Maps y citaciones en IA (GEO).",

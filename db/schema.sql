@@ -229,6 +229,21 @@ CREATE TABLE IF NOT EXISTS competidores_snapshots (
 );
 CREATE INDEX IF NOT EXISTS idx_comp_snap_comercio ON competidores_snapshots(comercio_id, mes);
 
+-- Logo del comercio, para la miniatura de WhatsApp de /t/[slug]. Tabla
+-- aparte (no columna en `comercios`) para que ningún SELECT * existente
+-- empiece a traer bytes de imagen sin necesitarlos.
+CREATE TABLE IF NOT EXISTS comercio_logos (
+  comercio_id    TEXT PRIMARY KEY REFERENCES comercios(id) ON DELETE CASCADE,
+  datos          BYTEA NOT NULL,
+  content_type   TEXT NOT NULL,
+  -- Miniatura de WhatsApp ya compuesta (logo + texto, 1200×630), calculada
+  -- una sola vez al subir el logo — nunca al vuelo en cada visita del bot
+  -- de preview, que resultó demasiado lento. NULL si la composición falló
+  -- al subir (queda sirviendo la genérica hasta que se reintente).
+  miniatura      BYTEA,
+  actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Las tablas `cobros` (cobranza/finanzas) y `prospectos` (pipeline de venta)
 -- se eliminaron del producto — panel simplificado a las métricas clave de la
 -- cartera. No se declaran acá: una base nueva no debe crearlas.

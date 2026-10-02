@@ -20,6 +20,8 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   generar_lote_piezas: "Generó un lote de piezas de hardware",
   asignar_pieza_hardware: "Asignó una pieza de hardware",
   reasignar_pieza_hardware: "Reasignó una pieza de hardware",
+  subir_logo_comercio: "Subió el logo de un comercio",
+  eliminar_logo_comercio: "Quitó el logo de un comercio",
 };
 
 export default async function ActividadPage() {

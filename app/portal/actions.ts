@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import {
   getClientePorCodigo,
@@ -16,6 +17,8 @@ import {
 } from "@/lib/db";
 import type { Cliente } from "@/lib/types";
 import { urlSegura } from "@/lib/url";
+import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
+import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial — pero esa credencial vive en la CUENTA
@@ -23,10 +26,27 @@ import { urlSegura } from "@/lib/url";
 // locales. Toda acción resuelve primero la cuenta por el código y después
 // confirma que `comercioId` es la cuenta misma o una sucursal que cuelga de
 // ella — nunca confiar en un comercioId suelto que manda el formulario.
+//
+// Además repite los chequeos que hace la página del portal antes de
+// mostrar nada — una server action se puede invocar directo, sin pasar por
+// la página, así que si no los repite acá no existen:
+// - rate limit por IP antes de tocar la base (frena enumerar códigos);
+// - cuenta dada de baja = portal inexistente;
+// - gate de Google: si el comercio cargó emails en portal_usuarios, el
+//   código ya no alcanza solo (ej. un ex empleado que se quedó con el link
+//   no puede cambiar el destino de los carteles ni desconectar Google).
 
 async function comercioAutorizado(codigo: string, comercioId: string): Promise<Cliente> {
+  limpiarVencidos();
+  const ip = ipDelRequest(await headers());
+  if (!(await permitir(`portal-accion:${ip}`, 60, 10 * 60_000))) {
+    throw new Error("Demasiados intentos. Probá de nuevo en un rato.");
+  }
   const cuenta = await getClientePorCodigo(codigo);
-  if (!cuenta) throw new Error("Portal inválido.");
+  if (!cuenta || cuenta.estado === "baja") throw new Error("Portal inválido.");
+  if ((await portalRequiereLoginGoogle(cuenta.id)) && !(await tieneAccesoPortal(cuenta.id))) {
+    throw new Error("Iniciá sesión con Google para hacer cambios en este portal.");
+  }
   if (comercioId === cuenta.id) return cuenta;
   const sucursal = await getCliente(comercioId);
   if (!sucursal || sucursal.comercioPadreId !== cuenta.id) {
@@ -127,7 +147,12 @@ export async function accionActualizarUrlLinkPortal(
   const nuevaUrl = String(fd.get("urlDestino") ?? "").trim();
   const nuevaEtiqueta = String(fd.get("etiqueta") ?? "").trim().slice(0, 60);
 
-  const comercio = await comercioAutorizado(codigo, comercioId);
+  let comercio: Cliente;
+  try {
+    comercio = await comercioAutorizado(codigo, comercioId);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
+  }
   const link = await getLink(linkId);
   if (!link || link.comercioId !== comercio.id) {
     throw new Error("Ese dispositivo no pertenece a este portal.");
