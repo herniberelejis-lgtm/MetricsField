@@ -5,15 +5,7 @@ import { revalidatePath } from "next/cache";
 import { activarAutogestion, editarAutogestion } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
-
-function urlDeResenaValida(url: string): boolean {
-  try {
-    const u = new URL(url);
-    return u.protocol === "https:" || u.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
+import { urlSegura } from "@/lib/url";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
 // que su comprador escaneó por primera vez. Sin login — el rate limit por
@@ -29,8 +21,10 @@ export async function activarCartel(
   const nombre = String(nombreNegocio ?? "").trim().slice(0, 80);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
-  const url = String(urlDestino ?? "").trim();
-  if (!urlDeResenaValida(url)) {
+  // urlSegura (no un new URL() suelto): además de exigir http(s), guarda
+  // la versión sin caracteres de control — misma validación que el portal.
+  const url = urlSegura(String(urlDestino ?? ""));
+  if (!url) {
     return { ok: false, error: "Pegá el link completo de tu reseña de Google (empieza con https://)." };
   }
 
@@ -65,8 +59,10 @@ export async function editarCartel(
   const nombre = String(nombreNegocio ?? "").trim().slice(0, 80);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
-  const url = String(urlDestino ?? "").trim();
-  if (!urlDeResenaValida(url)) {
+  // urlSegura (no un new URL() suelto): además de exigir http(s), guarda
+  // la versión sin caracteres de control — misma validación que el portal.
+  const url = urlSegura(String(urlDestino ?? ""));
+  if (!url) {
     return { ok: false, error: "Pegá el link completo de tu reseña de Google (empieza con https://)." };
   }
 
