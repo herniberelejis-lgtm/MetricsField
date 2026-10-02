@@ -54,7 +54,7 @@ export async function componerMiniaturaLogo(
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoDataUri} width={ancho} height={alto} />
+          <img src={logoDataUri} width={ancho} height={alto} alt="" />
         </div>
         <div style={{ fontSize: 52, fontWeight: 700, color: "#0D0D0D" }}>¿Cómo te fue?</div>
         <div style={{ fontSize: 28, color: "#666666", marginTop: 12 }}>

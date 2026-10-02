@@ -106,7 +106,6 @@ export async function ensambleCliente(row: Record<string, unknown>): Promise<Cli
  * ya guardados de antes); esto es para no volver a guardar algo sucio. */
 export function limpiarUrl<T extends string | null | undefined>(url: T): T {
   if (!url) return url;
-  // eslint-disable-next-line no-control-regex
   return url.replace(/[\x00-\x1f\x7f]/g, "").trim() as T;
 }
 

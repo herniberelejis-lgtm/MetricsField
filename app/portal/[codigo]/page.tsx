@@ -16,7 +16,6 @@ import {
   getBenchmarkMensual,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
-  type TapsPorHoraDia,
   type TopPiezaSemana,
 } from "@/lib/db";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
@@ -401,7 +400,6 @@ export default async function PortalPage({
   // menciones dentro del texto de las reseñas.
   panels.resenas = (
     <PanelResenas
-      resenas={resenasCombinadas}
       resenasPendientes={resenasPendientesCombinadas}
       resenasAutomaticas={resenasAutomaticas}
       resumenResenas={resumenResenasCombinado}
