@@ -15,6 +15,11 @@ on:
     branches: [main, desarrollo]
   push:
     branches: [main, desarrollo]
+  # Una vez por semana aunque nadie pushee: los avisos de seguridad de
+  # dependencias se publican solos (así apareció el de nodemailer), y sin
+  # esto recién se veían en el próximo PR. Lunes 9:17 hora de Córdoba.
+  schedule:
+    - cron: "17 12 * * 1"
 
 jobs:
   verificar:
@@ -32,6 +37,9 @@ jobs:
 
       - name: Chequeo de tipos
         run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
 
       - name: Tests
         run: npm test

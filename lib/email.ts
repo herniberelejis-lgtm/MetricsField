@@ -46,7 +46,15 @@ export async function enviarEmail(opts: {
   } catch (e) {
     // El envío de email falla en silencio a propósito (nunca tumba el flujo
     // que lo llamó), así que el reporte es la única forma de enterarse.
-    void reportarFalla("email", e, { para: opts.to });
+    // El destinatario va enmascarado: el reporte sale a un webhook externo
+    // y alcanza con el dominio + primera letra para saber a quién era.
+    void reportarFalla("email", e, { para: enmascararEmail(opts.to) });
     return false;
   }
+}
+
+function enmascararEmail(email: string): string {
+  const [usuario, dominio] = email.split("@");
+  if (!dominio) return "***";
+  return `${usuario.slice(0, 1)}***@${dominio}`;
 }

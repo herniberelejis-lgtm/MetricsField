@@ -12,15 +12,24 @@ import crypto from "node:crypto";
 // ella, cifrar()/descifrar() son no-op — el valor se guarda/lee tal cual,
 // como siempre. Así un deploy sin la variable cargada no rompe la conexión
 // de Google de nadie; simplemente sigue en texto plano hasta que se cargue.
+//
+// Rotación: cambiar TOKEN_ENCRYPTION_KEY deja ilegibles todos los tokens
+// cifrados con la anterior (pasó de verdad: un cliente quedó con su Google
+// "conectado" pero sin sincronizar, error "unable to authenticate data").
+// Para rotar sin romper a nadie: mover el valor viejo a
+// TOKEN_ENCRYPTION_KEY_ANTERIOR y poner el nuevo en TOKEN_ENCRYPTION_KEY.
+// descifrar() prueba primero la actual y después la anterior; cifrar() usa
+// siempre la actual, así que cada token se va re-cifrando con la clave nueva
+// la próxima vez que el cliente reconecta.
 
 const PREFIJO = "enc1:";
 
-function clave(): Buffer | null {
-  const hex = process.env.TOKEN_ENCRYPTION_KEY;
+function clave(variable = "TOKEN_ENCRYPTION_KEY"): Buffer | null {
+  const hex = process.env[variable];
   if (!hex) return null;
   const buf = Buffer.from(hex, "hex");
   if (buf.length !== 32) {
-    throw new Error("TOKEN_ENCRYPTION_KEY debe ser 64 caracteres hex (32 bytes) — generala con: openssl rand -hex 32");
+    throw new Error(`${variable} debe ser 64 caracteres hex (32 bytes) — generala con: openssl rand -hex 32`);
   }
   return buf;
 }
@@ -47,6 +56,16 @@ export function descifrar(valor: string): string {
   if (!k) {
     throw new Error("Hay un valor cifrado pero falta TOKEN_ENCRYPTION_KEY para leerlo.");
   }
+  const anterior = clave("TOKEN_ENCRYPTION_KEY_ANTERIOR");
+  try {
+    return descifrarCon(k, valor);
+  } catch (e) {
+    if (!anterior) throw e;
+    return descifrarCon(anterior, valor);
+  }
+}
+
+function descifrarCon(k: Buffer, valor: string): string {
   const [ivHex, tagHex, dataHex] = valor.slice(PREFIJO.length).split(":");
   const decipher = crypto.createDecipheriv("aes-256-gcm", k, Buffer.from(ivHex, "hex"));
   decipher.setAuthTag(Buffer.from(tagHex, "hex"));
