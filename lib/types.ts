@@ -1,6 +1,6 @@
 // Modelo de dominio del dashboard de la agencia (NFC + GEO) — Córdoba.
 // Refleja las entidades del documento de proyecto: clientes, reseñas,
-// posición en Google Maps, citaciones en IA (GEO) y reportes mensuales.
+// métricas de la ficha de Google, citaciones en IA (GEO) y reportes mensuales.
 
 export type Plan = "Base" | "Premium";
 
