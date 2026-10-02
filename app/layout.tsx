@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://app.metricsfield.com"),
   title: "MetricsField — Panel de clientes",
   description:
-    "Dashboard de presencia digital para pymes de Córdoba: reseñas, posición en Google Maps y citaciones en IA (GEO).",
+    "Dashboard de presencia digital para pymes de Córdoba: reseñas de Google, visitas y llamadas a tu ficha, y citaciones en IA (GEO).",
 };
 
 export default function RootLayout({
