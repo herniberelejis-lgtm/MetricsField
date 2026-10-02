@@ -49,6 +49,12 @@ export async function sincronizarGoogle(id: string): Promise<boolean> {
   const stats = await fetchGooglePlaceStats(placeId);
   if (!stats) return false;
 
+  // El cron corre apenas pasada la medianoche de Córdoba: este es el total
+  // con el que arranca el día, la base de "Reseñas hoy" (ver resenasDeHoy).
+  // Solo si todavía no hay base de hoy — un "Sincronizar" a mano a media
+  // tarde no puede moverla.
+  await fijarInicioDelDia(id, stats.totalReseñas);
+
   await sql`
     UPDATE comercios SET
       rating_google = ${stats.rating},
@@ -112,6 +118,59 @@ export async function desconectarGoogleComercio(id: string): Promise<void> {
     UPDATE comercios SET google_refresh_token = '', google_location = '', google_conectado_en = NULL
     WHERE id = ${id}
   `;
+}
+
+// ---------- Reseñas de hoy ----------
+// La API de reseñas de Google (que traería cada reseña con su fecha) todavía
+// no está aprobada, así que "reseñas hoy" sale del TOTAL público de Places:
+// el total ahora menos el total con que arrancó el día en Córdoba. Antes
+// salía de la tabla `resenas`, que sin esa API solo se llena a mano — por
+// eso daba 0 aunque hubieran entrado reseñas reales.
+// La base del día se guarda en `ajustes` (sin migración de esquema).
+
+const ZONA_HORARIA = "America/Argentina/Cordoba";
+
+/** Fecha de hoy en Córdoba (YYYY-MM-DD), no la de UTC: entre las 21 y las
+ * 24 hs locales, UTC ya está en el día siguiente. */
+export function fechaHoyCordoba(ahora = new Date()): string {
+  return ahora.toLocaleDateString("en-CA", { timeZone: ZONA_HORARIA });
+}
+
+interface InicioDelDia {
+  fecha: string;
+  total: number;
+}
+
+async function fijarInicioDelDia(id: string, totalActual: number): Promise<InicioDelDia> {
+  const clave = `resenas_inicio_dia:${id}`;
+  const hoy = fechaHoyCordoba();
+  const guardado = await getAjuste(clave);
+  if (guardado) {
+    try {
+      const base = JSON.parse(guardado) as InicioDelDia;
+      if (base.fecha === hoy && typeof base.total === "number") return base;
+    } catch {
+      // valor corrupto: se pisa abajo con uno nuevo
+    }
+  }
+  const nueva = { fecha: hoy, total: totalActual };
+  await setAjuste(clave, JSON.stringify(nueva));
+  return nueva;
+}
+
+/** Reseñas que entraron hoy (hora de Córdoba) según el total público de
+ * Google. null si no hay forma de saberlo (sin place_id o sin API key) —
+ * el portal entonces no muestra el número en vez de mostrar un 0 falso.
+ * Usa un total cacheado hasta 30 min: es una API paga y esto corre en cada
+ * visita al portal. */
+export async function resenasDeHoy(id: string, placeId: string | null): Promise<number | null> {
+  if (!placeId) return null;
+  const stats = await fetchGooglePlaceStats(placeId, { cacheSegundos: 1800 });
+  if (!stats) return null;
+  // Si el cron todavía no fijó la base de hoy (local recién dado de alta,
+  // o el cron no corrió), se fija ahora: cuenta desde este momento.
+  const base = await fijarInicioDelDia(id, stats.totalReseñas);
+  return Math.max(0, stats.totalReseñas - base.total);
 }
 
 /** Trae visitas al perfil, llamadas y clics "cómo llegar" del mes en curso

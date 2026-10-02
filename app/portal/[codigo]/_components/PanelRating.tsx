@@ -5,6 +5,7 @@ import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import RatingSerieChart from "@/components/RatingSerieChart";
 import RatingPorHoraChart from "@/components/RatingPorHoraChart";
+import { businessProfileHabilitado } from "@/lib/gbp";
 
 const COLOR_ESTRELLA: Record<number, string> = {
   5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
@@ -61,58 +62,63 @@ export default function PanelRating({
 
   return (
     <>
-      <Card variant="glass" className="mb-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <span
-              className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-slate-900" : "bg-slate-300"}`}
-              aria-hidden
-            />
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-slate-800">Google Business Profile</p>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    gbpConectado ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {gbpConectado ? "Conectado" : "No conectado"}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {gbpConectado
-                  ? "Así traemos solas las visitas, llamadas y clics de “cómo llegar” de tu ficha."
-                  : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
-              </p>
-              {gbpConectado && (
-                <p className="mt-1 text-xs text-slate-400">
-                  Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
+      {/* Conexión con Google Business Profile: oculta mientras Google no
+          apruebe esa API (ver businessProfileHabilitado en lib/gbp.ts) —
+          conectar hoy no traería ningún dato. */}
+      {businessProfileHabilitado() && (
+        <Card variant="glass" className="mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span
+                className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-slate-900" : "bg-slate-300"}`}
+                aria-hidden
+              />
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-800">Google Business Profile</p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      gbpConectado ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {gbpConectado ? "Conectado" : "No conectado"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {gbpConectado
+                    ? "Así traemos solas las visitas, llamadas y clics de “cómo llegar” de tu ficha."
+                    : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
                 </p>
+                {gbpConectado && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <a
+                href={`/api/portal/google/oauth/start?codigo=${codigoAcceso}&comercioId=${comercioId}`}
+                className={gbpConectado ? btnSecondary : btnPrimary}
+              >
+                {gbpConectado ? "Reconectar" : "Conectar con Google"}
+              </a>
+              {gbpConectado && (
+                <DesconectarGoogleBoton codigo={codigoAcceso} comercioId={comercioId} />
               )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <a
-              href={`/api/portal/google/oauth/start?codigo=${codigoAcceso}&comercioId=${comercioId}`}
-              className={gbpConectado ? btnSecondary : btnPrimary}
-            >
-              {gbpConectado ? "Reconectar" : "Conectar con Google"}
-            </a>
-            {gbpConectado && (
-              <DesconectarGoogleBoton codigo={codigoAcceso} comercioId={comercioId} />
-            )}
-          </div>
-        </div>
-        {gbpPorVencer && (
-          <p className="mt-3 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
-            <IconClock size={14} className="mt-0.5 shrink-0" />
-            <span>
-              Todavía estamos terminando de verificar la app con Google — mientras tanto, este
-              permiso vence cada 7 días. Tocá "Reconectar" una vez por semana para que no se corte.
-            </span>
-          </p>
-        )}
-      </Card>
+          {gbpPorVencer && (
+            <p className="mt-3 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
+              <IconClock size={14} className="mt-0.5 shrink-0" />
+              <span>
+                Todavía estamos terminando de verificar la app con Google — mientras tanto, este
+                permiso vence cada 7 días. Tocá "Reconectar" una vez por semana para que no se corte.
+              </span>
+            </p>
+          )}
+        </Card>
+      )}
 
       {googleSyncEn && (
         <Card variant="glass" className="mb-4">

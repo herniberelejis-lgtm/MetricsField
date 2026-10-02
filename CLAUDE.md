@@ -145,8 +145,10 @@ el código pero está sin usar (audits/respuestas hoy son manuales o por plantil
 Obligatorias en producción: `DATABASE_URL` y `GOOGLE_OAUTH_CLIENT_ID`/
 `GOOGLE_OAUTH_CLIENT_SECRET` (sin OAuth nadie puede entrar al panel).
 `ADMIN_PASSWORD` solo para previews y local. Opcionales:
-`NEXT_PUBLIC_WHATSAPP_NUMBER`, `GOOGLE_PLACES_API_KEY`, `CRON_SECRET`. Detalle
-completo en `.env.example`.
+`NEXT_PUBLIC_WHATSAPP_NUMBER`, `GOOGLE_PLACES_API_KEY`, `CRON_SECRET`. Interruptores
+que esperan aprobación de Google: `GOOGLE_REVIEWS_API_ENABLED` (reseñas una por
+una) y `GOOGLE_BUSINESS_PROFILE_HABILITADO` (visitas/llamadas: mientras esté
+apagado el portal oculta esas métricas). Detalle completo en `.env.example`.
 
 ## DNS de producción
 

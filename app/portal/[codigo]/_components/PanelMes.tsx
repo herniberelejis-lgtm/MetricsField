@@ -3,6 +3,7 @@ import { fmtMes, fmtNum, delta } from "@/lib/format";
 import { Card, Kpi, Stars, Sparkline, SectionHeading, IconCheck, IconX } from "@/components/ui";
 import TendenciaResenasChart from "@/components/TendenciaResenasChart";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
+import { businessProfileHabilitado } from "@/lib/gbp";
 
 // Panel "Resumen del mes": KPIs del snapshot mensual, citaciones en IA
 // (Premium), checklist de SEO local, recomendación del mes que viene y la
@@ -34,13 +35,16 @@ export default function PanelMes({
 }) {
   const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
   const dCitas = delta(citasIA(m), citasIA(prev));
+  // Visitas / llamadas / "cómo llegar" son de Business Profile: ocultas
+  // hasta que Google apruebe esa API (ver lib/gbp.ts).
+  const conBusinessProfile = businessProfileHabilitado();
 
   return (
     <>
       {!m ? (
         <Card variant="glass">
           <p className="text-sm text-slate-600">
-            Todavía no cargamos las métricas de este mes (reseñas, posición en Maps, visitas).
+            Todavía no cargamos las métricas de este mes (reseñas y calificación).
             Se actualiza una vez al mes — mientras tanto, en "Escaneos" ya ves lo que pasa con
             tu cartel día a día.
           </p>
@@ -63,7 +67,10 @@ export default function PanelMes({
                   : undefined
               }
             />
-            <Kpi variant="glass" label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
+            {conBusinessProfile && (
+              <Kpi variant="glass" label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
+            )}
+            {(esPremium || conBusinessProfile) && (
             <Kpi
               variant="glass"
               label={esPremium ? "Citaciones en IA" : "Clics cómo llegar"}
@@ -79,6 +86,7 @@ export default function PanelMes({
                   : undefined
               }
             />
+            )}
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -89,12 +97,14 @@ export default function PanelMes({
               </div>
               <Sparkline values={historico.map((h) => h.resenasTotal)} width={280} height={60} mono />
             </Card>
-            <Card variant="glass">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
-              </div>
-              <Sparkline values={historico.map((h) => h.visitasPerfil)} width={280} height={60} mono />
-            </Card>
+            {conBusinessProfile && (
+              <Card variant="glass">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
+                </div>
+                <Sparkline values={historico.map((h) => h.visitasPerfil)} width={280} height={60} mono />
+              </Card>
+            )}
           </div>
         </>
       )}
@@ -168,7 +178,12 @@ export default function PanelMes({
             </div>
           )}
           <p className="mb-2 text-xs text-slate-500">Tocá un mes para ver el detalle de ese período.</p>
-          <EvolucionMensual historico={historico} esPremium={esPremium} detalle={detalleMensual} />
+          <EvolucionMensual
+            historico={historico}
+            esPremium={esPremium}
+            mostrarVisitas={conBusinessProfile}
+            detalle={detalleMensual}
+          />
         </>
       )}
     </>

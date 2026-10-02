@@ -14,6 +14,7 @@ import {
 } from "@/components/portal/PortalResumen";
 import { IconSearch } from "@/components/portal/PortalShell";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
+import { businessProfileHabilitado } from "@/lib/gbp";
 import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
 import TapsPorHoraSemanaChart from "@/components/TapsPorHoraSemanaChart";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
@@ -41,6 +42,7 @@ export default function PanelResumen({
   resenasNuevasMes,
   resenasTotales,
   resenasNegativas,
+  hayResenasDetalladas,
   horasSemana,
   piezaMasUsada,
   posicionCompetencia,
@@ -63,11 +65,14 @@ export default function PanelResumen({
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
   modoTodos: boolean;
   totalTapsHistorico: number;
-  resenasHoy: number;
+  /** null = no hay forma de saberlo (sin place_id / sin API key). */
+  resenasHoy: number | null;
   resenasNuevasMes: number;
   resenasTotales: number;
   /** Reseñas de 3★ o menos — la métrica que dispara la sección de arriba. */
   resenasNegativas: number;
+  /** Hay reseñas con texto y estrellas (API de reseñas o carga a mano). */
+  hayResenasDetalladas: boolean;
   /** Grilla día×hora de taps de los últimos 7 días — heatmap de "a qué hora te tocan el cartel". */
   horasSemana: TapsPorHoraDia[];
   /** El dispositivo con más taps de la semana — null si no hubo actividad. `local`
@@ -153,24 +158,23 @@ export default function PanelResumen({
           — acá va compacto, con el link para saltar para allá. */}
       <SectionHeading
         title="Lo que Google no te muestra"
-        subtitle="de qué se queja la gente, y cómo usan tu cartel"
+        subtitle={hayResenasDetalladas ? "de qué se queja la gente, y cómo usan tu cartel" : "cómo usan tu cartel"}
       />
 
+      {/* "Reseñas negativas" y "Sugerencias repetidas" necesitan cada reseña
+          con su texto y estrellas: sin la API de reseñas de Google aprobada
+          (ni reseñas cargadas a mano) no hay de dónde sacarlas, y un 0 fijo
+          le haría creer al dueño que no tiene quejas. */}
       <div className="mb-4 flex flex-wrap gap-3">
-        <div className="min-w-[150px] max-w-[220px] flex-1">
-          <StatChip
-            icon={<IconStarChip size={17} className="text-slate-700" />}
-            value={fmtNum(resenasHoy)}
-            label="Reseñas hoy"
-          />
-        </div>
-        <div className="min-w-[150px] max-w-[220px] flex-1">
-          <StatChip
-            icon={<IconStarChip size={17} className="text-slate-700" />}
-            value={fmtNum(resenasNegativas)}
-            label="Reseñas negativas (≤3★)"
-          />
-        </div>
+        {hayResenasDetalladas && (
+          <div className="min-w-[150px] max-w-[220px] flex-1">
+            <StatChip
+              icon={<IconStarChip size={17} className="text-slate-700" />}
+              value={fmtNum(resenasNegativas)}
+              label="Reseñas negativas (≤3★)"
+            />
+          </div>
+        )}
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
             icon={<IconWave size={18} className="text-slate-700" />}
@@ -191,9 +195,11 @@ export default function PanelResumen({
         )}
       </div>
 
-      <SugerenciasRepetidas temas={temasRecurrentes} apiHabilitada={resenasApiHabilitada()} />
+      {hayResenasDetalladas && (
+        <SugerenciasRepetidas temas={temasRecurrentes} apiHabilitada={resenasApiHabilitada()} />
+      )}
 
-      <div className="mt-4">
+      <div className={hayResenasDetalladas ? "mt-4" : ""}>
         <TapsPorHoraSemanaChart dias={horasSemana} />
       </div>
 
@@ -211,13 +217,15 @@ export default function PanelResumen({
       <SectionHeading title="Tu calificación" subtitle="tu progreso desde que usás MetricsField" />
 
       <div className="mb-4 flex flex-wrap gap-3">
-        <div className="min-w-[150px] max-w-[220px] flex-1">
-          <StatChip
-            icon={<IconStarChip size={17} className="text-slate-700" />}
-            value={fmtNum(resenasHoy)}
-            label="Reseñas hoy"
-          />
-        </div>
+        {resenasHoy !== null && (
+          <div className="min-w-[150px] max-w-[220px] flex-1">
+            <StatChip
+              icon={<IconStarChip size={17} className="text-slate-700" />}
+              value={fmtNum(resenasHoy)}
+              label="Reseñas hoy"
+            />
+          </div>
+        )}
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
             icon={<IconStarChip size={17} className="text-slate-700" />}
@@ -296,46 +304,49 @@ export default function PanelResumen({
       </div>
 
       {/* TIER 3 — alcance real en Google (Business Profile Performance API):
-          cuánta gente te vio, te llamó o pidió cómo llegar. Solo existe si
-          el propio cliente conectó su cuenta desde acá — sin conexión activa
-          no hay nada honesto que mostrar: mejor la invitación a conectar que
-          un 0 fijo que confunde. */}
-      <SectionHeading
-        title="Alcance en Google"
-        subtitle="cuánta gente te vio, te llamó o pidió cómo llegar este mes"
-      />
+          cuánta gente te vio, te llamó o pidió cómo llegar. Oculto entero
+          mientras Google no apruebe esa API (ver businessProfileHabilitado
+          en lib/gbp.ts): hoy solo podría mostrar ceros. */}
+      {businessProfileHabilitado() && (
+        <>
+          <SectionHeading
+            title="Alcance en Google"
+            subtitle="cuánta gente te vio, te llamó o pidió cómo llegar este mes"
+          />
 
-      {conexionGoogle ? (
-        <div className="mb-4 flex flex-wrap gap-3">
-          <div className="min-w-[150px] max-w-[220px] flex-1">
-            <StatChip
-              icon={<IconEyeChip size={18} className="text-slate-700" />}
-              value={fmtNum(visitasPerfil)}
-              label="Visitas al perfil"
-            />
-          </div>
-          <div className="min-w-[150px] max-w-[220px] flex-1">
-            <StatChip
-              icon={<IconPhoneChip size={17} className="text-slate-700" />}
-              value={fmtNum(llamadas)}
-              label="Llamadas"
-            />
-          </div>
-          <div className="min-w-[150px] max-w-[220px] flex-1">
-            <StatChip
-              icon={<IconDirectionsChip size={18} className="text-slate-700" />}
-              value={fmtNum(comoLlegar)}
-              label="Cómo llegar"
-            />
-          </div>
-        </div>
-      ) : (
-        <a
-          href="#rating"
-          className="mb-4 block rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4 text-sm text-slate-600 transition hover:border-slate-400 hover:bg-white"
-        >
-          Conectá tu Google Business Profile para ver cuánta gente te vio, te llamó o pidió cómo llegar. →
-        </a>
+          {conexionGoogle ? (
+            <div className="mb-4 flex flex-wrap gap-3">
+              <div className="min-w-[150px] max-w-[220px] flex-1">
+                <StatChip
+                  icon={<IconEyeChip size={18} className="text-slate-700" />}
+                  value={fmtNum(visitasPerfil)}
+                  label="Visitas al perfil"
+                />
+              </div>
+              <div className="min-w-[150px] max-w-[220px] flex-1">
+                <StatChip
+                  icon={<IconPhoneChip size={17} className="text-slate-700" />}
+                  value={fmtNum(llamadas)}
+                  label="Llamadas"
+                />
+              </div>
+              <div className="min-w-[150px] max-w-[220px] flex-1">
+                <StatChip
+                  icon={<IconDirectionsChip size={18} className="text-slate-700" />}
+                  value={fmtNum(comoLlegar)}
+                  label="Cómo llegar"
+                />
+              </div>
+            </div>
+          ) : (
+            <a
+              href="#rating"
+              className="mb-4 block rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4 text-sm text-slate-600 transition hover:border-slate-400 hover:bg-white"
+            >
+              Conectá tu Google Business Profile para ver cuánta gente te vio, te llamó o pidió cómo llegar. →
+            </a>
+          )}
+        </>
       )}
 
       {/* TIER 4 — NFC vs. QR por día: la más barata de las cuatro secciones

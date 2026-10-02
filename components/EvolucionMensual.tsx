@@ -22,15 +22,18 @@ export interface DetalleMes {
 export default function EvolucionMensual({
   historico,
   esPremium,
+  mostrarVisitas,
   detalle,
 }: {
   historico: MetricaMensual[];
   esPremium: boolean;
+  /** Visitas salen de Business Profile: false hasta que Google lo apruebe. */
+  mostrarVisitas: boolean;
   detalle: Record<string, DetalleMes>;
 }) {
   const [abierto, setAbierto] = useState<string | null>(null);
   const filas = [...historico].reverse();
-  const cols = esPremium ? 6 : 5;
+  const cols = 4 + (mostrarVisitas ? 1 : 0) + (esPremium ? 1 : 0);
 
   return (
     <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
@@ -41,7 +44,7 @@ export default function EvolucionMensual({
             <th className="px-4 py-3 font-medium">Reseñas nuevas</th>
             <th className="px-4 py-3 font-medium">Total</th>
             <th className="px-4 py-3 font-medium">Rating</th>
-            <th className="px-4 py-3 font-medium">Visitas</th>
+            {mostrarVisitas && <th className="px-4 py-3 font-medium">Visitas</th>}
             {esPremium && <th className="px-4 py-3 font-medium">Citas IA</th>}
           </tr>
         </thead>
@@ -54,6 +57,7 @@ export default function EvolucionMensual({
                 key={h.mes}
                 h={h}
                 esPremium={esPremium}
+                mostrarVisitas={mostrarVisitas}
                 open={open}
                 detalle={d}
                 cols={cols}
@@ -70,6 +74,7 @@ export default function EvolucionMensual({
 function FilaMes({
   h,
   esPremium,
+  mostrarVisitas,
   open,
   detalle,
   cols,
@@ -77,6 +82,7 @@ function FilaMes({
 }: {
   h: MetricaMensual;
   esPremium: boolean;
+  mostrarVisitas: boolean;
   open: boolean;
   detalle?: DetalleMes;
   cols: number;
@@ -96,7 +102,7 @@ function FilaMes({
         <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasNuevas)}</td>
         <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasTotal)}</td>
         <td className="px-4 py-2.5 tabular-nums">{h.ratingPromedio.toFixed(1)}</td>
-        <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.visitasPerfil)}</td>
+        {mostrarVisitas && <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.visitasPerfil)}</td>}
         {esPremium && <td className="px-4 py-2.5 tabular-nums">{fmtNum(citasIA(h))}</td>}
       </tr>
       {open && (

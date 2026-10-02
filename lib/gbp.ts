@@ -9,6 +9,16 @@ import "server-only";
 //   retraso, así que el número del mes en curso siempre corre un poco
 //   detrás de la realidad.
 
+/** Visitas al perfil, llamadas y "cómo llegar" salen de la Business Profile
+ * Performance API, que Google todavía no nos aprobó: la cuota está en 0 y
+ * todo pedido responde 429. Mientras tanto no se muestran en ningún lado (un
+ * 0 fijo le hace creer al cliente que nadie lo vio) y el cron no las pide.
+ * El día que llegue la aprobación: GOOGLE_BUSINESS_PROFILE_HABILITADO=true
+ * en Vercel (Production) y redeploy — no hace falta tocar código. */
+export function businessProfileHabilitado(): boolean {
+  return process.env.GOOGLE_BUSINESS_PROFILE_HABILITADO === "true";
+}
+
 export interface UbicacionGBP {
   location: string; // resource name, ej. "locations/1234567890"
   placeId: string;
