@@ -485,7 +485,9 @@ export async function accionAgregarAdmin(fd: FormData): Promise<void> {
 export async function accionEliminarAdmin(fd: FormData): Promise<void> {
   await requireAdmin();
   const email = str(fd, "email");
-  await db.eliminarAdmin(email);
+  if (!(await db.eliminarAdmin(email))) {
+    redirect("/admin/administradores?error=ultimo");
+  }
   await auditar("eliminar_admin", email);
   revalidatePath("/admin/administradores");
   redirect("/admin/administradores");

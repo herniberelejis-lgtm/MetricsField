@@ -7,14 +7,16 @@ import {
   crearCookiePassword as crearCookiePasswordFormato,
   crearCookieSesionGoogle as crearCookieSesionGoogleFormato,
   leerCookieSesionGoogle,
+  loginConPasswordPermitido,
 } from "./sesion";
 
-// Autenticación del panel de admin — dos formas, una sesión:
-// 1. Contraseña compartida (histórica): cookie con un vencimiento firmado
-//    por HMAC usando la contraseña como clave (ver lib/sesion.ts).
-// 2. Google, restringido a la allowlist de `admins`: cookie firmada (HMAC)
+// Autenticación del panel de admin:
+// 1. Google, restringido a la allowlist de `admins`: cookie firmada (HMAC)
 //    con el email de quien entró + vencimiento, para que auditoria.ts sepa
-//    quién hizo qué. La sesión por Google es la preferida — deja identidad.
+//    quién hizo qué. En producción es la ÚNICA forma de entrar.
+// 2. Contraseña compartida: solo en previews y en tu PC (ver
+//    loginConPasswordPermitido en lib/sesion.ts). Cookie con un vencimiento
+//    firmado por HMAC usando la contraseña como clave.
 //
 // El formato y la verificación de ambas cookies viven en lib/sesion.ts,
 // compartido con middleware.ts para que nunca diverjan. Este archivo agrega
@@ -45,13 +47,18 @@ export async function crearCookieSesionGoogle(email: string, nombre: string): Pr
 }
 
 export async function tieneSesionAdmin(): Promise<boolean> {
-  const password = process.env.ADMIN_PASSWORD;
-  // Sin contraseña configurada: abierto solo en desarrollo (tu PC).
-  if (!password) return process.env.NODE_ENV !== "production";
   const jar = await cookies();
 
-  const porPassword = jar.get(COOKIE)?.value;
-  if (porPassword && (await cookiePasswordValida(porPassword, password))) return true;
+  if (loginConPasswordPermitido()) {
+    const password = process.env.ADMIN_PASSWORD;
+    // Sin contraseña configurada: abierto solo en desarrollo (tu PC).
+    if (!password) {
+      if (process.env.NODE_ENV !== "production") return true;
+    } else {
+      const porPassword = jar.get(COOKIE)?.value;
+      if (porPassword && (await cookiePasswordValida(porPassword, password))) return true;
+    }
+  }
 
   const porGoogle = jar.get(COOKIE_GOOGLE)?.value;
   if (porGoogle && (await leerCookieSesionGoogle(porGoogle, claveFirmaGoogle()))) return true;
@@ -60,8 +67,8 @@ export async function tieneSesionAdmin(): Promise<boolean> {
 }
 
 /** Email de quien está logueado, solo si entró con Google — para auditoria.
- * Con login por contraseña no hay forma de saber quién es (por eso el
- * objetivo es migrar el equipo al login con Google). */
+ * Con login por contraseña (solo previews / tu PC) no hay forma de saber
+ * quién es. */
 export async function emailAdminActual(): Promise<string | null> {
   const jar = await cookies();
   const porGoogle = jar.get(COOKIE_GOOGLE)?.value;
@@ -79,8 +86,7 @@ export async function emailAdminActual(): Promise<string | null> {
  * mutación: sacar a alguien de /admin/administradores le revoca el acceso
  * aunque su cookie siga vigente. La consulta falla cerrada a propósito —
  * si la base no responde, la mutación iba a fallar igual un paso después.
- * OJO: esto solo cubre sesiones por Google; la contraseña compartida no
- * tiene identidad, ahí la única revocación es rotar ADMIN_PASSWORD.
+ * En producción toda sesión es por Google, así que siempre se re-chequea.
  */
 export async function requireAdmin(): Promise<void> {
   if (!(await tieneSesionAdmin())) {

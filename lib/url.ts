@@ -21,7 +21,6 @@
 const ESQUEMAS_PERMITIDOS = new Set(["http:", "https:"]);
 
 export function urlSegura(url: string): string | null {
-  // eslint-disable-next-line no-control-regex
   const limpia = url.replace(/[\x00-\x1f\x7f]/g, "").trim();
   if (!limpia) return null;
   try {

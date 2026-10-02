@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { cookiePasswordValida, leerCookieSesionGoogle } from "@/lib/sesion";
+import { cookiePasswordValida, leerCookieSesionGoogle, loginConPasswordPermitido } from "@/lib/sesion";
 
 // Dos trabajos en un solo middleware, porque Next.js solo permite uno:
 //
@@ -12,9 +12,9 @@ import { cookiePasswordValida, leerCookieSesionGoogle } from "@/lib/sesion";
 //    los Server Components — por eso esto corre en TODAS las rutas, no solo
 //    en una lista fija.
 //
-// 2) Protege el panel interno (/admin) con dos formas de sesión válida:
-//    contraseña compartida (ADMIN_PASSWORD) o login con Google (allowlist de
-//    `admins`, ver /api/admin/oauth/callback). Todo lo demás sigue siendo
+// 2) Protege el panel interno (/admin): en producción solo con login de
+//    Google (allowlist de `admins`, ver /api/admin/oauth/callback); en
+//    previews y en tu PC también con la contraseña compartida. Todo lo demás sigue siendo
 //    público: la landing (/), el portal de clientes (/portal/…), la página
 //    de tap (/t/…) y /login — esas rutas solo pasan por la parte 1 (CSP),
 //    nunca por el chequeo de sesión de acá abajo.
@@ -79,14 +79,18 @@ export async function middleware(req: NextRequest) {
 
   if (!PROTEGIDAS.test(pathname)) return siguiente();
 
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) {
-    if (process.env.NODE_ENV !== "production") return siguiente();
-    // producción sin contraseña: mandar a /login, que explica cómo configurarla
-  } else {
-    const cookiePassword = req.cookies.get("admin_session")?.value;
-    if (cookiePassword && (await cookiePasswordValida(cookiePassword, password))) {
-      return siguiente();
+  // La contraseña compartida solo vale fuera de producción (ver
+  // loginConPasswordPermitido): en prod una cookie admin_session vieja ya no
+  // abre nada, solo la sesión de Google.
+  if (loginConPasswordPermitido()) {
+    const password = process.env.ADMIN_PASSWORD;
+    if (!password) {
+      if (process.env.NODE_ENV !== "production") return siguiente();
+    } else {
+      const cookiePassword = req.cookies.get("admin_session")?.value;
+      if (cookiePassword && (await cookiePasswordValida(cookiePassword, password))) {
+        return siguiente();
+      }
     }
   }
 

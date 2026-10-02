@@ -84,6 +84,9 @@ export default async function EditarClientePage({
 
         {logo && (
           <div className="mb-4 flex items-center gap-4">
+            {/* Vista previa del logo guardado en la base como data URI: next/image
+                no aporta nada acá (no hay archivo que optimizar ni CDN). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`data:${logo.contentType};base64,${logo.datos.toString("base64")}`}
               alt={`Logo de ${c.nombre}`}

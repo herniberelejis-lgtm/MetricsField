@@ -14,6 +14,7 @@ export interface GooglePlaceStats {
 
 export async function fetchGooglePlaceStats(
   placeId: string,
+  opciones: { cacheSegundos?: number } = {},
 ): Promise<GooglePlaceStats | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey || !placeId) return null;
@@ -23,8 +24,12 @@ export async function fetchGooglePlaceStats(
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "rating,userRatingCount",
     },
-    // Nunca cachear: siempre queremos el dato más nuevo cuando se pide.
-    cache: "no-store",
+    // El cron pide siempre el dato fresco. El portal (reseñas de hoy) acepta
+    // uno de hasta `cacheSegundos`: Places es una API paga y sin caché cada
+    // visita al portal sería un pedido.
+    ...(opciones.cacheSegundos
+      ? { next: { revalidate: opciones.cacheSegundos } }
+      : { cache: "no-store" as const }),
   });
 
   if (!res.ok) {

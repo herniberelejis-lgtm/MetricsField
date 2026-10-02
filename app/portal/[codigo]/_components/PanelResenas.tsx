@@ -23,7 +23,6 @@ import SelectorSucursales from "./SelectorSucursales";
 // las reseñas, tiene más sentido leerlas junto a ellas que en una sección
 // aparte.
 export default function PanelResenas({
-  resenas,
   resenasPendientes,
   resenasAutomaticas,
   resumenResenas,
@@ -38,7 +37,6 @@ export default function PanelResenas({
   autoResponderUmbral,
   tonoMarca,
 }: {
-  resenas: ResenaCRM[];
   resenasPendientes: ResenaCRM[];
   resenasAutomaticas: ResenaCRM[];
   resumenResenas: ResumenResenasData;

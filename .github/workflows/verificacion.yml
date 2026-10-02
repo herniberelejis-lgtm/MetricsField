@@ -55,3 +55,60 @@ jobs:
       # que verificamos que no nos afectan.
       - name: Vulnerabilidades en dependencias
         run: node scripts/auditar-dependencias.mjs
+
+  # Prueba cruzada de permisos contra la app de verdad: build de producción
+  # + Postgres con db/seed.sql (datos sintéticos). Comercio A contra B,
+  # portal con gate de Google, cuenta en baja, acciones de admin sin sesión,
+  # límites de intentos, y que en producción NO se entre con contraseña.
+  # Ver scripts/prueba-permisos.mjs.
+  permisos:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: prueba
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/prueba
+      ADMIN_PASSWORD: clave-solo-para-el-ci
+      CRON_SECRET: secreto-solo-para-el-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Cargar esquema y datos de prueba
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f db/schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f db/seed.sql
+
+      - name: Build de producción
+        run: npm run build
+
+      - name: Permisos (modo preview)
+        run: |
+          PORT=3100 npx next start > servidor.log 2>&1 &
+          SERVIDOR=$!
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3100/login && break; sleep 1; done
+          node scripts/prueba-permisos.mjs || { tail -50 servidor.log; exit 1; }
+          kill $SERVIDOR
+
+      - name: Permisos (modo producción, solo Google)
+        run: |
+          # Otro puerto a propósito: si el server del paso anterior quedara
+          # vivo, esta prueba nunca puede terminar pegándole a ese.
+          PORT=3101 VERCEL_ENV=production npx next start > servidor-prod.log 2>&1 &
+          SERVIDOR=$!
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3101/login && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:3101 MODO=produccion node scripts/prueba-permisos.mjs || { tail -50 servidor-prod.log; exit 1; }
+          kill $SERVIDOR
