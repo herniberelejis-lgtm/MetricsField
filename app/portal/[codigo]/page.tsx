@@ -13,12 +13,14 @@ import {
   getChecklist,
   getAudits,
   getResenas,
+  resenasDeHoy,
   getBenchmarkMensual,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
-  type TapsPorHoraDia,
   type TopPiezaSemana,
 } from "@/lib/db";
+import { resenasApiHabilitada } from "@/lib/google-reviews";
+import { businessProfileHabilitado } from "@/lib/gbp";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
 import { oauthVerificado } from "@/lib/google-oauth";
 import PortalGateGoogle from "./_components/PortalGateGoogle";
@@ -199,8 +201,6 @@ export default async function PortalPage({
   // "fecha" en resenas es DATE (sin hora, ver db/schema.sql) — comparamos
   // contra la fecha de hoy en el mismo formato que ya usa fechaISO() en
   // lib/db.ts, para que "hoy" siempre coincida con lo que guardó el sync.
-  const hoyISO = new Date().toISOString().slice(0, 10);
-
   // `totalTapsHistorico` (de acá para abajo) queda SIEMPRE scopeado a
   // `activo` — lo usan Dispositivos y Escaneos, que siguen siendo detalle
   // de un solo local aunque el Resumen esté en modo combinado (si no, el
@@ -213,7 +213,6 @@ export default async function PortalPage({
   // Cliente ya trae cargado (sin queries extra); taps y "reseñas hoy" sí
   // necesitan traer los links/reseñas de cada sucursal aparte.
   let totalTapsCombinado = totalTapsHistorico;
-  let resenasHoy = resenas.filter((r) => r.fecha === hoyISO).length;
   let resenasNuevasMesTotal = m?.resenasNuevas ?? 0;
 
   // Alcance en Google (Business Profile Performance API): visitas al
@@ -259,7 +258,6 @@ export default async function PortalPage({
     if (mejorPieza) mejorPieza = { ...mejorPieza, local: activo.nombre };
     for (const { s, linksS, resenasS, horasS, piezaS } of deLasSucursales) {
       totalTapsCombinado += linksS.reduce((acc, l) => acc + l.taps, 0);
-      resenasHoy += resenasS.filter((r) => r.fecha === hoyISO).length;
       resenasNuevasMesTotal += metricaActual(s)?.resenasNuevas ?? 0;
       const ms = metricaActual(s);
       visitasPerfilTotal += ms?.visitasPerfil ?? 0;
@@ -276,6 +274,23 @@ export default async function PortalPage({
     }
     resenasCombinadas = [...resenasCombinadas].sort((a, b) => b.fecha.localeCompare(a.fecha));
   }
+
+  // Reseñas de hoy: del total público de Google (ver resenasDeHoy), no de
+  // la tabla `resenas`, que sin la API de reseñas aprobada solo se llena a
+  // mano — por eso antes daba 0 aunque entraran reseñas reales. null si
+  // ningún local tiene place_id: el portal no muestra un 0 inventado.
+  const localesDelResumen = modoTodos ? ubicaciones : [activo];
+  const resenasHoyPorLocal = await Promise.all(
+    localesDelResumen.map((u) => resenasDeHoy(u.id, u.googlePlaceId)),
+  );
+  const resenasHoyConDato = resenasHoyPorLocal.filter((n): n is number => n !== null);
+  const resenasHoy =
+    resenasHoyConDato.length > 0 ? resenasHoyConDato.reduce((acc, n) => acc + n, 0) : null;
+
+  // "Reseñas negativas" y "Sugerencias repetidas" necesitan el texto y las
+  // estrellas de cada reseña: solo existen con la API de reseñas de Google
+  // o con reseñas cargadas a mano. Sin ninguna de las dos, no se muestran.
+  const hayResenasDetalladas = resenasApiHabilitada() || resenasCombinadas.length > 0;
 
   const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
   const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
@@ -346,7 +361,10 @@ export default async function PortalPage({
       tono: "atencion",
     });
   }
-  if (!gbpConectado) {
+  // Mientras Google no apruebe Business Profile, conectarlo no trae nada:
+  // ni el aviso ni el botón del header (ver lib/gbp.ts).
+  const conBusinessProfile = businessProfileHabilitado();
+  if (conBusinessProfile && !gbpConectado) {
     prioridades.push({
       texto: "Conectá tu Google Business Profile para automatizar visitas y llamadas",
       href: "#rating",
@@ -369,6 +387,7 @@ export default async function PortalPage({
       resenasNuevasMes={resenasNuevasMesTotal}
       resenasTotales={resenasTotalesTotal}
       resenasNegativas={resenasNegativasTotal}
+      hayResenasDetalladas={hayResenasDetalladas}
       horasSemana={horasSemanaCombinado}
       piezaMasUsada={mejorPieza}
       posicionCompetencia={posicionCompetencia}
@@ -401,7 +420,6 @@ export default async function PortalPage({
   // menciones dentro del texto de las reseñas.
   panels.resenas = (
     <PanelResenas
-      resenas={resenasCombinadas}
       resenasPendientes={resenasPendientesCombinadas}
       resenasAutomaticas={resenasAutomaticas}
       resumenResenas={resumenResenasCombinado}
@@ -504,11 +522,15 @@ export default async function PortalPage({
         sucursales.length > 0 ? ` · ${modoTodos ? `Todos los locales (${ubicaciones.length})` : activo.nombre}` : ""
       }${m ? ` · datos a ${fmtMes(m.mes)}` : ""}`}
       planBadge={<PlanBadge plan={c.plan} mono />}
-      google={{
-        conectado: gbpConectado,
-        conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
-        perfilPanelId: "rating",
-      }}
+      google={
+        conBusinessProfile
+          ? {
+              conectado: gbpConectado,
+              conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
+              perfilPanelId: "rating",
+            }
+          : undefined
+      }
       whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
       prioridades={prioridades}
       nav={nav}

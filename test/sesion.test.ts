@@ -4,6 +4,7 @@ import {
   cookiePasswordValida,
   crearCookieSesionGoogle,
   leerCookieSesionGoogle,
+  loginConPasswordPermitido,
   SESION_MAX_MS,
 } from "@/lib/sesion";
 
@@ -14,6 +15,7 @@ import {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe("cookie de contraseña compartida", () => {
@@ -100,5 +102,24 @@ describe("cookie de sesión con Google", () => {
     for (const malo of ["", ".", "abc", "abc.def", "...."]) {
       expect(await leerCookieSesionGoogle(malo, "secreto")).toBeNull();
     }
+  });
+});
+
+// En producción el panel es solo con Google: si esto se pone en rojo, la
+// contraseña compartida vuelve a abrir el panel de producción.
+describe("login con contraseña compartida según el entorno", () => {
+  it("en producción (Vercel) NO se permite", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(loginConPasswordPermitido()).toBe(false);
+  });
+
+  it("en previews de Vercel sí (detrás de Vercel Authentication)", () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    expect(loginConPasswordPermitido()).toBe(true);
+  });
+
+  it("en tu PC (sin VERCEL_ENV) sí", () => {
+    vi.stubEnv("VERCEL_ENV", "");
+    expect(loginConPasswordPermitido()).toBe(true);
   });
 });

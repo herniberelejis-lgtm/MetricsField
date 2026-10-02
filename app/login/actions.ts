@@ -4,10 +4,17 @@ import crypto from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { crearCookiePassword, SESION_MAX_MS } from "@/lib/auth";
+import { loginConPasswordPermitido } from "@/lib/sesion";
 import { registrarAuditoria } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 
 export async function accionLogin(fd: FormData): Promise<void> {
+  // En producción se entra solo con Google. Se corta acá además de esconder
+  // el formulario: una server action se puede invocar sin la página.
+  if (!loginConPasswordPermitido()) {
+    redirect("/login?error=solo-google");
+  }
+
   // Rate limit: la contraseña compartida protege todo el panel — sin esto
   // se puede probar por fuerza bruta sin límite.
   limpiarVencidos();

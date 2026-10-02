@@ -9,7 +9,6 @@ import {
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader, Stars } from "@/components/ui";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
-import { waUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 

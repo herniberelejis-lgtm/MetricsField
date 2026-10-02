@@ -36,6 +36,15 @@ export async function agregarAdmin(email: string, nombre: string): Promise<void>
   `;
 }
 
-export async function eliminarAdmin(email: string): Promise<void> {
-  await sql`DELETE FROM admins WHERE lower(email) = lower(${email})`;
+/** Con el panel solo por Google, borrar al último admin deja a todo el
+ * equipo afuera (y sin forma de volver a entrar salvo tocando la base a
+ * mano). Devuelve false si no se borró porque era el último. */
+export async function eliminarAdmin(email: string): Promise<boolean> {
+  const borrados = await sql`
+    DELETE FROM admins
+    WHERE lower(email) = lower(${email}) AND (SELECT count(*) FROM admins) > 1
+    RETURNING email
+  `;
+  if (borrados.length > 0) return true;
+  return !(await esAdminPermitido(email)); // no existía: nada que borrar, no es error
 }
