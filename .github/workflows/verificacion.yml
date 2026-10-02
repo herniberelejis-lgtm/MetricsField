@@ -102,8 +102,10 @@ jobs:
 
       - name: Permisos (modo producción, solo Google)
         run: |
-          PORT=3100 VERCEL_ENV=production npx next start > servidor-prod.log 2>&1 &
+          # Otro puerto a propósito: si el server del paso anterior quedara
+          # vivo, esta prueba nunca puede terminar pegándole a ese.
+          PORT=3101 VERCEL_ENV=production npx next start > servidor-prod.log 2>&1 &
           SERVIDOR=$!
-          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3100/login && break; sleep 1; done
-          MODO=produccion node scripts/prueba-permisos.mjs || { tail -50 servidor-prod.log; exit 1; }
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3101/login && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:3101 MODO=produccion node scripts/prueba-permisos.mjs || { tail -50 servidor-prod.log; exit 1; }
           kill $SERVIDOR
