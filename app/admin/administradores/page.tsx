@@ -7,7 +7,12 @@ import { Card, PageHeader } from "@/components/ui";
 export const metadata: Metadata = { title: "Administradores" };
 export const dynamic = "force-dynamic";
 
-export default async function AdministradoresPage() {
+export default async function AdministradoresPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const [admins, emailActual] = await Promise.all([getAdmins(), emailAdminActual()]);
 
   return (
@@ -17,11 +22,17 @@ export default async function AdministradoresPage() {
         subtitle="Cuentas de Google que pueden entrar al panel — solo estas, nadie más."
       />
 
+      {error === "ultimo" && (
+        <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          No se puede eliminar al último administrador: el panel quedaría sin
+          nadie que pueda entrar. Agregá otra cuenta antes de sacar esta.
+        </p>
+      )}
+
       <Card className="mb-4">
         <p className="text-sm text-slate-600">
-          El login con Google reemplaza de a poco a la contraseña
-          compartida: cada quien entra con su propia cuenta y queda
-          registrado en{" "}
+          El panel se usa solo con Google: cada quien entra con su propia
+          cuenta y queda registrado en{" "}
           <a href="/admin/actividad" className="text-brand-fg hover:underline">
             Actividad
           </a>{" "}

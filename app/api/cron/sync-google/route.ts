@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { businessProfileHabilitado } from "@/lib/gbp";
 import {
   sincronizarGoogleTodos,
   sincronizarRendimientoTodos,
@@ -14,6 +15,10 @@ import {
 // comercios con Google Place ID cargado. Vercel Cron llama esta ruta con
 // un header Authorization: Bearer <CRON_SECRET> — lo verificamos para que
 // nadie más pueda disparar el sync desde afuera.
+//
+// Horario: 03:05 UTC = 00:05 en Córdoba. No es casual: el total de reseñas
+// que se lee acá es la base de "Reseñas hoy" del portal (ver resenasDeHoy en
+// lib/db/google-sync.ts), así que tiene que correr apenas empieza el día.
 
 // Sin esto la función se cortaba con el timeout default a mitad de la
 // lista y los últimos comercios quedaban sin sincronizar en silencio.
@@ -39,7 +44,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const resenas = await sincronizarGoogleTodos();
-  const rendimiento = await sincronizarRendimientoTodos();
+  // Business Profile (visitas/llamadas) todavía no está aprobado por Google:
+  // pedirlo solo genera 429 y avisos de "se desconectó" que no son reales.
+  const rendimiento = businessProfileHabilitado()
+    ? await sincronizarRendimientoTodos()
+    : { omitido: "GOOGLE_BUSINESS_PROFILE_HABILITADO apagado" };
   // No hace nada (0 en todos los conteos) mientras GOOGLE_REVIEWS_API_ENABLED
   // no esté prendido — ver lib/google-reviews.ts.
   const resenasDetalle = await sincronizarResenasGoogleTodos();
@@ -61,7 +70,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // Va al final a propósito: si algo de arriba falla, el aviso de clientes
   // desconectados no aporta nada todavía. Mientras la app siga en modo Prueba
   // esto avisa por el webhook cada vez que a un cliente se le vence el permiso.
-  const desconectados = await avisarGoogleDesconectado();
+  const desconectados = businessProfileHabilitado()
+    ? await avisarGoogleDesconectado()
+    : { omitido: "GOOGLE_BUSINESS_PROFILE_HABILITADO apagado" };
 
   return NextResponse.json({
     resenas,

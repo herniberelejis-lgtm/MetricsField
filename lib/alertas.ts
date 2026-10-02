@@ -2,6 +2,7 @@ import "server-only";
 import { metricaActual, metricaAnterior, type Cliente } from "./types";
 import { fmtMes, fmtNum, delta } from "./format";
 import { enviarEmail } from "./email";
+import { businessProfileHabilitado } from "./gbp";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
 // necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
@@ -85,7 +86,11 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
     <ul style="font-size:14px;padding-left:18px;">
       <li>${fmtNum(m.resenasNuevas)} reseñas nuevas${filaDelta(dResenas)} — ${fmtNum(m.resenasTotal)} en total</li>
       <li>Rating promedio: ${m.ratingPromedio.toFixed(1)}★</li>
-      <li>${fmtNum(m.visitasPerfil)} visitas a tu ficha de Google, ${fmtNum(m.llamadas)} llamadas</li>
+      ${
+        businessProfileHabilitado()
+          ? `<li>${fmtNum(m.visitasPerfil)} visitas a tu ficha de Google, ${fmtNum(m.llamadas)} llamadas</li>`
+          : ""
+      }
     </ul>
   `;
   return enviarEmail({

@@ -121,10 +121,12 @@ inserta en la tabla `auditoria` con el email del admin (de `emailAdminActual`).
 **Tres sistemas de acceso que no se pisan** (ver `docs/CONTEXTO-Y-PROGRESO.md` §4):
 1. Cliente → su portal `/portal/[codigo]`: el código privado es la credencial,
    solo lectura, aislado a sus datos.
-2. Equipo → panel `/admin`: contraseña compartida (`ADMIN_PASSWORD`, cookie
-   SHA-256) **o** login con Google restringido a la allowlist de la tabla `admins`
-   (cookie firmada con HMAC del client secret). `middleware.ts` protege `/admin`;
-   la lógica de sesión vive en `lib/auth.ts`.
+2. Equipo → panel `/admin`: **en producción solo login con Google**, restringido
+   a la allowlist de la tabla `admins` (cookie firmada con HMAC del client
+   secret). La contraseña compartida (`ADMIN_PASSWORD`) solo sirve en previews y
+   en local (`loginConPasswordPermitido` en `lib/sesion.ts`). No se puede borrar
+   al último admin. `middleware.ts` protege `/admin`; la lógica de sesión vive en
+   `lib/auth.ts`.
 3. Cliente → conexión de Google Business Profile desde su portal: no es un login a
    Taply, es un permiso de datos OAuth con la cuenta del propio cliente.
 
@@ -142,10 +144,13 @@ el código pero está sin usar (audits/respuestas hoy son manuales o por plantil
 
 ## Variables de entorno
 
-Obligatoria en producción: `ADMIN_PASSWORD` (sin ella el panel se bloquea),
-`DATABASE_URL`. Opcionales: `NEXT_PUBLIC_WHATSAPP_NUMBER`, `GOOGLE_PLACES_API_KEY`,
-`CRON_SECRET`, `GOOGLE_OAUTH_CLIENT_ID`/`GOOGLE_OAUTH_CLIENT_SECRET`. Detalle
-completo en `.env.example`.
+Obligatorias en producción: `DATABASE_URL` y `GOOGLE_OAUTH_CLIENT_ID`/
+`GOOGLE_OAUTH_CLIENT_SECRET` (sin OAuth nadie puede entrar al panel).
+`ADMIN_PASSWORD` solo para previews y local. Opcionales:
+`NEXT_PUBLIC_WHATSAPP_NUMBER`, `GOOGLE_PLACES_API_KEY`, `CRON_SECRET`. Interruptores
+que esperan aprobación de Google: `GOOGLE_REVIEWS_API_ENABLED` (reseñas una por
+una) y `GOOGLE_BUSINESS_PROFILE_HABILITADO` (visitas/llamadas: mientras esté
+apagado el portal oculta esas métricas). Detalle completo en `.env.example`.
 
 ## DNS de producción
 
