@@ -38,6 +38,11 @@ export default function PanelMes({
   // Visitas / llamadas / "cómo llegar" son de Business Profile: ocultas
   // hasta que Google apruebe esa API (ver lib/gbp.ts).
   const conBusinessProfile = businessProfileHabilitado();
+  // Las citaciones en IA las carga el equipo a mano (Audit GEO): si nunca
+  // se cargó ninguna, mostrar "0 veces" diría algo falso ("la IA no te
+  // recomienda") en vez de "todavía no lo medimos".
+  const historialIA = historico.some((h) => citasIA(h) > 0) || ultimosAudits.length > 0;
+  const mostrarIA = esPremium && historialIA;
 
   return (
     <>
@@ -70,14 +75,14 @@ export default function PanelMes({
             {conBusinessProfile && (
               <Kpi variant="glass" label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
             )}
-            {(esPremium || conBusinessProfile) && (
+            {(mostrarIA || conBusinessProfile) && (
             <Kpi
               variant="glass"
-              label={esPremium ? "Citaciones en IA" : "Clics cómo llegar"}
-              value={fmtNum(esPremium ? citasIA(m) : m.clicsComoLlegar)}
-              hint={esPremium ? "ChatGPT · Copilot · Perplexity" : undefined}
+              label={mostrarIA ? "Citaciones en IA" : "Clics cómo llegar"}
+              value={fmtNum(mostrarIA ? citasIA(m) : m.clicsComoLlegar)}
+              hint={mostrarIA ? "ChatGPT · Copilot · Perplexity" : undefined}
               delta={
-                esPremium && prev
+                mostrarIA && prev
                   ? {
                       dir: dCitas.dir,
                       text: `${dCitas.valor >= 0 ? "+" : ""}${dCitas.valor} vs mes previo`,
@@ -109,7 +114,7 @@ export default function PanelMes({
         </>
       )}
 
-      {esPremium && (
+      {mostrarIA && (
         <Card variant="glass" className="mt-4">
           <h2 className="text-sm font-medium text-slate-700">Tu negocio en la IA este mes</h2>
           <ul className="mt-2 space-y-1 text-sm text-slate-600">
@@ -177,10 +182,12 @@ export default function PanelMes({
               />
             </div>
           )}
-          <p className="mb-2 text-xs text-slate-500">Tocá un mes para ver el detalle de ese período.</p>
+          {Object.values(detalleMensual).some((d) => d.terminos.length > 0) && (
+            <p className="mb-2 text-xs text-slate-500">Tocá un mes para ver el detalle de ese período.</p>
+          )}
           <EvolucionMensual
             historico={historico}
-            esPremium={esPremium}
+            esPremium={mostrarIA}
             mostrarVisitas={conBusinessProfile}
             detalle={detalleMensual}
           />

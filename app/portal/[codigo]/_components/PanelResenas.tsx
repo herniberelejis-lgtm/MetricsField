@@ -9,6 +9,7 @@ import AutomatizacionResenas from "@/components/AutomatizacionResenas";
 import ResumenResenas, { type ResumenResenasData } from "@/components/ResumenResenas";
 import { hrefTodos } from "../_lib";
 import SelectorSucursales from "./SelectorSucursales";
+import ResenasGoogle, { type LocalConResenasGoogle } from "@/components/portal/ResenasGoogle";
 
 // Panel "Reseñas": el workspace completo — todas las reseñas (de todos los
 // locales, si hay más de uno), cuántas son negativas, y la respuesta
@@ -36,6 +37,8 @@ export default function PanelResenas({
   autoResponderPositivas,
   autoResponderUmbral,
   tonoMarca,
+  hayResenasDetalladas,
+  resenasGoogle,
 }: {
   resenasPendientes: ResenaCRM[];
   resenasAutomaticas: ResenaCRM[];
@@ -51,6 +54,11 @@ export default function PanelResenas({
   autoResponderPositivas: boolean;
   autoResponderUmbral: 4 | 5;
   tonoMarca: TonoMarca;
+  /** Hay reseñas completas (API de reseñas aprobada o cargadas a mano). */
+  hayResenasDetalladas: boolean;
+  /** Reseñas públicas de Places, solo cuando NO hay detalladas. null = sin
+   * ficha vinculada (sin place_id) o sin API key. */
+  resenasGoogle: LocalConResenasGoogle[] | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   return (
@@ -82,31 +90,54 @@ export default function PanelResenas({
         </div>
       )}
 
-      <Card variant="glass">
-        <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
-        <p className="mt-1 text-xs text-slate-500">
-          Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
-          Google vos mismo — todavía no publicamos nada en tu nombre.
-        </p>
-        <div className="mt-3">
-          <ResumenResenas data={resumenResenas} variant="glass" />
-        </div>
-        {resenasApiHabilitada() && (
-          <div className="mt-3">
-            <AutomatizacionResenas
-              codigo={codigoAcceso}
-              comercioId={comercioId}
-              activa={autoResponderPositivas}
-              umbral={autoResponderUmbral}
-              apiHabilitada
-              resenasAutomaticas={resenasAutomaticas}
-            />
+      {!hayResenasDetalladas ? (
+        // Sin la API de reseñas aprobada (ni reseñas cargadas a mano), lo
+        // único automático y real son las que Google muestra en la ficha.
+        <Card variant="glass">
+          <p className="text-sm font-medium text-slate-700">Tus reseñas en Google</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Las que Google muestra en tu ficha (hasta 5 por local, elegidas por Google). Para
+            cada una te sugerimos una respuesta: copiala y pegala en Google. Cuando Google
+            apruebe la conexión completa, vas a ver todas acá y responderlas sin salir del portal.
+          </p>
+          <div className="mt-4">
+            {resenasGoogle ? (
+              <ResenasGoogle locales={resenasGoogle} tonoMarca={tonoMarca} />
+            ) : (
+              <p className="text-sm text-slate-500">
+                Todavía no está vinculada tu ficha de Google. Escribinos por WhatsApp y la
+                dejamos lista.
+              </p>
+            )}
           </div>
-        )}
-        <div className="mt-3">
-          <GestionResenas resenasIniciales={resenasPendientes} tonoMarca={tonoMarca} codigo={codigoAcceso} />
-        </div>
-      </Card>
+        </Card>
+      ) : (
+        <Card variant="glass">
+          <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
+            Google vos mismo — todavía no publicamos nada en tu nombre.
+          </p>
+          <div className="mt-3">
+            <ResumenResenas data={resumenResenas} variant="glass" />
+          </div>
+          {resenasApiHabilitada() && (
+            <div className="mt-3">
+              <AutomatizacionResenas
+                codigo={codigoAcceso}
+                comercioId={comercioId}
+                activa={autoResponderPositivas}
+                umbral={autoResponderUmbral}
+                apiHabilitada
+                resenasAutomaticas={resenasAutomaticas}
+              />
+            </div>
+          )}
+          <div className="mt-3">
+            <GestionResenas resenasIniciales={resenasPendientes} tonoMarca={tonoMarca} codigo={codigoAcceso} />
+          </div>
+        </Card>
+      )}
 
       {personalEmpleados.length > 0 && (
         <Card variant="glass" className="mt-4">
