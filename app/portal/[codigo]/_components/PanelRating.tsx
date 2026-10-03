@@ -1,31 +1,30 @@
 import type { MetricaMensual, ResenaCRM } from "@/lib/types";
 import type { ResenasPorHoraDia } from "@/lib/db";
-import { Card, Stars, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
+import { Card, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import RatingSerieChart from "@/components/RatingSerieChart";
 import RatingPorHoraChart from "@/components/RatingPorHoraChart";
+import { resenasParaProximaDecima, cincoEstrellasPorCadaUna, ratingDespuesDeUnaMala } from "@/lib/objetivos";
 import { businessProfileHabilitado } from "@/lib/gbp";
 
 const COLOR_ESTRELLA: Record<number, string> = {
   5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
 };
 
-// Panel "Mi Rating en Google": estado de la conexión con Google Business
-// Profile, foto en vivo de la ficha, calificación hero con el delta desde
-// que usa MetricsField, y distribución de reseñas por estrella.
+// Panel "Mi Rating en Google": la calificación mes a mes, qué falta para
+// subir (próximo escalón y cuánto pesa una mala reseña) y, si hay reseñas
+// detalladas, a qué hora llegan y su distribución por estrella. La
+// calificación de hoy y el "desde que usás MetricsField" viven en el
+// Resumen — acá no se repiten.
 export default function PanelRating({
   gbpConectado,
   diasConectado,
   gbpPorVencer,
   codigoAcceso,
   comercioId,
-  googleSyncEn,
-  ratingGoogle,
-  resenasGoogle,
   ratingHero,
   resenasHero,
-  deltaResenasHero,
   resenas,
   historico,
   resenasPorHora,
@@ -36,22 +35,14 @@ export default function PanelRating({
   gbpPorVencer: boolean;
   codigoAcceso: string;
   comercioId: string;
-  googleSyncEn: string | null;
-  ratingGoogle: number | null;
-  resenasGoogle: number | null;
   ratingHero: number | null;
   resenasHero: number;
-  deltaResenasHero: number | null;
   resenas: ResenaCRM[];
   historico: MetricaMensual[];
   resenasPorHora: ResenasPorHoraDia[];
   /** Hay reseñas con fecha y hora (API de reseñas o cargadas a mano). */
   hayResenasDetalladas: boolean;
 }) {
-  // "Al instalar": la primera foto mensual que tenemos (arranque del
-  // servicio) — si todavía no hay ni un mes cargado, no hay piso con qué
-  // comparar y no mostramos el dato en vez de inventarlo.
-  const ratingAlInstalar = historico[0]?.ratingPromedio ?? null;
   // Distribución de reseñas por estrella — para la barra 5★..1★ del panel
   // "Mi Rating en Google". Sobre TODAS las reseñas conocidas (no solo las
   // pendientes), igual que resumenResenas en el panel de Resumen.
@@ -121,19 +112,9 @@ export default function PanelRating({
         </Card>
       )}
 
-      {googleSyncEn && (
-        <Card variant="glass" className="mb-4">
-          <p className="text-sm font-medium text-slate-700">Tu ficha de Google ahora mismo</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold tracking-tight text-slate-900">{ratingGoogle?.toFixed(1)}★</span>
-            <span className="text-sm text-slate-500">{fmtNum(resenasGoogle ?? 0)} reseñas totales</span>
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            actualizado automáticamente {new Date(googleSyncEn).toLocaleDateString("es-AR")}
-          </p>
-        </Card>
-      )}
-
+      {/* La calificación de hoy y el "desde que usás MetricsField" ya están
+          en la tarjeta del Resumen: acá va lo que no está en ningún otro
+          lado — la evolución mes a mes y qué falta para subir. */}
       {ratingHero !== null && (
         <>
           {historico.length > 0 && (
@@ -141,29 +122,7 @@ export default function PanelRating({
               <RatingSerieChart historico={historico} />
             </div>
           )}
-
-          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Card variant="glass">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Al instalar</p>
-              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-                {ratingAlInstalar === null ? "—" : `${ratingAlInstalar.toFixed(1)}★`}
-              </div>
-            </Card>
-            <Card variant="glass">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hoy</p>
-              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-                {ratingHero.toFixed(1)}★
-              </div>
-              <Stars rating={ratingHero} mono />
-            </Card>
-            <Card variant="glass">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Reseñas sumadas</p>
-              <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-                {deltaResenasHero === null ? fmtNum(resenasHero) : `${deltaResenasHero >= 0 ? "+" : ""}${fmtNum(deltaResenasHero)}`}
-              </div>
-              <p className="mt-1 text-xs text-slate-500">{fmtNum(resenasHero)} reseñas totales</p>
-            </Card>
-          </div>
+          <ObjetivosRating rating={ratingHero} total={resenasHero} />
         </>
       )}
 
@@ -195,5 +154,59 @@ export default function PanelRating({
         </Card>
       )}
     </>
+  );
+}
+
+// "Qué te falta para subir": dos cuentas sobre el rating y el total reales
+// de Google (ver lib/objetivos.ts). Aproximadas porque Google redondea el
+// promedio a un decimal.
+function ObjetivosRating({ rating, total }: { rating: number; total: number }) {
+  const proximo = resenasParaProximaDecima(rating, total);
+  const porCadaMala = cincoEstrellasPorCadaUna(rating);
+  return (
+    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Card variant="glass">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tu próximo escalón</p>
+        {proximo ? (
+          <>
+            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+              {proximo.objetivo.toFixed(1)}★
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Te faltan ≈ {fmtNum(proximo.faltan)} reseña{proximo.faltan === 1 ? "" : "s"} de 5★ seguidas para que
+              Google muestre {proximo.objetivo.toFixed(1)}★.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">5.0★</div>
+            <p className="mt-1 text-xs text-slate-500">Estás en el máximo que muestra Google. Ahora se trata de sostenerlo.</p>
+          </>
+        )}
+      </Card>
+      <Card variant="glass">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cuánto pesa una mala reseña</p>
+        {porCadaMala !== null ? (
+          <>
+            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+              {fmtNum(porCadaMala)} de 5★
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              hacen falta para compensar una sola de 1★ con tu promedio actual. Por eso conviene que cada cliente
+              contento deje la suya.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+              {ratingDespuesDeUnaMala(rating, total).toFixed(2)}★
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              sería tu promedio después de una sola reseña de 1★: con 5.0★, cualquier mala reseña se nota.
+            </p>
+          </>
+        )}
+      </Card>
+    </div>
   );
 }
