@@ -1,5 +1,6 @@
 import "server-only";
 import { metricaActual, metricaAnterior, type Cliente } from "./types";
+import { sanearHistorico } from "./historico";
 import { fmtMes, fmtNum, delta } from "./format";
 import { enviarEmail } from "./email";
 import { businessProfileHabilitado } from "./gbp";
@@ -73,10 +74,13 @@ export async function alertarResenaMala(
  * mail vacío. */
 export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
   if (!cliente.emailNotificaciones) return false;
-  const m = metricaActual(cliente);
+  // Mismo histórico saneado que ve en el portal (lib/historico.ts).
+  const saneado = { ...cliente, historico: sanearHistorico(cliente.historico) };
+  const m = metricaActual(saneado);
   if (!m) return false;
-  const prev = metricaAnterior(cliente);
-  const dResenas = prev ? delta(m.resenasNuevas, prev.resenasNuevas) : null;
+  const prev = metricaAnterior(saneado);
+  const dResenas =
+    prev && !prev.nuevasSinDato && !m.nuevasSinDato ? delta(m.resenasNuevas, prev.resenasNuevas) : null;
 
   const filaDelta = (d: typeof dResenas) =>
     d && d.dir !== "flat" ? ` (${d.valor >= 0 ? "+" : ""}${d.valor} vs mes anterior)` : "";
@@ -84,7 +88,11 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
   const cuerpo = `
     <p style="font-size:14px;">Así estuvo ${escapeHtml(cliente.nombre)} en ${fmtMes(m.mes)}:</p>
     <ul style="font-size:14px;padding-left:18px;">
-      <li>${fmtNum(m.resenasNuevas)} reseñas nuevas${filaDelta(dResenas)} — ${fmtNum(m.resenasTotal)} en total</li>
+      <li>${
+        m.nuevasSinDato
+          ? `${fmtNum(m.resenasTotal)} reseñas en total`
+          : `${fmtNum(m.resenasNuevas)} reseñas nuevas${filaDelta(dResenas)} — ${fmtNum(m.resenasTotal)} en total`
+      }</li>
       <li>Rating promedio: ${m.ratingPromedio.toFixed(1)}★</li>
       ${
         businessProfileHabilitado()

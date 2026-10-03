@@ -103,7 +103,7 @@ function FilaMes({
           {expandible && <span className="mr-1.5 inline-block text-slate-400">{open ? "▾" : "▸"}</span>}
           {fmtMes(h.mes)}
         </td>
-        <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasNuevas)}</td>
+        <td className="px-4 py-2.5 tabular-nums">{h.nuevasSinDato ? "—" : fmtNum(h.resenasNuevas)}</td>
         <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasTotal)}</td>
         <td className="px-4 py-2.5 tabular-nums">{h.ratingPromedio.toFixed(1)}</td>
         {mostrarVisitas && <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.visitasPerfil)}</td>}
