@@ -17,9 +17,19 @@ import { Redis } from "@upstash/redis";
 // cargada pero con un valor que no es una URL https válida). Una env var
 // mal cargada en un entorno no puede tirar abajo el build de todos los
 // demás.
+
+/** Valor de una env var sin espacios ni comillas envolventes. En el panel de
+ * Vercel es fácil pegar `"https://…"` con las comillas del .env — pasó en
+ * Production y el rate limit quedó en memoria sin que nadie lo notara. */
+export function limpiarValorEnv(valor: string | undefined): string {
+  const v = (valor ?? "").trim();
+  const m = v.match(/^(["'])(.*)\1$/);
+  return (m ? m[2] : v).trim();
+}
+
 function crearRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = limpiarValorEnv(process.env.UPSTASH_REDIS_REST_URL);
+  const token = limpiarValorEnv(process.env.UPSTASH_REDIS_REST_TOKEN);
   if (!url || !token) return null;
   try {
     return new Redis({ url, token });
@@ -44,6 +54,9 @@ function limitadorRedis(maximo: number, ventanaMs: number): Ratelimit {
       limiter: Ratelimit.slidingWindow(maximo, `${ventanaMs} ms`),
       analytics: false,
       prefix: "ratelimit",
+      // Si Redis tarda más que esto, Ratelimit deja pasar el request: el
+      // cartel NFC no puede quedar colgado esperando al rate limit.
+      timeout: 1500,
     });
     limitadoresRedis.set(clave, l);
   }
@@ -80,18 +93,23 @@ export function ipDelRequest(h: Headers): string {
 /** Devuelve true si el request está permitido; false si superó el límite. */
 export async function permitir(clave: string, maximo: number, ventanaMs: number): Promise<boolean> {
   if (redis) {
-    const { success } = await limitadorRedis(maximo, ventanaMs).limit(clave);
-    return success;
+    try {
+      const { success } = await limitadorRedis(maximo, ventanaMs).limit(clave);
+      return success;
+    } catch (err) {
+      // Token inválido, Upstash caído, etc.: el límite sigue en memoria en
+      // vez de tirar abajo el tap, el login o el portal.
+      console.error("Rate limit: falló Upstash, uso el contador en memoria —", err);
+    }
   }
   return permitirMemoria(clave, maximo, ventanaMs);
 }
 
 // Limpieza perezosa del fallback en memoria: cada tanto, purgar ventanas
-// vencidas para no crecer sin límite. Con Redis no hace falta — las claves
-// expiran solas (TTL nativo del sliding window).
+// vencidas para no crecer sin límite. Con Redis el mapa casi siempre está
+// vacío (solo se usa si Upstash falla), así que limpiar no cuesta nada.
 let ultimaLimpieza = Date.now();
 export function limpiarVencidos(): void {
-  if (redis) return;
   const ahora = Date.now();
   if (ahora - ultimaLimpieza < 60_000) return;
   ultimaLimpieza = ahora;

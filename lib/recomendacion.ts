@@ -25,7 +25,7 @@ export function recomendacionDelMes(
     resenasDelMes = dia >= 7 ? (actual.resenasNuevas / dia) * diasDelMes : Number.NaN;
   }
   const resenasBajaron =
-    previa !== undefined && Number.isFinite(resenasDelMes) && resenasDelMes < previa.resenasNuevas * 0.8;
+    previa !== undefined && !previa.nuevasSinDato && Number.isFinite(resenasDelMes) && resenasDelMes < previa.resenasNuevas * 0.8;
   const ratingBajo = actual.ratingPromedio < 4.5;
   // Solo si alguna vez se midió IA (el equipo carga las citaciones a mano):
   // "no aparecés en IA" sin haberlo medido sería inventado.
@@ -43,6 +43,10 @@ export function recomendacionDelMes(
   }
   if (c.plan === "Base") {
     return "Buen mes de reseñas y calificación. El próximo paso es aparecer cuando alguien le pregunta a ChatGPT o Copilot por tu rubro: consultanos por el plan Premium.";
+  }
+  // Premium sin IA medida todavía: no se le dice "buen mes en IA".
+  if (!midioIA) {
+    return "Buen mes de reseñas y calificación. Mantené el ritmo: que todo el equipo ofrezca el cartel al cobrar.";
   }
   return "Buen mes en reseñas y en IA. Mantené el ritmo: que todo el equipo ofrezca el cartel al cobrar.";
 }

@@ -41,6 +41,9 @@ export interface MetricaMensual {
   resenasNuevas: number;
   resenasTotal: number;
   ratingPromedio: number; // 1..5
+  /** No se sabe cuántas reseñas nuevas hubo ese mes (ver lib/historico.ts).
+   * No es columna de la base: lo marca el saneado del portal. */
+  nuevasSinDato?: boolean;
   visitasPerfil: number;
   llamadas: number;
   clicsComoLlegar: number;

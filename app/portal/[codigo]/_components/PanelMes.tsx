@@ -17,7 +17,7 @@ export default function PanelMes({
   checklistHechos,
   checklistPct,
   recomendacion,
-  promedioResenasMensual,
+  ritmo,
   detalleMensual,
 }: {
   m: MetricaMensual | undefined;
@@ -29,15 +29,20 @@ export default function PanelMes({
   checklistHechos: number;
   checklistPct: number;
   recomendacion: string | null;
-  promedioResenasMensual: number;
+  /** Promedio sobre meses completos con dato (lib/historico.ts). */
+  ritmo: { promedio: number; meses: number } | null;
   detalleMensual: Record<string, DetalleMes>;
 }) {
   // Mes pasado vs el anterior a ese (los dos completos — el mes en curso
-  // todavía no terminó, compararlo engaña los primeros días).
-  const antePrev = historico.length >= 3 ? historico[historico.length - 3] : undefined;
-  const dMesPasado = delta(prev?.resenasNuevas ?? 0, antePrev?.resenasNuevas ?? 0);
-  const mejorMes = historico.length >= 2
-    ? historico.reduce((mejor, h) => (h.resenasNuevas > mejor.resenasNuevas ? h : mejor), historico[0])
+  // todavía no terminó, compararlo engaña los primeros días). Un mes sin
+  // dato de reseñas nuevas (el primero medido) no se muestra como "0".
+  const mesPasado = prev && !prev.nuevasSinDato ? prev : undefined;
+  const anteriorAlPrev = historico.length >= 3 ? historico[historico.length - 3] : undefined;
+  const antePrev = anteriorAlPrev && !anteriorAlPrev.nuevasSinDato ? anteriorAlPrev : undefined;
+  const dMesPasado = delta(mesPasado?.resenasNuevas ?? 0, antePrev?.resenasNuevas ?? 0);
+  const conDato = historico.filter((h) => !h.nuevasSinDato);
+  const mejorMes = conDato.length >= 2
+    ? conDato.reduce((mejor, h) => (h.resenasNuevas > mejor.resenasNuevas ? h : mejor), conDato[0])
     : null;
   // Visitas / llamadas / "cómo llegar" son de Business Profile: ocultas
   // hasta que Google apruebe esa API (ver lib/gbp.ts).
@@ -64,11 +69,11 @@ export default function PanelMes({
               mes en Mi Rating: acá va la comparación con meses anteriores,
               que no está en ningún otro lado. */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-            {prev && (
+            {mesPasado && (
               <Kpi
                 variant="glass"
-                label={`Mes pasado · ${fmtMes(prev.mes)}`}
-                value={fmtNum(prev.resenasNuevas)}
+                label={`Mes pasado · ${fmtMes(mesPasado.mes)}`}
+                value={fmtNum(mesPasado.resenasNuevas)}
                 hint="reseñas nuevas"
                 delta={
                   antePrev
@@ -81,15 +86,16 @@ export default function PanelMes({
                 }
               />
             )}
-            {historico.length >= 2 && (
+            {/* Con un solo mes completo, el promedio repetiría "Mes pasado". */}
+            {ritmo && ritmo.meses >= 2 && (
               <Kpi
                 variant="glass"
                 label="Promedio por mes"
-                value={promedioResenasMensual.toFixed(1)}
-                hint="reseñas nuevas"
+                value={ritmo.promedio.toFixed(1)}
+                hint={`reseñas nuevas · sobre ${ritmo.meses} meses completos`}
               />
             )}
-            {mejorMes && (
+            {mejorMes && mejorMes.resenasNuevas > 0 && (
               <Kpi
                 variant="glass"
                 label="Tu mejor mes"
