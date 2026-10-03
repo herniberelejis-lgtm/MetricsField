@@ -1,4 +1,4 @@
-import type { MetricaMensual, ResenaCRM } from "@/lib/types";
+import type { MetricaMensual } from "@/lib/types";
 import type { ResenasPorHoraDia } from "@/lib/db";
 import { Card, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
@@ -7,10 +7,8 @@ import RatingSerieChart from "@/components/RatingSerieChart";
 import RatingPorHoraChart from "@/components/RatingPorHoraChart";
 import { resenasParaProximaDecima, cincoEstrellasPorCadaUna, ratingDespuesDeUnaMala } from "@/lib/objetivos";
 import { businessProfileHabilitado } from "@/lib/gbp";
-
-const COLOR_ESTRELLA: Record<number, string> = {
-  5: "bg-slate-900", 4: "bg-slate-900", 3: "bg-slate-500", 2: "bg-slate-300", 1: "bg-slate-300",
-};
+import SemaforoResenas from "@/components/portal/SemaforoResenas";
+import type { ResenaParaSemaforo } from "@/lib/semaforo";
 
 // Panel "Mi Rating en Google": la calificación mes a mes, qué falta para
 // subir (próximo escalón y cuánto pesa una mala reseña) y, si hay reseñas
@@ -25,10 +23,11 @@ export default function PanelRating({
   comercioId,
   ratingHero,
   resenasHero,
-  resenas,
   historico,
   resenasPorHora,
-  hayResenasDetalladas,
+  resenasSemaforo,
+  semaforoFuente,
+  ritmoMensual,
 }: {
   gbpConectado: boolean;
   diasConectado: number | null;
@@ -37,20 +36,17 @@ export default function PanelRating({
   comercioId: string;
   ratingHero: number | null;
   resenasHero: number;
-  resenas: ResenaCRM[];
   historico: MetricaMensual[];
+  /** Grilla día×hora de los últimos 7 días, coloreada por calificación. */
   resenasPorHora: ResenasPorHoraDia[];
-  /** Hay reseñas con fecha y hora (API de reseñas o cargadas a mano). */
-  hayResenasDetalladas: boolean;
+  /** Reseñas para el semáforo, de la más nueva a la más vieja. */
+  resenasSemaforo: ResenaParaSemaforo[];
+  /** "todas" (API de reseñas o cargadas a mano) o "google" (las públicas de la ficha). */
+  semaforoFuente: "todas" | "google";
+  /** Reseñas nuevas por mes en promedio (historial mensual). */
+  ritmoMensual: number;
 }) {
-  // Distribución de reseñas por estrella — para la barra 5★..1★ del panel
-  // "Mi Rating en Google". Sobre TODAS las reseñas conocidas (no solo las
-  // pendientes), igual que resumenResenas en el panel de Resumen.
-  const distribucionEstrellas = ([5, 4, 3, 2, 1] as const).map((n) => ({
-    n,
-    cantidad: resenas.filter((r) => r.estrellas === n).length,
-  }));
-  const maxDistribucion = Math.max(...distribucionEstrellas.map((d) => d.cantidad), 1);
+  const hayReseñasPorHora = resenasPorHora.some((d) => d.horas.some((c) => c.rating !== null));
 
   return (
     <>
@@ -122,37 +118,25 @@ export default function PanelRating({
               <RatingSerieChart historico={historico} />
             </div>
           )}
-          <ObjetivosRating rating={ratingHero} total={resenasHero} />
+          <ObjetivosRating rating={ratingHero} total={resenasHero} ritmoMensual={ritmoMensual} />
         </>
       )}
 
-      {/* Necesita la hora de cada reseña: sin API de reseñas (ni carga a
-          mano) sería un gráfico vacío para siempre. */}
-      {hayResenasDetalladas && (
+      {/* Semáforo: buenas / medias / malas, con aviso si hay una mala. */}
+      {resenasSemaforo.length > 0 && (
+        <div className="mb-4">
+          <SemaforoResenas resenas={resenasSemaforo} fuente={semaforoFuente} />
+        </div>
+      )}
+
+      {/* Mapa por hora en colores: solo si alguna reseña cayó en los últimos
+          7 días — si no, es una grilla vacía. */}
+      {hayReseñasPorHora && (
         <div className="mb-4">
           <RatingPorHoraChart dias={resenasPorHora} />
         </div>
       )}
 
-      {resenas.length > 0 && (
-        <Card variant="glass">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cómo vienen tus reseñas</p>
-          <div className="mt-3 flex flex-col gap-2">
-            {distribucionEstrellas.map((d) => (
-              <div key={d.n} className="flex items-center gap-2">
-                <span className="w-7 shrink-0 text-xs text-slate-500">{d.n}★</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={`h-full rounded-full ${COLOR_ESTRELLA[d.n]}`}
-                    style={{ width: `${Math.max(d.cantidad ? 4 : 0, (d.cantidad / maxDistribucion) * 100)}%` }}
-                  />
-                </div>
-                <span className="w-6 shrink-0 text-right text-xs tabular-nums text-slate-600">{d.cantidad}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </>
   );
 }
@@ -160,11 +144,22 @@ export default function PanelRating({
 // "Qué te falta para subir": dos cuentas sobre el rating y el total reales
 // de Google (ver lib/objetivos.ts). Aproximadas porque Google redondea el
 // promedio a un decimal.
-function ObjetivosRating({ rating, total }: { rating: number; total: number }) {
+function ObjetivosRating({
+  rating,
+  total,
+  ritmoMensual,
+}: {
+  rating: number;
+  total: number;
+  ritmoMensual: number;
+}) {
   const proximo = resenasParaProximaDecima(rating, total);
   const porCadaMala = cincoEstrellasPorCadaUna(rating);
+  // Meses para llegar al próximo escalón al ritmo de reseñas de siempre —
+  // en el mejor caso (todas de 5★): es un piso, no una promesa.
+  const meses = proximo && ritmoMensual >= 0.5 ? Math.ceil(proximo.faltan / ritmoMensual) : null;
   return (
-    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <Card variant="glass">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tu próximo escalón</p>
         {proximo ? (
@@ -184,6 +179,19 @@ function ObjetivosRating({ rating, total }: { rating: number; total: number }) {
           </>
         )}
       </Card>
+      {meses !== null && proximo && (
+        <Card variant="glass">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">A tu ritmo</p>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+            {meses > 24 ? "+2 años" : `${meses} mes${meses === 1 ? "" : "es"}`}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            para llegar a {proximo.objetivo.toFixed(1)}★ con tus ~{ritmoMensual.toFixed(0)} reseñas nuevas por mes, y
+            eso si todas fueran de 5★.{" "}
+            {meses > 6 ? "Para acortarlo: más clientes tocando el cartel." : ""}
+          </p>
+        </Card>
+      )}
       <Card variant="glass">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cuánto pesa una mala reseña</p>
         {porCadaMala !== null ? (
