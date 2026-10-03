@@ -37,6 +37,8 @@ export default function PanelResumen({
   modoTodos,
   resenasHoy,
   resenasNuevasMes,
+  tapsMes,
+  proyeccionMes,
   resenasNegativas,
   hayResenasDetalladas,
   horasSemana,
@@ -58,6 +60,11 @@ export default function PanelResumen({
   /** null = no hay forma de saberlo (sin place_id / sin API key). */
   resenasHoy: number | null;
   resenasNuevasMes: number;
+  /** Taps del mes en curso — para "reseñas por cada 10 taps". */
+  tapsMes: number;
+  /** Reseñas nuevas proyectadas a fin de mes (y las del mes pasado, si se
+   * conocen). null los primeros días o sin foto del mes en curso. */
+  proyeccionMes: { valor: number; mesPasado: number | null } | null;
   /** Reseñas de 3★ o menos — la métrica que dispara la sección de arriba. */
   resenasNegativas: number;
   /** Hay reseñas con texto y estrellas (API de reseñas o carga a mano). */
@@ -90,6 +97,11 @@ export default function PanelResumen({
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
   // total histórico vive en la pestaña Escaneos: acá, lo de esta semana.
   const tapsSemana = horasSemana.reduce((acc, dia) => acc + dia.horas.reduce((a, n) => a + n, 0), 0);
+  // Conversión del cartel: reseñas nuevas por cada 10 taps del mes. No
+  // toda reseña viene del cartel, así que es aproximada: solo con una base
+  // mínima de taps y si da menos reseñas que taps (si no, no dice nada).
+  const reseñasPor10Taps =
+    tapsMes >= 10 && resenasNuevasMes <= tapsMes ? (resenasNuevasMes / tapsMes) * 10 : null;
   return (
     <>
       {mensajeGoogle && (
@@ -180,6 +192,15 @@ export default function PanelResumen({
             />
           </div>
         )}
+        {reseñasPor10Taps !== null && (
+          <div className="min-w-[150px] max-w-[220px] flex-1">
+            <StatChip
+              icon={<IconStarChip size={17} className="text-slate-700" />}
+              value={reseñasPor10Taps.toFixed(1)}
+              label="reseñas por cada 10 taps este mes (aprox.)"
+            />
+          </div>
+        )}
       </div>
 
       {hayResenasDetalladas && (
@@ -224,6 +245,17 @@ export default function PanelResumen({
             label="Reseñas este mes"
           />
         </div>
+        {proyeccionMes && (
+          <div className="min-w-[150px] max-w-[220px] flex-1">
+            <StatChip
+              icon={<IconStarChip size={17} className="text-slate-700" />}
+              value={`≈ ${fmtNum(proyeccionMes.valor)}`}
+              label={`al cierre del mes, a este ritmo${
+                proyeccionMes.mesPasado !== null ? ` (mes pasado: ${fmtNum(proyeccionMes.mesPasado)})` : ""
+              }`}
+            />
+          </div>
+        )}
         {posicionCompetencia && (
           <div className="min-w-[150px] max-w-[220px] flex-1">
             <StatChip

@@ -14,6 +14,8 @@ import {
   getAudits,
   getResenas,
   resenasDeHoy,
+  getTapsMesActual,
+  fechaHoyCordoba,
   getBenchmarkMensual,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
@@ -22,6 +24,7 @@ import {
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { fetchResenasGooglePublicas } from "@/lib/places";
+import { grillaPorHora, type ResenaParaSemaforo } from "@/lib/semaforo";
 import { type LocalConResenasGoogle } from "@/components/portal/ResenasGoogle";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
 import { oauthVerificado } from "@/lib/google-oauth";
@@ -286,6 +289,33 @@ export default async function PortalPage({
   const resenasHoy =
     resenasHoyConDato.length > 0 ? resenasHoyConDato.reduce((acc, n) => acc + n, 0) : null;
 
+  // Taps del mes en curso (todos los locales del Resumen) — para "reseñas
+  // por cada 10 taps": cuánto convierte el cartel.
+  const tapsMes = (await Promise.all(localesDelResumen.map((u) => getTapsMesActual(u.id)))).reduce(
+    (acc, n) => acc + n,
+    0,
+  );
+
+  // Proyección de reseñas nuevas a fin de mes: el número del mes sale de la
+  // foto que saca el cron cada medianoche, así que cubre hasta ayer. Solo
+  // si esa foto es del mes en curso y ya pasaron unos días (antes, una
+  // proyección no dice nada).
+  const proyeccionMes = (() => {
+    const ahora = new Date();
+    const mesHoy = fechaHoyCordoba(ahora).slice(0, 7);
+    if (localesDelResumen.some((u) => metricaActual(u)?.mes !== mesHoy)) return null;
+    const dia = Number(fechaHoyCordoba(ahora).slice(8, 10));
+    if (dia < 6) return null;
+    const [anio, mes] = mesHoy.split("-").map(Number);
+    const diasDelMes = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+    const valor = Math.round((resenasNuevasMesTotal / (dia - 1)) * diasDelMes);
+    const anteriores = localesDelResumen.map((u) => metricaAnterior(u)?.resenasNuevas);
+    const mesPasado = anteriores.every((n) => typeof n === "number")
+      ? anteriores.reduce((acc: number, n) => acc + (n ?? 0), 0)
+      : null;
+    return { valor, mesPasado };
+  })();
+
   // "Reseñas negativas" y "Sugerencias repetidas" necesitan el texto y las
   // estrellas de cada reseña: solo existen con la API de reseñas de Google
   // o con reseñas cargadas a mano. Sin ninguna de las dos, no se muestran.
@@ -299,12 +329,28 @@ export default async function PortalPage({
     const porLocal = await Promise.all(
       localesDelResumen.map(async (u) => {
         const r = u.googlePlaceId ? await fetchResenasGooglePublicas(u.googlePlaceId) : null;
-        return r ? { nombre: u.nombre, ...r } : null;
+        return r ? { comercioId: u.id, nombre: u.nombre, ...r } : null;
       }),
     );
     const conDatos = porLocal.filter((x): x is LocalConResenasGoogle => x !== null);
     resenasGoogle = conDatos.length > 0 ? conDatos : null;
   }
+
+  // Semáforo y mapa por hora de "Mi Rating" (del local activo): con reseñas
+  // completas, sobre todas; si no, sobre las públicas que muestra Google.
+  const semaforoFuente: "todas" | "google" = hayResenasDetalladas ? "todas" : "google";
+  const resenasSemaforo: ResenaParaSemaforo[] = hayResenasDetalladas
+    ? resenas.map((r) => ({
+        estrellas: r.estrellas,
+        fecha: r.creadoEn ?? `${r.fecha}T12:00:00-03:00`,
+        cuando: new Date(`${r.fecha}T12:00:00`).toLocaleDateString("es-AR"),
+      }))
+    : (resenasGoogle?.find((l) => l.comercioId === activo.id)?.resenas ?? []).map((r) => ({
+        estrellas: r.estrellas,
+        fecha: r.fecha,
+        cuando: r.haceCuanto,
+      }));
+  const resenasPorHoraRating = hayResenasDetalladas ? resenasPorHora : grillaPorHora(resenasSemaforo);
 
   const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
   const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
@@ -391,6 +437,8 @@ export default async function PortalPage({
       modoTodos={modoTodos}
       resenasHoy={resenasHoy}
       resenasNuevasMes={resenasNuevasMesTotal}
+      tapsMes={tapsMes}
+      proyeccionMes={proyeccionMes}
       resenasNegativas={resenasNegativasTotal}
       hayResenasDetalladas={hayResenasDetalladas}
       horasSemana={horasSemanaCombinado}
@@ -472,10 +520,11 @@ export default async function PortalPage({
       comercioId={activo.id}
       ratingHero={ratingHero}
       resenasHero={resenasHero}
-      resenas={resenas}
       historico={activo.historico}
-      resenasPorHora={resenasPorHora}
-      hayResenasDetalladas={hayResenasDetalladas}
+      resenasPorHora={resenasPorHoraRating}
+      resenasSemaforo={resenasSemaforo}
+      semaforoFuente={semaforoFuente}
+      ritmoMensual={promedioResenasMensual}
     />
   );
 

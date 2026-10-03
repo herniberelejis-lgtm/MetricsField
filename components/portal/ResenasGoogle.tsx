@@ -22,6 +22,7 @@ const COLOR_BADGE: Record<number, string> = {
 };
 
 export interface LocalConResenasGoogle {
+  comercioId: string;
   nombre: string;
   resenas: ResenaGooglePublica[];
   urlFicha: string | null;
@@ -139,7 +140,7 @@ export default function ResenasGoogle({
         <p className="text-sm text-slate-500">Google todavía no muestra reseñas para tu ficha.</p>
       )}
       {locales.map((local) => (
-        <div key={local.nombre}>
+        <div key={local.comercioId}>
           {varios && <p className="mb-2 text-sm font-semibold text-slate-800">{local.nombre}</p>}
           <div className="space-y-3">
             {local.resenas.map((r, i) => (
