@@ -143,7 +143,10 @@ function TarjetaResena({
         </div>
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
           {"★".repeat(resena.estrellas)}
-          <span className="text-slate-200">{"★".repeat(5 - resena.estrellas)}</span>
+          {/* Estrellas vacías visibles también sobre el fondo oscuro (4★ se veía como 5★). */}
+          <span className={resena.estrellas >= 4 ? "text-slate-500" : "text-slate-300"}>
+            {"★".repeat(5 - resena.estrellas)}
+          </span>
         </span>
       </div>
 

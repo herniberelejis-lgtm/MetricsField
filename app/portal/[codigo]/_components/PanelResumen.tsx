@@ -7,7 +7,6 @@ import {
   StatChip,
   CalificacionGoogleCard,
   IconStarChip,
-  IconCrecimiento,
   IconEyeChip,
   IconPhoneChip,
   IconDirectionsChip,
@@ -15,10 +14,9 @@ import {
 import { IconSearch } from "@/components/portal/PortalShell";
 import SugerenciasRepetidas from "@/components/portal/SugerenciasRepetidas";
 import { businessProfileHabilitado } from "@/lib/gbp";
-import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
 import TapsPorHoraSemanaChart from "@/components/TapsPorHoraSemanaChart";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
-import { heroDeCalificacion, hrefSucursal, hrefTodos } from "../_lib";
+import { datoVisible, heroDeCalificacion, hrefSucursal, hrefTodos } from "../_lib";
 import SelectorSucursales from "./SelectorSucursales";
 
 // Panel "Resumen": de un vistazo, para abrir el portal y entender el estado
@@ -37,10 +35,8 @@ import SelectorSucursales from "./SelectorSucursales";
 export default function PanelResumen({
   mensajeGoogle,
   modoTodos,
-  totalTapsHistorico,
   resenasHoy,
   resenasNuevasMes,
-  resenasTotales,
   resenasNegativas,
   hayResenasDetalladas,
   horasSemana,
@@ -54,21 +50,14 @@ export default function PanelResumen({
   activoId,
   activoNombre,
   codigoAcceso,
-  diasConTaps,
-  labelsTaps,
-  nfcPorDia,
-  qrPorDia,
-  tieneSoporteQr,
   temasRecurrentes,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
   modoTodos: boolean;
-  totalTapsHistorico: number;
   /** null = no hay forma de saberlo (sin place_id / sin API key). */
   resenasHoy: number | null;
   resenasNuevasMes: number;
-  resenasTotales: number;
   /** Reseñas de 3★ o menos — la métrica que dispara la sección de arriba. */
   resenasNegativas: number;
   /** Hay reseñas con texto y estrellas (API de reseñas o carga a mano). */
@@ -95,14 +84,12 @@ export default function PanelResumen({
   activoId: string;
   activoNombre: string;
   codigoAcceso: string;
-  diasConTaps: string[];
-  labelsTaps: string[];
-  nfcPorDia: number[];
-  qrPorDia: number[];
-  tieneSoporteQr: boolean;
   temasRecurrentes: TerminoFrecuente[];
 }) {
   const hayVarios = ubicaciones.length > 1;
+  // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
+  // total histórico vive en la pestaña Escaneos: acá, lo de esta semana.
+  const tapsSemana = horasSemana.reduce((acc, dia) => acc + dia.horas.reduce((a, n) => a + n, 0), 0);
   return (
     <>
       {mensajeGoogle && (
@@ -178,8 +165,8 @@ export default function PanelResumen({
         <div className="min-w-[150px] max-w-[220px] flex-1">
           <StatChip
             icon={<IconWave size={18} className="text-slate-700" />}
-            value={fmtNum(totalTapsHistorico)}
-            label="Taps del cartel"
+            value={fmtNum(tapsSemana)}
+            label="Taps esta semana"
           />
         </div>
         {piezaMasUsada && (
@@ -199,9 +186,13 @@ export default function PanelResumen({
         <SugerenciasRepetidas temas={temasRecurrentes} apiHabilitada={resenasApiHabilitada()} />
       )}
 
-      <div className={hayResenasDetalladas ? "mt-4" : ""}>
-        <TapsPorHoraSemanaChart dias={horasSemana} />
-      </div>
+      {/* Sin taps en la semana, el mapa por hora es una grilla vacía: el
+          "0 taps esta semana" de arriba ya lo dice. */}
+      {tapsSemana > 0 && (
+        <div className={hayResenasDetalladas ? "mt-4" : ""}>
+          <TapsPorHoraSemanaChart dias={horasSemana} />
+        </div>
+      )}
 
       <a
         href="#resenas"
@@ -231,13 +222,6 @@ export default function PanelResumen({
             icon={<IconStarChip size={17} className="text-slate-700" />}
             value={fmtNum(resenasNuevasMes)}
             label="Reseñas este mes"
-          />
-        </div>
-        <div className="min-w-[150px] max-w-[220px] flex-1">
-          <StatChip
-            icon={<IconCrecimiento size={18} className="text-slate-700" />}
-            value={fmtNum(resenasTotales)}
-            label="Reseñas totales"
           />
         </div>
         {posicionCompetencia && (
@@ -276,13 +260,13 @@ export default function PanelResumen({
                   deltaRating={heroData.deltaRating}
                   deltaResenas={heroData.deltaResenas}
                   nombre={s.nombre}
-                  subtitulo={`${s.zona}${activa ? " · viendo ahora" : ""}`}
+                  subtitulo={[datoVisible(s.zona), activa ? "viendo ahora" : null].filter(Boolean).join(" · ")}
                   hero={activa}
                 />
               ) : (
                 <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
-                  <p className="text-xs text-slate-500">{s.zona}</p>
+                  {datoVisible(s.zona) && <p className="text-xs text-slate-500">{datoVisible(s.zona)}</p>}
                   <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
                 </div>
               );
@@ -349,27 +333,6 @@ export default function PanelResumen({
         </>
       )}
 
-      {/* TIER 4 — NFC vs. QR por día: la más barata de las cuatro secciones
-          (el total de taps y su patrón horario ya se contaron en el tier 1)
-          — esto es el desglose por canal, día a día, para el final. */}
-      <SectionHeading title="Tu cartel" subtitle="taps por día, NFC vs. QR" />
-
-      {diasConTaps.length > 0 ? (
-        <TapsPorSoporteChart
-          labels={labelsTaps}
-          fechas={diasConTaps}
-          nfc={nfcPorDia}
-          qr={qrPorDia}
-          mostrarQr={tieneSoporteQr}
-          codigo={codigoAcceso}
-          comercioId={activoId}
-        />
-      ) : (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-800">Escaneos</p>
-          <p className="mt-2 text-sm text-slate-500">Todavía no hay actividad del cartel.</p>
-        </div>
-      )}
     </>
   );
 }

@@ -88,15 +88,19 @@ function FilaMes({
   cols: number;
   onToggle: () => void;
 }) {
+  // Solo se despliega un mes que tenga temas para mostrar: sin texto de
+  // reseñas (API de reseñas no aprobada, nada cargado a mano) el panel
+  // abierto quedaría vacío.
+  const expandible = Boolean(detalle && detalle.terminos.length > 0);
   return (
     <>
       <tr
-        className="cursor-pointer border-b border-slate-100 hover:bg-slate-50"
-        onClick={onToggle}
-        aria-expanded={open}
+        className={`border-b border-slate-100 ${expandible ? "cursor-pointer hover:bg-slate-50" : ""}`}
+        onClick={expandible ? onToggle : undefined}
+        aria-expanded={expandible ? open : undefined}
       >
         <td className="px-4 py-2.5 font-medium text-slate-800">
-          <span className="mr-1.5 inline-block text-slate-400">{open ? "▾" : "▸"}</span>
+          {expandible && <span className="mr-1.5 inline-block text-slate-400">{open ? "▾" : "▸"}</span>}
           {fmtMes(h.mes)}
         </td>
         <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasNuevas)}</td>
@@ -105,7 +109,7 @@ function FilaMes({
         {mostrarVisitas && <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.visitasPerfil)}</td>}
         {esPremium && <td className="px-4 py-2.5 tabular-nums">{fmtNum(citasIA(h))}</td>}
       </tr>
-      {open && (
+      {open && expandible && (
         <tr className="border-b border-slate-100 bg-slate-50/60">
           <td colSpan={cols} className="px-4 py-4">
             <div className="space-y-3">
@@ -113,7 +117,7 @@ function FilaMes({
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                   Temas más repetidos este mes
                 </p>
-                {detalle && detalle.terminos.length > 0 ? (
+                {detalle && detalle.terminos.length > 0 && (
                   <>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {detalle.terminos.map((t) => (
@@ -131,17 +135,8 @@ function FilaMes({
                       {detalle.nResenasTexto === 1 ? "" : "s"} y feedback con texto de ese mes.
                     </p>
                   </>
-                ) : (
-                  <p className="mt-2 text-sm text-slate-500">
-                    No hay suficiente texto de reseñas ni feedback este mes para
-                    detectar temas.
-                  </p>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
-                Horarios y empleados mencionados: no disponibles todavía con los
-                datos que se registran hoy.
-              </p>
             </div>
           </td>
         </tr>
