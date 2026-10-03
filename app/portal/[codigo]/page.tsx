@@ -32,6 +32,7 @@ import PortalGateGoogle from "./_components/PortalGateGoogle";
 import { metricaActual, metricaAnterior } from "@/lib/types";
 import { fmtMes } from "@/lib/format";
 import { recomendacionDelMes } from "@/lib/recomendacion";
+import { ritmoMensual, sanearHistorico } from "@/lib/historico";
 import { waUrl } from "@/lib/whatsapp";
 import { PlanBadge } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
@@ -72,8 +73,11 @@ export default async function PortalPage({
   const ip = ipDelRequest(await headers());
   if (!(await permitir(`portal-codigo:${ip}`, 20, 10 * 60_000))) notFound();
 
-  const c = await getClientePorCodigo(codigo);
-  if (!c || c.estado === "baja") notFound();
+  const crudo = await getClientePorCodigo(codigo);
+  if (!crudo || crudo.estado === "baja") notFound();
+  // El cliente ve el histórico saneado: un mes que leyó otra ficha de
+  // Google no puede ensuciar promedios, tabla ni gráficos (lib/historico.ts).
+  const c = { ...crudo, historico: sanearHistorico(crudo.historico) };
 
   // Gate de Google: solo si el ADMIN cargó al menos un email autorizado
   // para este comercio (portal_usuarios) — sin ninguno, el portal sigue
@@ -97,7 +101,10 @@ export default async function PortalPage({
   // clic por cada local. Elegir un local puntual (`?sucursal=<id>`,
   // cualquiera, incluida la cuenta raíz) hace drill-down a su detalle,
   // exactamente como antes.
-  const sucursales = await getSucursales(c.id);
+  const sucursales = (await getSucursales(c.id)).map((s) => ({
+    ...s,
+    historico: sanearHistorico(s.historico),
+  }));
   const ubicaciones = [c, ...sucursales];
   const modoTodos = sucursales.length > 0 && (!sucursalParam || sucursalParam === "todos");
   const activo = modoTodos
@@ -309,7 +316,10 @@ export default async function PortalPage({
     const [anio, mes] = mesHoy.split("-").map(Number);
     const diasDelMes = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
     const valor = Math.round((resenasNuevasMesTotal / (dia - 1)) * diasDelMes);
-    const anteriores = localesDelResumen.map((u) => metricaAnterior(u)?.resenasNuevas);
+    const anteriores = localesDelResumen.map((u) => {
+      const p = metricaAnterior(u);
+      return p && !p.nuevasSinDato ? p.resenasNuevas : undefined;
+    });
     const mesPasado = anteriores.every((n) => typeof n === "number")
       ? anteriores.reduce((acc: number, n) => acc + (n ?? 0), 0)
       : null;
@@ -360,12 +370,9 @@ export default async function PortalPage({
     ? ubicaciones.some((u) => Boolean(u.googleConectadoEn))
     : gbpConectado;
 
-  // Promedio de reseñas nuevas por mes, sobre todo el histórico cargado —
-  // para "Evolución mes a mes", así el número no depende de mirar mes por
-  // mes a mano.
-  const promedioResenasMensual = activo.historico.length > 0
-    ? activo.historico.reduce((acc, h) => acc + h.resenasNuevas, 0) / activo.historico.length
-    : 0;
+  // Ritmo de reseñas nuevas por mes: solo meses completos y con dato (el
+  // mes en curso y el primero medido no cuentan — ver lib/historico.ts).
+  const ritmo = ritmoMensual(activo.historico, fechaHoyCordoba().slice(0, 7));
 
   const {
     rating: ratingHero,
@@ -524,7 +531,7 @@ export default async function PortalPage({
       resenasPorHora={resenasPorHoraRating}
       resenasSemaforo={resenasSemaforo}
       semaforoFuente={semaforoFuente}
-      ritmoMensual={promedioResenasMensual}
+      ritmoMensual={ritmo?.promedio ?? 0}
     />
   );
 
@@ -557,7 +564,7 @@ export default async function PortalPage({
       checklistHechos={checklistHechos}
       checklistPct={checklistPct}
       recomendacion={recomendacion}
-      promedioResenasMensual={promedioResenasMensual}
+      ritmo={ritmo}
       detalleMensual={detalleMensual}
     />
   );
