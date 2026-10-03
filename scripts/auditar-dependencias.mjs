@@ -14,6 +14,12 @@ const EXCEPCIONES = {
   // createSignedData + sign) con nuestro propio certificado; nunca verifica
   // una firma recibida de afuera. Sin parche publicado al 02/10/2026.
   "GHSA-86w9-cpqp-85rv": "2026-12-31",
+  // braces (lo traen tailwindcss y eslint-config-next, vía micromatch /
+  // fast-glob): caída por stack con patrones de glob muy anidados. Solo
+  // corre en build/lint, sobre los patrones de NUESTRA configuración
+  // (tailwind.config, eslint) — nunca con input de un usuario, y no llega
+  // al bundle de producción. Sin versión corregida al 03/10/2026.
+  "GHSA-vfj7-8cjw-p6xm": "2026-12-31",
 };
 
 let salida;

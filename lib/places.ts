@@ -104,3 +104,88 @@ export async function searchGooglePlace(query: string): Promise<SearchGooglePlac
     })),
   };
 }
+
+// ---------- Reseñas públicas (las que Google muestra en la ficha) ----------
+// Hasta que Google apruebe la API de reseñas de Business Profile (que trae
+// TODAS, con fecha exacta y permite responder), la única fuente automática
+// son las que expone Places: hasta 5 por ficha, elegidas por Google ("más
+// relevantes", no siempre las más nuevas).
+//
+// Términos de Google Maps Platform: este contenido NO se guarda en la base —
+// se pide en vivo (con caché HTTP de 1 hora, que además ahorra costo: el
+// campo `reviews` es de la SKU más cara de Places) y se muestra con el
+// nombre/link de cada autor y la atribución a Google.
+
+export interface ResenaGooglePublica {
+  autor: string;
+  autorUrl: string | null;
+  estrellas: 1 | 2 | 3 | 4 | 5;
+  texto: string;
+  /** "hace 2 días", tal cual lo da Google. */
+  haceCuanto: string;
+  /** ISO; para ordenar de la más nueva a la más vieja. */
+  fecha: string | null;
+  /** Link a esa reseña en Google Maps (para responderla desde ahí). */
+  urlResena: string | null;
+}
+
+export interface ResenasGooglePublicas {
+  resenas: ResenaGooglePublica[];
+  /** Ficha en Google Maps — "ver todas tus reseñas". */
+  urlFicha: string | null;
+}
+
+function soloHttps(url: string | undefined): string | null {
+  return url && url.startsWith("https://") ? url : null;
+}
+
+export async function fetchResenasGooglePublicas(
+  placeId: string,
+): Promise<ResenasGooglePublicas | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey || !placeId) return null;
+
+  const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=es`, {
+    headers: {
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "reviews,googleMapsUri",
+    },
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) {
+    console.error(`Places API (reseñas) respondió ${res.status} para place_id ${placeId}`);
+    return null;
+  }
+
+  const data = (await res.json()) as {
+    googleMapsUri?: string;
+    reviews?: {
+      rating?: number;
+      text?: { text?: string };
+      originalText?: { text?: string };
+      relativePublishTimeDescription?: string;
+      publishTime?: string;
+      googleMapsUri?: string;
+      authorAttribution?: { displayName?: string; uri?: string };
+    }[];
+  };
+
+  const resenas: ResenaGooglePublica[] = [];
+  for (const r of data.reviews ?? []) {
+    const estrellas = Math.round(r.rating ?? 0);
+    if (estrellas < 1 || estrellas > 5) continue;
+    resenas.push({
+      autor: r.authorAttribution?.displayName || "Cliente de Google",
+      autorUrl: soloHttps(r.authorAttribution?.uri),
+      estrellas: estrellas as 1 | 2 | 3 | 4 | 5,
+      // El texto original (en el idioma en que la escribieron), no la
+      // traducción automática de Google.
+      texto: r.originalText?.text ?? r.text?.text ?? "",
+      haceCuanto: r.relativePublishTimeDescription ?? "",
+      fecha: r.publishTime ?? null,
+      urlResena: soloHttps(r.googleMapsUri),
+    });
+  }
+  resenas.sort((a, b) => (b.fecha ?? "").localeCompare(a.fecha ?? ""));
+  return { resenas, urlFicha: soloHttps(data.googleMapsUri) };
+}
