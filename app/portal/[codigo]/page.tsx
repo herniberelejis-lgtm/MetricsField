@@ -21,6 +21,8 @@ import {
 } from "@/lib/db";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
+import { fetchResenasGooglePublicas } from "@/lib/places";
+import { type LocalConResenasGoogle } from "@/components/portal/ResenasGoogle";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
 import { oauthVerificado } from "@/lib/google-oauth";
 import PortalGateGoogle from "./_components/PortalGateGoogle";
@@ -292,6 +294,21 @@ export default async function PortalPage({
   // o con reseñas cargadas a mano. Sin ninguna de las dos, no se muestran.
   const hayResenasDetalladas = resenasApiHabilitada() || resenasCombinadas.length > 0;
 
+  // Sin reseñas detalladas, la pestaña Reseñas muestra las públicas de
+  // Google (Places, hasta 5 por local, en vivo — no se guardan). Solo se
+  // piden en ese caso: el campo `reviews` es la SKU más cara de Places.
+  let resenasGoogle: LocalConResenasGoogle[] | null = null;
+  if (!hayResenasDetalladas) {
+    const porLocal = await Promise.all(
+      localesDelResumen.map(async (u) => {
+        const r = u.googlePlaceId ? await fetchResenasGooglePublicas(u.googlePlaceId) : null;
+        return r ? { nombre: u.nombre, ...r } : null;
+      }),
+    );
+    const conDatos = porLocal.filter((x): x is LocalConResenasGoogle => x !== null);
+    resenasGoogle = conDatos.length > 0 ? conDatos : null;
+  }
+
   const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
   const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
   const resumenResenasCombinado = calcularResumenResenas(resenasCombinadas);
@@ -433,6 +450,8 @@ export default async function PortalPage({
       autoResponderPositivas={activo.autoResponderPositivas}
       autoResponderUmbral={activo.autoResponderUmbral}
       tonoMarca={c.tonoMarca}
+      hayResenasDetalladas={hayResenasDetalladas}
+      resenasGoogle={resenasGoogle}
     />
   );
 
@@ -476,8 +495,8 @@ export default async function PortalPage({
       deltaResenasHero={deltaResenasHero}
       resenas={resenas}
       historico={activo.historico}
-      zona={activo.zona}
       resenasPorHora={resenasPorHora}
+      hayResenasDetalladas={hayResenasDetalladas}
     />
   );
 

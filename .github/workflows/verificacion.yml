@@ -50,8 +50,11 @@ jobs:
           DATABASE_URL: postgres://build:build@localhost:5432/build
           ADMIN_PASSWORD: build-no-se-usa
 
+      # Igual que `npm audit --audit-level=high`, pero con excepciones
+      # explícitas y con vencimiento (ver el script) para avisos sin parche
+      # que verificamos que no nos afectan.
       - name: Vulnerabilidades en dependencias
-        run: npm audit --audit-level=high
+        run: node scripts/auditar-dependencias.mjs
 
   # Prueba cruzada de permisos contra la app de verdad: build de producción
   # + Postgres con db/seed.sql (datos sintéticos). Comercio A contra B,

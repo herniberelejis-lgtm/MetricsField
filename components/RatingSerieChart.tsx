@@ -13,10 +13,8 @@ import type { MetricaMensual } from "@/lib/types";
 // de un salto exagerado por un eje recortado.
 export default function RatingSerieChart({
   historico,
-  zona,
 }: {
   historico: MetricaMensual[];
-  zona: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const n = historico.length;
@@ -42,7 +40,7 @@ export default function RatingSerieChart({
   return (
     <ChartCard
       variant="glass"
-      title={`Calificación en ${zona}`}
+      title="Tu calificación en Google"
       subtitle={`Últimos ${n} mes${n === 1 ? "" : "es"}`}
       table={table}
     >
@@ -51,7 +49,7 @@ export default function RatingSerieChart({
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
           role="img"
-          aria-label={`Calificación en ${zona}, últimos ${n} meses`}
+          aria-label={`Tu calificación en Google, últimos ${n} meses`}
         >
           {[1, 2, 3, 4, 5].map((v) => (
             <line key={`grid-${v}`} x1={M.left} x2={W - M.right} y1={y(v)} y2={y(v)} stroke={INK.grid} strokeWidth={1} />

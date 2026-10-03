@@ -28,8 +28,8 @@ export default function PanelRating({
   deltaResenasHero,
   resenas,
   historico,
-  zona,
   resenasPorHora,
+  hayResenasDetalladas,
 }: {
   gbpConectado: boolean;
   diasConectado: number | null;
@@ -44,8 +44,9 @@ export default function PanelRating({
   deltaResenasHero: number | null;
   resenas: ResenaCRM[];
   historico: MetricaMensual[];
-  zona: string;
   resenasPorHora: ResenasPorHoraDia[];
+  /** Hay reseñas con fecha y hora (API de reseñas o cargadas a mano). */
+  hayResenasDetalladas: boolean;
 }) {
   // "Al instalar": la primera foto mensual que tenemos (arranque del
   // servicio) — si todavía no hay ni un mes cargado, no hay piso con qué
@@ -137,7 +138,7 @@ export default function PanelRating({
         <>
           {historico.length > 0 && (
             <div className="mb-4">
-              <RatingSerieChart historico={historico} zona={zona} />
+              <RatingSerieChart historico={historico} />
             </div>
           )}
 
@@ -166,9 +167,13 @@ export default function PanelRating({
         </>
       )}
 
-      <div className="mb-4">
-        <RatingPorHoraChart dias={resenasPorHora} />
-      </div>
+      {/* Necesita la hora de cada reseña: sin API de reseñas (ni carga a
+          mano) sería un gráfico vacío para siempre. */}
+      {hayResenasDetalladas && (
+        <div className="mb-4">
+          <RatingPorHoraChart dias={resenasPorHora} />
+        </div>
+      )}
 
       {resenas.length > 0 && (
         <Card variant="glass">
