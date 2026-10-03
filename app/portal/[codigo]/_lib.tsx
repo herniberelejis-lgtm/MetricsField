@@ -20,6 +20,13 @@ export function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
 }
 
+/** Rubro/zona para mostrar: "Otro"/"Otra" son los valores por defecto del
+ * alta y no dicen nada, así que se omiten (null). */
+export function datoVisible(valor: string | null | undefined): string | null {
+  const v = (valor ?? "").trim();
+  return v && !/^otr[oa]$/i.test(v) ? v : null;
+}
+
 // Link para elegir un local puntual: siempre manda al Resumen de ESE local
 // (hash incluido) — esta es una page.tsx server component, así que cada
 // click es una navegación de página completa; sin el hash, PortalShell

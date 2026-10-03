@@ -1,7 +1,6 @@
 import { citasIA, type AuditGEOResultado, type MetricaMensual } from "@/lib/types";
 import { fmtMes, fmtNum, delta } from "@/lib/format";
-import { Card, Kpi, Stars, Sparkline, SectionHeading, IconCheck, IconX } from "@/components/ui";
-import TendenciaResenasChart from "@/components/TendenciaResenasChart";
+import { Card, Kpi, Sparkline, SectionHeading, IconCheck, IconX } from "@/components/ui";
 import EvolucionMensual, { type DetalleMes } from "@/components/EvolucionMensual";
 import { businessProfileHabilitado } from "@/lib/gbp";
 
@@ -33,8 +32,13 @@ export default function PanelMes({
   promedioResenasMensual: number;
   detalleMensual: Record<string, DetalleMes>;
 }) {
-  const dResenas = delta(m?.resenasNuevas ?? 0, prev?.resenasNuevas ?? 0);
-  const dCitas = delta(citasIA(m), citasIA(prev));
+  // Mes pasado vs el anterior a ese (los dos completos — el mes en curso
+  // todavía no terminó, compararlo engaña los primeros días).
+  const antePrev = historico.length >= 3 ? historico[historico.length - 3] : undefined;
+  const dMesPasado = delta(prev?.resenasNuevas ?? 0, antePrev?.resenasNuevas ?? 0);
+  const mejorMes = historico.length >= 2
+    ? historico.reduce((mejor, h) => (h.resenasNuevas > mejor.resenasNuevas ? h : mejor), historico[0])
+    : null;
   // Visitas / llamadas / "cómo llegar" son de Business Profile: ocultas
   // hasta que Google apruebe esa API (ver lib/gbp.ts).
   const conBusinessProfile = businessProfileHabilitado();
@@ -56,61 +60,61 @@ export default function PanelMes({
         </Card>
       ) : (
         <>
+          {/* "Reseñas este mes" ya está en el Resumen y la calificación mes a
+              mes en Mi Rating: acá va la comparación con meses anteriores,
+              que no está en ningún otro lado. */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-            <Kpi
-              variant="glass"
-              label="Reseñas nuevas"
-              value={fmtNum(m.resenasNuevas)}
-              hint={`total ${fmtNum(m.resenasTotal)}`}
-              delta={
-                prev
-                  ? {
-                      dir: dResenas.dir,
-                      text: `${dResenas.valor >= 0 ? "+" : ""}${dResenas.valor} vs mes previo`,
-                      good: dResenas.dir === "up",
-                    }
-                  : undefined
-              }
-            />
+            {prev && (
+              <Kpi
+                variant="glass"
+                label={`Mes pasado · ${fmtMes(prev.mes)}`}
+                value={fmtNum(prev.resenasNuevas)}
+                hint="reseñas nuevas"
+                delta={
+                  antePrev
+                    ? {
+                        dir: dMesPasado.dir,
+                        text: `${dMesPasado.valor >= 0 ? "+" : ""}${dMesPasado.valor} vs ${fmtMes(antePrev.mes)}`,
+                        good: dMesPasado.dir === "up",
+                      }
+                    : undefined
+                }
+              />
+            )}
+            {historico.length >= 2 && (
+              <Kpi
+                variant="glass"
+                label="Promedio por mes"
+                value={promedioResenasMensual.toFixed(1)}
+                hint="reseñas nuevas"
+              />
+            )}
+            {mejorMes && (
+              <Kpi
+                variant="glass"
+                label="Tu mejor mes"
+                value={fmtNum(mejorMes.resenasNuevas)}
+                hint={`reseñas nuevas en ${fmtMes(mejorMes.mes)}`}
+              />
+            )}
             {conBusinessProfile && (
               <Kpi variant="glass" label="Visitas al perfil" value={fmtNum(m.visitasPerfil)} hint={`${fmtNum(m.llamadas)} llamadas`} />
             )}
-            {(mostrarIA || conBusinessProfile) && (
-            <Kpi
-              variant="glass"
-              label={mostrarIA ? "Citaciones en IA" : "Clics cómo llegar"}
-              value={fmtNum(mostrarIA ? citasIA(m) : m.clicsComoLlegar)}
-              hint={mostrarIA ? "ChatGPT · Copilot · Perplexity" : undefined}
-              delta={
-                mostrarIA && prev
-                  ? {
-                      dir: dCitas.dir,
-                      text: `${dCitas.valor >= 0 ? "+" : ""}${dCitas.valor} vs mes previo`,
-                      good: dCitas.dir === "up",
-                    }
-                  : undefined
-              }
-            />
+            {conBusinessProfile && (
+              <Kpi variant="glass" label="Clics cómo llegar" value={fmtNum(m.clicsComoLlegar)} />
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card variant="glass">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">Reseñas acumuladas</span>
-                <Stars rating={m.ratingPromedio} mono />
-              </div>
-              <Sparkline values={historico.map((h) => h.resenasTotal)} width={280} height={60} mono />
-            </Card>
-            {conBusinessProfile && (
+          {conBusinessProfile && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card variant="glass">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-700">Visitas al perfil</span>
                 </div>
                 <Sparkline values={historico.map((h) => h.visitasPerfil)} width={280} height={60} mono />
               </Card>
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
 
@@ -145,7 +149,9 @@ export default function PanelMes({
         </Card>
       )}
 
-      {checklistLength > 0 && (
+      {/* Checklist interno de SEO local que tilda el equipo: con 0 tareas
+          hechas, un "0%" no le dice nada útil al cliente. */}
+      {checklistLength > 0 && checklistHechos > 0 && (
         <Card variant="glass" className="mt-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-slate-700">Ficha de Google optimizada</p>
@@ -171,17 +177,8 @@ export default function PanelMes({
         <>
           <SectionHeading
             title="Evolución mes a mes"
-            subtitle={`Promedio: ${promedioResenasMensual.toFixed(1)} reseñas nuevas por mes`}
+            subtitle="reseñas nuevas, total y calificación de cada mes"
           />
-          {historico.length >= 2 && (
-            <div className="mb-4">
-              <TendenciaResenasChart
-                labels={historico.map((h) => fmtMes(h.mes))}
-                totales={historico.map((h) => h.resenasTotal)}
-                ratings={historico.map((h) => h.ratingPromedio)}
-              />
-            </div>
-          )}
           {Object.values(detalleMensual).some((d) => d.terminos.length > 0) && (
             <p className="mb-2 text-xs text-slate-500">Tocá un mes para ver el detalle de ese período.</p>
           )}
