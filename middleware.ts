@@ -27,6 +27,37 @@ import { cookiePasswordValida, leerCookieSesionGoogle, loginConPasswordPermitido
 
 const PROTEGIDAS = /^\/admin(\/|$)/;
 
+// La landing de venta (public/landing/, servida en la raíz de
+// metricsfield.com y www vía rewrite en next.config.ts) es HTML estático:
+// sus <script src> no llevan nonce, y con 'strict-dynamic' el navegador
+// ignora 'self' y los bloquea — pasó desde la CSP con nonce (#108): se
+// apagaron el mundo animado, el panel demo y el simulador sin que nada
+// avisara. Para ella: scripts solo del propio dominio (sin inline, sin
+// nonce) y videos como blob: (scroll-world.js baja cada clip con fetch y
+// lo reproduce desde un object URL).
+const HOSTS_LANDING = new Set(["metricsfield.com", "www.metricsfield.com"]);
+
+function esLanding(req: NextRequest): boolean {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/landing/")) return true;
+  const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  return pathname === "/" && HOSTS_LANDING.has(host);
+}
+
+const CSP_LANDING = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "media-src 'self' blob: data:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
+
 function construirCsp(nonce: string): string {
   return [
     "default-src 'self'",
@@ -57,7 +88,7 @@ export async function middleware(req: NextRequest) {
   // nonce ahí, 'unsafe-inline' sí se aplica — inyección de ESTILOS es un
   // riesgo bajo comparado con scripts, que sí quedan estrictos.
   const nonce = crypto.randomUUID();
-  const csp = construirCsp(nonce);
+  const csp = esLanding(req) ? CSP_LANDING : construirCsp(nonce);
 
   const headersConNonce = new Headers(req.headers);
   headersConNonce.set("x-nonce", nonce);
