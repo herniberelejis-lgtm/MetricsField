@@ -119,7 +119,19 @@ export default async function PortalPage({
   // refresh token vence de verdad cada ~7 días — con la verificación hecha,
   // este aviso ya no aplica nunca, sin importar cuántos días pasaron.
   const gbpPorVencer = !oauthVerificado() && diasConectado !== null && diasConectado >= 6;
-  const mensajeGoogle = google ? MENSAJE_GOOGLE[google] : null;
+  // Sin la API de Business Profile aprobada, "en un rato vas a ver visitas
+  // y llamadas" sería falso: la conexión queda hecha, los datos llegan cuando
+  // Google la habilite.
+  const mensajeGoogle =
+    google === "conectado" && !businessProfileHabilitado()
+      ? {
+          texto:
+            "Conectaste tu cuenta de Google. Las visitas y llamadas de tu ficha van a aparecer acá apenas Google habilite la integración.",
+          tono: "ok" as const,
+        }
+      : google
+        ? MENSAJE_GOOGLE[google]
+        : null;
 
   const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark, resenasPorHora] =
     await Promise.all([
@@ -583,15 +595,15 @@ export default async function PortalPage({
         .filter(Boolean)
         .join(" · ")}
       planBadge={<PlanBadge plan={c.plan} mono />}
-      google={
-        conBusinessProfile
-          ? {
-              conectado: gbpConectado,
-              conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
-              perfilPanelId: "rating",
-            }
-          : undefined
-      }
+      // "Conectar con Google" siempre visible (celular y compu), aunque la
+      // API de Business Profile todavía no esté aprobada: la conexión queda
+      // hecha y las visitas/llamadas aparecen solas el día que se prenda
+      // GOOGLE_BUSINESS_PROFILE_HABILITADO.
+      google={{
+        conectado: gbpConectado,
+        conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
+        perfilPanelId: "rating",
+      }}
       whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
       prioridades={prioridades}
       nav={nav}
