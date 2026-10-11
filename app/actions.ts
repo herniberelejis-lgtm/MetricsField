@@ -443,33 +443,71 @@ export async function accionActualizarResena(fd: FormData): Promise<void> {
 
 // ---------- Competencia ----------
 
+/** Un Place ID que arranca con "_" o "-" está cortado: el doble clic para
+ * copiarlo selecciona solo hasta el guión y deja afuera el "ChIJ…" del
+ * principio (pasó con un competidor: Google respondía 400 y en el portal
+ * quedaba una fila sin datos sin que nadie se enterara). */
+function placeIdCortado(placeId: string): boolean {
+  return /^[-_]/.test(placeId);
+}
+
+/** Sincroniza un competidor contra Places sin cortar el guardado si falla. */
+async function sincronizarCompetidorSeguro(id: number): Promise<boolean> {
+  try {
+    return await db.sincronizarCompetidor(id);
+  } catch {
+    return false;
+  }
+}
+
 export async function accionCrearCompetidor(fd: FormData): Promise<void> {
   await requireAdmin();
   const comercioId = str(fd, "comercioId");
+  const placeId = str(fd, "googlePlaceId");
+  if (placeId && placeIdCortado(placeId)) {
+    redirect(`/admin/clientes/${comercioId}/competencia?error=place-id-cortado`);
+  }
   const competidor = await db.crearCompetidor(comercioId, {
     nombre: str(fd, "nombre"),
     rating: fd.get("rating") ? num(fd, "rating") : null,
     totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
-    googlePlaceId: str(fd, "googlePlaceId") || null,
+    googlePlaceId: placeId || null,
   });
   // Si vino con place_id, traemos el rating/reseñas reales de una — así no
   // hay que esperar al cron de mañana para ver el primer dato automático.
-  if (competidor.googlePlaceId) await db.sincronizarCompetidor(competidor.id);
+  // Si Google lo rechaza, se avisa en la página en vez de quedar escondido.
+  const sincronizado = competidor.googlePlaceId ? await sincronizarCompetidorSeguro(competidor.id) : true;
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/competencia`);
+  redirect(`/admin/clientes/${comercioId}/competencia${sincronizado ? "" : "?error=sync-competidor"}`);
 }
 
 export async function accionActualizarCompetidor(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = Number(fd.get("id"));
   const comercioId = str(fd, "comercioId");
+  const placeId = str(fd, "googlePlaceId");
+  if (placeId && placeIdCortado(placeId)) {
+    redirect(`/admin/clientes/${comercioId}/competencia?error=place-id-cortado`);
+  }
+  const antes = (await db.getCompetidores(comercioId)).find((c) => c.id === id);
+  // "Cambiar Place ID" no manda calificación ni reseñas: sin el campo en el
+  // formulario se dejan como están (undefined), no se pisan con vacío.
   await db.actualizarCompetidor(id, {
-    rating: fd.get("rating") ? num(fd, "rating") : null,
-    totalResenas: fd.get("totalResenas") ? Math.round(num(fd, "totalResenas")) : null,
-    googlePlaceId: str(fd, "googlePlaceId") || null,
+    rating: !fd.has("rating") ? undefined : fd.get("rating") ? num(fd, "rating") : null,
+    totalResenas: !fd.has("totalResenas")
+      ? undefined
+      : fd.get("totalResenas")
+        ? Math.round(num(fd, "totalResenas"))
+        : null,
+    googlePlaceId: placeId || null,
   });
+  // Place ID nuevo (o que nunca trajo datos): se sincroniza en el momento y,
+  // si Google lo rechaza, la página lo dice.
+  const hayQueSincronizar =
+    Boolean(placeId) && (placeId !== antes?.googlePlaceId || (antes?.rating === null && antes?.totalResenas === null));
+  const sincronizado = hayQueSincronizar ? await sincronizarCompetidorSeguro(id) : true;
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${comercioId}/competencia`);
+  redirect(`/admin/clientes/${comercioId}/competencia${sincronizado ? "" : "?error=sync-competidor"}`);
 }
 
 export async function accionSincronizarCompetidor(fd: FormData): Promise<void> {
