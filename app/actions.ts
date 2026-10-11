@@ -6,6 +6,7 @@ import * as db from "@/lib/db";
 import { requireAdmin, emailAdminActual } from "@/lib/auth";
 import { alertarResenaMala } from "@/lib/alertas";
 import { componerMiniaturaLogo } from "@/lib/imagenLogo";
+import { businessProfileHabilitado } from "@/lib/gbp";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -29,6 +30,19 @@ function str(fd: FormData, key: string): string {
 function num(fd: FormData, key: string): number {
   const v = Number(String(fd.get(key) ?? "").replace(",", "."));
   return Number.isFinite(v) ? v : 0;
+}
+
+/** Al cargar o cambiar el Place ID de un local, trae rating y reseñas de
+ * Google en el momento — antes había que acordarse de tocar "Sincronizar
+ * ahora" y, mientras tanto, el portal del cliente quedaba vacío. Nunca
+ * corta el guardado: si Google falla (Place ID mal copiado, API key sin
+ * configurar), devuelve false y la página avisa. */
+async function sincronizarPlaceId(id: string): Promise<boolean> {
+  try {
+    return await db.sincronizarGoogle(id);
+  } catch {
+    return false;
+  }
 }
 
 /** Deja rastro en /admin/auditoria de quién hizo qué. Con login por Google
@@ -57,8 +71,9 @@ export async function accionCrearCliente(fd: FormData): Promise<void> {
     googlePlaceId: str(fd, "googlePlaceId"),
   });
   await auditar("crear_cliente", `${cliente.nombre} (${cliente.id})`);
+  const sincronizado = cliente.googlePlaceId ? await sincronizarPlaceId(cliente.id) : true;
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${cliente.id}`);
+  redirect(`/admin/clientes/${cliente.id}${sincronizado ? "" : "?error=sync-google"}`);
 }
 
 export async function accionCrearSucursal(fd: FormData): Promise<void> {
@@ -75,13 +90,17 @@ export async function accionCrearSucursal(fd: FormData): Promise<void> {
     busquedaClave: str(fd, "busquedaClave"),
   });
   await auditar("crear_sucursal", `${sucursal.nombre} (${sucursal.id}) de ${cuentaId}`);
+  const sincronizado = sucursal.googlePlaceId ? await sincronizarPlaceId(sucursal.id) : true;
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${cuentaId}`);
+  // Si falló, a la ficha del local nuevo: ahí está su Place ID para corregirlo.
+  redirect(sincronizado ? `/admin/clientes/${cuentaId}` : `/admin/clientes/${sucursal.id}?error=sync-google`);
 }
 
 export async function accionActualizarCliente(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
+  const antes = await db.getCliente(id);
+  const placeIdNuevo = str(fd, "googlePlaceId");
   await db.actualizarCliente(id, {
     nombre: str(fd, "nombre"),
     rubro: str(fd, "rubro") as Rubro,
@@ -97,8 +116,13 @@ export async function accionActualizarCliente(fd: FormData): Promise<void> {
     emailNotificaciones: str(fd, "emailNotificaciones"),
   });
   await auditar("editar_cliente", id);
+  // Solo si el Place ID es nuevo o nunca se sincronizó: guardar otro campo
+  // (el contacto, el plan) no gasta una llamada a Places.
+  const hayQueSincronizar =
+    Boolean(placeIdNuevo) && (placeIdNuevo !== antes?.googlePlaceId || !antes?.googleSyncEn);
+  const sincronizado = hayQueSincronizar ? await sincronizarPlaceId(id) : true;
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${id}`);
+  redirect(`/admin/clientes/${id}${sincronizado ? "" : "?error=sync-google"}`);
 }
 
 export async function accionEliminarCliente(fd: FormData): Promise<void> {
@@ -180,8 +204,9 @@ export async function accionSincronizarGoogle(fd: FormData): Promise<void> {
   }
   // Rendimiento (visitas/llamadas): best-effort — depende de que la cuenta
   // de Google esté conectada y administre esta ficha. Si falta algo, el
-  // rating/reseñas ya quedaron actualizados igual.
-  await db.sincronizarRendimiento(id);
+  // rating/reseñas ya quedaron actualizados igual. Igual que el cron: sin
+  // la API de Business Profile aprobada no se pide (Google responde 429).
+  if (businessProfileHabilitado()) await db.sincronizarRendimiento(id);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}`);
 }
