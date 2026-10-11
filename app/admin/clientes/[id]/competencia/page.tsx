@@ -17,6 +17,8 @@ export const dynamic = "force-dynamic";
 const ERRORES: Record<string, string> = {
   "sync-competidor":
     "No se pudo sincronizar con Google — revisá que el competidor tenga un Place ID correcto y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.",
+  "place-id-cortado":
+    'Ese Place ID está cortado: le falta el principio ("ChIJ…"). Pasa al copiarlo con doble clic, que se frena en el guión. Seleccionalo entero arrastrando o usá el buscador por nombre. No se guardó nada.',
 };
 
 export async function generateMetadata({
@@ -159,6 +161,27 @@ export default async function CompetenciaPage({
                         Sincronizar ahora
                       </button>
                     </form>
+                    {comp.rating === null && comp.totalResenas === null && (
+                      <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                        Este Place ID no trae datos de Google, así que no aparece en el portal del cliente.
+                        Revisalo abajo en &quot;Cambiar Place ID&quot; (si arranca con &quot;_&quot; o &quot;-&quot;, está cortado).
+                      </p>
+                    )}
+                    {/* Antes, con el Place ID cargado no había forma de corregirlo
+                        sin borrar el competidor (y su historial mensual). */}
+                    <details className="w-full" open={comp.rating === null && comp.totalResenas === null}>
+                      <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+                        Cambiar Place ID
+                      </summary>
+                      <form action={accionActualizarCompetidor} className="mt-2 space-y-3">
+                        <input type="hidden" name="id" value={comp.id} />
+                        <input type="hidden" name="comercioId" value={c.id} />
+                        <Field label="Google Place ID" hint={`actual: ${comp.googlePlaceId}`}>
+                          <GooglePlaceIdField defaultValue={comp.googlePlaceId} />
+                        </Field>
+                        <SubmitButton>Guardar y sincronizar</SubmitButton>
+                      </form>
+                    </details>
                   </div>
                 ) : (
                   <form action={accionActualizarCompetidor} className="mt-3 space-y-3 border-t border-slate-100 pt-3">
