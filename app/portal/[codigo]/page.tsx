@@ -38,7 +38,7 @@ import { PlanBadge } from "@/components/ui";
 import { terminosFrecuentes } from "@/lib/keywords";
 import { metricasPorEmpleado } from "@/lib/empleados";
 import { type DetalleMes } from "@/components/EvolucionMensual";
-import { type CrecimientoVsCompetencia } from "@/components/BenchmarkCompetencia";
+import { comparativaMensual, mesSiguiente, primerMesComparable } from "@/lib/comparativa-competencia";
 import { calcularResumenResenas } from "@/components/ResumenResenas";
 import { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import PortalShell, { type PortalNavEntry } from "@/components/portal/PortalShell";
@@ -183,34 +183,13 @@ export default async function PortalPage({
     links.map((l) => ({ nombreEmpleado: l.nombreEmpleado, taps: l.taps })),
   );
 
-  // Crecimiento del mes vs el anterior, propio y de la competencia — el
-  // número pelado ("tenés 40 reseñas") dice menos que el ritmo ("crecés más
-  // rápido que tu competencia"). `benchmark` viene ordenado del mes más
-  // reciente al más viejo (ver getBenchmarkMensual).
-  const crecimientoVsCompetencia: CrecimientoVsCompetencia | null = (() => {
-    if (benchmark.length < 2) return null;
-    const actual = benchmark[0];
-    const anterior = benchmark[1];
-    if (actual.propioResenas === null || anterior.propioResenas === null) return null;
-
-    const propio = actual.propioResenas - anterior.propioResenas;
-    const propioPct = anterior.propioResenas > 0 ? (propio / anterior.propioResenas) * 100 : null;
-
-    const resenasAnteriorPorNombre = new Map(anterior.competidores.map((c) => [c.nombre, c.totalResenas]));
-    let sumaActual = 0;
-    let sumaAnterior = 0;
-    let pares = 0;
-    for (const c of actual.competidores) {
-      const prev = resenasAnteriorPorNombre.get(c.nombre);
-      if (c.totalResenas === null || prev === null || prev === undefined) continue;
-      sumaActual += c.totalResenas;
-      sumaAnterior += prev;
-      pares += 1;
-    }
-    const competenciaPct = pares > 0 && sumaAnterior > 0 ? ((sumaActual - sumaAnterior) / sumaAnterior) * 100 : null;
-
-    return { mes: actual.mes, propio, propioPct, competenciaPct };
-  })();
+  // Mes a mes contra la competencia: reseñas captadas en cada mes y
+  // calificación al cierre (lib/comparativa-competencia.ts). Las fotos de la
+  // competencia y las métricas propias usan el mes en UTC (el del cron).
+  const mesEnCursoUtc = new Date().toISOString().slice(0, 7);
+  const comparativas = comparativaMensual(benchmark, activo.historico, mesEnCursoUtc);
+  const primerMesComparativa =
+    comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));
 
   const diasConTaps = [...new Set(tapsPorDiaSoporte.map((d) => d.fecha))].sort();
   const labelsTaps = diasConTaps.map((d) => d.slice(5).replace("-", "/"));
@@ -554,9 +533,8 @@ export default async function PortalPage({
         nombreLocal={activo.nombre}
         ratingLocal={ratingHero}
         resenasLocal={resenasHero}
-        posicion={posicionCompetencia}
-        benchmark={benchmark}
-        crecimientoVsCompetencia={crecimientoVsCompetencia}
+        comparativas={comparativas}
+        primerMesComparable={primerMesComparativa}
         modoTodos={modoTodos}
         ubicaciones={ubicaciones}
         activoId={activo.id}
