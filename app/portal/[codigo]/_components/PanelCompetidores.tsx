@@ -1,6 +1,7 @@
-import type { BenchmarkMes, Cliente, Competidor } from "@/lib/types";
+import type { Cliente, Competidor } from "@/lib/types";
 import { fmtNum } from "@/lib/format";
-import BenchmarkCompetencia, { type CrecimientoVsCompetencia } from "@/components/BenchmarkCompetencia";
+import type { ComparativaMes } from "@/lib/comparativa-competencia";
+import ComparativaCompetencia from "@/components/portal/ComparativaCompetencia";
 import SelectorSucursales from "./SelectorSucursales";
 
 // Panel "Competidores": foto EN VIVO de cómo está parado el local frente a
@@ -10,17 +11,16 @@ import SelectorSucursales from "./SelectorSucursales";
 // cliente entra a ver esta pestaña (ver sincronizarCompetidoresDeComercio en
 // page.tsx), no solo una vez por día vía cron. La comparación es siempre de
 // UN local puntual (la competencia de un barrio no es la de otro) — en modo
-// "Todos" se pide elegir uno. Debajo, si ya hay al menos dos fotos
-// mensuales congeladas, se agrega el benchmarking histórico
-// (BenchmarkCompetencia) para ver la evolución mes a mes.
+// "Todos" se pide elegir uno. Debajo va la comparativa mes a mes
+// (ComparativaCompetencia): reseñas captadas en cada mes y calificación al
+// cierre, desde las fotos mensuales que congela el cron.
 export default function PanelCompetidores({
   competidores,
   nombreLocal,
   ratingLocal,
   resenasLocal,
-  posicion,
-  benchmark,
-  crecimientoVsCompetencia,
+  comparativas,
+  primerMesComparable,
   modoTodos,
   ubicaciones,
   activoId,
@@ -30,16 +30,24 @@ export default function PanelCompetidores({
   nombreLocal: string;
   ratingLocal: number | null;
   resenasLocal: number;
-  posicion: { puesto: number; total: number } | null;
-  benchmark: BenchmarkMes[];
-  crecimientoVsCompetencia: CrecimientoVsCompetencia | null;
+  comparativas: ComparativaMes[];
+  primerMesComparable: string | null;
   modoTodos: boolean;
   ubicaciones: Cliente[];
   activoId: string;
   codigoAcceso: string;
 }) {
   const hayVarios = ubicaciones.length > 1;
-  const filasCompetencia = [...competidores].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  // Un competidor sin calificación ni reseñas (Place ID sin cargar o mal
+  // copiado) es una fila de guiones: se arregla en el admin, no se muestra.
+  const filasCompetencia = competidores
+    .filter((c) => c.rating !== null || c.totalResenas !== null)
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  // "Este mes": reseñas captadas en el mes en curso, si ya hay foto del mes
+  // anterior para restar (ver comparativaMensual).
+  const mesEnCurso = comparativas.find((m) => m.enCurso) ?? null;
+  const esteMes = new Map(mesEnCurso?.filas.map((f) => [f.id, f.nuevas]) ?? []);
+  const fmtEsteMes = (n: number | null | undefined) => (n === null || n === undefined ? "—" : `+${fmtNum(n)}`);
 
   return (
     <>
@@ -74,9 +82,9 @@ export default function PanelCompetidores({
                   <thead>
                     <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
                       <th className="px-4 py-3 font-medium">Ficha</th>
-                      <th className="px-4 py-3 font-medium">Rating</th>
+                      <th className="px-4 py-3 font-medium">Calificación</th>
                       <th className="px-4 py-3 font-medium">Reseñas</th>
-                      <th className="px-4 py-3 font-medium">Posición</th>
+                      {mesEnCurso && <th className="px-4 py-3 font-medium">Este mes</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -86,9 +94,11 @@ export default function PanelCompetidores({
                         {ratingLocal === null ? "—" : ratingLocal.toFixed(1)}
                       </td>
                       <td className="px-4 py-3 tabular-nums font-medium text-slate-800">{fmtNum(resenasLocal)}</td>
-                      <td className="px-4 py-3 tabular-nums font-semibold text-slate-800">
-                        {posicion ? `#${posicion.puesto} de ${posicion.total}` : "—"}
-                      </td>
+                      {mesEnCurso && (
+                        <td className="px-4 py-3 tabular-nums font-semibold text-slate-800">
+                          {fmtEsteMes(esteMes.get("propio"))}
+                        </td>
+                      )}
                     </tr>
                     {filasCompetencia.map((c) => (
                       <tr key={c.id} className="border-b border-slate-100 text-slate-600 last:border-0">
@@ -97,7 +107,9 @@ export default function PanelCompetidores({
                         <td className="px-4 py-3 tabular-nums">
                           {c.totalResenas === null ? "—" : fmtNum(c.totalResenas)}
                         </td>
-                        <td className="px-4 py-3 tabular-nums text-slate-400">—</td>
+                        {mesEnCurso && (
+                          <td className="px-4 py-3 tabular-nums text-slate-600">{fmtEsteMes(esteMes.get(c.id))}</td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -113,16 +125,8 @@ export default function PanelCompetidores({
         </>
       )}
 
-      {benchmark.length > 0 && (
-        <>
-          {modoTodos && (
-            <p className="mb-2 text-xs text-slate-400">
-              El benchmarking histórico de abajo es de {nombreLocal} (la cuenta raíz) — elegí una sucursal arriba
-              para ver la suya.
-            </p>
-          )}
-          <BenchmarkCompetencia meses={benchmark} crecimiento={crecimientoVsCompetencia} />
-        </>
+      {!modoTodos && competidores.length > 0 && (
+        <ComparativaCompetencia meses={comparativas} primerMes={primerMesComparable} />
       )}
     </>
   );

@@ -227,6 +227,8 @@ export interface Competidor {
 
 /** Foto de un competidor en un mes dado (benchmarking histórico). */
 export interface SnapshotCompetidor {
+  /** Para emparejar el mismo competidor entre meses aunque cambie el nombre. */
+  id: number;
   nombre: string;
   rating: number | null;
   totalResenas: number | null;
