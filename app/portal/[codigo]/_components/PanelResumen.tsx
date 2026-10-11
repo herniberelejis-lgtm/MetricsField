@@ -261,7 +261,7 @@ export default function PanelResumen({
             <StatChip
               icon={<IconSearch size={17} className="text-slate-700" />}
               value={`#${posicionCompetencia.puesto} de ${posicionCompetencia.total}`}
-              label="Posición vs. competencia"
+              label="Puesto por calificación en tu zona"
             />
           </div>
         )}
