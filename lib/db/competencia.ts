@@ -146,7 +146,7 @@ export async function snapshotCompetenciaMensual(mes = mesActual()): Promise<num
 export async function getBenchmarkMensual(comercioId: string): Promise<BenchmarkMes[]> {
   const [snaps, propias] = await Promise.all([
     sql`
-      SELECT mes, nombre, rating, total_resenas
+      SELECT competidor_id, mes, nombre, rating, total_resenas
       FROM competidores_snapshots
       WHERE comercio_id = ${comercioId}
       ORDER BY mes DESC, nombre ASC
@@ -181,6 +181,7 @@ export async function getBenchmarkMensual(comercioId: string): Promise<Benchmark
       porMes.set(mes, fila);
     }
     fila.competidores.push({
+      id: Number(r.competidor_id),
       nombre: r.nombre as string,
       rating: r.rating === null ? null : Number(r.rating),
       totalResenas: r.total_resenas === null ? null : Number(r.total_resenas),
