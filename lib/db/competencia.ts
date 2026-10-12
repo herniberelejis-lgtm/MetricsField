@@ -2,6 +2,14 @@ import "server-only";
 import { sql } from "../sql";
 import { fetchGooglePlaceStats } from "../places";
 import type { BenchmarkMes, Competidor } from "../types";
+import { getAjuste, setAjuste } from "./ajustes";
+import {
+  completarBase,
+  seguimientoDesdeBase,
+  type BaseSeguimiento,
+  type EstadoActual,
+  type Seguimiento,
+} from "../seguimiento-competencia";
 import { sincronizarEnLotes } from "./_compartido";
 
 // ---------- Competencia ----------
@@ -189,4 +197,30 @@ export async function getBenchmarkMensual(comercioId: string): Promise<Benchmark
   }
 
   return [...porMes.values()];
+}
+
+// ---------- "Desde que los seguimos" ----------
+
+/** Compara al comercio contra su competencia desde el primer día en que se
+ * los siguió (ver lib/seguimiento-competencia.ts). El punto de partida vive
+ * en `ajustes` como JSON; acá se completa con lo que falte (el comercio o un
+ * competidor nuevo) y se guarda solo si cambió. */
+export async function getSeguimientoCompetencia(
+  comercioId: string,
+  actual: EstadoActual,
+  hoy: string,
+): Promise<Seguimiento | null> {
+  const clave = `competencia_seguimiento:${comercioId}`;
+  let base: BaseSeguimiento | null = null;
+  const guardado = await getAjuste(clave);
+  if (guardado) {
+    try {
+      base = JSON.parse(guardado) as BaseSeguimiento;
+    } catch {
+      base = null; // valor corrupto: arranca de nuevo desde hoy
+    }
+  }
+  const { base: completa, cambio } = completarBase(base, actual, hoy);
+  if (cambio) await setAjuste(clave, JSON.stringify(completa));
+  return seguimientoDesdeBase(completa, actual, hoy);
 }
