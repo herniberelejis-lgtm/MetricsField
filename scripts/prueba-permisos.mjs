@@ -150,6 +150,46 @@ c = await comercio("vet-cerro");
 registrar("ex cliente (baja)", "acción del portal con su código", "denegado", `auto = ${c.auto_responder_positivas}`, c.auto_responder_positivas === false);
 await sql`UPDATE comercios SET estado = 'activo' WHERE id = 'vet-cerro'`;
 
+// ---------- Sucursales: su código propio NO abre el portal ----------
+// S = sucursal de A creada acá (no está en db/seed.sql) con su propio
+// codigo_acceso en la base, como las crea crearCliente. El portal se abre
+// solo con el código de la cuenta raíz (C2 del security audit 2026-10).
+await sql`DELETE FROM links_nfc WHERE id = 'barberia-guemes-centro-mostrador'`;
+await sql`DELETE FROM comercios WHERE id = 'barberia-guemes-centro'`;
+await sql`CREATE TEMP TABLE sucursal_prueba AS SELECT * FROM comercios WHERE id = 'barberia-guemes'`;
+await sql`UPDATE sucursal_prueba SET id = 'barberia-guemes-centro', nombre = 'Barbería Güemes Centro',
+          codigo_acceso = 'suc7k2m4', comercio_padre_id = 'barberia-guemes'`;
+await sql`INSERT INTO comercios SELECT * FROM sucursal_prueba`;
+await sql`DROP TABLE sucursal_prueba`;
+await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, destino)
+          VALUES ('barberia-guemes-centro-mostrador', 'barberia-guemes-centro', 'Mostrador', 'resena')`;
+
+await accionForm("accionActualizarUrlLinkPortal", {
+  codigo: "suc7k2m4", comercioId: "barberia-guemes-centro", linkId: "barberia-guemes-centro-mostrador",
+  etiqueta: "x", urlDestino: "https://malo.example",
+});
+u = await urlLink("barberia-guemes-centro-mostrador");
+registrar("código propio de una sucursal", "editar el cartel de la sucursal", "denegado", `url de S = '${u}'`, u === "");
+
+r = await fetch(`${BASE}/portal/suc7k2m4`, { headers: { "x-real-ip": ipNueva() } });
+registrar("código propio de una sucursal", "abrir el portal", "404", `HTTP ${r.status}`, r.status === 404);
+
+await accionForm("accionActualizarUrlLinkPortal", {
+  codigo: "bg7k2m4p", comercioId: "barberia-guemes-centro", linkId: "barberia-guemes-centro-mostrador",
+  etiqueta: "Mostrador", urlDestino: "https://centro.example",
+});
+u = await urlLink("barberia-guemes-centro-mostrador");
+registrar("A", "editar el cartel de SU sucursal (control positivo)", "permitido", `url de S = '${u}'`, u === "https://centro.example");
+
+await sql`UPDATE comercios SET estado = 'baja' WHERE id = 'barberia-guemes-centro'`;
+await accionForm("accionActualizarUrlLinkPortal", {
+  codigo: "bg7k2m4p", comercioId: "barberia-guemes-centro", linkId: "barberia-guemes-centro-mostrador",
+  etiqueta: "Mostrador", urlDestino: "https://otra.example",
+});
+u = await urlLink("barberia-guemes-centro-mostrador");
+registrar("A", "editar el cartel de una sucursal dada de baja", "denegado", `url de S = '${u}'`, u === "https://centro.example");
+await sql`UPDATE comercios SET estado = 'activo' WHERE id = 'barberia-guemes-centro'`;
+
 r = await fetch(`${BASE}/portal/rn9x3c5v`, { headers: { "x-real-ip": ipNueva() } });
 cuerpo = await r.text();
 registrar("quien tiene el código de B", "abrir el portal de B", "ve solo a B",

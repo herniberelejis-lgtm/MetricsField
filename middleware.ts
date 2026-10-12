@@ -127,7 +127,7 @@ export async function middleware(req: NextRequest) {
 
   const cookieGoogle = req.cookies.get("admin_google_session")?.value;
   const claveGoogle = process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "";
-  if (cookieGoogle && (await leerCookieSesionGoogle(cookieGoogle, claveGoogle))) {
+  if (cookieGoogle && (await leerCookieSesionGoogle(cookieGoogle, claveGoogle, "admin"))) {
     return siguiente();
   }
 

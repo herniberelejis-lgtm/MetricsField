@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getAdmins } from "@/lib/db";
-import { emailAdminActual } from "@/lib/auth";
+import { emailAdminActual, asegurarAdminPagina } from "@/lib/auth";
 import { accionAgregarAdmin, accionEliminarAdmin } from "@/app/actions";
 import { Card, PageHeader } from "@/components/ui";
 
@@ -12,6 +12,7 @@ export default async function AdministradoresPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { error } = await searchParams;
   const [admins, emailActual] = await Promise.all([getAdmins(), emailAdminActual()]);
 

@@ -49,7 +49,7 @@ async function comercioAutorizado(codigo: string, comercioId: string): Promise<C
   }
   if (comercioId === cuenta.id) return cuenta;
   const sucursal = await getCliente(comercioId);
-  if (!sucursal || sucursal.comercioPadreId !== cuenta.id) {
+  if (!sucursal || sucursal.comercioPadreId !== cuenta.id || sucursal.estado === "baja") {
     throw new Error("Ese local no pertenece a este portal.");
   }
   return sucursal;

@@ -71,6 +71,14 @@ export async function cookiePasswordValida(valor: string, password: string): Pro
 }
 
 // ---------- Cookie por Google: "payload.firma", exp dentro del payload ----------
+// Hay DOS cookies con este formato y la misma clave: la del panel de admin
+// (lib/auth.ts) y la del portal de un cliente (lib/portal-auth.ts). Cada
+// una lleva su audiencia ("admin" | "portal") adentro del payload Y en la
+// entrada del HMAC, y al leer se exige la audiencia esperada: así la cookie
+// del portal de un empleado de un cliente nunca vale como sesión del panel,
+// aunque alguien copie su valor con el nombre de la otra.
+
+export type AudienciaSesion = "admin" | "portal";
 
 export interface SesionGoogle {
   email: string;
@@ -81,27 +89,30 @@ export async function crearCookieSesionGoogle(
   email: string,
   nombre: string,
   secreto: string,
+  aud: AudienciaSesion,
 ): Promise<string> {
   const exp = Date.now() + SESION_MAX_MS;
-  const payload = bytesABase64Url(new TextEncoder().encode(JSON.stringify({ email, nombre, exp })));
-  return `${payload}.${await hmacBase64Url(secreto, payload)}`;
+  const payload = bytesABase64Url(new TextEncoder().encode(JSON.stringify({ email, nombre, exp, aud })));
+  return `${payload}.${await hmacBase64Url(secreto, `google.${aud}.${payload}`)}`;
 }
 
 export async function leerCookieSesionGoogle(
   valor: string,
   secreto: string,
+  aud: AudienciaSesion,
 ): Promise<SesionGoogle | null> {
   if (!secreto) return null;
   const [payload, firma] = valor.split(".");
   if (!payload || !firma) return null;
-  if (!iguales(firma, await hmacBase64Url(secreto, payload))) return null;
+  if (!iguales(firma, await hmacBase64Url(secreto, `google.${aud}.${payload}`))) return null;
   try {
     const data = JSON.parse(new TextDecoder().decode(base64UrlABytes(payload))) as {
       email?: string;
       nombre?: string;
       exp?: number;
+      aud?: string;
     };
-    if (!data.email) return null;
+    if (!data.email || data.aud !== aud) return null;
     if (!data.exp || Date.now() > data.exp) return null; // sesión vencida
     return { email: data.email, nombre: data.nombre ?? "" };
   } catch {

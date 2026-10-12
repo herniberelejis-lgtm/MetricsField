@@ -17,6 +17,7 @@ import {
   Stars,
   Sparkline,
 } from "@/components/ui";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Panel" };
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ periodo?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { periodo: periodoParam } = await searchParams;
   const periodo = PERIODOS.find((p) => p.key === periodoParam) ?? PERIODOS[2];
 

@@ -67,9 +67,17 @@ export async function getCliente(id: string): Promise<Cliente | undefined> {
   return ensambleCliente(rows[0]);
 }
 
+/** La cuenta cuyo portal abre este código. Solo cuentas raíz: cada
+ * sucursal tiene su propio codigo_acceso en la base (crearCliente se lo
+ * genera a toda fila), pero NO es una credencial del portal — el acceso, el
+ * gate de Google, la regeneración del código y la baja viven en la cuenta
+ * raíz. Antes el código de una sucursal abría su portal salteándose todo
+ * eso (C2 del security audit 2026-10). */
 export async function getClientePorCodigo(codigo: string): Promise<Cliente | undefined> {
   if (!codigo) return undefined;
-  const rows = await sql`SELECT * FROM comercios WHERE codigo_acceso = ${codigo}`;
+  const rows = await sql`
+    SELECT * FROM comercios WHERE codigo_acceso = ${codigo} AND comercio_padre_id IS NULL
+  `;
   if (rows.length === 0) return undefined;
   return ensambleCliente(rows[0]);
 }

@@ -11,11 +11,13 @@ import {
   EstadoBadge,
   Stars,
 } from "@/components/ui";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Clientes" };
 export const dynamic = "force-dynamic";
 
 export default async function ClientesPage() {
+  await asegurarAdminPagina();
   const [clientes, sucursalesPorCuenta] = await Promise.all([
     getCuentas(),
     contarSucursalesPorCuenta(),

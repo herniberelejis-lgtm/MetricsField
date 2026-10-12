@@ -64,44 +64,77 @@ describe("cookie de contraseña compartida", () => {
 
 describe("cookie de sesión con Google", () => {
   it("devuelve el email y nombre que firmó", async () => {
-    const cookie = await crearCookieSesionGoogle("aleee@metricsfield.com", "Ale", "secreto");
-    expect(await leerCookieSesionGoogle(cookie, "secreto")).toEqual({
+    const cookie = await crearCookieSesionGoogle("aleee@metricsfield.com", "Ale", "secreto", "admin");
+    expect(await leerCookieSesionGoogle(cookie, "secreto", "admin")).toEqual({
       email: "aleee@metricsfield.com",
       nombre: "Ale",
     });
   });
 
   it("rechaza la cookie firmada con otro secreto", async () => {
-    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto-uno");
-    expect(await leerCookieSesionGoogle(cookie, "secreto-dos")).toBeNull();
+    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto-uno", "admin");
+    expect(await leerCookieSesionGoogle(cookie, "secreto-dos", "admin")).toBeNull();
   });
 
   it("rechaza un payload manipulado para escalar a otro email", async () => {
-    const cookie = await crearCookieSesionGoogle("cualquiera@gmail.com", "X", "secreto");
+    const cookie = await crearCookieSesionGoogle("cualquiera@gmail.com", "X", "secreto", "admin");
     const [, firma] = cookie.split(".");
     const payloadFalso = Buffer.from(
       JSON.stringify({ email: "jefe@metricsfield.com", nombre: "Jefe", exp: Date.now() + 99999 }),
     )
       .toString("base64url");
-    expect(await leerCookieSesionGoogle(`${payloadFalso}.${firma}`, "secreto")).toBeNull();
+    expect(await leerCookieSesionGoogle(`${payloadFalso}.${firma}`, "secreto", "admin")).toBeNull();
   });
 
   it("rechaza una sesión vencida", async () => {
-    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto");
+    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto", "admin");
     vi.useFakeTimers();
     vi.setSystemTime(Date.now() + SESION_MAX_MS + 1000);
-    expect(await leerCookieSesionGoogle(cookie, "secreto")).toBeNull();
+    expect(await leerCookieSesionGoogle(cookie, "secreto", "admin")).toBeNull();
   });
 
   it("nunca valida si no hay secreto configurado", async () => {
-    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto");
-    expect(await leerCookieSesionGoogle(cookie, "")).toBeNull();
+    const cookie = await crearCookieSesionGoogle("a@b.com", "A", "secreto", "admin");
+    expect(await leerCookieSesionGoogle(cookie, "", "admin")).toBeNull();
   });
 
   it("rechaza basura sin explotar", async () => {
     for (const malo of ["", ".", "abc", "abc.def", "...."]) {
-      expect(await leerCookieSesionGoogle(malo, "secreto")).toBeNull();
+      expect(await leerCookieSesionGoogle(malo, "secreto", "admin")).toBeNull();
     }
+  });
+
+  // C1 del security audit 2026-10: la cookie del portal de un cliente tenía
+  // el mismo formato y la misma clave que la del panel, así que copiarla con
+  // el nombre admin_google_session abría /admin. Si alguno de estos se pone
+  // en rojo, ese agujero volvió.
+  it("una cookie del portal nunca vale como sesión del panel (y al revés)", async () => {
+    const portal = await crearCookieSesionGoogle("empleado@cliente.com", "E", "secreto", "portal");
+    expect(await leerCookieSesionGoogle(portal, "secreto", "admin")).toBeNull();
+    expect(await leerCookieSesionGoogle(portal, "secreto", "portal")).toEqual({
+      email: "empleado@cliente.com",
+      nombre: "E",
+    });
+    const admin = await crearCookieSesionGoogle("jefe@metricsfield.com", "J", "secreto", "admin");
+    expect(await leerCookieSesionGoogle(admin, "secreto", "portal")).toBeNull();
+  });
+
+  it("no alcanza con cambiar la audiencia del payload: la firma la cubre", async () => {
+    const portal = await crearCookieSesionGoogle("empleado@cliente.com", "E", "secreto", "portal");
+    const [payload, firma] = portal.split(".");
+    const datos = JSON.parse(Buffer.from(payload, "base64url").toString());
+    const payloadAdmin = Buffer.from(JSON.stringify({ ...datos, aud: "admin" })).toString("base64url");
+    expect(await leerCookieSesionGoogle(`${payloadAdmin}.${firma}`, "secreto", "admin")).toBeNull();
+  });
+
+  it("rechaza las cookies del formato viejo, sin audiencia", async () => {
+    const payload = Buffer.from(
+      JSON.stringify({ email: "a@b.com", nombre: "A", exp: Date.now() + 99999 }),
+    ).toString("base64url");
+    const { createHmac } = await import("node:crypto");
+    const firmaVieja = createHmac("sha256", "secreto").update(payload).digest("base64url");
+    expect(await leerCookieSesionGoogle(`${payload}.${firmaVieja}`, "secreto", "admin")).toBeNull();
+    expect(await leerCookieSesionGoogle(`${payload}.${firmaVieja}`, "secreto", "portal")).toBeNull();
   });
 });
 
