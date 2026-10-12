@@ -565,23 +565,24 @@ export default async function PortalPage({
     />
   );
 
-  if (competidoresLive.length > 0 || benchmark.length > 0) {
-    panels.competidores = (
-      <PanelCompetidores
-        competidores={competidoresLive}
-        nombreLocal={activo.nombre}
-        ratingLocal={ratingHero}
-        resenasLocal={resenasHero}
-        comparativas={comparativas}
-        primerMesComparable={primerMesComparativa}
-        seguimiento={seguimientoCompetencia}
-        modoTodos={modoTodos}
-        ubicaciones={ubicaciones}
-        activoId={activo.id}
-        codigoAcceso={c.codigoAcceso}
-      />
-    );
-  }
+  // Siempre hay pestaña de Competidores: aunque no tenga ninguno, desde acá
+  // el cliente suma el primero.
+  panels.competidores = (
+    <PanelCompetidores
+      competidores={competidoresLive}
+      nombreLocal={activo.nombre}
+      ratingLocal={ratingHero}
+      resenasLocal={resenasHero}
+      comparativas={comparativas}
+      primerMesComparable={primerMesComparativa}
+      seguimiento={seguimientoCompetencia}
+      modoTodos={modoTodos}
+      ubicaciones={ubicaciones}
+      activoId={activo.id}
+      codigoAcceso={c.codigoAcceso}
+      puedeAgregar={Boolean(process.env.GOOGLE_PLACES_API_KEY)}
+    />
+  );
 
   panels.mes = (
     <PanelMes

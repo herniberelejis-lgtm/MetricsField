@@ -13,8 +13,14 @@ import {
   desconectarGoogleComercio,
   getLink,
   actualizarLink,
+  getCompetidores,
+  crearCompetidor,
+  sincronizarCompetidor,
+  eliminarCompetidor,
   type TapsPorHora,
 } from "@/lib/db";
+import { searchGooglePlace, SESGO_CORDOBA } from "@/lib/places";
+import { MAX_COMPETIDORES_PORTAL } from "@/lib/competencia-portal";
 import type { Cliente } from "@/lib/types";
 import { urlSegura } from "@/lib/url";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
@@ -187,3 +193,136 @@ export async function accionObtenerTapsPorHora(codigo: string, comercioId: strin
   if (!comercio) return [];
   return getTapsPorHora(comercio.id, fecha);
 }
+
+// ---------- Competidores: el cliente arma su propia lista ----------
+// Antes solo el equipo podía cargar competidores (con el Place ID a mano o
+// el buscador del admin). Ahora el dueño los busca por nombre, como en
+// Google Maps, y los agrega con un toque. Cada competidor cuesta cuota paga
+// de Places (sync diario + al abrir el portal), y cada búsqueda también:
+// por eso hay tope de competidores por local y límite de búsquedas.
+
+export interface LugarEncontrado {
+  placeId: string;
+  nombre: string;
+  direccion: string;
+  /** Ya está en la lista o es el propio local: se muestra sin botón. */
+  estado: "disponible" | "agregado" | "propio";
+}
+
+type ResultadoBusqueda = { ok: true; lugares: LugarEncontrado[] } | { ok: false; error: string };
+
+// Un Place ID de Google: letras, números, "-" y "_". Si empieza con "-" o
+// "_", es uno que se copió cortado (doble clic corta en el guion).
+function placeIdValido(placeId: string): boolean {
+  return /^[A-Za-z0-9][A-Za-z0-9_-]{9,299}$/.test(placeId);
+}
+
+export async function accionBuscarLugarPortal(
+  codigo: string,
+  comercioId: string,
+  texto: string,
+): Promise<ResultadoBusqueda> {
+  const consulta = String(texto ?? "").trim().slice(0, 120);
+  if (consulta.length < 3) return { ok: true, lugares: [] };
+
+  let comercio: Cliente;
+  try {
+    comercio = await comercioAutorizado(String(codigo), String(comercioId));
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
+  }
+  // Cada búsqueda se paga: límite por IP y, aparte, por local (para que
+  // rotar IPs no sirva para gastar la cuota de un cliente).
+  const ip = ipDelRequest(await headers());
+  if (
+    !(await permitir(`portal-buscar-lugar:${ip}`, 40, 10 * 60_000)) ||
+    !(await permitir(`portal-buscar-lugar-local:${comercio.id}`, 120, 60 * 60_000))
+  ) {
+    return { ok: false, error: "Hiciste muchas búsquedas seguidas. Esperá unos minutos y probá de nuevo." };
+  }
+
+  const r = await searchGooglePlace(consulta, SESGO_CORDOBA);
+  if (!r.ok) {
+    return { ok: false, error: "El buscador de Google no está disponible ahora. Probá de nuevo en un rato." };
+  }
+  const yaAgregados = new Set(
+    (await getCompetidores(comercio.id)).map((c) => c.googlePlaceId).filter(Boolean),
+  );
+  return {
+    ok: true,
+    lugares: r.resultados.slice(0, 8).map((l) => ({
+      placeId: l.placeId,
+      nombre: l.nombre,
+      direccion: l.direccion,
+      estado:
+        l.placeId === comercio.googlePlaceId ? "propio" : yaAgregados.has(l.placeId) ? "agregado" : "disponible",
+    })),
+  };
+}
+
+export async function accionAgregarCompetidorPortal(
+  codigo: string,
+  comercioId: string,
+  placeId: string,
+  nombre: string,
+): Promise<{ ok: true; nombre: string } | { ok: false; error: string }> {
+  const id = String(placeId ?? "").trim();
+  // El nombre viene del resultado de la búsqueda; solo lo ve este mismo
+  // local, pero igual se limpia y se acota.
+  const nombreLimpio = String(nombre ?? "").replace(/\s+/g, " ").trim().slice(0, 120) || "Competidor";
+  if (!placeIdValido(id)) return { ok: false, error: "Ese lugar no es válido. Buscalo de nuevo." };
+
+  let comercio: Cliente;
+  try {
+    comercio = await comercioAutorizado(String(codigo), String(comercioId));
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
+  }
+  const ip = ipDelRequest(await headers());
+  if (!(await permitir(`portal-agregar-competidor:${ip}`, 20, 10 * 60_000))) {
+    return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
+  }
+
+  if (id === comercio.googlePlaceId) return { ok: false, error: "Ese es tu propio local." };
+  const actuales = await getCompetidores(comercio.id);
+  if (actuales.some((c) => c.googlePlaceId === id)) {
+    return { ok: false, error: `${nombreLimpio} ya está en tu lista.` };
+  }
+  if (actuales.length >= MAX_COMPETIDORES_PORTAL) {
+    return {
+      ok: false,
+      error: `Ya tenés ${MAX_COMPETIDORES_PORTAL} competidores. Quitá alguno para sumar otro.`,
+    };
+  }
+
+  // Se crea y se trae su calificación de una: si Google no devuelve datos
+  // para ese lugar, no se deja una fila vacía en la lista.
+  const nuevo = await crearCompetidor(comercio.id, { nombre: nombreLimpio, googlePlaceId: id });
+  const conDatos = await sincronizarCompetidor(nuevo.id).catch(() => false);
+  if (!conDatos) {
+    await eliminarCompetidor(nuevo.id);
+    return { ok: false, error: "No pudimos leer los datos de ese lugar en Google. Probá con otro resultado." };
+  }
+  revalidatePath(`/portal/${codigo}`);
+  return { ok: true, nombre: nombreLimpio };
+}
+
+export async function accionQuitarCompetidorPortal(
+  codigo: string,
+  comercioId: string,
+  competidorId: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  let comercio: Cliente;
+  try {
+    comercio = await comercioAutorizado(String(codigo), String(comercioId));
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
+  }
+  // Nunca borrar por un id suelto: tiene que ser un competidor de ESTE local.
+  const competidor = (await getCompetidores(comercio.id)).find((c) => c.id === Number(competidorId));
+  if (!competidor) return { ok: false, error: "Ese competidor no está en tu lista." };
+  await eliminarCompetidor(competidor.id);
+  revalidatePath(`/portal/${codigo}`);
+  return { ok: true };
+}
+

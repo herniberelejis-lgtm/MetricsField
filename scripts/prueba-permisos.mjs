@@ -190,6 +190,23 @@ u = await urlLink("barberia-guemes-centro-mostrador");
 registrar("A", "editar el cartel de una sucursal dada de baja", "denegado", `url de S = '${u}'`, u === "https://centro.example");
 await sql`UPDATE comercios SET estado = 'activo' WHERE id = 'barberia-guemes-centro'`;
 
+// ---------- Competidores que arma el propio cliente ----------
+await sql`DELETE FROM competidores WHERE comercio_id IN ('resto-nueva-cordoba', 'gym-guemes')`;
+const [{ id: compB }] = await sql`INSERT INTO competidores (comercio_id, nombre, google_place_id)
+  VALUES ('resto-nueva-cordoba', 'Competidor de B', 'ChIJcompetidorDeBprueba01') RETURNING id`;
+await accionArgs("accionQuitarCompetidorPortal", ["bg7k2m4p", "barberia-guemes", compB]);
+await accionArgs("accionQuitarCompetidorPortal", ["bg7k2m4p", "resto-nueva-cordoba", compB]);
+let [{ n: compBQuedan }] = await sql`SELECT count(*)::int AS n FROM competidores WHERE id = ${compB}`;
+registrar("A", "quitar un competidor de B", "denegado", `filas = ${compBQuedan}`, compBQuedan === 1);
+
+await accionArgs("accionAgregarCompetidorPortal", ["gg8u3i6o", "gym-guemes", "ChIJcompetidorIntruso0001", "Intruso"]);
+let [{ n: compG }] = await sql`SELECT count(*)::int AS n FROM competidores WHERE comercio_id = 'gym-guemes'`;
+registrar("código sin Google", "agregar un competidor en un portal con gate", "denegado", `filas = ${compG}`, compG === 0);
+
+await accionArgs("accionQuitarCompetidorPortal", ["rn9x3c5v", "resto-nueva-cordoba", compB]);
+[{ n: compBQuedan }] = await sql`SELECT count(*)::int AS n FROM competidores WHERE id = ${compB}`;
+registrar("B", "quitar SU competidor (control positivo)", "permitido", `filas = ${compBQuedan}`, compBQuedan === 0);
+
 r = await fetch(`${BASE}/portal/rn9x3c5v`, { headers: { "x-real-ip": ipNueva() } });
 cuerpo = await r.text();
 registrar("quien tiene el código de B", "abrir el portal de B", "ve solo a B",
