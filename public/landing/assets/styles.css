@@ -377,7 +377,7 @@ input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:3p
 /* ---------- footer ---------- */
 .foot{background:var(--ink);color:var(--g400);border-top:1px solid var(--g800);
   padding:56px 24px calc(40px + env(safe-area-inset-bottom))}
-.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px;margin-bottom:40px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:36px;margin-bottom:40px}
 .foot-brand{display:flex;align-items:center;gap:9px;margin-bottom:16px}
 .foot-brand img{height:26px;width:26px}
 .foot-brand span{font-weight:800;letter-spacing:-.02em;font-size:1.05rem;color:var(--white)}
