@@ -352,7 +352,9 @@ export default async function PortalPage({
         fecha: r.fecha,
         cuando: r.haceCuanto,
       }));
-  const resenasPorHoraRating = hayResenasDetalladas ? resenasPorHora : grillaPorHora(resenasSemaforo);
+  // El mapa por hora solo con reseñas completas: con las 5 que elige Google
+  // por relevancia mostraría un patrón que no existe.
+  const resenasPorHoraRating = hayResenasDetalladas ? resenasPorHora : grillaPorHora([]);
 
   const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
   const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
