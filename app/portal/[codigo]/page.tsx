@@ -17,6 +17,7 @@ import {
   getTapsMesActual,
   fechaHoyCordoba,
   getBenchmarkMensual,
+  getSeguimientoCompetencia,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
   type TopPiezaSemana,
@@ -384,6 +385,29 @@ export default async function PortalPage({
         return getCompetidores(activo.id);
       })();
 
+  // "Desde que los seguimos": punto de partida guardado el primer día que se
+  // mira la competencia. El propio solo cuenta si ya trae datos de Google —
+  // un 0 sin Place ID haría que, al cargarlo, aparezcan miles de "captadas".
+  const seguimientoCompetencia =
+    modoTodos || competidoresLive.length === 0
+      ? null
+      : await getSeguimientoCompetencia(
+          activo.id,
+          {
+            propio: {
+              total: activo.googlePlaceId && ratingHero !== null ? resenasHero : null,
+              rating: ratingHero,
+            },
+            competidores: competidoresLive.map((comp) => ({
+              id: comp.id,
+              nombre: comp.nombre,
+              total: comp.totalResenas,
+              rating: comp.rating,
+            })),
+          },
+          fechaHoyCordoba(),
+        );
+
   const posicionCompetencia = (() => {
     if (modoTodos || ratingHero === null) return null;
     const ratingsCompetencia = competidoresLive
@@ -535,6 +559,7 @@ export default async function PortalPage({
         resenasLocal={resenasHero}
         comparativas={comparativas}
         primerMesComparable={primerMesComparativa}
+        seguimiento={seguimientoCompetencia}
         modoTodos={modoTodos}
         ubicaciones={ubicaciones}
         activoId={activo.id}

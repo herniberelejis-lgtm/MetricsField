@@ -2,6 +2,8 @@ import type { Cliente, Competidor } from "@/lib/types";
 import { fmtNum } from "@/lib/format";
 import type { ComparativaMes } from "@/lib/comparativa-competencia";
 import ComparativaCompetencia from "@/components/portal/ComparativaCompetencia";
+import SeguimientoCompetencia from "@/components/portal/SeguimientoCompetencia";
+import type { Seguimiento } from "@/lib/seguimiento-competencia";
 import SelectorSucursales from "./SelectorSucursales";
 
 // Panel "Competidores": foto EN VIVO de cómo está parado el local frente a
@@ -21,6 +23,7 @@ export default function PanelCompetidores({
   resenasLocal,
   comparativas,
   primerMesComparable,
+  seguimiento,
   modoTodos,
   ubicaciones,
   activoId,
@@ -32,6 +35,8 @@ export default function PanelCompetidores({
   resenasLocal: number;
   comparativas: ComparativaMes[];
   primerMesComparable: string | null;
+  /** "Desde que los seguimos" — se muestra hasta que haya un mes completo. */
+  seguimiento: Seguimiento | null;
   modoTodos: boolean;
   ubicaciones: Cliente[];
   activoId: string;
@@ -126,7 +131,12 @@ export default function PanelCompetidores({
       )}
 
       {!modoTodos && competidores.length > 0 && (
-        <ComparativaCompetencia meses={comparativas} primerMes={primerMesComparable} />
+        <>
+          {seguimiento && !comparativas.some((m) => !m.enCurso) && (
+            <SeguimientoCompetencia seguimiento={seguimiento} />
+          )}
+          <ComparativaCompetencia meses={comparativas} primerMes={primerMesComparable} />
+        </>
       )}
     </>
   );
