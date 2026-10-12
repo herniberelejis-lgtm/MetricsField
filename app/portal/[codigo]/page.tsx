@@ -8,7 +8,6 @@ import {
   getTapsPorDiaPorSoporte,
   getTapsPorHoraSemana,
   getPiezaMasUsadaSemana,
-  getResenasPorHoraSemana,
   getLinks,
   getChecklist,
   getAudits,
@@ -25,7 +24,7 @@ import {
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { fetchResenasGooglePublicas } from "@/lib/places";
-import { grillaPorHora, type ResenaParaSemaforo } from "@/lib/semaforo";
+import { vistasMapaResenas, type ResenaParaSemaforo } from "@/lib/semaforo";
 import { type LocalConResenasGoogle } from "@/components/portal/ResenasGoogle";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
 import { oauthVerificado } from "@/lib/google-oauth";
@@ -134,7 +133,7 @@ export default async function PortalPage({
         ? MENSAJE_GOOGLE[google]
         : null;
 
-  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark, resenasPorHora] =
+  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark] =
     await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
@@ -144,7 +143,6 @@ export default async function PortalPage({
       getAudits(activo.id),
       getResenas(activo.id),
       getBenchmarkMensual(activo.id),
-      getResenasPorHoraSemana(activo.id),
     ]);
 
   const m = metricaActual(activo);
@@ -352,9 +350,24 @@ export default async function PortalPage({
         fecha: r.fecha,
         cuando: r.haceCuanto,
       }));
-  // El mapa por hora solo con reseñas completas: con las 5 que elige Google
-  // por relevancia mostraría un patrón que no existe.
-  const resenasPorHoraRating = hayResenasDetalladas ? resenasPorHora : grillaPorHora([]);
+  // Mapa de calor (día de la semana × hora) sobre las reseñas del mes o las
+  // últimas 100. Solo con reseñas completas y con hora exacta: con las 5 que
+  // elige Google por relevancia mostraría un patrón que no existe.
+  const vistasMapa = hayResenasDetalladas
+    ? vistasMapaResenas(
+        resenas
+          // Hora real: la del sync de Google, o la que cargó el equipo a mano.
+          // Una carga manual sin hora guarda el momento de la carga (no el de
+          // la reseña) y cae en otro día: esas quedan afuera.
+          .filter(
+            (r) =>
+              r.plataforma === "google" &&
+              r.creadoEn &&
+              (r.origenGoogleId !== null || fechaHoyCordoba(new Date(r.creadoEn)) === r.fecha),
+          )
+          .map((r) => ({ estrellas: r.estrellas, fecha: r.creadoEn })),
+      )
+    : [];
 
   const resenasPendientesCombinadas = resenasCombinadas.filter((r) => r.estado === "nueva");
   const resenasNegativasTotal = resenasCombinadas.filter((r) => r.estrellas <= 3).length;
@@ -545,7 +558,7 @@ export default async function PortalPage({
       ratingHero={ratingHero}
       resenasHero={resenasHero}
       historico={activo.historico}
-      resenasPorHora={resenasPorHoraRating}
+      vistasMapa={vistasMapa}
       resenasSemaforo={resenasSemaforo}
       semaforoFuente={semaforoFuente}
       ritmoMensual={ritmo?.promedio ?? 0}
