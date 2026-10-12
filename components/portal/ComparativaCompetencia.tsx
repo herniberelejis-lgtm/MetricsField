@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { fmtMes, fmtNum } from "@/lib/format";
-import type { ComparativaMes } from "@/lib/comparativa-competencia";
+import type { ComparativaMes, FilaComparativa } from "@/lib/comparativa-competencia";
 
 // Mes a mes contra la competencia: reseñas captadas EN el mes (barra para
 // comparar de un vistazo) y calificación al cierre con su cambio. La lógica
@@ -44,7 +44,6 @@ export default function ComparativaCompetencia({
 
   const mes = meses[Math.min(sel, meses.length - 1)];
   const vos = mes.filas.find((f) => f.esPropio) ?? null;
-  const maxNuevas = Math.max(1, ...mes.filas.map((f) => f.nuevas ?? 0));
   const etiquetaMes = `${fmtMes(mes.mes)}${mes.enCurso ? " (en curso)" : ""}`;
 
   return (
@@ -100,57 +99,74 @@ export default function ComparativaCompetencia({
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="px-2 py-2 font-medium">Comercio</th>
-              <th className="px-2 py-2 font-medium">Reseñas captadas</th>
-              <th className="px-2 py-2 font-medium">Calificación</th>
-              <th className="px-2 py-2 font-medium">Cambio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mes.filas.map((f) => {
-              const delta = fmtDelta(f.deltaRating);
-              return (
-                <tr
-                  key={String(f.id)}
-                  className={`border-b border-slate-100 last:border-0 ${f.esPropio ? "bg-brand/5" : ""}`}
-                >
-                  <td className={`px-2 py-2 ${f.esPropio ? "font-semibold text-brand-fg" : "text-slate-700"}`}>
-                    {f.esPropio ? "Vos" : f.nombre}
-                  </td>
-                  <td className="px-2 py-2">
-                    {f.nuevas === null ? (
-                      <span className="text-slate-300">—</span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-100 sm:w-32" aria-hidden>
-                          <div
-                            className={`h-full rounded-full ${f.esPropio ? "bg-slate-900" : "bg-slate-400"}`}
-                            style={{ width: `${(f.nuevas / maxNuevas) * 100}%` }}
-                          />
-                        </div>
-                        <span className="tabular-nums text-slate-800">{fmtNum(f.nuevas)}</span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-2 py-2 tabular-nums text-slate-700">
-                    {f.rating === null ? "—" : `${f.rating.toFixed(1)}★`}
-                  </td>
-                  <td className={`px-2 py-2 tabular-nums font-medium ${delta.clase}`}>{delta.texto}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <TablaComparativa filas={mes.filas} />
       {mes.enCurso && (
         <p className="mt-3 text-xs text-slate-400">
           El mes todavía no terminó: es lo captado hasta hoy, igual para todos.
         </p>
       )}
+    </div>
+  );
+}
+
+/** Tabla de captación: barra de reseñas captadas, calificación y cambio.
+ * La usan la comparativa mes a mes y "desde que los seguimos". */
+export function TablaComparativa({
+  filas,
+  notaFila,
+}: {
+  filas: FilaComparativa[];
+  /** Texto chico al lado del nombre (p. ej. "desde 15/10"). */
+  notaFila?: (f: FilaComparativa) => string | null;
+}) {
+  const maxNuevas = Math.max(1, ...filas.map((f) => f.nuevas ?? 0));
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="px-2 py-2 font-medium">Comercio</th>
+            <th className="px-2 py-2 font-medium">Reseñas captadas</th>
+            <th className="px-2 py-2 font-medium">Calificación</th>
+            <th className="px-2 py-2 font-medium">Cambio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((f) => {
+            const delta = fmtDelta(f.deltaRating);
+            return (
+              <tr
+                key={String(f.id)}
+                className={`border-b border-slate-100 last:border-0 ${f.esPropio ? "bg-brand/5" : ""}`}
+              >
+                <td className={`px-2 py-2 ${f.esPropio ? "font-semibold text-brand-fg" : "text-slate-700"}`}>
+                  {f.esPropio ? "Vos" : f.nombre}
+                  {notaFila?.(f) && <span className="ml-1.5 text-xs font-normal text-slate-400">{notaFila(f)}</span>}
+                </td>
+                <td className="px-2 py-2">
+                  {f.nuevas === null ? (
+                    <span className="text-slate-300">—</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-100 sm:w-32" aria-hidden>
+                        <div
+                          className={`h-full rounded-full ${f.esPropio ? "bg-slate-900" : "bg-slate-400"}`}
+                          style={{ width: `${(f.nuevas / maxNuevas) * 100}%` }}
+                        />
+                      </div>
+                      <span className="tabular-nums text-slate-800">{fmtNum(f.nuevas)}</span>
+                    </div>
+                  )}
+                </td>
+                <td className="px-2 py-2 tabular-nums text-slate-700">
+                  {f.rating === null ? "—" : `${f.rating.toFixed(1)}★`}
+                </td>
+                <td className={`px-2 py-2 tabular-nums font-medium ${delta.clase}`}>{delta.texto}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
