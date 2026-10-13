@@ -221,6 +221,7 @@ export async function crearClienteFinal(datos: {
 }
 
 export interface ResumenTelefono {
+  id: string;
   nombre: string;
   email: string;
   creadoEn: string;
@@ -239,6 +240,7 @@ export async function getResumenTelefono(telefono: string): Promise<ResumenTelef
     ORDER BY co.nombre
   `;
   return {
+    id: persona[0].id as string,
     nombre: persona[0].nombre as string,
     email: (persona[0].email as string) ?? "",
     creadoEn: new Date(persona[0].creado_en as string).toISOString(),
@@ -251,9 +253,16 @@ export async function getResumenTelefono(telefono: string): Promise<ResumenTelef
  * tarjetas de Google que había que desactivar. Es la salida cuando alguien
  * registró un número que no era suyo — sin verificación por SMS, el dueño
  * real queda afuera hasta que el equipo lo libera. */
-export async function liberarTelefono(telefono: string): Promise<{ liberado: boolean; objetosGoogle: string[] }> {
+export async function liberarTelefono(
+  telefono: string,
+  clienteFinalId: string,
+): Promise<{ liberado: boolean; objetosGoogle: string[] }> {
   return sql.begin(async (tx) => {
-    const persona = await tx`SELECT id FROM clientes_finales WHERE telefono = ${telefono} FOR UPDATE`;
+    // Atado a la persona que el equipo vio en la vista previa: si el número
+    // cambió de dueño entre medio, no se borra al nuevo.
+    const persona = await tx`
+      SELECT id FROM clientes_finales WHERE telefono = ${telefono} AND id = ${clienteFinalId} FOR UPDATE
+    `;
     if (persona.length === 0) return { liberado: false, objetosGoogle: [] };
     const id = persona[0].id as string;
     const objetos = await tx`
@@ -487,19 +496,28 @@ export async function acreditarReferido(
   nuevaMembresiaId: string,
   mision: MisionLoyalty,
 ): Promise<{ aplicado: boolean; saldo: number }> {
-  const previos = await sql`
-    SELECT COUNT(*)::int AS n FROM movimientos_puntos
-    WHERE membresia_id = ${referidorMembresiaId} AND motivo = 'referido'
-  `;
-  if (Number(previos[0].n) >= MAX_REFERIDOS) {
-    return { aplicado: false, saldo: await calcularSaldo(referidorMembresiaId) };
-  }
-  return registrarMovimiento({
-    membresiaId: referidorMembresiaId,
-    delta: mision.puntos,
-    motivo: "referido",
-    misionId: mision.id,
-    idemClave: `referido:${nuevaMembresiaId}`,
+  // Conteo e inserción bajo el candado de saldo del referidor: varios
+  // registros simultáneos no pasan el tope.
+  return sql.begin(async (tx) => {
+    await bloquearSaldo(tx, referidorMembresiaId);
+    const previos = await tx`
+      SELECT COUNT(*)::int AS n FROM movimientos_puntos
+      WHERE membresia_id = ${referidorMembresiaId} AND motivo = 'referido'
+    `;
+    let aplicado = false;
+    if (Number(previos[0].n) < MAX_REFERIDOS) {
+      const insertado = await tx`
+        INSERT INTO movimientos_puntos (membresia_id, delta, motivo, mision_id, idem_clave)
+        VALUES (${referidorMembresiaId}, ${mision.puntos}, 'referido', ${mision.id}, ${`referido:${nuevaMembresiaId}`})
+        ON CONFLICT (idem_clave) DO NOTHING
+        RETURNING id
+      `;
+      aplicado = insertado.length > 0;
+    }
+    const saldo = await tx`
+      SELECT COALESCE(SUM(delta), 0) AS saldo FROM movimientos_puntos WHERE membresia_id = ${referidorMembresiaId}
+    `;
+    return { aplicado, saldo: Number(saldo[0].saldo) };
   });
 }
 
@@ -518,6 +536,10 @@ function codigoCanje(): string {
  * antes de leer SUM(delta), así dos operaciones concurrentes se ordenan. */
 async function bloquearSaldo(tx: postgres.TransactionSql, membresiaId: string): Promise<void> {
   await tx`SELECT pg_advisory_xact_lock(hashtext(${`saldo:${membresiaId}`}))`;
+  // Y la fila de la membresía en modo "clave compartida": un borrado (baja,
+  // liberar teléfono, borrar cliente) espera acá en vez de trabarse a mitad
+  // de su cascada con el INSERT de esta transacción (deadlock).
+  await tx`SELECT 1 FROM membresias WHERE id = ${membresiaId} FOR KEY SHARE`;
 }
 
 export interface CanjePendiente {
@@ -624,7 +646,7 @@ export async function validarCanje(comercioId: string, codigoCrudo: string, quie
       JOIN beneficios b ON b.id = c.beneficio_id
       JOIN membresias m ON m.id = c.membresia_id
       JOIN clientes_finales cf ON cf.id = m.cliente_final_id
-      WHERE c.id = ${codigo} AND c.comercio_id = ${comercioId}
+      WHERE c.id = ${codigo} AND c.comercio_id = ${comercioId} AND c.membresia_id = ${duenio[0].membresia_id as string}
       FOR UPDATE OF c
     `;
     if (rows.length === 0) return { ok: false, error: "Ese código no existe en este local." };

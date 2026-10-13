@@ -155,8 +155,8 @@ async function desactivarEnTandas(ids: string[], contexto: string): Promise<void
 
 /** Libera un teléfono tomado por otra persona (ver liberarTelefono) y
  * desactiva sus tarjetas en Google. Devuelve si había algo para liberar. */
-export async function liberarTelefonoYTarjetas(telefono: string): Promise<boolean> {
-  const r = await liberarTelefono(telefono);
+export async function liberarTelefonoYTarjetas(telefono: string, clienteFinalId: string): Promise<boolean> {
+  const r = await liberarTelefono(telefono, clienteFinalId);
   if (r.liberado && walletGoogleConfigurado()) await desactivarEnTandas(r.objetosGoogle, "liberar teléfono");
   return r.liberado;
 }

@@ -27,9 +27,17 @@ const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3100";
 const MODO = process.env.MODO ?? "preview";
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 // Este script reescribe datos en masa (links, códigos, comercios): jamás
-// contra la base de producción.
-if (/neon\.tech/i.test(process.env.DATABASE_URL ?? "")) {
-  console.error("prueba-permisos: DATABASE_URL apunta a Neon. Esto es solo para una base de prueba.");
+// contra la base de producción. Lista blanca: solo una base local (la del
+// CI o la de tu PC), salvo que se pida explícitamente otra.
+const hostBase = (() => {
+  try {
+    return new URL(process.env.DATABASE_URL ?? "").hostname;
+  } catch {
+    return "";
+  }
+})();
+if (!["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostBase) && process.env.PERMITIR_BASE_DE_PRUEBA !== "1") {
+  console.error(`prueba-permisos: la base (${hostBase || "?"}) no es local. Si es una base de prueba, PERMITIR_BASE_DE_PRUEBA=1.`);
   process.exit(2);
 }
 const sql = postgres(process.env.DATABASE_URL, { prepare: false, max: 1 });
@@ -430,7 +438,14 @@ if (MODO !== "produccion") {
   await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefono: "351 000 0003" }, comoEquipo);
   [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
   registrar("equipo", "liberar un teléfono sin confirmar (solo muestra de quién es)", "no borra", `filas = ${okupa}`, okupa === 1);
-  await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefono: "351 000 0003", confirmar: "on" }, comoEquipo);
+  await accionForm("accionLiberarTelefonoLoyalty", {
+    id: "barberia-guemes", telefono: "351 000 0003", confirmar: "on", persona: "cf-otra-persona",
+  }, comoEquipo);
+  [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
+  registrar("equipo", "confirmar la liberación de OTRA persona que la mostrada", "no borra", `filas = ${okupa}`, okupa === 1);
+  await accionForm("accionLiberarTelefonoLoyalty", {
+    id: "barberia-guemes", telefono: "351 000 0003", confirmar: "on", persona: "cf-prueba-z",
+  }, comoEquipo);
   [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
   registrar("equipo", "liberar un teléfono confirmando (control positivo)", "liberado", `filas = ${okupa}`, okupa === 0);
 

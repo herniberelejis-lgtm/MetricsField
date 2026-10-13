@@ -71,7 +71,7 @@ export default async function LoyaltyClientePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string; liberar?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; liberar?: string | string[] }>;
 }) {
   await asegurarAdminPagina();
   const { id } = await params;
@@ -107,7 +107,10 @@ export default async function LoyaltyClientePage({
   }
   const [comercio, programa, beneficios, misiones, metricas, conError] = datos;
   if (!comercio) notFound();
-  const aLiberar = sp.liberar ? await getResumenTelefono(normalizarTelefono(sp.liberar) ?? "") : null;
+  // Solo dígitos normalizados: lo que muestra la confirmación no lo puede
+  // dictar un link armado (?liberar=... "ya verificado por soporte").
+  const telefonoALiberar = typeof sp.liberar === "string" ? normalizarTelefono(sp.liberar) : null;
+  const aLiberar = telefonoALiberar ? await getResumenTelefono(telefonoALiberar) : null;
   const mensaje = sp.error ? MENSAJES[sp.error] : sp.ok === "telefono" ? MENSAJES["ok-telefono"] : sp.ok ? MENSAJES.ok : null;
   const linkLanding = `${await origenLoyalty()}/l/${encodeURIComponent(id)}`;
   const activoDeVerdad = loyaltyHabilitado() && comercio.tieneLoyalty && Boolean(programa?.activo);
@@ -270,9 +273,10 @@ export default async function LoyaltyClientePage({
         {aLiberar ? (
           <form action={accionLiberarTelefonoLoyalty} className="mt-3 space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
             <input type="hidden" name="id" value={id} />
-            <input type="hidden" name="telefono" value={sp.liberar ?? ""} />
+            <input type="hidden" name="telefono" value={telefonoALiberar ?? ""} />
+            <input type="hidden" name="persona" value={aLiberar.id} />
             <p className="text-sm text-slate-800">
-              <strong>{sp.liberar}</strong> está a nombre de <strong>{aLiberar.nombre}</strong>
+              <strong>{telefonoALiberar}</strong> está a nombre de <strong>{aLiberar.nombre}</strong>
               {aLiberar.email && ` (${aLiberar.email})`}. Tarjetas:{" "}
               {aLiberar.locales.map((l) => `${l.comercio} — ${l.saldo} puntos`).join(" · ") || "ninguna"}.
             </p>

@@ -371,10 +371,17 @@ export async function accionValidarCanjePortal(
     }
     const r = await validarCanje(comercio.id, String(codigoCanje ?? ""), "portal");
     if (!r.ok) return r;
-    await registrarEventoLoyalty({ comercioId: comercio.id, tipo: "canje_validado", detalle: r.codigo });
-    const membresia = await getMembresiaPorId(r.membresiaId);
-    if (membresia) await reflejarSaldoEnWallet(membresia, r.saldo);
-    revalidatePath(`/portal/${encodeURIComponent(String(codigo))}`);
+    // El canje YA quedó validado: lo que sigue es accesorio y un fallo acá no
+    // puede decirle al cajero "probá de nuevo" (vería "ya se usó" y le
+    // negaría el beneficio a quien ya pagó con sus puntos).
+    try {
+      await registrarEventoLoyalty({ comercioId: comercio.id, tipo: "canje_validado", detalle: r.codigo });
+      const membresia = await getMembresiaPorId(r.membresiaId);
+      if (membresia) await reflejarSaldoEnWallet(membresia, r.saldo);
+      revalidatePath(`/portal/${encodeURIComponent(String(codigo))}`);
+    } catch (e) {
+      console.error("Canje validado, pero falló el registro posterior:", e instanceof Error ? e.message : e);
+    }
     return { ok: true, beneficio: r.beneficio, cliente: r.cliente, costoPuntos: r.costoPuntos, saldo: r.saldo };
   } catch (e) {
     // Errores de autorización (los de comercioAutorizado) se muestran; uno de

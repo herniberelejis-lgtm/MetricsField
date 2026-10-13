@@ -671,9 +671,11 @@ export async function accionLiberarTelefonoLoyalty(fd: FormData): Promise<void> 
   if (fd.get("confirmar") !== "on") {
     redirect(rutaLoyalty(id, `?liberar=${encodeURIComponent(telefono)}`));
   }
+  // La confirmación vale para la persona que se mostró, no para el número.
+  if (str(fd, "persona") !== resumen.id) redirect(rutaLoyalty(id, `?liberar=${encodeURIComponent(telefono)}`));
   const locales = resumen.locales.map((l) => `${l.comercio} (${l.saldo} pts)`).join(", ") || "sin locales";
   await auditar("liberar_telefono_loyalty", `${telefono} — ${resumen.nombre}; ${locales} (desde ${id})`);
-  await liberarTelefonoYTarjetas(telefono);
+  const liberado = await liberarTelefonoYTarjetas(telefono, resumen.id);
   revalidatePath(rutaLoyalty(id));
-  redirect(rutaLoyalty(id, "?ok=telefono"));
+  redirect(rutaLoyalty(id, liberado ? "?ok=telefono" : "?error=telefono-libre"));
 }
