@@ -110,16 +110,27 @@ async function crearOActualizar(recurso: string, id: string, cuerpo: Record<stri
   }
 }
 
+// La Issuer API rechaza una LoyaltyClass sin programLogo (400). Google baja
+// la imagen desde sus servidores, así que tiene que ser una URL pública de
+// producción — una preview de Vercel pide login y Google no la puede leer.
+// Mientras no haya logo por comercio, va el de MetricsField.
+const LOGO_POR_DEFECTO = "https://app.metricsfield.com/landing/assets/img/favicon.png";
+
 /** Da de alta (o actualiza) la LoyaltyClass de un comercio — una por
  * comercio, reusada por todas sus membresías. Idempotente: se puede llamar
  * en cada alta de comercio sin duplicar nada. */
-export async function crearClase(comercio: { id: string; nombre: string }): Promise<string> {
+export async function crearClase(comercio: { id: string; nombre: string; logoUrl?: string }): Promise<string> {
   const { issuerId } = credenciales();
   const classId = `${issuerId}.${comercio.id}`;
   await crearOActualizar("loyaltyClass", classId, {
     id: classId,
     issuerName: comercio.nombre,
     programName: `${comercio.nombre} — Fidelización`,
+    programLogo: {
+      sourceUri: { uri: comercio.logoUrl ?? LOGO_POR_DEFECTO },
+      contentDescription: { defaultValue: { language: "es-AR", value: comercio.nombre } },
+    },
+    hexBackgroundColor: "#10131a",
     reviewStatus: "UNDER_REVIEW",
   });
   return classId;

@@ -23,6 +23,7 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   reasignar_pieza_hardware: "Reasignó una pieza de hardware",
   subir_logo_comercio: "Subió el logo de un comercio",
   eliminar_logo_comercio: "Quitó el logo de un comercio",
+  prueba_wallet: "Generó una tarjeta de prueba de Google Wallet",
 };
 
 export default async function ActividadPage() {
