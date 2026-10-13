@@ -374,75 +374,72 @@ que funciona es la trampa que ya evitamos una vez.
 
 ## 10 · Estado real del desarrollo
 
-> Todo esto vive en el PR **#90**, rama `claude/loyalty-a1-migraciones` →
-> `main`. Todavía **no está mergeado ni desplegado**.
->
-> **Nota sobre la rama destino (septiembre 2026):** el PR apuntaba
-> originalmente a `desarrollo`, pero esa rama está abandonada en la práctica
-> — tiene cero commits que `main` no tenga y está 36 atrás. Todo el equipo
-> mergea directo a `main` (PRs 91 a 97). Se reapuntó a `main`, que además es
-> seguro: el módulo entero está detrás de `LOYALTY_ENABLED=false`, así que en
-> producción es código muerto hasta que alguien encienda el flag.
+> **Octubre 2026:** Fase A con **Google Wallet** construida entera (A1–A9),
+> en `desarrollo`. Apple Wallet queda para después (el código del `.pkpass`
+> está, falta la cuenta de Apple Developer). Todo sigue detrás de
+> `LOYALTY_ENABLED` y del entitlement `tiene_loyalty` por comercio: en
+> producción es código muerto hasta que se prenda.
 
-### Hecho y verificado
+### Google Wallet: verificado de punta a punta (13/10/2026)
+
+- Issuer ID `3388000000023214787` (Pay & Wallet Console, **modo demo**).
+- Cuenta de servicio `Loyalty-wallet-issuer` del proyecto `taply-501313`,
+  con nivel **Desarrollador** en la consola. Su clave está en Vercel
+  **solo en Preview** (`GOOGLE_WALLET_*`).
+- `/admin/wallet-prueba` creó la clase y una tarjeta, y se guardó en un
+  Android de prueba. Esa página queda para diagnosticar: si Google rechaza
+  algo, muestra el error y qué tocar.
+- Modo demo = solo las cuentas de prueba de la consola pueden guardar
+  tarjetas. Para clientes reales falta el **acceso de publicación** (ver
+  "Tareas que no son de código").
+
+### Qué hace cada pieza
 
 | PR | Qué incluye | Estado |
 |---|---|---|
-| **A1** | Migración: 9 tablas + `ALTER comercios` (`tiene_loyalty`, `lat`, `lng`) | ✅ Escrito |
-| **A2** | Flag `LOYALTY_ENABLED`, branch en el router del tap, landing `/l/<codigo>`, `lib/db/loyalty.ts` | ✅ Escrito |
-| **A3** | Motor de puntos: ledger, antifraude, Google Wallet (Issuer API), Apple Wallet (`.pkpass`) | ✅ Escrito |
+| **A1** | Migración 012: 9 tablas + `ALTER comercios` | ✅ |
+| **A2** | Flag, branch en `/t/[slug]`, landing `/l/<comercio>` | ✅ |
+| **A3** | Ledger, antifraude, Google Wallet (Issuer API), Apple (`.pkpass`) | ✅ |
+| **A4** | Alta con nombre + celular + consentimiento versionado, bienvenida, tarjeta de Google emitida al toque, "Guardar en Google Wallet" | ✅ |
+| **A5** | Misiones: opinar en Google y seguir en redes (autodeclaradas, una vez cada una), referidos (automático, solo personas nuevas, tope 20) | ✅ |
+| **A6** | Canje: el cliente pide un código de 6 letras (vence a los 15 min); el comercio lo valida en su portal y recién ahí se descuentan los puntos | ✅ |
+| **A7** | Panel `/admin/clientes/<id>/loyalty` (prender, puntos, beneficios, misiones; sincroniza la clase de Google) + pestaña "Club de beneficios" en el portal (socios, retorno 30 d, canjes, validar) | ✅ |
+| **A8** | Tests: `test/loyalty-firma.test.ts` (20) + 16 casos cruzados en `scripts/prueba-permisos.mjs` contra la app real (canje de otro local, doble canje, código vencido, visita sin tap, cooldown, link de tarjeta ajeno, misión ajena, baja ajena) | ✅ |
+| **A9** | Sección "Club de beneficios" en `/privacy#loyalty` (Ley 25.326, leyenda de la AAIP), baja con un botón, IP con HMAC | ✅ |
 
-**Verificación — el CI está en verde, entero** (septiembre 2026): instalación
-de dependencias, `tsc --noEmit`, **49/49 tests**, `next build` y auditoría de
-vulnerabilidades. Los cinco pasos.
+### Decisiones de esta etapa
 
-La firma PKCS#7 de los pases de Apple se comprobó con **OpenSSL** contra una
-cadena de certificados de prueba — no solo "no tira excepción", se validó de
-verdad contra una implementación independiente.
-
-> **Lo que pasó antes, para que no se repita.** Este PR estuvo diez días en
-> rojo sin que nadie lo mirara, por dos motivos acumulados:
->
-> 1. El `package-lock.json` quedó inconsistente con `package.json` al armar
->    el PR, y `npm ci` fallaba en el **primer paso** del CI, antes de correr
->    un solo test. Trampa a tener presente: `npm install` con Node 24 **borra**
->    `node_modules/vite-node/node_modules/{@types/node,undici-types}`, que el
->    npm de Node 22 (el del CI) exige. Si alguien toca el lockfile con una
->    versión de Node distinta a la del CI, hay que verificar que esas entradas
->    sigan estando.
-> 2. El PR estaba marcado como **borrador**, que en GitHub significa
->    literalmente "no lo revises todavía".
->
-> Y un tercero que no era de este PR: el paso de auditoría venía fallando en
-> **todas** las corridas de `main` desde el 2 de septiembre por dos CVE high en
-> `browserslist`. Se arregló acá (bump de parche) porque si no, este PR nunca
-> podía ponerse verde.
-
-### Falta construir
-
-| PR | Qué | Bloqueante de |
-|---|---|---|
-| **A4** | Formulario de registro + consentimiento + primer sello en la landing | Todo lo demás |
-| **A5** | Misiones: lógica, configuración por comercio, acreditación | El valor diferencial |
-| **A6** | Canje en mostrador (QR de un solo uso) | Cerrar el ciclo |
-| **A7** | Sección de admin + métricas en el portal | Que el comercio vea el valor |
-| **A8** | Tests del flujo crítico completo | Mergear con confianza |
-| **A9** | Legal (política de privacidad ampliada) + hardening | Salir a producción |
+- **Solo un tap real suma.** `/t/<slug>` agrega un token firmado de 15
+  minutos; abrir `/l/<comercio>` de nuevo (historial, la tarjeta) no suma.
+  El cooldown de 20 h vive en la base (transacción + lock por membresía),
+  no en el rate limit en memoria, que en serverless es por instancia.
+- **El teléfono no es una credencial.** Sin SMS no se puede verificar, así
+  que registrar un número que ya existe no da acceso a esa tarjeta ni pisa
+  sus datos. La forma de recuperar la sesión es el link "Ver mis puntos y
+  beneficios" que viene dentro del pase de Google Wallet (firmado).
+- **La base manda.** Si Google falla al emitir o actualizar, la membresía
+  queda en `error` y se reintenta cada vez que el cliente abre su página.
+- **Configuración desde el panel, no desde el portal**, para el piloto: el
+  equipo arma el club de cada comercio. El portal valida canjes y muestra
+  métricas.
+- **Logo de la tarjeta:** el del comercio (subido en "Logo para WhatsApp"),
+  servido en 660×660 por `/api/loyalty/logo/<id>`; si no tiene, el de
+  MetricsField (`public/wallet/logo-metricsfield.png`). Fuera de producción
+  Google no puede leer la preview (pide login), así que usa el favicon.
 
 ### Tareas que no son de código y bloquean el lanzamiento
 
-- [ ] **Cuenta de Apple Developer Program** (~99 USD/año) — sin esto no hay pases
-      de Apple. Los certificados (Pass Type ID + WWDR) se generan una vez y
-      **vencen aproximadamente cada año**: alguien tiene que tenerlo en el
-      calendario o se corta la emisión de tarjetas nuevas.
-- [ ] **Cuenta de Google Wallet Issuer** (gratis) + cuenta de servicio en GCP
-- [ ] **Correr la migración 011 a mano en Neon** — no se auto-aplica, es la
-      regla de oro del repo
-- [ ] **Ampliar la política de privacidad** — primera vez que guardamos datos de
-      consumidores
-- [ ] **Elegir 2-3 comercios piloto** entre los clientes actuales de Reviews
-
----
+- [ ] **Correr a mano en Neon** (producción): `db/migrations/012_loyalty_fundaciones.sql`
+      y después `db/migrations/016_loyalty_google.sql`. Lo mismo en la base de
+      Preview si es otra.
+- [ ] **Vercel:** `LOYALTY_PII_KEY` y `LOYALTY_IP_PEPPER` también en Preview
+      (hoy solo en Production); `LOYALTY_ENABLED=true` en Preview; las tres
+      `GOOGLE_WALLET_*` en Production cuando se lance.
+- [ ] **Pay & Wallet Console:** completar el Perfil de Negocio y pedir el
+      **acceso de publicación** (Google revisa cómo se ve la tarjeta).
+- [ ] **Revisión legal** del texto de `/privacy#loyalty` y del consentimiento.
+- [ ] **Elegir 2-3 comercios piloto** y cargarles logo, beneficios y misiones.
+- [ ] **Cuenta de Apple Developer Program** (~99 USD/año) — para iPhone.
 
 ## 11 · Decisiones ya tomadas (no re-litigar)
 
@@ -512,6 +509,12 @@ eso existe el corte.
 | Google Wallet | `lib/wallet/google.ts` |
 | Apple Wallet (.pkpass) | `lib/wallet/apple.ts` |
 | El branch del router | `app/t/[slug]/page.tsx` |
-| La landing pública | `app/(loyalty)/l/[codigo]/page.tsx` |
+| La landing pública (alta, tarjeta, canje, misiones) | `app/(loyalty)/l/[codigo]/` |
+| Firmas del cliente final (sesión, visita, tarjeta) | `lib/loyalty-firma.ts` |
+| Orquestación base ↔ Google Wallet | `lib/loyalty.ts` |
+| Configuración del club (panel) | `app/admin/clientes/[id]/loyalty/page.tsx` |
+| Pestaña del portal + validar canje | `app/portal/[codigo]/_components/PanelLoyalty.tsx` |
+| Prueba de Google Wallet | `/admin/wallet-prueba` |
+| Lo nuevo de la base (A4–A7) | `db/migrations/016_loyalty_google.sql` |
 | Variables de entorno necesarias | `.env.example` |
 | Reglas de integridad de taps (Reviews) | `docs/REGLAS-INTEGRIDAD-TAPS-RESENAS.html` |

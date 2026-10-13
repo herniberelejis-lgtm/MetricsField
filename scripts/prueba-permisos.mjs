@@ -212,6 +212,130 @@ cuerpo = await r.text();
 registrar("quien tiene el código de B", "abrir el portal de B", "ve solo a B",
   `HTTP ${r.status}, ¿aparece A? ${cuerpo.includes("Barbería")}`, r.status === 200 && !cuerpo.includes("Barbería"));
 
+// ---------- Loyalty: canje en caja, visitas, tarjeta y misiones ----------
+// X = cliente final socio de A; Y = socio de B. El server corre con
+// LOYALTY_ENABLED=true y LOYALTY_PII_KEY (ver el workflow); las cookies y
+// tokens se firman acá con la misma clave, igual que lib/loyalty-firma.ts.
+const CLAVE_LOYALTY = process.env.LOYALTY_PII_KEY ?? "";
+const firmaL = (texto) => crypto.createHmac("sha256", CLAVE_LOYALTY).update(texto).digest("base64url");
+const cookieCliente = (id) => {
+  const exp = Date.now() + 60 * 60 * 1000;
+  return `loyalty_cliente=${id}.${exp}.${firmaL(`sesion:${id}:${exp}`)}`;
+};
+const tokenVisita = (comercioId) => {
+  const t = Date.now();
+  return encodeURIComponent(`${t}.${firmaL(`visita:${comercioId}:${t}`)}`);
+};
+const saldoDe = async (m) =>
+  Number((await uno(sql`SELECT COALESCE(SUM(delta),0)::int AS s FROM movimientos_puntos WHERE membresia_id = ${m}`)).s);
+
+await sql`DELETE FROM clientes_finales WHERE id IN ('cf-prueba-x', 'cf-prueba-y')`;
+await sql`DELETE FROM beneficios WHERE comercio_id IN ('barberia-guemes', 'resto-nueva-cordoba', 'gym-guemes')`;
+await sql`DELETE FROM misiones WHERE comercio_id IN ('barberia-guemes', 'resto-nueva-cordoba')`;
+await sql`UPDATE comercios SET tiene_loyalty = true WHERE id IN ('barberia-guemes', 'resto-nueva-cordoba', 'gym-guemes')`;
+for (const id of ["barberia-guemes", "resto-nueva-cordoba", "gym-guemes"]) {
+  await sql`INSERT INTO programas_loyalty (comercio_id, puntos_bienvenida, puntos_por_visita, activo)
+            VALUES (${id}, 100, 10, true)
+            ON CONFLICT (comercio_id) DO UPDATE SET puntos_bienvenida = 100, puntos_por_visita = 10, activo = true`;
+  await sql`INSERT INTO beneficios (id, comercio_id, nombre, costo_puntos) VALUES (${`ben-${id}`}, ${id}, 'Café', 50)`;
+}
+await sql`INSERT INTO misiones (id, comercio_id, tipo, puntos, verificacion)
+          VALUES ('mis-a', 'barberia-guemes', 'resena_google', 20, 'autodeclarada'),
+                 ('mis-b', 'resto-nueva-cordoba', 'resena_google', 20, 'autodeclarada')`;
+await sql`INSERT INTO clientes_finales (id, telefono, nombre) VALUES
+          ('cf-prueba-x', '3510000001', 'Equis'), ('cf-prueba-y', '3510000002', 'Ye')`;
+await sql`INSERT INTO membresias (id, cliente_final_id, comercio_id) VALUES
+          ('mem-x-a', 'cf-prueba-x', 'barberia-guemes'), ('mem-y-b', 'cf-prueba-y', 'resto-nueva-cordoba')`;
+// Bienvenida de hace dos días: así el cooldown de 20 h no tapa la visita.
+await sql`INSERT INTO movimientos_puntos (membresia_id, delta, motivo, idem_clave, creado_en) VALUES
+          ('mem-x-a', 100, 'bienvenida', 'bienvenida:mem-x-a', now() - interval '2 days'),
+          ('mem-y-b', 100, 'bienvenida', 'bienvenida:mem-y-b', now() - interval '2 days')`;
+const nuevoCanje = async (codigo, membresia, comercioId, vence = "15 minutes") =>
+  sql`INSERT INTO canjes (id, membresia_id, beneficio_id, comercio_id, costo_puntos, expira_en)
+      VALUES (${codigo}, ${membresia}, ${`ben-${comercioId}`}, ${comercioId}, 50, now() + ${vence}::interval)`;
+const canjeValidado = async (codigo) => (await uno(sql`SELECT validado FROM canjes WHERE id = ${codigo}`)).validado;
+
+await nuevoCanje("PRUEB2", "mem-x-a", "barberia-guemes");
+await accionArgs("accionValidarCanjePortal", ["rn9x3c5v", "resto-nueva-cordoba", "PRUEB2"]);
+await accionArgs("accionValidarCanjePortal", ["rn9x3c5v", "barberia-guemes", "PRUEB2"]);
+registrar("B", "validar en su caja un canje de un socio de A", "denegado",
+  `validado = ${await canjeValidado("PRUEB2")}, saldo X = ${await saldoDe("mem-x-a")}`,
+  (await canjeValidado("PRUEB2")) === false && (await saldoDe("mem-x-a")) === 100);
+
+await accionArgs("accionValidarCanjePortal", ["gg8u3i6o", "gym-guemes", "PRUEB2"]);
+registrar("código sin Google", "validar un canje en un portal con gate", "denegado",
+  `validado = ${await canjeValidado("PRUEB2")}`, (await canjeValidado("PRUEB2")) === false);
+
+await accionArgs("accionValidarCanjePortal", ["bg7k2m4p", "barberia-guemes", "prueb2"]);
+registrar("A", "validar el canje de SU socio (control positivo)", "permitido",
+  `validado = ${await canjeValidado("PRUEB2")}, saldo X = ${await saldoDe("mem-x-a")}`,
+  (await canjeValidado("PRUEB2")) === true && (await saldoDe("mem-x-a")) === 50);
+
+await accionArgs("accionValidarCanjePortal", ["bg7k2m4p", "barberia-guemes", "PRUEB2"]);
+registrar("A", "validar dos veces el mismo código", "descuenta una sola vez", `saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 50);
+
+await nuevoCanje("VENC34", "mem-x-a", "barberia-guemes", "-1 minutes");
+await accionArgs("accionValidarCanjePortal", ["bg7k2m4p", "barberia-guemes", "VENC34"]);
+registrar("A", "validar un código vencido", "denegado", `validado = ${await canjeValidado("VENC34")}`,
+  (await canjeValidado("VENC34")) === false && (await saldoDe("mem-x-a")) === 50);
+
+const verTarjeta = (comercioId, query, cookie) =>
+  fetch(`${BASE}/l/${comercioId}${query}`, { headers: { "x-real-ip": ipNueva(), ...(cookie ? { cookie } : {}) } });
+
+await verTarjeta("barberia-guemes", "", cookieCliente("cf-prueba-x"));
+registrar("X", "abrir su tarjeta sin tocar el cartel", "no suma", `saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 50);
+
+await verTarjeta("barberia-guemes", `?v=${tokenVisita("resto-nueva-cordoba")}`, cookieCliente("cf-prueba-x"));
+registrar("X", "sumar en A con el token de visita de B", "no suma", `saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 50);
+
+r = await verTarjeta("barberia-guemes", `?v=${tokenVisita("barberia-guemes")}`, cookieCliente("cf-prueba-x"));
+registrar("X", "tocar el cartel de A (control positivo)", "+10", `HTTP ${r.status}, saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 60);
+
+await verTarjeta("barberia-guemes", `?v=${tokenVisita("barberia-guemes")}`, cookieCliente("cf-prueba-x"));
+registrar("X", "tocar el cartel dos veces en 20 h", "suma una sola", `saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 60);
+
+r = await verTarjeta("barberia-guemes", "", "loyalty_cliente=cf-prueba-y.9999999999999.firmatrucha");
+cuerpo = await r.text();
+registrar("anónimo", "cookie de cliente falsificada", "ve el alta, no una tarjeta",
+  `HTTP ${r.status}, ¿muestra saldo? ${cuerpo.includes("puntos</p>")}`, !cuerpo.includes("Equis") && !cuerpo.includes("Ye<"));
+
+const tokenTarjetaX = encodeURIComponent(`mem-x-a.${firmaL("tarjeta:mem-x-a")}`);
+r = await fetch(`${BASE}/l/resto-nueva-cordoba/entrar?tarjeta=${tokenTarjetaX}`, { redirect: "manual", headers: { "x-real-ip": ipNueva() } });
+registrar("X", "usar el link de su tarjeta de A en el club de B", "sin sesión", `set-cookie: ${Boolean(r.headers.get("set-cookie"))}`,
+  !r.headers.get("set-cookie"));
+r = await fetch(`${BASE}/l/barberia-guemes/entrar?tarjeta=${tokenTarjetaX}`, { redirect: "manual", headers: { "x-real-ip": ipNueva() } });
+registrar("X", "link de su tarjeta en A (control positivo)", "recupera la sesión", `set-cookie: ${Boolean(r.headers.get("set-cookie"))}`,
+  (r.headers.get("set-cookie") ?? "").includes("loyalty_cliente=cf-prueba-x."));
+
+await accionForm("accionReclamarMision", { comercioId: "barberia-guemes", misionId: "mis-b" }, {
+  pagina: "/l/barberia-guemes", cookie: cookieCliente("cf-prueba-x"),
+});
+registrar("X", "cobrar en A una misión de B", "denegado", `saldo X = ${await saldoDe("mem-x-a")}`, (await saldoDe("mem-x-a")) === 60);
+for (let i = 0; i < 2; i++) {
+  await accionForm("accionReclamarMision", { comercioId: "barberia-guemes", misionId: "mis-a" }, {
+    pagina: "/l/barberia-guemes", cookie: cookieCliente("cf-prueba-x"),
+  });
+}
+registrar("X", "cobrar dos veces la misión de A", "suma una sola (+20)", `saldo X = ${await saldoDe("mem-x-a")}`,
+  (await saldoDe("mem-x-a")) === 80);
+
+await accionForm("accionDarseDeBaja", { comercioId: "resto-nueva-cordoba" }, {
+  pagina: "/l/resto-nueva-cordoba", cookie: cookieCliente("cf-prueba-x"),
+});
+let [{ n: membresiaY }] = await sql`SELECT count(*)::int AS n FROM membresias WHERE id = 'mem-y-b'`;
+registrar("X", "dar de baja la tarjeta de otra persona en B", "denegado", `membresía de Y = ${membresiaY}`, membresiaY === 1);
+
+await accionForm("accionDarseDeBaja", { comercioId: "resto-nueva-cordoba" }, {
+  pagina: "/l/resto-nueva-cordoba", cookie: cookieCliente("cf-prueba-y"),
+});
+[{ n: membresiaY }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-y'`;
+registrar("Y", "borrar su tarjeta y sus datos (control positivo)", "borrado", `cliente Y = ${membresiaY}`, membresiaY === 0);
+
 // ---------- Acciones de admin sin sesión ----------
 const [{ n: comerciosAntes }] = await sql`SELECT count(*)::int AS n FROM comercios`;
 for (const pagina of ["/portal/x", "/login", "/admin/clientes"]) {

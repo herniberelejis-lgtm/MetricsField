@@ -76,6 +76,8 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/prueba
       ADMIN_PASSWORD: clave-solo-para-el-ci
       CRON_SECRET: secreto-solo-para-el-ci
+      LOYALTY_ENABLED: "true"
+      LOYALTY_PII_KEY: clave-loyalty-solo-para-el-ci
     steps:
       - uses: actions/checkout@v4
 

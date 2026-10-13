@@ -144,6 +144,47 @@ export default function PrivacidadPage() {
                 </p>
               </section>
 
+              <section id="loyalty" className="scroll-mt-6">
+                <h2 className={h2}>Club de beneficios (tarjeta de puntos)</h2>
+                <p className="mt-2">
+                  Algunos comercios ofrecen una tarjeta de puntos de MetricsField. Es
+                  opcional: solo existe si vos te registrás. Al registrarte guardamos tu
+                  nombre, tu celular, tu email si lo cargás, las visitas en las que
+                  sumaste puntos, tus puntos, los beneficios que canjeaste y qué
+                  aceptaste y cuándo. Lo usamos solo para darte tu tarjeta, sumarte
+                  puntos y que puedas canjearlos. Para frenar abusos guardamos un
+                  código derivado de tu IP del que no se puede recuperar la IP.
+                </p>
+                <p className="mt-2">
+                  Esos datos los ve el comercio donde te registraste (no otros
+                  comercios). Tu nombre y tus puntos viajan a Google para mostrar la
+                  tarjeta en tu Google Wallet. Solo te mandan promociones si lo
+                  aceptaste. No vendemos tus datos.
+                </p>
+                <p className="mt-2">
+                  Los guardamos mientras tengas la tarjeta. Desde tu tarjeta podés
+                  borrarla con un botón (&ldquo;Borrar mi tarjeta y mis datos&rdquo;):
+                  se eliminan tus datos de ese comercio y la tarjeta se desactiva en tu
+                  Wallet. También podés pedir acceso, corrección o eliminación
+                  escribiendo a{" "}
+                  <a href="mailto:info@metricsfield.com" className={link}>
+                    info@metricsfield.com
+                  </a>
+                  .
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  El titular de los datos personales tiene la facultad de ejercer el
+                  derecho de acceso a los mismos en forma gratuita a intervalos no
+                  inferiores a seis meses, salvo que se acredite un interés legítimo al
+                  efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley
+                  Nº 25.326. La Agencia de Acceso a la Información Pública, en su
+                  carácter de Órgano de Control de la Ley Nº 25.326, tiene la
+                  atribución de atender las denuncias y reclamos que interpongan
+                  quienes resulten afectados en sus derechos por incumplimiento de las
+                  normas vigentes en materia de protección de datos personales.
+                </p>
+              </section>
+
               <section>
                 <h2 className={h2}>Uso limitado (Limited Use) — datos de las APIs de Google</h2>
                 <p className="mt-2">
@@ -305,6 +346,36 @@ export default function PrivacidadPage() {
                   do not store their IP address or any personal data in our database;
                   the IP is used only transiently (minutes) to prevent abuse. The review they leave on Google
                   is governed by Google&rsquo;s privacy policy.
+                </p>
+              </section>
+
+              <section id="loyalty" className="scroll-mt-6">
+                <h2 className={h2}>Rewards Club (points card)</h2>
+                <p className="mt-2">
+                  Some businesses offer a MetricsField points card. It is optional: it
+                  only exists if you sign up. When you sign up we store your name,
+                  your phone number, your email if you provide it, the visits in which
+                  you earned points, your points, the rewards you redeemed, and what
+                  you agreed to and when. We use it only to give you your card, add
+                  points and let you redeem them. To prevent abuse we keep a code
+                  derived from your IP address that cannot be turned back into it.
+                </p>
+                <p className="mt-2">
+                  The business where you signed up can see this data (other
+                  businesses cannot). Your name and points are sent to Google to show
+                  the card in your Google Wallet. You only get promotions if you opted
+                  in. We do not sell your data.
+                </p>
+                <p className="mt-2">
+                  We keep it while you have the card. From your card you can delete it
+                  with one button (&ldquo;Borrar mi tarjeta y mis datos&rdquo;): your
+                  data for that business is erased and the card is deactivated in your
+                  Wallet. You can also request access, correction or deletion at{" "}
+                  <a href="mailto:info@metricsfield.com" className={link}>
+                    info@metricsfield.com
+                  </a>
+                  . Argentina&rsquo;s data protection authority (Agencia de Acceso a la
+                  Información Pública) handles complaints under Law 25,326.
                 </p>
               </section>
 

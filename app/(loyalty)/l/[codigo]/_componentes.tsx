@@ -22,7 +22,7 @@ function Consentimientos({ nombreComercio }: { nombreComercio: string }) {
         <span>
           Acepto que {nombreComercio} y MetricsField guarden mis datos para darme mi tarjeta de puntos y que se
           guarde en Google Wallet.{" "}
-          <a href="/privacidad#loyalty" target="_blank" className="underline underline-offset-2">
+          <a href="/privacy#loyalty" target="_blank" className="underline underline-offset-2">
             Cómo usamos tus datos
           </a>
         </span>

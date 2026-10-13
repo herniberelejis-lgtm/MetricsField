@@ -273,7 +273,7 @@ export default async function LoyaltyLandingPage({
 
       <footer className="space-y-2 pt-4 text-center text-xs text-slate-400">
         <p>
-          <a href="/privacidad#loyalty" className="underline underline-offset-2">
+          <a href="/privacy#loyalty" className="underline underline-offset-2">
             Privacidad
           </a>
         </p>
