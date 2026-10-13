@@ -31,6 +31,9 @@ const DESTINOS: { value: string; label: string }[] = [
   { value: "instagram", label: "Instagram" },
   { value: "promo", label: "Promoción" },
   { value: "url_custom", label: "Otra URL" },
+  // Sin URL: manda a /l/<comercio> si el cliente tiene Loyalty activo; si
+  // no, cae en la reseña de Google (nunca un callejón sin salida).
+  { value: "loyalty", label: "Club de beneficios (Loyalty)" },
 ];
 
 const TIPOS: { value: string; label: string }[] = [

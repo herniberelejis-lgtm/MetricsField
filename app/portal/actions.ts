@@ -25,6 +25,8 @@ import type { Cliente } from "@/lib/types";
 import { urlSegura } from "@/lib/url";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
+import { comercioConLoyalty, reflejarSaldoEnWallet } from "@/lib/loyalty";
+import { getMembresiaPorId, registrarEventoLoyalty, validarCanje } from "@/lib/db/loyalty";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial — pero esa credencial vive en la CUENTA
@@ -326,3 +328,38 @@ export async function accionQuitarCompetidorPortal(
   return { ok: true };
 }
 
+
+// ---------- Loyalty: validar un canje en caja ----------
+// La primera escritura del portal que mueve plata del comercio (un café
+// gratis): misma autorización que el resto del portal (comercioAutorizado:
+// código + gate de Google + el local tiene que ser de esta cuenta) y además
+// un límite propio por local, para que nadie pruebe códigos al azar.
+
+export type ResultadoCanjePortal =
+  | { ok: true; beneficio: string; cliente: string; costoPuntos: number; saldo: number }
+  | { ok: false; error: string };
+
+export async function accionValidarCanjePortal(
+  codigo: string,
+  comercioId: string,
+  codigoCanje: string,
+): Promise<ResultadoCanjePortal> {
+  try {
+    const comercio = await comercioAutorizado(codigo, comercioId);
+    if (!(await permitir(`portal-canje:${comercio.id}`, 30, 10 * 60_000))) {
+      return { ok: false, error: "Demasiados intentos seguidos. Esperá unos minutos." };
+    }
+    if (!(await comercioConLoyalty(comercio.id))) {
+      return { ok: false, error: "Este local no tiene el club de beneficios activo." };
+    }
+    const r = await validarCanje(comercio.id, codigoCanje, "portal");
+    if (!r.ok) return r;
+    await registrarEventoLoyalty({ comercioId: comercio.id, tipo: "canje_validado", detalle: codigoCanje.toUpperCase() });
+    const membresia = await getMembresiaPorId(r.membresiaId);
+    if (membresia) await reflejarSaldoEnWallet(membresia, r.saldo);
+    revalidatePath(`/portal/${codigo}`);
+    return { ok: true, beneficio: r.beneficio, cliente: r.cliente, costoPuntos: r.costoPuntos, saldo: r.saldo };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No se pudo validar el código." };
+  }
+}

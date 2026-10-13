@@ -7,7 +7,11 @@ import { requireAdmin, emailAdminActual } from "@/lib/auth";
 import { alertarResenaMala } from "@/lib/alertas";
 import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
+import * as loyaltyDb from "@/lib/db/loyalty";
+import { urlSegura } from "@/lib/url";
+import { sincronizarClaseGoogle, walletGoogleConfigurado } from "@/lib/loyalty";
 import type {
+  TipoMisionLoyalty,
   DestinoLink,
   EstadoCliente,
   EstadoResena,
@@ -295,7 +299,7 @@ export async function accionCrearLink(fd: FormData): Promise<void> {
   const comercioId = str(fd, "comercioId");
   const destino = str(fd, "destino") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
-  if (destino !== "resena" && !urlDestino) {
+  if (destino !== "resena" && destino !== "loyalty" && !urlDestino) {
     redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
   await db.crearLink(comercioId, {
@@ -315,7 +319,7 @@ export async function accionActualizarLink(fd: FormData): Promise<void> {
   const comercioId = str(fd, "comercioId");
   const destino = str(fd, "destino") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
-  if (destino !== "resena" && !urlDestino) {
+  if (destino !== "resena" && destino !== "loyalty" && !urlDestino) {
     redirect(`/admin/clientes/${comercioId}/links?error=sin-url`);
   }
   await db.actualizarLink(linkId, {
@@ -360,7 +364,7 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   if (!comercioId) redirect("/admin/hardware?error=sin-cliente");
   const destino = (str(fd, "destino") || "resena") as DestinoLink;
   const urlDestino = str(fd, "urlDestino");
-  if (destino !== "resena" && !urlDestino) {
+  if (destino !== "resena" && destino !== "loyalty" && !urlDestino) {
     redirect("/admin/hardware?error=sin-url");
   }
   await db.asignarPiezaACliente(id, comercioId, {
@@ -556,3 +560,95 @@ export async function accionEliminarAdmin(fd: FormData): Promise<void> {
   redirect("/admin/administradores");
 }
 
+
+// ---------- Loyalty (club de beneficios) ----------
+// El equipo configura el club de cada comercio desde
+// /admin/clientes/<id>/loyalty: lo prende, fija los puntos y arma el
+// catálogo de beneficios y misiones. Al guardar, la clase de Google Wallet
+// del comercio se crea o se actualiza (nombre y logo) en el momento.
+
+const TIPOS_MISION: TipoMisionLoyalty[] = ["resena_google", "seguir_redes", "referido"];
+
+function enteroEntre(fd: FormData, key: string, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(num(fd, key))));
+}
+
+function rutaLoyalty(id: string, query = ""): string {
+  return `/admin/clientes/${encodeURIComponent(id)}/loyalty${query}`;
+}
+
+export async function accionGuardarLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  if (!(await db.getCliente(id))) throw new Error("Cliente inexistente.");
+  const tieneLoyalty = fd.get("tieneLoyalty") === "on";
+  await loyaltyDb.setTieneLoyalty(id, tieneLoyalty);
+  const programa = await loyaltyDb.guardarProgramaLoyalty(id, {
+    puntosBienvenida: enteroEntre(fd, "puntosBienvenida", 0, 10_000),
+    puntosPorVisita: enteroEntre(fd, "puntosPorVisita", 0, 10_000),
+    activo: fd.get("activo") === "on",
+  });
+  await auditar("guardar_loyalty", `${id}: ${tieneLoyalty ? "activo" : "apagado"}, bienvenida ${programa.puntosBienvenida}, visita ${programa.puntosPorVisita}`);
+
+  let query = "?ok=1";
+  if (tieneLoyalty && walletGoogleConfigurado()) {
+    try {
+      const comercio = await loyaltyDb.getComercioLoyalty(id);
+      if (comercio) await sincronizarClaseGoogle(comercio);
+    } catch (e) {
+      console.error("Loyalty: no se pudo sincronizar la clase de Google:", e instanceof Error ? e.message : e);
+      query = "?error=google";
+    }
+  }
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id, query));
+}
+
+export async function accionCrearBeneficioLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const nombre = str(fd, "nombre").slice(0, 80);
+  const costo = enteroEntre(fd, "costoPuntos", 1, 100_000);
+  if (!nombre) redirect(rutaLoyalty(id, "?error=beneficio"));
+  if (!(await db.getCliente(id))) throw new Error("Cliente inexistente.");
+  await loyaltyDb.crearBeneficio(id, nombre, costo);
+  await auditar("crear_beneficio_loyalty", `${id}: ${nombre} (${costo})`);
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id));
+}
+
+export async function accionToggleBeneficioLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await loyaltyDb.setBeneficioActivo(id, str(fd, "beneficioId"), fd.get("activo") === "1");
+  await auditar("editar_beneficio_loyalty", `${id}: ${str(fd, "beneficioId")}`);
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id));
+}
+
+export async function accionCrearMisionLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const tipo = str(fd, "tipo") as TipoMisionLoyalty;
+  const url = str(fd, "url");
+  if (!TIPOS_MISION.includes(tipo)) redirect(rutaLoyalty(id, "?error=mision"));
+  if (tipo === "seguir_redes" && !urlSegura(url)) redirect(rutaLoyalty(id, "?error=mision-url"));
+  if (!(await db.getCliente(id))) throw new Error("Cliente inexistente.");
+  await loyaltyDb.crearMision(id, {
+    tipo,
+    puntos: enteroEntre(fd, "puntos", 1, 10_000),
+    url: tipo === "seguir_redes" ? url : "",
+  });
+  await auditar("crear_mision_loyalty", `${id}: ${tipo}`);
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id));
+}
+
+export async function accionToggleMisionLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  await loyaltyDb.setMisionActiva(id, str(fd, "misionId"), fd.get("activa") === "1");
+  await auditar("editar_mision_loyalty", `${id}: ${str(fd, "misionId")}`);
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id));
+}

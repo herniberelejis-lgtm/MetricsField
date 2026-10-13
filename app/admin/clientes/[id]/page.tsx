@@ -135,12 +135,20 @@ export default async function ClienteDetallePage({
       {/* Acciones: "Cargar métricas" queda a la vista porque se usa todos
           los meses; el resto vive en el menú para no competir por atención. */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={`/admin/clientes/${c.id}/metricas`}
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          + Cargar métricas
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/clientes/${c.id}/metricas`}
+            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            + Cargar métricas
+          </Link>
+          <Link
+            href={`/admin/clientes/${c.id}/loyalty`}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Club de beneficios
+          </Link>
+        </div>
 
         <AccionesClienteMenu id={c.id} nombre={c.nombre} />
       </div>
