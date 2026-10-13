@@ -102,6 +102,22 @@ const SALUDOS: Record<TonoMarca, string[]> = {
   formal: ["Estimado/a {autor}, muchas gracias por su reseña.", "Sr./Sra. {autor}, agradecemos su comentario."],
 };
 
+const SALUDOS_SIN_NOMBRE: Record<TonoMarca, string[]> = {
+  cercano: ["¡Hola! Gracias por tu reseña.", "¡Hola!", "Muchas gracias por tomarte el tiempo."],
+  formal: ["Muchas gracias por su reseña.", "Agradecemos su comentario."],
+};
+
+/** El nombre público de Google lo elige el autor de la reseña: puede ser un
+ * teléfono, un link o cualquier texto. Como la respuesta sale publicada con
+ * la identidad del comercio (a veces sin que nadie la lea antes), del
+ * nombre solo se usa la primera palabra, con letras nada más y corta. Si no
+ * queda un nombre razonable, se saluda sin nombre. */
+export function nombreParaSaludo(autor: string): string {
+  const primera = (autor ?? "").normalize("NFC").trim().split(/\s+/)[0] ?? "";
+  if (!/^[\p{L}][\p{L}'’-]{1,19}$/u.test(primera)) return "";
+  return primera.charAt(0).toLocaleUpperCase("es") + primera.slice(1);
+}
+
 /**
  * `intento` deja pedir una variante distinta a propósito (botón "Regenerar")
  * sin volverse aleatorio: mismo intento + mismo texto siempre da la misma
@@ -118,7 +134,11 @@ export function generarRespuestaSugerida(
   const positiva = estrellas >= 4;
   const tema = detectarTema(texto);
   const sal = String(intento);
-  const saludo = variante(autor + texto + sal, SALUDOS[tono]).replace("{autor}", autor);
+  const nombre = nombreParaSaludo(autor);
+  // Reemplazo con función: un string de reemplazo interpreta $&, $' y $`.
+  const saludo = nombre
+    ? variante(autor + texto + sal, SALUDOS[tono]).replace("{autor}", () => nombre)
+    : variante(autor + texto + sal, SALUDOS_SIN_NOMBRE[tono]);
   const cuerpoTema =
     tema === "general"
       ? positiva

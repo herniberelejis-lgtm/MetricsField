@@ -7,6 +7,7 @@ import { COOKIE_CLIENTE_FINAL, leerCookieClienteFinal, tokenVisitaValido } from 
 import {
   comercioConLoyalty,
   emitirTarjetaGoogle,
+  loyaltyHabilitado,
   origenLoyalty,
   reflejarSaldoEnWallet,
   walletGoogleConfigurado,
@@ -17,6 +18,7 @@ import {
   getBeneficios,
   getCanjePendiente,
   getClienteFinal,
+  getComercioLoyalty,
   getMembresia,
   getMisiones,
   getMisionesCumplidas,
@@ -79,10 +81,45 @@ export default async function LoyaltyLandingPage({
   if (!(await permitir(`loyalty-landing:${ip}`, 60, 10 * 60_000))) notFound();
 
   const ctx = await comercioConLoyalty(codigo);
-  if (!ctx) notFound();
+  const clienteFinalId = leerCookieClienteFinal((await cookies()).get(COOKIE_CLIENTE_FINAL)?.value);
+  if (!ctx) {
+    // Club apagado, pausado o cuenta en baja: nada de puntos ni canjes, pero
+    // quien tenía tarjeta acá igual puede borrar sus datos (derecho de supresión).
+    const local = loyaltyHabilitado() ? await getComercioLoyalty(codigo) : null;
+    if (!local) notFound();
+    const socio = clienteFinalId ? await getMembresia(clienteFinalId, local.id) : null;
+    if (!socio) {
+      if (!sp.baja) notFound();
+      // Confirmación de la baja: sin el nombre del local (sin sesión no hay
+      // nada que mostrar de un comercio sin club).
+      return (
+        <Pantalla>
+          <Tarjeta>
+            <p className="text-sm text-slate-600">Listo: borramos tu tarjeta y tus datos de este local.</p>
+          </Tarjeta>
+        </Pantalla>
+      );
+    }
+    return (
+      <Pantalla>
+        <header className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Club de beneficios</p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900">{local.nombre}</h1>
+        </header>
+        <Tarjeta>
+          <p className="text-sm text-slate-600">Este club de beneficios no está disponible por ahora.</p>
+          <form action={accionDarseDeBaja} className="mt-4">
+            <input type="hidden" name="comercioId" value={local.id} />
+            <button type="submit" className="text-sm text-slate-500 underline underline-offset-2">
+              Borrar mi tarjeta y mis datos de este local
+            </button>
+          </form>
+        </Tarjeta>
+      </Pantalla>
+    );
+  }
   const { comercio, programa } = ctx;
 
-  const clienteFinalId = leerCookieClienteFinal((await cookies()).get(COOKIE_CLIENTE_FINAL)?.value);
   const persona = clienteFinalId ? await getClienteFinal(clienteFinalId) : null;
   const membresia = persona ? await getMembresia(persona.id, comercio.id) : null;
 

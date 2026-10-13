@@ -8,10 +8,10 @@ import { pinValido } from "@/lib/pin";
 import { urlSegura } from "@/lib/url";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
-// que su comprador escaneó por primera vez. Sin login — el rate limit por
-// IP es la única defensa contra reclamar piezas en masa por fuerza bruta
-// sobre los códigos (son secuenciales); alcanza para el volumen de este
-// canal, no para un ataque dedicado con muchas IPs.
+// que su comprador escaneó por primera vez. Sin login — la defensa contra
+// reclamar piezas ajenas es que el id lleva un sufijo aleatorio (no se
+// puede enumerar, ver generarLotePiezas), que solo es reclamable inventario
+// nunca usado (ver activarAutogestion) y el rate limit por IP.
 export async function activarCartel(
   slug: string,
   nombreNegocio: string,
@@ -48,8 +48,10 @@ export async function activarCartel(
 }
 
 // Editar una pieza ya autogestionada — pide el PIN elegido en la
-// activación. Rate limit por IP+pieza: un PIN de pocos dígitos solo es
-// seguro si además está protegido contra fuerza bruta.
+// activación. Un PIN de pocos dígitos solo es seguro si además está
+// protegido contra fuerza bruta: límite por IP+pieza Y un tope por pieza
+// que no depende de la IP (rotar IPs no da más intentos contra el mismo
+// cartel). Con 30 intentos por día, 10⁴ PIN llevan casi un año.
 export async function editarCartel(
   slug: string,
   pin: string,
@@ -68,7 +70,12 @@ export async function editarCartel(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  if (!(await permitir(`editar-cartel:${ip}:${slug}`, 5, 15 * 60_000))) {
+  const pieza = String(slug ?? "").slice(0, 80);
+  if (
+    !(await permitir(`editar-cartel:${ip}:${pieza}`, 5, 15 * 60_000)) ||
+    !(await permitir(`editar-cartel-pieza:${pieza}`, 10, 60 * 60_000)) ||
+    !(await permitir(`editar-cartel-pieza-dia:${pieza}`, 30, 24 * 60 * 60_000))
+  ) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 

@@ -1,6 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import { sql } from "../sql";
+import type postgres from "postgres";
 import type { BeneficioLoyalty, MisionLoyalty, ProgramaLoyalty, TipoMisionLoyalty } from "../types";
 import type { TipoEventoLoyalty } from "../loyalty-antifraude";
 
@@ -27,6 +28,9 @@ export interface ComercioLoyalty {
   tieneLoyalty: boolean;
   /** "baja" = el comercio dejó de ser cliente: Loyalty se apaga con él. */
   estado: string;
+  /** Estado de la cuenta raíz (el propio si no es sucursal): una sucursal
+   * de una cuenta en baja o pausada tampoco tiene Loyalty. */
+  estadoRaiz: string;
   googleReviewUrl: string;
   tieneLogo: boolean;
 }
@@ -37,8 +41,11 @@ export interface ComercioLoyalty {
 export async function getComercioLoyalty(comercioId: string): Promise<ComercioLoyalty | null> {
   const rows = await sql`
     SELECT co.id, co.nombre, co.tiene_loyalty, co.estado, co.google_review_url,
+           COALESCE(padre.estado, co.estado) AS estado_raiz,
            EXISTS (SELECT 1 FROM comercio_logos l WHERE l.comercio_id = co.id) AS tiene_logo
-    FROM comercios co WHERE co.id = ${comercioId}
+    FROM comercios co
+    LEFT JOIN comercios padre ON padre.id = co.comercio_padre_id
+    WHERE co.id = ${comercioId}
   `;
   if (rows.length === 0) return null;
   const r = rows[0];
@@ -47,6 +54,7 @@ export async function getComercioLoyalty(comercioId: string): Promise<ComercioLo
     nombre: r.nombre as string,
     tieneLoyalty: Boolean(r.tiene_loyalty),
     estado: (r.estado as string) ?? "",
+    estadoRaiz: (r.estado_raiz as string) ?? "",
     googleReviewUrl: (r.google_review_url as string) ?? "",
     tieneLogo: Boolean(r.tiene_logo),
   };
@@ -212,6 +220,24 @@ export async function crearClienteFinal(datos: {
   return { id: previo[0].id as string, existente: true };
 }
 
+/** Libera un teléfono: borra la identidad que lo tiene (con sus
+ * membresías, puntos, canjes y consentimientos, en cascada) y devuelve las
+ * tarjetas de Google que había que desactivar. Es la salida cuando alguien
+ * registró un número que no era suyo — sin verificación por SMS, el dueño
+ * real queda afuera hasta que el equipo lo libera. */
+export async function liberarTelefono(telefono: string): Promise<{ liberado: boolean; objetosGoogle: string[] }> {
+  return sql.begin(async (tx) => {
+    const persona = await tx`SELECT id FROM clientes_finales WHERE telefono = ${telefono} FOR UPDATE`;
+    if (persona.length === 0) return { liberado: false, objetosGoogle: [] };
+    const id = persona[0].id as string;
+    const objetos = await tx`
+      SELECT google_object_id FROM membresias WHERE cliente_final_id = ${id} AND google_object_id <> ''
+    `;
+    await tx`DELETE FROM clientes_finales WHERE id = ${id}`;
+    return { liberado: true, objetosGoogle: objetos.map((r) => r.google_object_id as string) };
+  });
+}
+
 /** Consentimiento versionado (Ley 25.326): append-only, nunca se edita. */
 export async function registrarConsentimiento(datos: {
   clienteFinalId: string;
@@ -312,16 +338,38 @@ export async function marcarEstadoGoogle(
 
 /** Baja pedida por el propio cliente (derecho de supresión, Ley 25.326):
  * borra su membresía en este comercio con sus puntos y canjes. Si ya no le
- * queda ninguna otra, borra también su identidad y sus consentimientos.
- * Los eventos quedan, pero anónimos (cliente_final_id pasa a NULL). */
+ * queda ninguna otra, borra también su identidad. Los consentimientos de
+ * este comercio se borran y sus eventos quedan, pero anónimos. */
 export async function eliminarMembresiaYDatos(clienteFinalId: string, membresiaId: string): Promise<void> {
   await sql.begin(async (tx) => {
-    await tx`DELETE FROM membresias WHERE id = ${membresiaId} AND cliente_final_id = ${clienteFinalId}`;
+    const borrada = await tx`
+      DELETE FROM membresias WHERE id = ${membresiaId} AND cliente_final_id = ${clienteFinalId}
+      RETURNING comercio_id
+    `;
+    if (borrada.length === 0) return;
+    // Lo de ESTE comercio se va ya, aunque la persona siga siendo socia de otro.
+    const comercioId = borrada[0].comercio_id as string;
+    await tx`DELETE FROM consentimientos WHERE cliente_final_id = ${clienteFinalId} AND comercio_id = ${comercioId}`;
+    await tx`
+      UPDATE eventos_loyalty SET cliente_final_id = NULL
+      WHERE cliente_final_id = ${clienteFinalId} AND comercio_id = ${comercioId}
+    `;
     const quedan = await tx`SELECT 1 FROM membresias WHERE cliente_final_id = ${clienteFinalId} LIMIT 1`;
     if (quedan.length === 0) {
       await tx`DELETE FROM clientes_finales WHERE id = ${clienteFinalId}`;
     }
   });
+}
+
+/** Ids de las tarjetas de Google emitidas para una cuenta y sus sucursales:
+ * al borrar el cliente hay que desactivarlas antes de que la base las olvide. */
+export async function getObjetosGoogleDeCuenta(comercioId: string): Promise<string[]> {
+  const rows = await sql`
+    SELECT m.google_object_id FROM membresias m
+    JOIN comercios c ON c.id = m.comercio_id
+    WHERE (c.id = ${comercioId} OR c.comercio_padre_id = ${comercioId}) AND m.google_object_id <> ''
+  `;
+  return rows.map((r) => r.google_object_id as string);
 }
 
 // ---------- Ledger de puntos (append-only) ----------
@@ -439,6 +487,13 @@ function codigoCanje(): string {
   return Array.from(bytes, (b) => ALFABETO_CANJE[b % ALFABETO_CANJE.length]).join("");
 }
 
+/** Candado de saldo por membresía (vive hasta el fin de la transacción).
+ * Toda escritura que depende del saldo — pedir un canje, validarlo — lo toma
+ * antes de leer SUM(delta), así dos operaciones concurrentes se ordenan. */
+async function bloquearSaldo(tx: postgres.TransactionSql, membresiaId: string): Promise<void> {
+  await tx`SELECT pg_advisory_xact_lock(hashtext(${`saldo:${membresiaId}`}))`;
+}
+
 export interface CanjePendiente {
   codigo: string;
   beneficio: string;
@@ -454,30 +509,38 @@ export async function crearCanje(
   comercioId: string,
   beneficio: BeneficioLoyalty,
 ): Promise<{ ok: true; canje: CanjePendiente } | { ok: false; error: string }> {
-  const saldo = await calcularSaldo(membresiaId);
-  if (saldo < beneficio.costoPuntos) {
-    return { ok: false, error: `Te faltan ${beneficio.costoPuntos - saldo} puntos para este beneficio.` };
-  }
-  await sql`
-    UPDATE canjes SET expira_en = now()
-    WHERE membresia_id = ${membresiaId} AND NOT validado AND expira_en > now()
-  `;
-  const codigo = codigoCanje();
-  const rows = await sql`
-    INSERT INTO canjes (id, membresia_id, beneficio_id, comercio_id, costo_puntos, expira_en)
-    VALUES (${codigo}, ${membresiaId}, ${beneficio.id}, ${comercioId}, ${beneficio.costoPuntos},
-            now() + ${`${CANJE_VALIDEZ_MIN} minutes`}::interval)
-    RETURNING expira_en
-  `;
-  return {
-    ok: true,
-    canje: {
-      codigo,
-      beneficio: beneficio.nombre,
-      costoPuntos: beneficio.costoPuntos,
-      expiraEn: new Date(rows[0].expira_en as string).toISOString(),
-    },
-  };
+  // Todo bajo el candado de saldo de la membresía: dos pedidos simultáneos
+  // no pueden dejar dos códigos vivos (cada uno anula al anterior en orden).
+  return sql.begin(async (tx) => {
+    await bloquearSaldo(tx, membresiaId);
+    const saldoRows = await tx`
+      SELECT COALESCE(SUM(delta), 0) AS saldo FROM movimientos_puntos WHERE membresia_id = ${membresiaId}
+    `;
+    const saldo = Number(saldoRows[0].saldo);
+    if (saldo < beneficio.costoPuntos) {
+      return { ok: false as const, error: `Te faltan ${beneficio.costoPuntos - saldo} puntos para este beneficio.` };
+    }
+    await tx`
+      UPDATE canjes SET expira_en = now()
+      WHERE membresia_id = ${membresiaId} AND NOT validado AND expira_en > now()
+    `;
+    const codigo = codigoCanje();
+    const rows = await tx`
+      INSERT INTO canjes (id, membresia_id, beneficio_id, comercio_id, costo_puntos, expira_en)
+      VALUES (${codigo}, ${membresiaId}, ${beneficio.id}, ${comercioId}, ${beneficio.costoPuntos},
+              now() + ${`${CANJE_VALIDEZ_MIN} minutes`}::interval)
+      RETURNING expira_en
+    `;
+    return {
+      ok: true as const,
+      canje: {
+        codigo,
+        beneficio: beneficio.nombre,
+        costoPuntos: beneficio.costoPuntos,
+        expiraEn: new Date(rows[0].expira_en as string).toISOString(),
+      },
+    };
+  });
 }
 
 export async function getCanjePendiente(membresiaId: string): Promise<CanjePendiente | null> {
@@ -500,6 +563,8 @@ export async function getCanjePendiente(membresiaId: string): Promise<CanjePendi
 export type ResultadoValidacion =
   | {
       ok: true;
+      /** El código ya normalizado (6 caracteres, mayúsculas). */
+      codigo: string;
       beneficio: string;
       cliente: string;
       costoPuntos: number;
@@ -512,13 +577,15 @@ export type ResultadoValidacion =
 /** El comercio valida en caja el código que le muestra el cliente. Todo en
  * una transacción con el canje bloqueado (FOR UPDATE): dos cajeros que
  * validan el mismo código a la vez no descuentan dos veces, y el código
- * tiene que ser de ESTE comercio. */
+ * tiene que ser de ESTE comercio. Además se toma el candado de saldo de la
+ * membresía antes de leer el saldo: dos códigos distintos de la misma
+ * persona validados a la vez no gastan dos veces los mismos puntos. */
 export async function validarCanje(comercioId: string, codigoCrudo: string, quien: string): Promise<ResultadoValidacion> {
-  const codigo = codigoCrudo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const codigo = String(codigoCrudo ?? "").slice(0, 40).toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (codigo.length !== 6) return { ok: false, error: "El código tiene 6 letras y números." };
   return sql.begin(async (tx): Promise<ResultadoValidacion> => {
     const rows = await tx`
-      SELECT c.id, c.membresia_id, c.validado, c.expira_en, c.costo_puntos,
+      SELECT c.id, c.membresia_id, c.validado, c.expira_en > now() AS vigente, c.costo_puntos,
              b.nombre AS beneficio, cf.nombre AS cliente, m.google_object_id
       FROM canjes c
       JOIN beneficios b ON b.id = c.beneficio_id
@@ -530,9 +597,11 @@ export async function validarCanje(comercioId: string, codigoCrudo: string, quie
     if (rows.length === 0) return { ok: false, error: "Ese código no existe en este local." };
     const c = rows[0];
     if (c.validado) return { ok: false, error: "Ese código ya se usó." };
-    if (new Date(c.expira_en as string).getTime() < Date.now()) {
+    // El vencimiento se compara con el reloj de la base (el mismo que lo fijó).
+    if (!c.vigente) {
       return { ok: false, error: "Ese código venció. Pedile al cliente que genere uno nuevo." };
     }
+    await bloquearSaldo(tx, c.membresia_id as string);
     const costo = Number(c.costo_puntos);
     const saldoRows = await tx`
       SELECT COALESCE(SUM(delta), 0) AS saldo FROM movimientos_puntos WHERE membresia_id = ${c.membresia_id as string}
@@ -548,6 +617,7 @@ export async function validarCanje(comercioId: string, codigoCrudo: string, quie
     `;
     return {
       ok: true,
+      codigo,
       beneficio: c.beneficio as string,
       cliente: c.cliente as string,
       costoPuntos: costo,
@@ -571,7 +641,7 @@ export async function registrarEventoLoyalty(datos: {
 }): Promise<void> {
   await sql`
     INSERT INTO eventos_loyalty (comercio_id, cliente_final_id, tipo, detalle, ip_hash)
-    VALUES (${datos.comercioId}, ${datos.clienteFinalId ?? null}, ${datos.tipo}, ${datos.detalle ?? ""}, ${datos.ipHash ?? null})
+    VALUES (${datos.comercioId}, ${datos.clienteFinalId ?? null}, ${datos.tipo}, ${datos.detalle ?? ""}, ${datos.ipHash || null})
   `;
 }
 

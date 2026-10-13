@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { getDatosTap, getLogoActualizadoEn, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { urlSegura } from "@/lib/url";
-import { loyaltyHabilitado } from "@/lib/loyalty";
+import { comercioConLoyalty } from "@/lib/loyalty";
 import { crearTokenVisita } from "@/lib/loyalty-firma";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
@@ -144,7 +144,9 @@ export default async function TapPage({
   // El token de visita (firmado, vale 15 min) es lo que prueba que la
   // persona tocó el cartel: abrir /l/<comercio> de nuevo desde el historial
   // o desde la tarjeta no suma puntos, solo un tap real.
-  if (link.destino === "loyalty" && comercio.tieneLoyalty && loyaltyHabilitado()) {
+  // Mismo chequeo completo que la landing (flag, entitlement, programa
+  // activo, cuenta no pausada ni en baja): sin eso no se emite el token.
+  if (link.destino === "loyalty" && comercio.tieneLoyalty && (await comercioConLoyalty(comercio.id))) {
     const visita = encodeURIComponent(crearTokenVisita(comercio.id));
     return <RedireccionSuave url={`/l/${comercio.id}?v=${visita}`} />;
   }

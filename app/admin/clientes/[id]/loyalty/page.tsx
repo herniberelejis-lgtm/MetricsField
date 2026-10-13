@@ -15,6 +15,7 @@ import {
   accionCrearBeneficioLoyalty,
   accionCrearMisionLoyalty,
   accionGuardarLoyalty,
+  accionLiberarTelefonoLoyalty,
   accionToggleBeneficioLoyalty,
   accionToggleMisionLoyalty,
 } from "@/app/actions";
@@ -34,6 +35,9 @@ const MENSAJES: Record<string, { texto: string; tono: "ok" | "error" }> = {
   beneficio: { texto: "El beneficio necesita un nombre.", tono: "error" },
   mision: { texto: "Elegí un tipo de misión válido.", tono: "error" },
   "mision-url": { texto: '"Seguir en redes" necesita el link completo (https://instagram.com/...).', tono: "error" },
+  telefono: { texto: "Ese teléfono no es válido. Escribilo con característica, por ejemplo 351 555 1234.", tono: "error" },
+  "telefono-libre": { texto: "Ese teléfono no tenía ninguna tarjeta: ya se puede registrar.", tono: "ok" },
+  "ok-telefono": { texto: "Teléfono liberado: se borró esa tarjeta (en todos los locales) y la persona ya se puede registrar.", tono: "ok" },
 };
 
 const NOMBRE_MISION = {
@@ -101,7 +105,7 @@ export default async function LoyaltyClientePage({
   }
   const [comercio, programa, beneficios, misiones, metricas, conError] = datos;
   if (!comercio) notFound();
-  const mensaje = sp.error ? MENSAJES[sp.error] : sp.ok ? MENSAJES.ok : null;
+  const mensaje = sp.error ? MENSAJES[sp.error] : sp.ok === "telefono" ? MENSAJES["ok-telefono"] : sp.ok ? MENSAJES.ok : null;
   const linkLanding = `${await origenLoyalty()}/l/${encodeURIComponent(id)}`;
   const activoDeVerdad = loyaltyHabilitado() && comercio.tieneLoyalty && Boolean(programa?.activo);
 
@@ -249,6 +253,24 @@ export default async function LoyaltyClientePage({
           </div>
           <div>
             <SubmitButton>Agregar misión</SubmitButton>
+          </div>
+        </form>
+      </Card>
+
+      <Card>
+        <p className="text-sm font-semibold text-slate-900">Liberar un teléfono</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Los teléfonos no se verifican: si alguien registró un número que no era suyo, el dueño real ve &ldquo;no
+          pudimos crear una tarjeta con ese teléfono&rdquo;. Liberarlo borra esa tarjeta en todos los locales (puntos,
+          canjes y datos) y queda en la auditoría.
+        </p>
+        <form action={accionLiberarTelefonoLoyalty} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <input type="hidden" name="id" value={id} />
+          <Field label="Teléfono">
+            <input name="telefono" inputMode="tel" placeholder="351 555 1234" required className={inputCls} />
+          </Field>
+          <div>
+            <SubmitButton>Liberar</SubmitButton>
           </div>
         </form>
       </Card>

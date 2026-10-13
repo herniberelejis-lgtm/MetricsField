@@ -106,7 +106,8 @@ export default function PanelLoyalty({
           </table>
         )}
         <p className="mt-3 text-[11px] text-slate-400">
-          &ldquo;Promos&rdquo; = aceptó recibir promociones. A quien dijo que no, no le mandes publicidad.
+          &ldquo;Promos&rdquo; = aceptó recibir promociones. A quien dijo que no, no le mandes publicidad. Nombre y
+          teléfono los escribe cada cliente y no están verificados.
         </p>
       </Card>
 

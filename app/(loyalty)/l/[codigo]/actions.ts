@@ -47,6 +47,16 @@ import { desactivarObjeto } from "@/lib/wallet/google";
 
 export type EstadoFormulario = { error: string } | null;
 
+/** Error pensado para mostrarle al cliente. Cualquier otro (base, Google,
+ * bug) se loguea y el cliente ve un mensaje genérico: nunca detalles internos. */
+class ErrorLoyalty extends Error {}
+
+function mensajeDeError(e: unknown, generico: string): string {
+  if (e instanceof ErrorLoyalty) return e.message;
+  console.error("Loyalty:", e instanceof Error ? e.message : e);
+  return generico;
+}
+
 const COOKIE_OPCIONES = {
   httpOnly: true,
   sameSite: "lax" as const,
@@ -59,14 +69,14 @@ async function limitarIp(clave: string, maximo: number): Promise<string> {
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
   if (!(await permitir(`loyalty-${clave}:${ip}`, maximo, 10 * 60_000))) {
-    throw new Error("Demasiados intentos. Probá de nuevo en unos minutos.");
+    throw new ErrorLoyalty("Demasiados intentos. Probá de nuevo en unos minutos.");
   }
   return ip;
 }
 
 async function contexto(comercioId: string) {
   const ctx = await comercioConLoyalty(comercioId);
-  if (!ctx) throw new Error("Este club de beneficios no está disponible.");
+  if (!ctx) throw new ErrorLoyalty("Este club de beneficios no está disponible.");
   return ctx;
 }
 
@@ -77,14 +87,15 @@ async function clienteDeLaSesion(): Promise<string | null> {
 /** La membresía de quien tiene la sesión, en este comercio. */
 async function membresiaDeLaSesion(comercioId: string): Promise<Membresia> {
   const clienteFinalId = await clienteDeLaSesion();
-  if (!clienteFinalId) throw new Error("Tu sesión venció. Abrí tu tarjeta desde Google Wallet.");
+  if (!clienteFinalId) throw new ErrorLoyalty("Tu sesión venció. Abrí tu tarjeta desde Google Wallet.");
   const membresia = await getMembresia(clienteFinalId, comercioId);
-  if (!membresia) throw new Error("Todavía no tenés tarjeta en este local.");
+  if (!membresia) throw new ErrorLoyalty("Todavía no tenés tarjeta en este local.");
   return membresia;
 }
 
 function texto(fd: FormData, campo: string, max: number): string {
-  return String(fd.get(campo) ?? "").trim().slice(0, max);
+  // Sin caracteres de control (NUL rompe Postgres; el resto no tiene uso en un nombre).
+  return String(fd.get(campo) ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max);
 }
 
 /** Alta completa: identidad + consentimiento + membresía con los puntos de
@@ -167,7 +178,7 @@ export async function accionRegistrarse(_previo: EstadoFormulario, fd: FormData)
       // Sin verificar el número no podemos dar la sesión de otra persona.
       return {
         error:
-          "Ese teléfono ya tiene una tarjeta. Abrila desde tu Google Wallet (\"Ver mis puntos y beneficios\") o pedile ayuda al local.",
+          "No pudimos crear una tarjeta con ese teléfono. Si ya tenés una, abrila desde tu Google Wallet (\"Ver mis puntos y beneficios\"); si no, pedile ayuda al local.",
       };
     }
     // La sesión va antes del alta: si algo falla en el medio, al reintentar
@@ -184,7 +195,7 @@ export async function accionRegistrarse(_previo: EstadoFormulario, fd: FormData)
       ip,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "No pudimos crear tu tarjeta. Probá de nuevo." };
+    return { error: mensajeDeError(e, "No pudimos crear tu tarjeta. Probá de nuevo.") };
   }
   redirect(`/l/${encodeURIComponent(comercioId)}?bienvenida=1`);
 }
@@ -212,7 +223,7 @@ export async function accionUnirse(_previo: EstadoFormulario, fd: FormData): Pro
       ip,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "No pudimos crear tu tarjeta. Probá de nuevo." };
+    return { error: mensajeDeError(e, "No pudimos crear tu tarjeta. Probá de nuevo.") };
   }
   redirect(`/l/${encodeURIComponent(comercioId)}?bienvenida=1`);
 }
@@ -241,7 +252,7 @@ export async function accionReclamarMision(fd: FormData): Promise<{ ok: boolean;
     revalidatePath(`/l/${comercio.id}`);
     return { ok: true, mensaje: r.aplicado ? `¡Sumaste ${mision.puntos} puntos!` : "Esta misión ya la cumpliste." };
   } catch (e) {
-    return { ok: false, mensaje: e instanceof Error ? e.message : "No se pudo sumar la misión." };
+    return { ok: false, mensaje: mensajeDeError(e, "No se pudo sumar la misión.") };
   }
 }
 
@@ -262,19 +273,20 @@ export async function accionPedirCanje(_previo: EstadoFormulario, fd: FormData):
       detalle: beneficio.id,
     });
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "No se pudo generar el código." };
+    return { error: mensajeDeError(e, "No se pudo generar el código.") };
   }
   revalidatePath(`/l/${comercioId}`);
   return null;
 }
 
 /** Derecho de supresión: el cliente borra su tarjeta y sus datos de este
- * local con un botón, sin tener que pedírselo a nadie. */
+ * local con un botón, sin tener que pedírselo a nadie. Funciona aunque el
+ * comercio haya apagado Loyalty o esté pausado: borrarse no depende de eso. */
 export async function accionDarseDeBaja(fd: FormData): Promise<void> {
   const comercioId = texto(fd, "comercioId", 120);
   await limitarIp("accion", 60);
-  const { comercio } = await contexto(comercioId);
-  const membresia = await membresiaDeLaSesion(comercio.id);
+  const membresia = await membresiaDeLaSesion(comercioId);
+  const comercio = { id: membresia.comercioId };
   if (walletGoogleConfigurado() && membresia.googleObjectId) {
     await desactivarObjeto(membresia.googleObjectId).catch((e) =>
       console.error("Loyalty: no se pudo desactivar la tarjeta en Google:", e instanceof Error ? e.message : e),

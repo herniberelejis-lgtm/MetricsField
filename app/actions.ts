@@ -9,7 +9,8 @@ import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import * as loyaltyDb from "@/lib/db/loyalty";
 import { urlSegura } from "@/lib/url";
-import { sincronizarClaseGoogle, walletGoogleConfigurado } from "@/lib/loyalty";
+import { desactivarTarjetasDeCuenta, liberarTelefonoYTarjetas, sincronizarClaseGoogle, walletGoogleConfigurado } from "@/lib/loyalty";
+import { normalizarTelefono } from "@/lib/loyalty-firma";
 import type {
   TipoMisionLoyalty,
   DestinoLink,
@@ -138,6 +139,7 @@ export async function accionEliminarCliente(fd: FormData): Promise<void> {
   if (nombreConfirmado.trim() !== cliente.nombre.trim()) {
     throw new Error("El nombre no coincide — no se borró nada.");
   }
+  await desactivarTarjetasDeCuenta(id);
   await db.eliminarCliente(id);
   await auditar("eliminar_cliente", `${cliente.nombre} (${id})`);
   revalidatePath("/", "layout");
@@ -651,4 +653,19 @@ export async function accionToggleMisionLoyalty(fd: FormData): Promise<void> {
   await auditar("editar_mision_loyalty", `${id}: ${str(fd, "misionId")}`);
   revalidatePath(rutaLoyalty(id));
   redirect(rutaLoyalty(id));
+}
+
+/** Un cliente final avisa que "su" teléfono ya tenía tarjeta (alguien lo
+ * registró antes sin ser suyo): el equipo lo libera y la persona se puede
+ * registrar. Borra esa identidad en TODOS los comercios — por eso queda en
+ * la auditoría con el teléfono. */
+export async function accionLiberarTelefonoLoyalty(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const telefono = normalizarTelefono(str(fd, "telefono"));
+  if (!telefono) redirect(rutaLoyalty(id, "?error=telefono"));
+  const liberado = await liberarTelefonoYTarjetas(telefono);
+  if (liberado) await auditar("liberar_telefono_loyalty", `${telefono} (desde ${id})`);
+  revalidatePath(rutaLoyalty(id));
+  redirect(rutaLoyalty(id, liberado ? "?ok=telefono" : "?error=telefono-libre"));
 }

@@ -28,6 +28,7 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   crear_beneficio_loyalty: "Agregó un beneficio del club",
   editar_beneficio_loyalty: "Pausó/reactivó un beneficio del club",
   crear_mision_loyalty: "Agregó una misión del club",
+  liberar_telefono_loyalty: "Liberó un teléfono del club",
   editar_mision_loyalty: "Pausó/reactivó una misión del club",
 };
 

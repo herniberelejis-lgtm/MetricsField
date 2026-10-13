@@ -4,13 +4,15 @@ import { origenCanonico } from "./google-oauth";
 import { claveLoyalty, crearTokenTarjeta } from "./loyalty-firma";
 import {
   getComercioLoyalty,
+  getObjetosGoogleDeCuenta,
+  liberarTelefono,
   getProgramaLoyalty,
   marcarEstadoGoogle,
   setGoogleClassId,
   type ComercioLoyalty,
   type Membresia,
 } from "./db/loyalty";
-import { actualizarPuntos, crearClase, crearOActualizarObjeto, urlLogoTarjeta } from "./wallet/google";
+import { actualizarPuntos, crearClase, crearOActualizarObjeto, desactivarObjeto, urlLogoTarjeta } from "./wallet/google";
 import type { ProgramaLoyalty } from "./types";
 
 // Orquestación de Loyalty: une la base (fuente de verdad) con Google Wallet
@@ -36,21 +38,33 @@ export function walletGoogleConfigurado(): boolean {
   );
 }
 
-/** Comercio con Loyalty activo y su programa, o null (la landing da 404). */
+/** Estados de cuenta en los que Loyalty no atiende: ni landing, ni sumar
+ * puntos, ni canjes, ni logo público. */
+const ESTADOS_SIN_LOYALTY = new Set(["baja", "pausado"]);
+
+/** Comercio con Loyalty activo y su programa, o null (la landing da 404).
+ * Mira el estado del local Y el de su cuenta raíz: dar de baja o pausar la
+ * cuenta corta también a sus sucursales. */
 export async function comercioConLoyalty(
   comercioId: string,
 ): Promise<{ comercio: ComercioLoyalty; programa: ProgramaLoyalty } | null> {
   if (!loyaltyHabilitado()) return null;
   const comercio = await getComercioLoyalty(comercioId);
-  if (!comercio || !comercio.tieneLoyalty || comercio.estado === "baja") return null;
+  if (!comercio || !comercio.tieneLoyalty) return null;
+  if (ESTADOS_SIN_LOYALTY.has(comercio.estado) || ESTADOS_SIN_LOYALTY.has(comercio.estadoRaiz)) return null;
   const programa = await getProgramaLoyalty(comercioId);
   if (!programa || !programa.activo) return null;
   return { comercio, programa };
 }
 
 /** Origen para los links absolutos que viajan dentro de la tarjeta: el
- * dominio canónico en producción, el host del request en previews y local. */
+ * dominio canónico si está configurado; en previews, la URL fija de la rama
+ * que pone Vercel; solo en local, el host del request. Un link que queda
+ * guardado en un pase de Wallet no debería depender de un header. */
 export async function origenLoyalty(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_BASE_URL) return origenCanonico("");
+  const rama = process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL;
+  if (rama) return `https://${rama.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
@@ -114,4 +128,35 @@ export async function reflejarSaldoEnWallet(membresia: Membresia, saldo: number)
     console.error("Loyalty: no se pudo actualizar el saldo en Google:", e instanceof Error ? e.message : e);
     await marcarEstadoGoogle(membresia.id, "error").catch(() => {});
   }
+}
+
+/** Antes de borrar un cliente: desactiva en Google las tarjetas de sus socios
+ * (las de la cuenta y sus sucursales) para que no queden pases "vivos" de un
+ * comercio que ya no existe. Best-effort y nunca tira — si Loyalty todavía
+ * no tiene sus tablas en esta base, o Google falla, el borrado sigue. */
+export async function desactivarTarjetasDeCuenta(comercioId: string): Promise<void> {
+  if (!walletGoogleConfigurado()) return;
+  let ids: string[];
+  try {
+    ids = await getObjetosGoogleDeCuenta(comercioId);
+  } catch {
+    return;
+  }
+  await desactivarEnTandas(ids, comercioId);
+}
+
+async function desactivarEnTandas(ids: string[], contexto: string): Promise<void> {
+  for (let i = 0; i < ids.length; i += 10) {
+    const tanda = await Promise.allSettled(ids.slice(i, i + 10).map((id) => desactivarObjeto(id)));
+    const fallidas = tanda.filter((r) => r.status === "rejected").length;
+    if (fallidas > 0) console.error(`Loyalty: ${fallidas} tarjetas (${contexto}) no se pudieron desactivar en Google.`);
+  }
+}
+
+/** Libera un teléfono tomado por otra persona (ver liberarTelefono) y
+ * desactiva sus tarjetas en Google. Devuelve si había algo para liberar. */
+export async function liberarTelefonoYTarjetas(telefono: string): Promise<boolean> {
+  const r = await liberarTelefono(telefono);
+  if (r.liberado && walletGoogleConfigurado()) await desactivarEnTandas(r.objetosGoogle, "liberar teléfono");
+  return r.liberado;
 }

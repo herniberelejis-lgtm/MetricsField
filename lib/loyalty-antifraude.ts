@@ -27,9 +27,11 @@ export type TipoEventoLoyalty =
  * casos: hex de 64 caracteres. */
 export function hashearIp(ip: string): string {
   const pepper = process.env.LOYALTY_IP_PEPPER;
-  return pepper
-    ? crypto.createHmac("sha256", pepper).update(ip).digest("hex")
-    : crypto.createHash("sha256").update(ip).digest("hex");
+  if (pepper) return crypto.createHmac("sha256", pepper).update(ip).digest("hex");
+  // Sin pepper, un SHA-256 de una IPv4 se revierte probando las 2^32: en
+  // producción, mejor no guardar nada que guardar la IP apenas disfrazada.
+  if (process.env.VERCEL_ENV === "production") return "";
+  return crypto.createHash("sha256").update(ip).digest("hex");
 }
 
 const COOLDOWN_TAP_MS = 20 * 60 * 60 * 1000; // 20h — ver sección 8 del doc de antifraude

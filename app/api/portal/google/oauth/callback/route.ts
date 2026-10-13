@@ -1,3 +1,4 @@
+import { portalSoloLectura } from "@/lib/portal-demo";
 import { NextResponse, type NextRequest } from "next/server";
 import { canjearCodigo, decodificarIdToken, origenCanonico, dominioCookieOauth } from "@/lib/google-oauth";
 import { getClientePorCodigo, getCliente, guardarTokenGoogleComercio, esEmailAutorizadoPortal } from "@/lib/db";
@@ -30,7 +31,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const cliente = await getClientePorCodigo(codigo);
-  if (!cliente) return limpiar(NextResponse.redirect(new URL("/", req.url)));
+  if (!cliente || cliente.estado === "baja" || portalSoloLectura(codigo)) {
+    return limpiar(NextResponse.redirect(new URL("/", req.url)));
+  }
 
   let comercioId = cliente.id;
   if (comercioIdState !== cliente.id) {

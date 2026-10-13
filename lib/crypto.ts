@@ -67,7 +67,9 @@ export function descifrar(valor: string): string {
 
 function descifrarCon(k: Buffer, valor: string): string {
   const [ivHex, tagHex, dataHex] = valor.slice(PREFIJO.length).split(":");
-  const decipher = crypto.createDecipheriv("aes-256-gcm", k, Buffer.from(ivHex, "hex"));
+  // Tag de 16 bytes exactos: GCM acepta tags truncados si no se lo fija.
+  if (!/^[0-9a-f]{32}$/i.test(tagHex ?? "")) throw new Error("Token cifrado con formato inválido.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", k, Buffer.from(ivHex, "hex"), { authTagLength: 16 });
   decipher.setAuthTag(Buffer.from(tagHex, "hex"));
   const texto = Buffer.concat([decipher.update(Buffer.from(dataHex, "hex")), decipher.final()]);
   return texto.toString("utf8");
