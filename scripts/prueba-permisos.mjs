@@ -26,6 +26,12 @@ import postgres from "postgres";
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3100";
 const MODO = process.env.MODO ?? "preview";
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
+// Este script reescribe datos en masa (links, códigos, comercios): jamás
+// contra la base de producción.
+if (/neon\.tech/i.test(process.env.DATABASE_URL ?? "")) {
+  console.error("prueba-permisos: DATABASE_URL apunta a Neon. Esto es solo para una base de prueba.");
+  process.exit(2);
+}
 const sql = postgres(process.env.DATABASE_URL, { prepare: false, max: 1 });
 
 const manifiesto = JSON.parse(readFileSync(".next/server/server-reference-manifest.json", "utf8"));
@@ -342,17 +348,18 @@ await accionForm("accionDarseDeBaja", { comercioId: "resto-nueva-cordoba" }, {
 registrar("Y", "borrar su tarjeta y sus datos (control positivo)", "borrado", `cliente Y = ${membresiaY}`, membresiaY === 0);
 
 // ---------- Lote de regresiones del audit run-2 ----------
-// Código demo publicado (demo2026, el de la landing): en producción, solo lectura.
-await sql`UPDATE comercios SET codigo_acceso = 'demo2026' WHERE id = 'taller-alberdi'`;
+// Código publicado en el repo (el propio de db/seed.sql, sin el prefijo
+// e2e-): en producción, solo lectura.
+await sql`UPDATE comercios SET codigo_acceso = 'ta5q1w9e' WHERE id = 'taller-alberdi'`;
 await accionForm("accionActualizarUrlLinkPortal", {
-  codigo: "demo2026", comercioId: "taller-alberdi", linkId: "taller-alberdi-mostrador",
+  codigo: "ta5q1w9e", comercioId: "taller-alberdi", linkId: "taller-alberdi-mostrador",
   etiqueta: "Mostrador", urlDestino: "https://malo.example/demo",
 });
 const urlDemo = await urlLink("taller-alberdi-mostrador");
 if (MODO === "produccion") {
-  registrar("anónimo con el código demo publicado", "cambiar el destino de un cartel de la demo", "denegado", `url = '${urlDemo}'`, urlDemo === "");
+  registrar("anónimo con un código publicado", "cambiar el destino de un cartel de la demo", "denegado", `url = '${urlDemo}'`, urlDemo === "");
 } else {
-  registrar("código demo en preview", "cambiar el destino (control positivo)", "permitido", `url = '${urlDemo}'`, urlDemo === "https://malo.example/demo");
+  registrar("código publicado en preview", "cambiar el destino (control positivo)", "permitido", `url = '${urlDemo}'`, urlDemo === "https://malo.example/demo");
 }
 await sql`UPDATE comercios SET codigo_acceso = 'e2e-ta5q1w9e' WHERE id = 'taller-alberdi'`;
 
@@ -403,6 +410,15 @@ r = await verTarjeta("barberia-guemes", "");
 registrar("anónimo", "abrir el club de una cuenta pausada", "404", `HTTP ${r.status}`, r.status === 404);
 await sql`UPDATE comercios SET estado = 'activo' WHERE id = 'barberia-guemes'`;
 
+// La confirmación de baja no revela si un comercio existe.
+const conBaja = async (id) => {
+  const resp = await verTarjeta(id, "?baja=1");
+  return `${resp.status}:${(await resp.text()).includes("borramos tu tarjeta")}`;
+};
+const [bajaExiste, bajaNoExiste] = [await conBaja("taller-alberdi"), await conBaja("no-existe-e2e")];
+registrar("anónimo", "/l/<id>?baja=1 de un comercio real vs uno inventado", "misma respuesta",
+  `${bajaExiste} vs ${bajaNoExiste}`, bajaExiste === bajaNoExiste);
+
 // Teléfono tomado por otro: el equipo lo libera (necesita sesión de admin).
 await sql`DELETE FROM clientes_finales WHERE id = 'cf-prueba-z'`;
 await sql`INSERT INTO clientes_finales (id, telefono, nombre) VALUES ('cf-prueba-z', '3510000003', 'Okupa')`;
@@ -410,11 +426,13 @@ await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefo
 let [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
 registrar("anónimo", "liberar un teléfono sin sesión de admin", "denegado", `filas = ${okupa}`, okupa === 1);
 if (MODO !== "produccion") {
-  await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefono: "351 000 0003" }, {
-    pagina: "/admin/clientes/barberia-guemes/loyalty", cookie: await cookiePasswordValida(),
-  });
+  const comoEquipo = { pagina: "/admin/clientes/barberia-guemes/loyalty", cookie: await cookiePasswordValida() };
+  await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefono: "351 000 0003" }, comoEquipo);
   [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
-  registrar("equipo", "liberar un teléfono (control positivo)", "liberado", `filas = ${okupa}`, okupa === 0);
+  registrar("equipo", "liberar un teléfono sin confirmar (solo muestra de quién es)", "no borra", `filas = ${okupa}`, okupa === 1);
+  await accionForm("accionLiberarTelefonoLoyalty", { id: "barberia-guemes", telefono: "351 000 0003", confirmar: "on" }, comoEquipo);
+  [{ n: okupa }] = await sql`SELECT count(*)::int AS n FROM clientes_finales WHERE id = 'cf-prueba-z'`;
+  registrar("equipo", "liberar un teléfono confirmando (control positivo)", "liberado", `filas = ${okupa}`, okupa === 0);
 
   // Borrar un cliente borra sus carteles: no quedan huérfanos reclamables.
   await sql`DELETE FROM comercios WHERE id = 'e2e-borrable'`;

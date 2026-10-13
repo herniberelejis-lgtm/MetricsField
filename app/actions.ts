@@ -657,15 +657,23 @@ export async function accionToggleMisionLoyalty(fd: FormData): Promise<void> {
 
 /** Un cliente final avisa que "su" teléfono ya tenía tarjeta (alguien lo
  * registró antes sin ser suyo): el equipo lo libera y la persona se puede
- * registrar. Borra esa identidad en TODOS los comercios — por eso queda en
- * la auditoría con el teléfono. */
+ * registrar. Dos pasos: el primero solo busca y muestra de quién es la
+ * tarjeta (nombre, locales, puntos); el segundo, con la confirmación
+ * tildada, la borra en TODOS los comercios. La auditoría se escribe antes
+ * del borrado, con lo que había. */
 export async function accionLiberarTelefonoLoyalty(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
   const telefono = normalizarTelefono(str(fd, "telefono"));
   if (!telefono) redirect(rutaLoyalty(id, "?error=telefono"));
-  const liberado = await liberarTelefonoYTarjetas(telefono);
-  if (liberado) await auditar("liberar_telefono_loyalty", `${telefono} (desde ${id})`);
+  const resumen = await loyaltyDb.getResumenTelefono(telefono);
+  if (!resumen) redirect(rutaLoyalty(id, "?error=telefono-libre"));
+  if (fd.get("confirmar") !== "on") {
+    redirect(rutaLoyalty(id, `?liberar=${encodeURIComponent(telefono)}`));
+  }
+  const locales = resumen.locales.map((l) => `${l.comercio} (${l.saldo} pts)`).join(", ") || "sin locales";
+  await auditar("liberar_telefono_loyalty", `${telefono} — ${resumen.nombre}; ${locales} (desde ${id})`);
+  await liberarTelefonoYTarjetas(telefono);
   revalidatePath(rutaLoyalty(id));
-  redirect(rutaLoyalty(id, liberado ? "?ok=telefono" : "?error=telefono-libre"));
+  redirect(rutaLoyalty(id, "?ok=telefono"));
 }

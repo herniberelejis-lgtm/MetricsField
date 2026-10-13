@@ -85,13 +85,13 @@ export default async function LoyaltyLandingPage({
   if (!ctx) {
     // Club apagado, pausado o cuenta en baja: nada de puntos ni canjes, pero
     // quien tenía tarjeta acá igual puede borrar sus datos (derecho de supresión).
-    const local = loyaltyHabilitado() ? await getComercioLoyalty(codigo) : null;
-    if (!local) notFound();
-    const socio = clienteFinalId ? await getMembresia(clienteFinalId, local.id) : null;
-    if (!socio) {
+    // Sin sesión de socio de ESTE local, la respuesta no depende de si el
+    // comercio existe (nada para enumerar ids): confirmación genérica de la
+    // baja o 404.
+    const local = loyaltyHabilitado() && clienteFinalId ? await getComercioLoyalty(codigo) : null;
+    const socio = local && clienteFinalId ? await getMembresia(clienteFinalId, local.id) : null;
+    if (!local || !socio) {
       if (!sp.baja) notFound();
-      // Confirmación de la baja: sin el nombre del local (sin sesión no hay
-      // nada que mostrar de un comercio sin club).
       return (
         <Pantalla>
           <Tarjeta>

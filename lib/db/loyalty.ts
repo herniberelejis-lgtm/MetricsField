@@ -220,6 +220,32 @@ export async function crearClienteFinal(datos: {
   return { id: previo[0].id as string, existente: true };
 }
 
+export interface ResumenTelefono {
+  nombre: string;
+  email: string;
+  creadoEn: string;
+  locales: { comercio: string; saldo: number }[];
+}
+
+/** Lo que el equipo ve ANTES de liberar un teléfono: de quién es la
+ * tarjeta, en qué locales y con cuántos puntos. */
+export async function getResumenTelefono(telefono: string): Promise<ResumenTelefono | null> {
+  const persona = await sql`SELECT id, nombre, email, creado_en FROM clientes_finales WHERE telefono = ${telefono}`;
+  if (persona.length === 0) return null;
+  const locales = await sql`
+    SELECT co.nombre, COALESCE((SELECT SUM(delta) FROM movimientos_puntos mp WHERE mp.membresia_id = m.id), 0) AS saldo
+    FROM membresias m JOIN comercios co ON co.id = m.comercio_id
+    WHERE m.cliente_final_id = ${persona[0].id as string}
+    ORDER BY co.nombre
+  `;
+  return {
+    nombre: persona[0].nombre as string,
+    email: (persona[0].email as string) ?? "",
+    creadoEn: new Date(persona[0].creado_en as string).toISOString(),
+    locales: locales.map((r) => ({ comercio: r.nombre as string, saldo: Number(r.saldo) })),
+  };
+}
+
 /** Libera un teléfono: borra la identidad que lo tiene (con sus
  * membresías, puntos, canjes y consentimientos, en cascada) y devuelve las
  * tarjetas de Google que había que desactivar. Es la salida cuando alguien
@@ -584,6 +610,13 @@ export async function validarCanje(comercioId: string, codigoCrudo: string, quie
   const codigo = String(codigoCrudo ?? "").slice(0, 40).toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (codigo.length !== 6) return { ok: false, error: "El código tiene 6 letras y números." };
   return sql.begin(async (tx): Promise<ResultadoValidacion> => {
+    // Orden de candados igual que crearCanje: primero el de saldo de la
+    // membresía, después la fila del canje. Al revés, un cliente que pide un
+    // código nuevo mientras el cajero valida el anterior se trababa con él
+    // (deadlock).
+    const duenio = await tx`SELECT membresia_id FROM canjes WHERE id = ${codigo} AND comercio_id = ${comercioId}`;
+    if (duenio.length === 0) return { ok: false, error: "Ese código no existe en este local." };
+    await bloquearSaldo(tx, duenio[0].membresia_id as string);
     const rows = await tx`
       SELECT c.id, c.membresia_id, c.validado, c.expira_en > now() AS vigente, c.costo_puntos,
              b.nombre AS beneficio, cf.nombre AS cliente, m.google_object_id
@@ -601,7 +634,6 @@ export async function validarCanje(comercioId: string, codigoCrudo: string, quie
     if (!c.vigente) {
       return { ok: false, error: "Ese código venció. Pedile al cliente que genere uno nuevo." };
     }
-    await bloquearSaldo(tx, c.membresia_id as string);
     const costo = Number(c.costo_puntos);
     const saldoRows = await tx`
       SELECT COALESCE(SUM(delta), 0) AS saldo FROM movimientos_puntos WHERE membresia_id = ${c.membresia_id as string}

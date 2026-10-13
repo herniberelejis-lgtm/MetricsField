@@ -377,6 +377,11 @@ export async function accionValidarCanjePortal(
     revalidatePath(`/portal/${encodeURIComponent(String(codigo))}`);
     return { ok: true, beneficio: r.beneficio, cliente: r.cliente, costoPuntos: r.costoPuntos, saldo: r.saldo };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "No se pudo validar el código." };
+    // Errores de autorización (los de comercioAutorizado) se muestran; uno de
+    // la base (ej. un conflicto de concurrencia) no: se pide reintentar.
+    const mensaje = e instanceof Error ? e.message : "";
+    const deLaBase = typeof e === "object" && e !== null && "code" in e;
+    if (deLaBase) console.error("Canje: error de base al validar:", mensaje);
+    return { ok: false, error: deLaBase || !mensaje ? "No se pudo validar el código. Probá de nuevo." : mensaje };
   }
 }

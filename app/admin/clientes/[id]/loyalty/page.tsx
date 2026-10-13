@@ -9,7 +9,9 @@ import {
   getMetricasLoyalty,
   getMisiones,
   getProgramaLoyalty,
+  getResumenTelefono,
 } from "@/lib/db/loyalty";
+import { normalizarTelefono } from "@/lib/loyalty-firma";
 import { loyaltyHabilitado, origenLoyalty, walletGoogleConfigurado } from "@/lib/loyalty";
 import {
   accionCrearBeneficioLoyalty,
@@ -69,7 +71,7 @@ export default async function LoyaltyClientePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; liberar?: string }>;
 }) {
   await asegurarAdminPagina();
   const { id } = await params;
@@ -105,6 +107,7 @@ export default async function LoyaltyClientePage({
   }
   const [comercio, programa, beneficios, misiones, metricas, conError] = datos;
   if (!comercio) notFound();
+  const aLiberar = sp.liberar ? await getResumenTelefono(normalizarTelefono(sp.liberar) ?? "") : null;
   const mensaje = sp.error ? MENSAJES[sp.error] : sp.ok === "telefono" ? MENSAJES["ok-telefono"] : sp.ok ? MENSAJES.ok : null;
   const linkLanding = `${await origenLoyalty()}/l/${encodeURIComponent(id)}`;
   const activoDeVerdad = loyaltyHabilitado() && comercio.tieneLoyalty && Boolean(programa?.activo);
@@ -264,15 +267,37 @@ export default async function LoyaltyClientePage({
           pudimos crear una tarjeta con ese teléfono&rdquo;. Liberarlo borra esa tarjeta en todos los locales (puntos,
           canjes y datos) y queda en la auditoría.
         </p>
-        <form action={accionLiberarTelefonoLoyalty} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <input type="hidden" name="id" value={id} />
-          <Field label="Teléfono">
-            <input name="telefono" inputMode="tel" placeholder="351 555 1234" required className={inputCls} />
-          </Field>
-          <div>
-            <SubmitButton>Liberar</SubmitButton>
-          </div>
-        </form>
+        {aLiberar ? (
+          <form action={accionLiberarTelefonoLoyalty} className="mt-3 space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <input type="hidden" name="id" value={id} />
+            <input type="hidden" name="telefono" value={sp.liberar ?? ""} />
+            <p className="text-sm text-slate-800">
+              <strong>{sp.liberar}</strong> está a nombre de <strong>{aLiberar.nombre}</strong>
+              {aLiberar.email && ` (${aLiberar.email})`}. Tarjetas:{" "}
+              {aLiberar.locales.map((l) => `${l.comercio} — ${l.saldo} puntos`).join(" · ") || "ninguna"}.
+            </p>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="confirmar" required /> Confirmo que esta tarjeta no es de quien la registró y
+              quiero borrarla en todos los locales.
+            </label>
+            <div className="flex gap-3">
+              <SubmitButton>Liberar teléfono</SubmitButton>
+              <Link href={`/admin/clientes/${id}/loyalty`} className="self-center text-sm text-slate-500 underline">
+                Cancelar
+              </Link>
+            </div>
+          </form>
+        ) : (
+          <form action={accionLiberarTelefonoLoyalty} className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+            <input type="hidden" name="id" value={id} />
+            <Field label="Teléfono">
+              <input name="telefono" inputMode="tel" placeholder="351 555 1234" required className={inputCls} />
+            </Field>
+            <div>
+              <SubmitButton>Buscar</SubmitButton>
+            </div>
+          </form>
+        )}
       </Card>
 
       <Card>
