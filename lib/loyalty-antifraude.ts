@@ -14,15 +14,22 @@ export type TipoEventoLoyalty =
   | "registro"
   | "wallet_guardada"
   | "mision_completada"
+  | "canje_solicitado"
   | "canje_validado"
-  | "cooldown_bloqueado";
+  | "cooldown_bloqueado"
+  | "baja";
 
 /** Hash de IP para eventos_loyalty — nunca se guarda la IP en texto plano
- * (ver comentario de la migración 011). SHA-256 simple: no hace falta un
- * salt por-registro, el objetivo es no poder revertir a la IP real desde
- * la base, no autenticar con esto. */
+ * (ver comentario de la migración 012). Con LOYALTY_IP_PEPPER es un HMAC:
+ * un SHA-256 pelado de una IPv4 se revierte probando las 4.300 millones de
+ * IPs posibles en minutos, con un secreto del servidor ya no. Sin la
+ * variable (tu PC) queda el SHA-256 simple. Mismo formato en los dos
+ * casos: hex de 64 caracteres. */
 export function hashearIp(ip: string): string {
-  return crypto.createHash("sha256").update(ip).digest("hex");
+  const pepper = process.env.LOYALTY_IP_PEPPER;
+  return pepper
+    ? crypto.createHmac("sha256", pepper).update(ip).digest("hex")
+    : crypto.createHash("sha256").update(ip).digest("hex");
 }
 
 const COOLDOWN_TAP_MS = 20 * 60 * 60 * 1000; // 20h — ver sección 8 del doc de antifraude

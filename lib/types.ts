@@ -268,6 +268,33 @@ export interface ProgramaLoyalty {
   googleClassId: string;
   applePassTypeId: string;
   puntosBienvenida: number;
+  /** Lo que suma cada visita (tap en el cartel), máx. una cada 20 h. */
+  puntosPorVisita: number;
   activo: boolean;
+}
+
+/** Premio del catálogo de un comercio ("Café gratis" por 100 puntos). */
+export interface BeneficioLoyalty {
+  id: string;
+  comercioId: string;
+  nombre: string;
+  costoPuntos: number;
+  activo: boolean;
+}
+
+/** Solo las misiones que hoy se pueden ofrecer sin OAuth de terceros (ver
+ * docs/LOYALTY-PRODUCTO-COMPLETO.md §6). La de reseña premia el acto de
+ * opinar, nunca la calificación. */
+export type TipoMisionLoyalty = "resena_google" | "seguir_redes" | "referido";
+
+export interface MisionLoyalty {
+  id: string;
+  comercioId: string;
+  tipo: TipoMisionLoyalty;
+  puntos: number;
+  verificacion: "automatica" | "autodeclarada";
+  /** Solo "seguir_redes": a dónde manda (Instagram, TikTok...). */
+  url: string;
+  activa: boolean;
 }
 
