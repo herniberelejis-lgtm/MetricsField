@@ -17,6 +17,7 @@ import {
 } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import { fmtARS } from "@/lib/format";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c ? `Editar · ${c.nombre}` : "Editar cliente" };
 }
@@ -42,6 +44,7 @@ export default async function EditarClientePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const [c, logo, { error }] = await Promise.all([
     getCliente(id),

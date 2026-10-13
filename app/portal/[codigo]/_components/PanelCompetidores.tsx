@@ -5,8 +5,12 @@ import ComparativaCompetencia from "@/components/portal/ComparativaCompetencia";
 import SeguimientoCompetencia from "@/components/portal/SeguimientoCompetencia";
 import type { Seguimiento } from "@/lib/seguimiento-competencia";
 import SelectorSucursales from "./SelectorSucursales";
+import AgregarCompetidor, { QuitarCompetidor } from "@/components/portal/AgregarCompetidor";
+import { MAX_COMPETIDORES_PORTAL } from "@/lib/competencia-portal";
 
-// Panel "Competidores": foto EN VIVO de cómo está parado el local frente a
+// Panel "Competidores": el cliente arma su propia lista (buscador tipo
+// Google Maps en AgregarCompetidor, con tope y límites en
+// app/portal/actions.ts) y ve una foto EN VIVO de cómo está parado el local frente a
 // la competencia de su zona — "Tu local" siempre va primero, arriba de la
 // lista, con el dato de ahora mismo (no el de la última foto congelada del
 // mes). Los competidores se sincronizan contra Google Places cuando el
@@ -28,6 +32,7 @@ export default function PanelCompetidores({
   ubicaciones,
   activoId,
   codigoAcceso,
+  puedeAgregar,
 }: {
   competidores: Competidor[];
   nombreLocal: string;
@@ -41,6 +46,9 @@ export default function PanelCompetidores({
   ubicaciones: Cliente[];
   activoId: string;
   codigoAcceso: string;
+  /** El buscador de Google está configurado: el cliente puede sumar y
+   * quitar competidores desde acá. */
+  puedeAgregar: boolean;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Un competidor sin calificación ni reseñas (Place ID sin cargar o mal
@@ -80,6 +88,18 @@ export default function PanelCompetidores({
             Cómo estás parado frente a los locales de tu zona, ahora mismo — se sincroniza solo cuando entrás a ver.
           </p>
 
+          {puedeAgregar && (
+            <div className="mb-4">
+              <AgregarCompetidor
+                codigo={codigoAcceso}
+                comercioId={activoId}
+                cantidad={competidores.length}
+                maximo={MAX_COMPETIDORES_PORTAL}
+                abiertoAlInicio={competidores.length === 0}
+              />
+            </div>
+          )}
+
           {competidores.length > 0 ? (
             <div className="mb-4 overflow-hidden rounded-3xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
               <div className="overflow-x-auto">
@@ -90,6 +110,7 @@ export default function PanelCompetidores({
                       <th className="px-4 py-3 font-medium">Calificación</th>
                       <th className="px-4 py-3 font-medium">Reseñas</th>
                       {mesEnCurso && <th className="px-4 py-3 font-medium">Este mes</th>}
+                      {puedeAgregar && <th className="px-2 py-3" aria-label="Acciones" />}
                     </tr>
                   </thead>
                   <tbody>
@@ -104,6 +125,7 @@ export default function PanelCompetidores({
                           {fmtEsteMes(esteMes.get("propio"))}
                         </td>
                       )}
+                      {puedeAgregar && <td className="px-2 py-3" />}
                     </tr>
                     {filasCompetencia.map((c) => (
                       <tr key={c.id} className="border-b border-slate-100 text-slate-600 last:border-0">
@@ -115,6 +137,16 @@ export default function PanelCompetidores({
                         {mesEnCurso && (
                           <td className="px-4 py-3 tabular-nums text-slate-600">{fmtEsteMes(esteMes.get(c.id))}</td>
                         )}
+                        {puedeAgregar && (
+                          <td className="px-2 py-3 text-right">
+                            <QuitarCompetidor
+                              codigo={codigoAcceso}
+                              comercioId={activoId}
+                              competidorId={c.id}
+                              nombre={c.nombre}
+                            />
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -122,10 +154,12 @@ export default function PanelCompetidores({
               </div>
             </div>
           ) : (
-            <p className="mb-4 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 text-sm text-slate-500">
-              Todavía no cargamos competidores con Place ID para tu zona — pedile a tu contacto en MetricsField que
-              los agregue desde el panel para ver esta comparación.
-            </p>
+            !puedeAgregar && (
+              <p className="mb-4 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 text-sm text-slate-500">
+                Todavía no cargamos competidores para tu zona — pedile a tu contacto en MetricsField que los agregue
+                para ver esta comparación.
+              </p>
+            )
           )}
         </>
       )}

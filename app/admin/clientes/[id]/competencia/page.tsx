@@ -11,6 +11,7 @@ import {
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import GooglePlaceIdField from "@/components/GooglePlaceIdField";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c ? `Competencia · ${c.nombre}` : "Competencia" };
 }
@@ -37,6 +39,7 @@ export default async function CompetenciaPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const { error } = await searchParams;
   const [c, competidores] = await Promise.all([getCliente(id), getCompetidores(id)]);

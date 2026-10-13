@@ -1,5 +1,4 @@
 import type { MetricaMensual } from "@/lib/types";
-import type { ResenasPorHoraDia } from "@/lib/db";
 import { Card, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
@@ -8,7 +7,7 @@ import RatingPorHoraChart from "@/components/RatingPorHoraChart";
 import { resenasParaProximaDecima, cincoEstrellasPorCadaUna, ratingDespuesDeUnaMala } from "@/lib/objetivos";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import SemaforoResenas from "@/components/portal/SemaforoResenas";
-import type { ResenaParaSemaforo } from "@/lib/semaforo";
+import type { ResenaParaSemaforo, VistaMapa } from "@/lib/semaforo";
 
 // Panel "Mi Rating en Google": la calificación mes a mes, qué falta para
 // subir (próximo escalón y cuánto pesa una mala reseña) y, si hay reseñas
@@ -24,7 +23,7 @@ export default function PanelRating({
   ratingHero,
   resenasHero,
   historico,
-  resenasPorHora,
+  vistasMapa,
   resenasSemaforo,
   semaforoFuente,
   ritmoMensual,
@@ -37,8 +36,8 @@ export default function PanelRating({
   ratingHero: number | null;
   resenasHero: number;
   historico: MetricaMensual[];
-  /** Grilla día×hora de los últimos 7 días, coloreada por calificación. */
-  resenasPorHora: ResenasPorHoraDia[];
+  /** Mapa día de la semana × hora: reseñas del mes y últimas 100. */
+  vistasMapa: VistaMapa[];
   /** Reseñas para el semáforo, de la más nueva a la más vieja. */
   resenasSemaforo: ResenaParaSemaforo[];
   /** "todas" (API de reseñas o cargadas a mano) o "google" (las públicas de la ficha). */
@@ -46,7 +45,7 @@ export default function PanelRating({
   /** Reseñas nuevas por mes en promedio (historial mensual). */
   ritmoMensual: number;
 }) {
-  const hayReseñasPorHora = resenasPorHora.some((d) => d.horas.some((c) => c.rating !== null));
+  const hayReseñasPorHora = vistasMapa.some((v) => v.total > 0);
 
   return (
     <>
@@ -129,11 +128,11 @@ export default function PanelRating({
         </div>
       )}
 
-      {/* Mapa por hora en colores: solo si alguna reseña cayó en los últimos
-          7 días — si no, es una grilla vacía. */}
+      {/* Mapa de calor día de la semana × hora (reseñas del mes o últimas
+          100): solo si hay alguna reseña con hora — si no, es una grilla vacía. */}
       {hayReseñasPorHora && (
         <div className="mb-4">
-          <RatingPorHoraChart dias={resenasPorHora} />
+          <RatingPorHoraChart vistas={vistasMapa} />
         </div>
       )}
 

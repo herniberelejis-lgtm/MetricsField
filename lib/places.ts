@@ -70,7 +70,14 @@ export type SearchGooglePlaceResultado =
  * desde afuera). Google no deja usar esto desde el navegador del cliente
  * final por CORS, así que corre server-side y el panel lo consume por
  * /api/places-search. */
-export async function searchGooglePlace(query: string): Promise<SearchGooglePlaceResultado> {
+/** Centro de Córdoba capital: el buscador del portal prioriza resultados de
+ * acá (es un sesgo, no un filtro — "Nemo Café, Rosario" igual aparece). */
+export const SESGO_CORDOBA = { lat: -31.4167, lng: -64.1833, radioMetros: 40_000 };
+
+export async function searchGooglePlace(
+  query: string,
+  sesgo?: { lat: number; lng: number; radioMetros: number },
+): Promise<SearchGooglePlaceResultado> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!query.trim()) return { ok: true, resultados: [] };
   if (!apiKey) return { ok: false, motivo: "sin-key" };
@@ -82,7 +89,16 @@ export async function searchGooglePlace(query: string): Promise<SearchGooglePlac
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress",
     },
-    body: JSON.stringify({ textQuery: query, regionCode: "AR", languageCode: "es" }),
+    body: JSON.stringify({
+      textQuery: query,
+      regionCode: "AR",
+      languageCode: "es",
+      ...(sesgo && {
+        locationBias: {
+          circle: { center: { latitude: sesgo.lat, longitude: sesgo.lng }, radius: sesgo.radioMetros },
+        },
+      }),
+    }),
     cache: "no-store",
   });
 

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui";
 import ResumenResenas, { calcularResumenResenas } from "@/components/ResumenResenas";
 import AccionesClienteMenu from "@/components/AccionesClienteMenu";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c?.nombre ?? "Cliente" };
 }
@@ -52,6 +54,7 @@ export default async function ClienteDetallePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const { error } = await searchParams;
   const [c, resenas] = await Promise.all([getCliente(id), getResenas(id)]);
@@ -67,6 +70,11 @@ export default async function ClienteDetallePage({
     c.comercioPadreId ? getCliente(c.comercioPadreId) : Promise.resolve(undefined),
     c.comercioPadreId ? Promise.resolve([]) : getUsuariosPortal(c.id),
   ]);
+  // El portal se abre siempre con el código de la cuenta raíz; una sucursal
+  // se elige con ?sucursal=. El código propio de la sucursal no abre nada.
+  const linkPortal = cuentaRaiz
+    ? `/portal/${cuentaRaiz.codigoAcceso}?sucursal=${c.id}`
+    : `/portal/${c.codigoAcceso}`;
 
   const gbpConfigurable = oauthConfigurado();
   const gbpConectado = Boolean(c.googleConectadoEn);
@@ -400,8 +408,8 @@ export default async function ClienteDetallePage({
             <p className="mt-1 text-sm text-slate-500">
               Todavía no conectó su cuenta de Google. Se conecta desde SU
               portal (
-              <Link href={`/portal/${c.codigoAcceso}`} className="text-brand-fg hover:underline" target="_blank">
-                /portal/{c.codigoAcceso}
+              <Link href={linkPortal} className="text-brand-fg hover:underline" target="_blank">
+                {linkPortal}
               </Link>
               ) — mandale el link y decile que toque "Conectar tu Google
               Business Profile".
