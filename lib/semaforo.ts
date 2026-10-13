@@ -1,6 +1,4 @@
-import type { ResenasPorHoraDia } from "@/lib/db/resenas";
-
-// Semáforo de reseñas (buenas / medias / malas) y su versión por hora, a
+// Semáforo de reseñas (buenas / medias / malas) y mapa de calor por hora, a
 // partir de una lista de reseñas con estrellas y fecha. Sirve para las dos
 // fuentes que hay: las reseñas completas (API de reseñas o cargadas a mano)
 // o, mientras tanto, las públicas que muestra Google en la ficha (Places).
@@ -29,42 +27,84 @@ export function contarSemaforo(resenas: { estrellas: number }[]): Semaforo {
   return { buenas, medias, malas, total: buenas + medias + malas };
 }
 
-function partesCordoba(fecha: Date): { dia: string; hora: number } {
+function partesCordoba(fecha: Date): { dia: string; hora: number; diaSemana: number } {
   const dia = fecha.toLocaleDateString("en-CA", { timeZone: ZONA_HORARIA });
   const hora = Number(
     fecha.toLocaleTimeString("en-GB", { timeZone: ZONA_HORARIA, hour: "2-digit", hour12: false }).slice(0, 2),
   );
-  return { dia, hora: hora % 24 };
+  const corto = fecha.toLocaleDateString("en-US", { timeZone: ZONA_HORARIA, weekday: "short" });
+  // 0 = lunes … 6 = domingo (la semana arranca el lunes, como en Argentina).
+  const diaSemana = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(corto);
+  return { dia, hora: hora % 24, diaSemana };
 }
 
-/** Grilla día×hora de los últimos `dias` días (hora de Córdoba), con el
- * promedio de estrellas de las reseñas publicadas en cada hora — el mismo
- * formato que getResenasPorHoraSemana, para el mapa de calor en colores. */
-export function grillaPorHora(
-  resenas: ResenaParaSemaforo[],
-  dias = 7,
-  ahora: Date = new Date(),
-): ResenasPorHoraDia[] {
-  const fechas: string[] = [];
-  for (let i = dias - 1; i >= 0; i--) {
-    fechas.push(partesCordoba(new Date(ahora.getTime() - i * 86_400_000)).dia);
-  }
-  const suma = new Map<string, { total: number; n: number }>();
+// ---------- Mapa de calor: día de la semana × hora ----------
+// En vez de los últimos 7 días calendario (con pocas reseñas, una grilla
+// casi vacía), junta un período más largo — las reseñas del mes o las
+// últimas 100 — en una semana tipo: cada celda es "los martes a las 20 h",
+// coloreada por el promedio de estrellas de lo que llegó en esa franja.
+// Solo reseñas con hora exacta (las de Google sincronizadas o cargadas con
+// hora): sin hora no hay casilla donde ponerlas.
+
+export interface CeldaMapa {
+  /** Promedio redondeado de estrellas; null si no llegó ninguna. */
+  rating: 1 | 2 | 3 | 4 | 5 | null;
+  cantidad: number;
+}
+
+export interface FilaMapa {
+  /** "lun", "mar"… */
+  etiqueta: string;
+  horas: CeldaMapa[];
+}
+
+export interface VistaMapa {
+  clave: "mes" | "ultimas";
+  nombre: string;
+  /** Cuántas reseñas entran en el mapa. */
+  total: number;
+  filas: FilaMapa[];
+}
+
+const DIAS_SEMANA = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+export function mapaSemanal(resenas: { estrellas: number; fecha: string | null }[]): FilaMapa[] {
+  const suma = DIAS_SEMANA.map(() => Array.from({ length: 24 }, () => ({ total: 0, n: 0 })));
   for (const r of resenas) {
     if (!r.fecha) continue;
-    const { dia, hora } = partesCordoba(new Date(r.fecha));
-    if (!fechas.includes(dia)) continue;
-    const clave = `${dia}|${hora}`;
-    const acc = suma.get(clave) ?? { total: 0, n: 0 };
-    suma.set(clave, { total: acc.total + r.estrellas, n: acc.n + 1 });
+    const { diaSemana, hora } = partesCordoba(new Date(r.fecha));
+    if (diaSemana < 0) continue;
+    suma[diaSemana][hora].total += r.estrellas;
+    suma[diaSemana][hora].n += 1;
   }
-  return fechas.map((fecha) => ({
-    fecha,
-    horas: Array.from({ length: 24 }, (_, hora) => {
-      const acc = suma.get(`${fecha}|${hora}`);
-      if (!acc) return { rating: null, cantidad: 0 };
-      const rating = Math.min(5, Math.max(1, Math.round(acc.total / acc.n))) as 1 | 2 | 3 | 4 | 5;
-      return { rating, cantidad: acc.n };
-    }),
+  return DIAS_SEMANA.map((etiqueta, d) => ({
+    etiqueta,
+    horas: suma[d].map(({ total, n }) => ({
+      rating: n === 0 ? null : (Math.min(5, Math.max(1, Math.round(total / n))) as 1 | 2 | 3 | 4 | 5),
+      cantidad: n,
+    })),
   }));
+}
+
+/** Las dos vistas del mapa: las reseñas del mes en curso (hora de Córdoba)
+ * y las últimas 100. `resenas` puede venir en cualquier orden. */
+export function vistasMapaResenas(
+  resenas: { estrellas: number; fecha: string | null }[],
+  ahora: Date = new Date(),
+): VistaMapa[] {
+  const conHora = resenas
+    .filter((r): r is { estrellas: number; fecha: string } => Boolean(r.fecha))
+    .sort((a, b) => Date.parse(b.fecha) - Date.parse(a.fecha));
+  const mesHoy = partesCordoba(ahora).dia.slice(0, 7);
+  const delMes = conHora.filter((r) => partesCordoba(new Date(r.fecha)).dia.startsWith(mesHoy));
+  const ultimas = conHora.slice(0, 100);
+  return [
+    { clave: "mes", nombre: "Este mes", total: delMes.length, filas: mapaSemanal(delMes) },
+    {
+      clave: "ultimas",
+      nombre: ultimas.length === 100 ? "Últimas 100" : `Todas (${ultimas.length})`,
+      total: ultimas.length,
+      filas: mapaSemanal(ultimas),
+    },
+  ];
 }

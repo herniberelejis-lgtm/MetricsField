@@ -3,11 +3,13 @@ import Link from "next/link";
 import { accionCrearCliente } from "@/app/actions";
 import { ClienteForm } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Nuevo cliente" };
 export const dynamic = "force-dynamic";
 
-export default function NuevoClientePage() {
+export default async function NuevoClientePage() {
+  await asegurarAdminPagina();
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-4 text-sm">

@@ -7,6 +7,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import { fmtMes, fmtNum } from "@/lib/format";
 import { citasIA, metricaActual } from "@/lib/types";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c ? `Métricas · ${c.nombre}` : "Métricas" };
 }
@@ -24,6 +26,7 @@ export default async function MetricasPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const c = await getCliente(id);
   if (!c) notFound();

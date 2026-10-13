@@ -26,7 +26,7 @@ function claveFirmaGoogle(): string {
 }
 
 export async function crearCookieSesionPortal(email: string, nombre: string): Promise<string> {
-  return crearCookieSesionGoogleFormato(email, nombre, claveFirmaGoogle());
+  return crearCookieSesionGoogleFormato(email, nombre, claveFirmaGoogle(), "portal");
 }
 
 /** Email de quien está mirando el portal ahora, si tiene una sesión de
@@ -36,7 +36,7 @@ export async function emailSesionPortal(): Promise<string | null> {
   const jar = await cookies();
   const valor = jar.get(COOKIE_PORTAL_GOOGLE)?.value;
   if (!valor) return null;
-  const sesion = await leerCookieSesionGoogle(valor, claveFirmaGoogle());
+  const sesion = await leerCookieSesionGoogle(valor, claveFirmaGoogle(), "portal");
   return sesion?.email ?? null;
 }
 

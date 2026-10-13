@@ -11,6 +11,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import TapsChart from "@/components/TapsChart";
 import { fmtNum } from "@/lib/format";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c ? `Links NFC/QR · ${c.nombre}` : "Links NFC/QR" };
 }
@@ -60,6 +62,7 @@ export default async function LinksPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const { error } = await searchParams;
   const [c, links, tapsPorDia] = await Promise.all([

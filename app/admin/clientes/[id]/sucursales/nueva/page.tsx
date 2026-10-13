@@ -5,6 +5,7 @@ import { getCliente } from "@/lib/db";
 import { accionCrearSucursal } from "@/app/actions";
 import { SucursalForm } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Nueva sucursal" };
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function NuevaSucursalPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const cuenta = await getCliente(id);
   if (!cuenta || cuenta.comercioPadreId) notFound();

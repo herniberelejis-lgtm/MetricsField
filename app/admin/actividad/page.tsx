@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAuditoria } from "@/lib/db";
 import { Card, PageHeader } from "@/components/ui";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Actividad" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ const ETIQUETAS_ACCION: Record<string, string> = {
 };
 
 export default async function ActividadPage() {
+  await asegurarAdminPagina();
   const entradas = await getAuditoria(200);
 
   return (
