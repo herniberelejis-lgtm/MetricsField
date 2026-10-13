@@ -4,6 +4,7 @@ import { sanearHistorico } from "./historico";
 import { fmtMes, fmtNum, delta } from "./format";
 import { enviarEmail } from "./email";
 import { businessProfileHabilitado } from "./gbp";
+import { resolverCuenta } from "./db/clientes";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
 // necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
@@ -16,9 +17,18 @@ function baseUrl(): string {
 
 const ESTILO = `font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1c2530;line-height:1.5;`;
 
-function layout(titulo: string, cuerpo: string, cliente: Cliente): string {
+// El link al portal sale SIEMPRE del código de la cuenta raíz (más
+// ?sucursal= si el aviso es de una sucursal): el código propio de una
+// sucursal no es credencial del portal y no debe circular por mail.
+async function linkPortalDe(cliente: Cliente): Promise<string | null> {
   const url = baseUrl();
-  const linkPortal = url ? `${url}/portal/${cliente.codigoAcceso}#resenas` : null;
+  if (!url) return null;
+  const cuenta = await resolverCuenta(cliente);
+  const sucursal = cuenta.id === cliente.id ? "" : `?sucursal=${encodeURIComponent(cliente.id)}`;
+  return `${url}/portal/${cuenta.codigoAcceso}${sucursal}#resenas`;
+}
+
+function layout(titulo: string, cuerpo: string, linkPortal: string | null): string {
   return `
     <div style="${ESTILO}max-width:480px;margin:0 auto;padding:24px;">
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;">MetricsField</div>
@@ -63,7 +73,7 @@ export async function alertarResenaMala(
   await enviarEmail({
     to: cliente.emailNotificaciones,
     asunto: `Nueva reseña de ${resena.estrellas}★ en ${cliente.nombre}`,
-    html: layout("Nueva reseña que necesita tu respuesta", cuerpo, cliente),
+    html: layout("Nueva reseña que necesita tu respuesta", cuerpo, await linkPortalDe(cliente)),
   });
 }
 
@@ -104,6 +114,6 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
   return enviarEmail({
     to: cliente.emailNotificaciones,
     asunto: `Tu mes en MetricsField — ${cliente.nombre} (${fmtMes(m.mes)})`,
-    html: layout(`Tu resumen de ${fmtMes(m.mes)}`, cuerpo, cliente),
+    html: layout(`Tu resumen de ${fmtMes(m.mes)}`, cuerpo, await linkPortalDe(cliente)),
   });
 }

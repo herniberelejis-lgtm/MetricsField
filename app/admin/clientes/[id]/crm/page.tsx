@@ -9,6 +9,7 @@ import {
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader, Stars } from "@/components/ui";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await asegurarAdminPagina();
   const c = await getCliente((await params).id);
   return { title: c ? `CRM · ${c.nombre}` : "CRM" };
 }
@@ -39,6 +41,7 @@ export default async function CRMPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await asegurarAdminPagina();
   const { id } = await params;
   const [c, resenas] = await Promise.all([
     getCliente(id),

@@ -9,6 +9,7 @@ import {
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
+import { asegurarAdminPagina } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Hardware" };
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export default async function HardwarePage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  await asegurarAdminPagina();
   const { error } = await searchParams;
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 

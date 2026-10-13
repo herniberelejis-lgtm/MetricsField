@@ -4,11 +4,12 @@ import { useState } from "react";
 import ChartCard, { type LegendItem } from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
 import { INK, RATING_COLORS } from "@/lib/palette";
-import type { ResenasPorHoraDia } from "@/lib/db";
+import type { VistaMapa } from "@/lib/semaforo";
 
-// Mapa de calor día×hora de CUÁNDO llegan las reseñas de Google — mismo
-// layout que "a qué hora te tocan el cartel" (TapsPorHoraSemanaChart), pero
-// acá el color es la calificación (rojo 1★ → verde 5★), no el volumen. Es
+// Mapa de calor día de la semana × hora de CUÁNDO llegan las reseñas de
+// Google, sobre las reseñas del mes o las últimas 100 (lib/semaforo.ts) —
+// mismo layout que "a qué hora te tocan el cartel" (TapsPorHoraSemanaChart),
+// pero acá el color es la calificación (rojo 1★ → verde 5★), no el volumen. Es
 // la única escala roja-a-verde del portal del cliente (el resto es
 // monocromo a propósito) — un rango de 5 pasos rojo→verde no puede pasar el
 // chequeo de daltonismo par-a-par que sí exige una paleta categórica (ver
@@ -23,62 +24,83 @@ const LEYENDA: LegendItem[] = ([1, 2, 3, 4, 5] as const).map((n) => ({
   mark: "rect",
 }));
 
-function etiquetaDia(fecha: string): string {
-  return new Date(`${fecha}T12:00:00`).toLocaleDateString("es-AR", { weekday: "short" });
-}
+const hh = (h: number) => `${String(h).padStart(2, "0")}h`;
 
-function fechaCorta(fecha: string): string {
-  return new Date(`${fecha}T12:00:00`).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
-}
-
-export default function RatingPorHoraChart({ dias }: { dias: ResenasPorHoraDia[] }) {
+export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) {
+  // Arranca en "Este mes" si ya llegó alguna; si no, en las últimas 100.
+  const inicial = vistas.find((v) => v.total > 0)?.clave ?? vistas[0]?.clave;
+  const [clave, setClave] = useState(inicial);
   const [hover, setHover] = useState<{ fila: number; hora: number } | null>(null);
-
-  const hayActividad = dias.some((d) => d.horas.some((c) => c.rating !== null));
+  const vista = vistas.find((v) => v.clave === clave) ?? vistas[0];
+  if (!vista) return null;
+  const filas = vista.filas;
 
   const W = 640;
   const H = 190;
   const M = { top: 4, right: 8, bottom: 16, left: 34 };
   const plotW = W - M.left - M.right;
   const plotH = H - M.top - M.bottom;
-  const filaH = plotH / dias.length;
+  const filaH = plotH / filas.length;
   const colW = plotW / 24;
   const gap = 1.5;
 
   const table = {
     head: ["Día", ...Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"))],
-    rows: dias.map((d) => [
-      `${etiquetaDia(d.fecha)} ${fechaCorta(d.fecha)}`,
-      ...d.horas.map((c) => (c.rating === null ? "—" : `${c.rating}★ (${c.cantidad})`)),
+    rows: filas.map((f) => [
+      f.etiqueta,
+      ...f.horas.map((c) => (c.rating === null ? "—" : `${c.rating}★ (${c.cantidad})`)),
     ]),
   };
+  const celda = hover ? filas[hover.fila].horas[hover.hora] : null;
 
   return (
     <ChartCard
       variant="glass"
-      title="A qué hora llegan tus reseñas de Google"
-      subtitle="Últimos 7 días, coloreado por calificación"
+      title="Cuándo llegan tus reseñas de Google"
+      subtitle={`${vista.nombre} · ${vista.total} reseña${vista.total === 1 ? "" : "s"}, por día de la semana y hora, coloreado por calificación`}
       legend={LEYENDA}
       table={table}
     >
-      {hayActividad ? (
+      {vistas.length > 1 && (
+        <div className="mb-3 inline-flex rounded-full bg-slate-100 p-0.5 text-xs" role="tablist">
+          {vistas.map((v) => (
+            <button
+              key={v.clave}
+              type="button"
+              role="tab"
+              aria-selected={v.clave === vista.clave}
+              onClick={() => {
+                setClave(v.clave);
+                setHover(null);
+              }}
+              className={`rounded-full px-3 py-1 font-medium transition ${
+                v.clave === vista.clave ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {v.nombre}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {vista.total > 0 ? (
         <div className="relative">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="w-full"
             role="img"
-            aria-label="Reseñas de Google por hora, últimos 7 días, coloreadas por calificación"
+            aria-label={`Reseñas de Google por día de la semana y hora (${vista.nombre}), coloreadas por calificación`}
           >
-            {dias.map((d, fila) => (
+            {filas.map((f, fila) => (
               <text
-                key={`y-${d.fecha}`}
+                key={`y-${f.etiqueta}`}
                 x={M.left - 6}
                 y={M.top + fila * filaH + filaH / 2 + 3}
                 textAnchor="end"
                 fontSize={9}
                 fill={INK.muted}
               >
-                {etiquetaDia(d.fecha)}
+                {f.etiqueta}
               </text>
             ))}
 
@@ -91,17 +113,17 @@ export default function RatingPorHoraChart({ dias }: { dias: ResenasPorHoraDia[]
                 fontSize={9}
                 fill={INK.muted}
               >
-                {String(h).padStart(2, "0")}h
+                {hh(h)}
               </text>
             ))}
 
-            {dias.map((d, fila) =>
-              d.horas.map((c, hora) => {
+            {filas.map((f, fila) =>
+              f.horas.map((c, hora) => {
                 const activa = hover?.fila === fila && hover.hora === hora;
                 const vacia = c.rating === null;
                 return (
                   <rect
-                    key={`${d.fecha}-${hora}`}
+                    key={`${f.etiqueta}-${hora}`}
                     x={M.left + hora * colW + gap / 2}
                     y={M.top + fila * filaH + gap / 2}
                     width={colW - gap}
@@ -116,7 +138,7 @@ export default function RatingPorHoraChart({ dias }: { dias: ResenasPorHoraDia[]
                     aria-label={
                       vacia
                         ? undefined
-                        : `${etiquetaDia(d.fecha)} ${fechaCorta(d.fecha)}, ${String(hora).padStart(2, "0")}h: ${c.cantidad} reseña${c.cantidad === 1 ? "" : "s"}, promedio ${c.rating}★`
+                        : `${f.etiqueta} ${hh(hora)}: ${c.cantidad} reseña${c.cantidad === 1 ? "" : "s"}, promedio ${c.rating}★`
                     }
                     onPointerEnter={() => setHover({ fila, hora })}
                     onPointerLeave={() => setHover(null)}
@@ -129,16 +151,16 @@ export default function RatingPorHoraChart({ dias }: { dias: ResenasPorHoraDia[]
             )}
           </svg>
 
-          {hover !== null && dias[hover.fila].horas[hover.hora].rating !== null && (
+          {hover !== null && celda?.rating && (
             <Tooltip
-              title={`${etiquetaDia(dias[hover.fila].fecha)} ${fechaCorta(dias[hover.fila].fecha)}, ${String(hover.hora).padStart(2, "0")}h`}
+              title={`${filas[hover.fila].etiqueta}, ${hh(hover.hora)}`}
               leftPct={((M.left + hover.hora * colW + colW / 2) / W) * 100}
               topPct={((M.top + hover.fila * filaH) / H) * 100}
               rows={[
                 {
-                  label: `reseña${dias[hover.fila].horas[hover.hora].cantidad === 1 ? "" : "s"}`,
-                  value: `${dias[hover.fila].horas[hover.hora].rating}★ (${dias[hover.fila].horas[hover.hora].cantidad})`,
-                  color: RATING_COLORS[dias[hover.fila].horas[hover.hora].rating!],
+                  label: `reseña${celda.cantidad === 1 ? "" : "s"}, promedio`,
+                  value: `${celda.cantidad} · ${celda.rating}★`,
+                  color: RATING_COLORS[celda.rating],
                 },
               ]}
             />
@@ -146,7 +168,9 @@ export default function RatingPorHoraChart({ dias }: { dias: ResenasPorHoraDia[]
         </div>
       ) : (
         <p className="py-6 text-center text-sm text-slate-400">
-          Todavía no llegó ninguna reseña de Google sincronizada esta semana.
+          {vista.clave === "mes"
+            ? "Todavía no llegó ninguna reseña de Google este mes."
+            : "Todavía no hay reseñas de Google con hora para armar el mapa."}
         </p>
       )}
     </ChartCard>

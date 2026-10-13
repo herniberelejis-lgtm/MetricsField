@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { esAdminPermitido } from "./db";
 import {
   SESION_MAX_MS,
@@ -43,7 +44,7 @@ export async function crearCookiePassword(): Promise<string> {
 /** Arma el valor de la cookie de sesión por Google: payload.firma — el
  * payload lleva el vencimiento adentro, verificado al leer. */
 export async function crearCookieSesionGoogle(email: string, nombre: string): Promise<string> {
-  return crearCookieSesionGoogleFormato(email, nombre, claveFirmaGoogle());
+  return crearCookieSesionGoogleFormato(email, nombre, claveFirmaGoogle(), "admin");
 }
 
 export async function tieneSesionAdmin(): Promise<boolean> {
@@ -61,7 +62,7 @@ export async function tieneSesionAdmin(): Promise<boolean> {
   }
 
   const porGoogle = jar.get(COOKIE_GOOGLE)?.value;
-  if (porGoogle && (await leerCookieSesionGoogle(porGoogle, claveFirmaGoogle()))) return true;
+  if (porGoogle && (await leerCookieSesionGoogle(porGoogle, claveFirmaGoogle(), "admin"))) return true;
 
   return false;
 }
@@ -73,7 +74,7 @@ export async function emailAdminActual(): Promise<string | null> {
   const jar = await cookies();
   const porGoogle = jar.get(COOKIE_GOOGLE)?.value;
   if (!porGoogle) return null;
-  return (await leerCookieSesionGoogle(porGoogle, claveFirmaGoogle()))?.email ?? null;
+  return (await leerCookieSesionGoogle(porGoogle, claveFirmaGoogle(), "admin"))?.email ?? null;
 }
 
 /**
@@ -109,4 +110,24 @@ export async function requireAdmin(): Promise<void> {
   if (!permitido) {
     throw new Error("Tu acceso al panel fue revocado.");
   }
+}
+
+/**
+ * Guard de las PÁGINAS de /admin (server components). El middleware solo
+ * verifica que la cookie esté bien firmada y no vencida — no puede consultar
+ * la base —, así que sin esto alguien sacado de /admin/administradores
+ * seguía viendo el panel (datos y códigos de portal de todos los clientes)
+ * hasta que le venciera la cookie. Va en la primera línea de CADA page.tsx y
+ * generateMetadata de /admin, no solo en el layout: en una navegación del
+ * lado del cliente Next vuelve a renderizar la página pero no el layout.
+ */
+export async function asegurarAdminPagina(): Promise<void> {
+  let permitido = true;
+  try {
+    await requireAdmin();
+  } catch {
+    permitido = false;
+  }
+  // redirect() lanza una excepción propia de Next: va fuera del try.
+  if (!permitido) redirect("/login");
 }
