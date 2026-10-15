@@ -16,3 +16,6 @@ npm-debug.log*
 /.claude/worktrees
 .gstack/
 brag-output/
+
+# Archivos de trabajo de la skill de diseño (capturas, dirección)
+.taste-skill/
