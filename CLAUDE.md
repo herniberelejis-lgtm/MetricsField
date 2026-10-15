@@ -144,6 +144,8 @@ el código pero está sin usar (audits/respuestas hoy son manuales o por plantil
 
 ## Loyalty — leé el briefing antes de tocarlo
 
+> Sesión nueva solo para Loyalty: empezá por `docs/LOYALTY-TRASPASO.md`.
+
 El Club de beneficios con Google Wallet tiene reglas que no se deducen leyendo un
 archivo por vez (el aislamiento entre comercios lo hace el código y no la base,
 el ledger de puntos solo recibe `INSERT`, los datos personales no están cifrados,

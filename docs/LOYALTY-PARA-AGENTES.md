@@ -11,9 +11,11 @@
 > `docs/LOYALTY-ESTADO.md` (qué se probó y qué falta hacer). Este archivo es
 > sobre **el código**: qué no romper y por qué.
 >
-> Verificado contra la rama `claude/repo-context-hi4dov` (PR #153), commit
-> `1885a86`, el 15/10/2026. Si pasó tiempo, verificá con `git` y `gh` antes de
-> dar por cierto lo del estado.
+> Escrito contra la rama `claude/repo-context-hi4dov` (PR #153) y actualizado
+> el 15/10/2026, después de mergear ese PR a `desarrollo`. Si pasó tiempo,
+> verificá con `git` y `gh` antes de dar por cierto lo del estado. Para la
+> situación operativa de hoy (Neon, Vercel, qué falta) leé primero
+> `docs/LOYALTY-TRASPASO.md`.
 
 ---
 
@@ -21,9 +23,8 @@
 
 | | |
 |---|---|
-| Rama | `claude/repo-context-hi4dov` |
-| PR | **#153**, base `desarrollo`, abierto, no es borrador |
-| `main` | **No tiene nada de Loyalty** (ni una migración) |
+| Rama | `desarrollo` (el #153 se mergeó el 15/10/2026; la rama `claude/repo-context-hi4dov` ya cumplió su ciclo, una tarea nueva sale de `desarrollo` con rama propia) |
+| `main` | **No tiene nada de Loyalty** (ni código ni migraciones): solo recibió el hotfix de carteles (#154) |
 | Flag | `LOYALTY_ENABLED` apagado en producción: es código dormido |
 | Base de datos | **La misma que el resto de la app** (ver §2.1) |
 
@@ -402,9 +403,9 @@ correr un solo test.
 **PRs en borrador.** En GitHub, "draft" significa "no lo revises todavía". Un PR
 de Loyalty ya estuvo diez días parado por eso.
 
-**Nunca pushees directo a `main` ni a `desarrollo`.** Rama propia y PR. El #153
-apunta a `desarrollo`; `main` no tiene nada de Loyalty y solo debería recibirlo
-cuando estén hechos los pasos de `docs/LOYALTY-ESTADO.md`.
+**Nunca pushees directo a `main` ni a `desarrollo`.** Rama propia y PR. Loyalty vive en
+`desarrollo` (#153 mergeado); `main` no tiene nada de Loyalty y solo debería
+recibirlo cuando estén hechos los pasos de `docs/LOYALTY-ESTADO.md`.
 
 ---
 

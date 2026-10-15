@@ -13,7 +13,10 @@ revisado por un audit de seguridad y con todos los arreglos hechos, pero
 de datos, variables en Vercel, Google) y una decisión (cómo verificar el
 teléfono).
 
-- Código: en el PR #153 hacia `desarrollo`, CI en verde, sin conflictos.
+- Código: **mergeado a `desarrollo`** (PR #153, 15/10/2026). `main` solo tiene
+  el hotfix de carteles (#154), nada de Loyalty.
+- Base de datos: las migraciones 012 y 016 **ya están corridas en producción**
+  (15/10/2026); los datos de Loyalty están vacíos.
 - Producción: no hay nada prendido. Todo está detrás de `LOYALTY_ENABLED` y de un
   interruptor por comercio, así que en producción es código dormido.
 - Apple Wallet (iPhone): queda para después, a propósito.
@@ -180,6 +183,11 @@ Decime cuál y lo construyo.
 ---
 
 ## 6. Lo que falta — tu lista, paso a paso
+
+> **Actualización del 15/10/2026:** el **Paso 1 (migraciones en Neon) ya está
+> hecho**, y la consulta de carteles huérfanos y la limpieza del seed del Paso 2
+> también. Las variables del Paso 3 se cargaron en Vercel. **Lo que sigue es el
+> Paso 4 (probar en Preview).** Los pasos de abajo quedan como referencia.
 
 Orden sugerido. Los pasos 1 a 4 te dejan probar todo en Preview sin tocar
 producción.

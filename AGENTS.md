@@ -10,6 +10,7 @@ Este archivo **no duplica** las instrucciones: dice dónde están.
 | Archivo | Cuándo |
 |---|---|
 | **`CLAUDE.md`** (raíz) | Siempre. Qué es el proyecto, arquitectura, reglas críticas, flujo de ramas, comandos. Aplica a todos los agentes, pese al nombre. |
+| **`docs/LOYALTY-TRASPASO.md`** | Si vas a trabajar en Loyalty en una sesión nueva: **empezá por acá**. La situación real de hoy (código, Neon, Vercel), qué falta, qué decide el dueño y cómo trabajar con él. Trae un prompt de arranque. |
 | **`docs/LOYALTY-PARA-AGENTES.md`** | Antes de tocar cualquier cosa de Loyalty: `app/(loyalty)/`, `lib/loyalty*.ts`, `lib/db/loyalty.ts`, `lib/wallet/`, las migraciones de Loyalty, y las acciones y pantallas de Loyalty de `app/admin/` y `app/portal/`. |
 | **`docs/LOYALTY-ESTADO.md`** | Qué se probó, qué falta y qué pasos manuales quedan (Neon, Vercel, Google). |
 | **`docs/LOYALTY-PRODUCTO-COMPLETO.md`** | Para entender el producto y el modelo de negocio, no el código. |
