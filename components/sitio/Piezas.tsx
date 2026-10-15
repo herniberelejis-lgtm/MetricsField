@@ -41,8 +41,8 @@ export default function Piezas({ titulo = "Las piezas" }: { titulo?: string }) {
             </li>
           ))}
         </ul>
-        <div className="piezas__ficha" aria-live="polite">
-          <p className="piezas__precio">
+        <div className="piezas__ficha">
+          <p className="piezas__precio" aria-live="polite">
             {formatoPesos(p.precioCentavos)} <small>+ IVA · pago único</small>
           </p>
           <p style={{ marginTop: 8 }}>{p.momento} {p.descripcion}</p>
@@ -65,7 +65,7 @@ export default function Piezas({ titulo = "Las piezas" }: { titulo?: string }) {
       </div>
       <div className="piezas__escena">
         <div className="piezas__hex">
-          <img key={p.slug} className="cambio-entra" src={p.imagen} alt={p.imagenAlt} width={900} height={900} loading="lazy" />
+          <img key={p.slug} className="cambio-entra" src={p.imagen} alt={p.imagenAlt} width={900} height={900} loading={p.slug === "standee" ? undefined : "lazy"} />
         </div>
       </div>
     </div>

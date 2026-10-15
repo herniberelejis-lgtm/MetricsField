@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { URL_RETAIL, waVertical } from "@/lib/sitio/contacto";
 import { pesos, resultadoVentaEjemplo, VENTA_EJEMPLO } from "@/lib/sitio/contenido";
 
@@ -114,15 +114,37 @@ function Accion({ clave }: { clave: Clave }) {
 
 export default function Puertas({ children }: { children: React.ReactNode }) {
   const [elegida, setElegida] = useState<Clave>("local");
+  const botones = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function teclas(e: React.KeyboardEvent, i: number) {
+    const n = PUERTAS.length;
+    const destino =
+      e.key === "ArrowDown" || e.key === "ArrowRight" ? (i + 1) % n
+      : e.key === "ArrowUp" || e.key === "ArrowLeft" ? (i - 1 + n) % n
+      : e.key === "Home" ? 0
+      : e.key === "End" ? n - 1
+      : null;
+    if (destino === null) return;
+    e.preventDefault();
+    setElegida(PUERTAS[destino].clave);
+    botones.current[destino]?.focus();
+  }
+
   return (
     <>
       <div className="hero__texto">
       {children}
-      <div className="puertas" role="tablist" aria-label="¿Qué tenés?">
-        {PUERTAS.map((p) => (
+      <div className="puertas" role="tablist" aria-label="¿Qué tenés?" aria-orientation="vertical">
+        {PUERTAS.map((p, i) => (
           <button
             key={p.clave}
+            ref={(el) => {
+              botones.current[i] = el;
+            }}
+            type="button"
             role="tab"
+            tabIndex={elegida === p.clave ? 0 : -1}
+            onKeyDown={(e) => teclas(e, i)}
             id={`puerta-${p.clave}`}
             aria-selected={elegida === p.clave}
             aria-controls="escenario-ui"
@@ -141,6 +163,7 @@ export default function Puertas({ children }: { children: React.ReactNode }) {
         <div
           id="escenario-ui"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby={`puerta-${elegida}`}
           className="escenario__ui en-escenario"
         >

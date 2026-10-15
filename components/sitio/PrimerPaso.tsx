@@ -7,6 +7,8 @@ import { waUrl } from "@/lib/whatsapp";
 // El cierre de la home: el mensaje de WhatsApp ya armado con lo que la
 // persona eligió. También es la lista de espera de Loyalty e Intel, sin
 // guardar nada en nuestra base: el pedido llega directo al WhatsApp.
+// El botón es un link común: funciona antes de que cargue el JS (con el
+// mensaje por defecto) y no depende de la CSP de formularios.
 
 const OPCIONES = ["Reviews", "Retail", "Loyalty", "Intel"] as const;
 type Opcion = (typeof OPCIONES)[number];
@@ -37,16 +39,8 @@ export default function PrimerPaso() {
   const texto = `Hola! ${PEDIDO[opcion]}${negocio.trim() ? `. Mi negocio: ${negocio.trim()}` : ""}. Vengo de la web (cierre).`;
 
   return (
-    <form
-      className="dialogo"
-      data-ui
-      action={waUrl(WHATSAPP, texto)}
-      onSubmit={(e) => {
-        e.preventDefault();
-        window.open(waUrl(WHATSAPP, texto), "_blank", "noopener,noreferrer");
-      }}
-    >
-      <h3>Escribinos por WhatsApp</h3>
+    <div className="dialogo" data-ui role="group" aria-labelledby="pp-titulo">
+      <h3 id="pp-titulo">Escribinos por WhatsApp</h3>
       <div className="campo-form">
         <label htmlFor="pp-negocio">Tu negocio</label>
         <input
@@ -67,9 +61,9 @@ export default function PrimerPaso() {
           </label>
         ))}
       </fieldset>
-      <button className="boton" type="submit">
+      <a className="boton" href={waUrl(WHATSAPP, texto)} target="_blank" rel="noopener noreferrer">
         Abrir WhatsApp con el mensaje
-      </button>
-    </form>
+      </a>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { getPedidoPorToken, registrarPago } from "@/lib/db/tienda";
 import { notificar, reportarFalla } from "@/lib/monitor";
 import { enviarEmail } from "@/lib/email";
 import { formatoPesos } from "@/lib/tienda/pedido";
+import { urlSitio } from "@/lib/sitio/contacto";
 
 // Notificaciones de Mercado Pago (Checkout Pro). Nunca se confía en el
 // cuerpo: con el id recibido se consulta el pago a Mercado Pago con nuestro
@@ -29,6 +30,11 @@ export async function POST(req: NextRequest) {
   if (tipo !== "payment" || !dataId) return NextResponse.json({ ok: true });
 
   const secreto = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  // En producción no se aceptan avisos sin firma: sin la clave, el endpoint
+  // quedaría abierto a que cualquiera dispare consultas a Mercado Pago.
+  if (!secreto && process.env.VERCEL_ENV === "production") {
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
   if (secreto) {
     const valida = firmaWebhookValida({
       firma: req.headers.get("x-signature"),
@@ -54,6 +60,11 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json({ ok: true });
       }
+      if (pedido.mpPagoId && pedido.mpPagoId !== pago.id && pedido.estado !== "pendiente" && pedido.estado !== "rechazado") {
+        // Segundo pago aprobado para un pedido ya pagado: hay que devolverlo a mano.
+        await reportarFalla("tienda/webhook", "Pago duplicado para un pedido ya pagado", { pedido: pedido.id, pago: pago.id });
+        return NextResponse.json({ ok: true });
+      }
       const cambio = await registrarPago(pedido.token, pago.id, "pagado");
       if (cambio) await avisarPagado(pedido.id, pedido.nombre, pedido.email, pedido.totalCentavos, pedido.token);
     } else if (pago.estado === "rejected" || pago.estado === "cancelled") {
@@ -67,7 +78,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function avisarPagado(id: number, nombre: string, email: string, totalCentavos: number, token: string) {
-  const base = (process.env.NEXT_PUBLIC_BASE_URL || "https://metricsfield.com").replace(/\/+$/, "");
+  const base = urlSitio();
   await notificar("Pedido pagado en la tienda", `#${id} · ${nombre} · ${formatoPesos(totalCentavos)}`);
   await enviarEmail({
     to: email,

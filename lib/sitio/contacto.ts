@@ -16,6 +16,13 @@ export const URL_PANEL = "https://app.metricsfield.com";
  * "/" es la home del panel, poné NEXT_PUBLIC_SITIO_INICIO=/sitio. */
 export const INICIO = process.env.NEXT_PUBLIC_SITIO_INICIO || "/";
 
+/** Origen público de la tienda, para las URLs de vuelta y de aviso de
+ * Mercado Pago y los links de los emails. Nunca se arma con el Host del
+ * request: un Host falso podría mandar al comprador a otro dominio. */
+export function urlSitio(): string {
+  return (process.env.NEXT_PUBLIC_SITIO_URL || "https://metricsfield.com").replace(/\/+$/, "");
+}
+
 export type Vertical = "Reviews" | "Retail" | "Loyalty" | "Intel" | "la tienda" | "MetricsField";
 
 export function waVertical(vertical: Vertical, seccion: string, pedido = "más información"): string {

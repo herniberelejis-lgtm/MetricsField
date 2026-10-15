@@ -21,6 +21,7 @@ export default function Checkout({ pagoHabilitado }: { pagoHabilitado: boolean }
     return p ? [{ slug: p.slug, nombre: p.nombre, cantidad: i.cantidad, precioUnitarioCentavos: p.precioCentavos }] : [];
   });
   const totales = calcularTotales(lineas, entrega);
+  const v = estado.valores ?? {};
 
   if (!cargado) return <p className="vacio">Cargando tu carrito…</p>;
   if (lineas.length === 0) {
@@ -47,9 +48,9 @@ export default function Checkout({ pagoHabilitado }: { pagoHabilitado: boolean }
                   <p>{formatoPesos(l.precioUnitarioCentavos)} c/u</p>
                   <button type="button" className="quitar" onClick={() => quitar(l.slug)}>Quitar</button>
                 </div>
-                <div className="cantidad" aria-label={`Cantidad de ${l.nombre}`}>
+                <div className="cantidad" role="group" aria-label={`Cantidad de ${l.nombre}`}>
                   <button type="button" aria-label="Uno menos" onClick={() => cambiar(l.slug, l.cantidad - 1)}>−</button>
-                  <output aria-live="polite">{l.cantidad}</output>
+                  <output>{l.cantidad}</output>
                   <button type="button" aria-label="Uno más" onClick={() => cambiar(l.slug, l.cantidad + 1)}>+</button>
                 </div>
               </li>
@@ -58,7 +59,7 @@ export default function Checkout({ pagoHabilitado }: { pagoHabilitado: boolean }
         </ul>
 
         <form id="form-compra" action={accion} style={{ marginTop: 48 }}>
-          <input type="hidden" name="carrito" value={JSON.stringify(items)} />
+          <input type="hidden" name="carrito" value={JSON.stringify(lineas.map((l) => ({ slug: l.slug, cantidad: l.cantidad })))} />
           <input type="hidden" name="origen" value="carrito" />
           <h2 className="seccion__titulo" style={{ fontSize: 32 }}>Tus datos</h2>
           <fieldset className="segmento">
@@ -72,16 +73,16 @@ export default function Checkout({ pagoHabilitado }: { pagoHabilitado: boolean }
               <span>Resto del país: envío</span>
             </label>
           </fieldset>
-          <div className="campo-form"><label htmlFor="c-nombre">Nombre o negocio</label><input id="c-nombre" name="nombre" required autoComplete="name" maxLength={120} /></div>
-          <div className="campo-form"><label htmlFor="c-email">Email</label><input id="c-email" name="email" type="email" required autoComplete="email" maxLength={160} /></div>
-          <div className="campo-form"><label htmlFor="c-wa">WhatsApp</label><input id="c-wa" name="whatsapp" type="tel" required autoComplete="tel" maxLength={40} placeholder="351 555 1234" /></div>
-          <div className="campo-form"><label htmlFor="c-cuit">CUIT (opcional, para tu factura)</label><input id="c-cuit" name="cuit" inputMode="numeric" maxLength={13} /></div>
-          <div className="campo-form"><label htmlFor="c-dir">Dirección del local</label><input id="c-dir" name="direccion" required autoComplete="street-address" maxLength={200} /></div>
+          <div className="campo-form"><label htmlFor="c-nombre">Nombre o negocio</label><input id="c-nombre" name="nombre" defaultValue={v.nombre} required autoComplete="name" maxLength={120} /></div>
+          <div className="campo-form"><label htmlFor="c-email">Email</label><input id="c-email" name="email" defaultValue={v.email} type="email" required autoComplete="email" maxLength={160} /></div>
+          <div className="campo-form"><label htmlFor="c-wa">WhatsApp</label><input id="c-wa" name="whatsapp" defaultValue={v.whatsapp} type="tel" required autoComplete="tel" maxLength={40} placeholder="351 555 1234" /></div>
+          <div className="campo-form"><label htmlFor="c-cuit">CUIT (opcional, para tu factura)</label><input id="c-cuit" name="cuit" defaultValue={v.cuit} inputMode="numeric" maxLength={13} /></div>
+          <div className="campo-form"><label htmlFor="c-dir">Dirección del local</label><input id="c-dir" name="direccion" defaultValue={v.direccion} required autoComplete="street-address" maxLength={200} /></div>
           {entrega === "envio_nacional" && (
             <>
-              <div className="campo-form"><label htmlFor="c-loc">Localidad</label><input id="c-loc" name="localidad" required autoComplete="address-level2" maxLength={100} /></div>
-              <div className="campo-form"><label htmlFor="c-prov">Provincia</label><input id="c-prov" name="provincia" required autoComplete="address-level1" maxLength={60} /></div>
-              <div className="campo-form"><label htmlFor="c-cp">Código postal</label><input id="c-cp" name="codigo_postal" required autoComplete="postal-code" maxLength={10} /></div>
+              <div className="campo-form"><label htmlFor="c-loc">Localidad</label><input id="c-loc" name="localidad" defaultValue={v.localidad} required autoComplete="address-level2" maxLength={100} /></div>
+              <div className="campo-form"><label htmlFor="c-prov">Provincia</label><input id="c-prov" name="provincia" defaultValue={v.provincia} required autoComplete="address-level1" maxLength={60} /></div>
+              <div className="campo-form"><label htmlFor="c-cp">Código postal</label><input id="c-cp" name="codigo_postal" defaultValue={v.codigo_postal} required autoComplete="postal-code" maxLength={10} /></div>
             </>
           )}
         </form>
@@ -94,7 +95,7 @@ export default function Checkout({ pagoHabilitado }: { pagoHabilitado: boolean }
           <span>{entrega === "instalacion_cordoba" ? "Instalación en Córdoba" : "Envío"}</span>
           <span>{totales.envioCentavos === null ? "A coordinar" : totales.envioCentavos === 0 ? "Incluida" : formatoPesos(totales.envioCentavos)}</span>
         </div>
-        <div className="resumen__fila resumen__fila--total"><span>Total</span><span>{formatoPesos(totales.totalCentavos)}</span></div>
+        <div className="resumen__fila resumen__fila--total"><span>Total</span><span aria-live="polite">{formatoPesos(totales.totalCentavos)}</span></div>
         <p className="descargo">Incluye un mes de panel de Reviews gratis. Tenés 10 días para arrepentirte de la compra.</p>
         {entrega === "envio_nacional" && totales.envioCentavos === null && (
           <p className="descargo">El costo del envío no se cobra acá: te lo pasamos por WhatsApp antes de despachar.</p>

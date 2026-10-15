@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCarrito } from "./Carrito";
 import { INICIO, waVertical } from "@/lib/sitio/contacto";
 
@@ -16,12 +16,25 @@ const LINKS = [
 export default function Nav() {
   const { cantidadTotal } = useCarrito();
   const [abierto, setAbierto] = useState(false);
+  const boton = useRef<HTMLButtonElement>(null);
+  const cajon = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!abierto) return;
-    const cerrar = (e: KeyboardEvent) => e.key === "Escape" && setAbierto(false);
+    cajon.current?.querySelector<HTMLElement>("a")?.focus();
+    // Mientras el menú tapa la pantalla, lo de atrás no recibe foco.
+    const main = document.querySelector("main");
+    main?.setAttribute("inert", "");
+    const cerrar = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setAbierto(false);
+      boton.current?.focus();
+    };
     window.addEventListener("keydown", cerrar);
-    return () => window.removeEventListener("keydown", cerrar);
+    return () => {
+      window.removeEventListener("keydown", cerrar);
+      main?.removeAttribute("inert");
+    };
   }, [abierto]);
 
   return (
@@ -45,6 +58,8 @@ export default function Nav() {
           WhatsApp
         </a>
         <button
+          ref={boton}
+          type="button"
           className="nav__menu"
           aria-expanded={abierto}
           aria-controls="cajon"
@@ -54,13 +69,13 @@ export default function Nav() {
         </button>
       </div>
       {abierto && (
-        <nav id="cajon" className="nav__cajon" aria-label="Menú">
+        <nav id="cajon" ref={cajon} className="nav__cajon" aria-label="Menú">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} onClick={() => setAbierto(false)}>
               {l.texto}
             </Link>
           ))}
-          <a href={waVertical("MetricsField", "menú celular", "hablar")} target="_blank" rel="noopener noreferrer">
+          <a href={waVertical("MetricsField", "menú celular", "hablar")} target="_blank" rel="noopener noreferrer" onClick={() => setAbierto(false)}>
             WhatsApp
           </a>
         </nav>

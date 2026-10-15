@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { MAX_POR_PRODUCTO, type SlugProducto } from "@/lib/tienda/catalogo";
+import { MAX_POR_PRODUCTO, productoPorSlug, type SlugProducto } from "@/lib/tienda/catalogo";
 
 // Carrito del navegador. Solo guarda slugs y cantidades: el precio lo pone
 // siempre el servidor al comprar. Se recuerda en localStorage como
@@ -30,7 +30,10 @@ function leer(): ItemCarrito[] {
     if (!Array.isArray(crudo)) return [];
     return crudo.filter(
       (i): i is ItemCarrito =>
-        typeof i?.slug === "string" && Number.isInteger(i?.cantidad) && i.cantidad > 0,
+        typeof i?.slug === "string" &&
+        productoPorSlug(i.slug) !== undefined &&
+        Number.isInteger(i?.cantidad) &&
+        i.cantidad > 0,
     );
   } catch {
     return [];
@@ -44,6 +47,10 @@ export function ProveedorCarrito({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setItems(leer());
     setCargado(true);
+    // Otra pestaña cambió el carrito: tomamos su versión.
+    const sincronizar = (e: StorageEvent) => e.key === CLAVE && setItems(leer());
+    window.addEventListener("storage", sincronizar);
+    return () => window.removeEventListener("storage", sincronizar);
   }, []);
 
   useEffect(() => {

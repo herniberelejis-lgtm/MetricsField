@@ -40,6 +40,7 @@ export type Resultado<T> = { ok: true; valor: T } | { ok: false; error: string }
  * duplicados (se suman). */
 export function lineasDesdeCarrito(crudo: unknown): Resultado<LineaPedido[]> {
   if (!Array.isArray(crudo) || crudo.length === 0) return { ok: false, error: "El carrito está vacío." };
+  if (crudo.length > 10) return { ok: false, error: "Carrito inválido." };
   const cantidades = new Map<SlugProducto, number>();
   for (const item of crudo) {
     if (typeof item !== "object" || item === null) return { ok: false, error: "Carrito inválido." };
