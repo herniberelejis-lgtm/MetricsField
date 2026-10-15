@@ -89,7 +89,7 @@ export async function getClientePorCodigo(codigo: string): Promise<Cliente | und
 export interface DatosTap {
   link: Pick<
     LinkNFC,
-    "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio"
+    "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio" | "etiqueta"
   >;
   comercio: {
     id: string;
@@ -102,7 +102,7 @@ export interface DatosTap {
 
 export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   const rows = await sql`
-    SELECT l.id, l.destino, l.url_destino, l.activo,
+    SELECT l.id, l.destino, l.url_destino, l.activo, l.etiqueta,
            l.autogestionado, l.nombre_negocio,
            co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url, co.tiene_loyalty
     FROM links_nfc l
@@ -120,6 +120,7 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
       // las columnas son NOT NULL y siempre vienen en el SELECT
       autogestionado: Boolean(r.autogestionado),
       nombreNegocio: (r.nombre_negocio as string) ?? "",
+      etiqueta: (r.etiqueta as string) ?? "",
     },
     comercio: r.comercio_id
       ? {

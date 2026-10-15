@@ -379,6 +379,8 @@ await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino)
 await accionArgs("activarCartel", ["huerfano-mostrador", "Intruso", "https://malo.example/huerfano", "1234"]);
 registrar("anónimo", "reclamar un link huérfano (de un cliente borrado)", "denegado",
   `url = '${await urlLink("huerfano-mostrador")}'`, (await urlLink("huerfano-mostrador")) === "");
+r = await fetch(`${BASE}/t/huerfano-mostrador`, { headers: { "x-real-ip": ipNueva() } });
+registrar("anónimo", "abrir el cartel de un cliente borrado", "404 (no ofrece activarlo)", `HTTP ${r.status}`, r.status === 404);
 await accionArgs("activarCartel", ["p-9999-e2e001", "Mi negocio", "https://bueno.example/", "4321"]);
 registrar("comprador", "activar una pieza de inventario (control positivo)", "permitido",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://bueno.example/");
