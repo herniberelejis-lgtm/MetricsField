@@ -23,6 +23,11 @@ export interface DatosPaseApple {
   nombreComercio: string;
   nombreCliente: string;
   saldo: number;
+  /** Link firmado "Ver mis puntos" (el mismo que lleva el pase de Google): le
+   * devuelve la sesión al cliente y le muestra el saldo al día. Un pase de
+   * Apple estático no se actualiza solo, así que este link es la forma de ver
+   * el saldo real. Es opcional para no romper a quien arma un pase sin él. */
+  urlTarjeta?: string;
 }
 
 /** icon.png (mínimo obligatorio por la spec de Apple) y opcionalmente
@@ -31,12 +36,19 @@ export interface DatosPaseApple {
  * sin definir de dónde salen — esta función no asume una fuente). */
 export type AssetsPaseApple = Record<string, Buffer>;
 
+/** Los PEM de una variable de entorno a veces llegan con "\n" escrito como
+ * texto (así los pide cargar Vercel en una sola línea, y así lo hace
+ * lib/wallet/google.ts con su clave). Se convierten en saltos reales. */
+function pem(valor: string | undefined): string | undefined {
+  return valor?.replace(/\\n/g, "\n");
+}
+
 function credenciales() {
   const teamId = process.env.APPLE_TEAM_ID;
   const passTypeId = process.env.APPLE_PASS_TYPE_ID;
-  const certPem = process.env.APPLE_PASS_CERT;
-  const keyPem = process.env.APPLE_PASS_KEY;
-  const wwdrPem = process.env.APPLE_WWDR_CERT;
+  const certPem = pem(process.env.APPLE_PASS_CERT);
+  const keyPem = pem(process.env.APPLE_PASS_KEY);
+  const wwdrPem = pem(process.env.APPLE_WWDR_CERT);
   if (!teamId || !passTypeId || !certPem || !keyPem || !wwdrPem) {
     throw new Error(
       "Faltan APPLE_TEAM_ID / APPLE_PASS_TYPE_ID / APPLE_PASS_CERT / APPLE_PASS_KEY / APPLE_WWDR_CERT"
@@ -54,10 +66,17 @@ function construirPassJson(datos: DatosPaseApple): Record<string, unknown> {
     serialNumber: datos.serialNumber,
     organizationName: datos.nombreComercio,
     description: `Tarjeta de fidelidad — ${datos.nombreComercio}`,
+    // Aspecto de MetricsField (crema y negro). La marca va en logo.png y el
+    // nombre del comercio al lado, en logoText.
+    logoText: datos.nombreComercio,
+    backgroundColor: "rgb(245, 243, 240)",
+    foregroundColor: "rgb(26, 26, 26)",
+    labelColor: "rgb(102, 102, 102)",
     // Pase estático (Fase A): sin webServiceURL ni authenticationToken, por
     // lo tanto Apple nunca intenta empujar actualizaciones — el saldo que
-    // ve el cliente es el del momento en que guardó el pase. Fase B agrega
-    // el Web Service + push por APNs, ver el addendum.
+    // ve el cliente es el del momento en que guardó el pase. Por eso el dorso
+    // trae el link a la tarjeta web, que sí está al día. Fase B agrega el Web
+    // Service + push por APNs.
     storeCard: {
       headerFields: [{ key: "puntos", label: "PUNTOS", value: String(datos.saldo) }],
       primaryFields: [{ key: "cliente", label: "MIEMBRO", value: datos.nombreCliente }],
@@ -65,8 +84,10 @@ function construirPassJson(datos: DatosPaseApple): Record<string, unknown> {
         {
           key: "info",
           label: "Sobre esta tarjeta",
-          value: "Pase estático — actualizá tu saldo tocando el cartel en el local.",
+          value:
+            "Este pase no se actualiza solo: el número de arriba es tu saldo del momento en que lo guardaste. Para ver tus puntos al día, abrí el link de abajo o tocá el cartel en el local.",
         },
+        ...(datos.urlTarjeta ? [{ key: "tarjeta", label: "Ver mis puntos al día", value: datos.urlTarjeta }] : []),
       ],
     },
   };
