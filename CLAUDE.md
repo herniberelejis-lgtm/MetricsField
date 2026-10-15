@@ -142,6 +142,15 @@ el código pero está sin usar (audits/respuestas hoy son manuales o por plantil
 `/l/[codigo]` (landing de Loyalty — detrás de `LOYALTY_ENABLED`, ver
 `lib/db/loyalty.ts`).
 
+## Loyalty — leé el briefing antes de tocarlo
+
+El Club de beneficios con Google Wallet tiene reglas que no se deducen leyendo un
+archivo por vez (el aislamiento entre comercios lo hace el código y no la base,
+el ledger de puntos solo recibe `INSERT`, los datos personales no están cifrados,
+el teléfono no es una contraseña). Están en **`docs/LOYALTY-PARA-AGENTES.md`**:
+leelo antes de modificar cualquier cosa de Loyalty. El estado y los pasos
+pendientes están en `docs/LOYALTY-ESTADO.md`.
+
 ## Variables de entorno
 
 Obligatorias en producción: `DATABASE_URL` y `GOOGLE_OAUTH_CLIENT_ID`/

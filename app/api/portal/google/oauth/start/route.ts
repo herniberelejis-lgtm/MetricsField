@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { portalSoloLectura } from "@/lib/portal-demo";
 import { NextResponse, type NextRequest } from "next/server";
 import { getClientePorCodigo, getCliente } from "@/lib/db";
 import {
@@ -30,7 +31,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const codigo = req.nextUrl.searchParams.get("codigo") ?? "";
   const cliente = await getClientePorCodigo(codigo);
-  if (!cliente) return NextResponse.redirect(new URL("/", req.url));
+  // Cuenta en baja o demo con código publicado: no se conecta Google.
+  if (!cliente || cliente.estado === "baja" || portalSoloLectura(codigo)) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
 
   // comercioId por defecto = la cuenta misma (caso de siempre, un solo
   // local). Si viene explícito, tiene que ser la cuenta o una sucursal suya.

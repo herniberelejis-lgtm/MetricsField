@@ -286,8 +286,10 @@ CREATE TABLE IF NOT EXISTS programas_loyalty (
   google_class_id      TEXT NOT NULL DEFAULT '',
   apple_pass_type_id   TEXT NOT NULL DEFAULT '',
   puntos_bienvenida    INTEGER NOT NULL DEFAULT 100,
+  puntos_por_visita    INTEGER NOT NULL DEFAULT 10,   -- máx. una visita cada 20 h por persona y comercio
   activo               BOOLEAN NOT NULL DEFAULT TRUE,
-  creado_en            TIMESTAMPTZ NOT NULL DEFAULT now()
+  creado_en            TIMESTAMPTZ NOT NULL DEFAULT now(),
+  actualizado_en       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS membresias (
@@ -309,6 +311,7 @@ CREATE TABLE IF NOT EXISTS misiones (
   tipo          TEXT NOT NULL,
   puntos        INTEGER NOT NULL DEFAULT 0,
   verificacion  TEXT NOT NULL DEFAULT 'autodeclarada',
+  url           TEXT NOT NULL DEFAULT '',               -- a dónde manda "seguir en redes"
   activa        BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -323,6 +326,7 @@ CREATE TABLE IF NOT EXISTS beneficios (
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_beneficios_comercio ON beneficios(comercio_id);
+CREATE INDEX IF NOT EXISTS idx_beneficios_comercio_costo ON beneficios(comercio_id, costo_puntos);
 
 CREATE TABLE IF NOT EXISTS movimientos_puntos (
   id            BIGSERIAL PRIMARY KEY,
@@ -334,6 +338,7 @@ CREATE TABLE IF NOT EXISTS movimientos_puntos (
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_movimientos_membresia ON movimientos_puntos(membresia_id, creado_en);
+CREATE INDEX IF NOT EXISTS idx_movimientos_mision ON movimientos_puntos(membresia_id, mision_id) WHERE mision_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS canjes (
   id            TEXT PRIMARY KEY,
@@ -342,9 +347,13 @@ CREATE TABLE IF NOT EXISTS canjes (
   validado      BOOLEAN NOT NULL DEFAULT FALSE,
   validado_en   TIMESTAMPTZ,
   admin_email   TEXT NOT NULL DEFAULT '',
-  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  comercio_id   TEXT REFERENCES comercios(id) ON DELETE CASCADE,
+  costo_puntos  INTEGER,                       -- precio al momento de validar
+  expira_en     TIMESTAMPTZ                    -- el código de caja vence a los 15 min
 );
 CREATE INDEX IF NOT EXISTS idx_canjes_membresia ON canjes(membresia_id);
+CREATE INDEX IF NOT EXISTS idx_canjes_comercio ON canjes(comercio_id, creado_en);
 
 CREATE TABLE IF NOT EXISTS eventos_loyalty (
   id                 BIGSERIAL PRIMARY KEY,
@@ -357,3 +366,4 @@ CREATE TABLE IF NOT EXISTS eventos_loyalty (
 );
 CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_comercio_fecha ON eventos_loyalty(comercio_id, creado_en);
 CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_cooldown ON eventos_loyalty(cliente_final_id, comercio_id, tipo, creado_en);
+CREATE INDEX IF NOT EXISTS idx_eventos_loyalty_tipo ON eventos_loyalty(comercio_id, tipo, creado_en);

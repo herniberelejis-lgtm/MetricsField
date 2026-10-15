@@ -14,7 +14,7 @@ import {
   getLink,
   actualizarLink,
   getCompetidores,
-  crearCompetidor,
+  crearCompetidorConTope,
   sincronizarCompetidor,
   eliminarCompetidor,
   type TapsPorHora,
@@ -25,6 +25,9 @@ import type { Cliente } from "@/lib/types";
 import { urlSegura } from "@/lib/url";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth";
+import { comercioConLoyalty, reflejarSaldoEnWallet } from "@/lib/loyalty";
+import { MENSAJE_SOLO_LECTURA, portalSoloLectura } from "@/lib/portal-demo";
+import { getMembresiaPorId, registrarEventoLoyalty, validarCanje } from "@/lib/db/loyalty";
 
 // Server actions públicas del portal: no hay sesión de admin, el código de
 // acceso privado ES la credencial — pero esa credencial vive en la CUENTA
@@ -38,11 +41,16 @@ import { portalRequiereLoginGoogle, tieneAccesoPortal } from "@/lib/portal-auth"
 // la página, así que si no los repite acá no existen:
 // - rate limit por IP antes de tocar la base (frena enumerar códigos);
 // - cuenta dada de baja = portal inexistente;
+// - cuenta demo con código publicado = solo lectura (lib/portal-demo.ts);
 // - gate de Google: si el comercio cargó emails en portal_usuarios, el
 //   código ya no alcanza solo (ej. un ex empleado que se quedó con el link
 //   no puede cambiar el destino de los carteles ni desconectar Google).
 
-async function comercioAutorizado(codigo: string, comercioId: string): Promise<Cliente> {
+async function comercioAutorizado(
+  codigo: string,
+  comercioId: string,
+  modo: "escritura" | "lectura" = "escritura",
+): Promise<Cliente> {
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
   if (!(await permitir(`portal-accion:${ip}`, 60, 10 * 60_000))) {
@@ -50,6 +58,8 @@ async function comercioAutorizado(codigo: string, comercioId: string): Promise<C
   }
   const cuenta = await getClientePorCodigo(codigo);
   if (!cuenta || cuenta.estado === "baja") throw new Error("Portal inválido.");
+  // Cuentas demo/seed con código publicado: se miran, no se tocan.
+  if (modo === "escritura" && portalSoloLectura(codigo)) throw new Error(MENSAJE_SOLO_LECTURA);
   if ((await portalRequiereLoginGoogle(cuenta.id)) && !(await tieneAccesoPortal(cuenta.id))) {
     throw new Error("Iniciá sesión con Google para hacer cambios en este portal.");
   }
@@ -188,8 +198,8 @@ export async function accionActualizarUrlLinkPortal(
  * día". Se llama directo desde el cliente (no un <form>), así que valida el
  * formato de la fecha a mano en vez de confiar en el tipo del parámetro. */
 export async function accionObtenerTapsPorHora(codigo: string, comercioId: string, fecha: string): Promise<TapsPorHora[]> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return [];
-  const comercio = await comercioAutorizado(codigo, comercioId).catch(() => null);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha))) return [];
+  const comercio = await comercioAutorizado(String(codigo), String(comercioId), "lectura").catch(() => null);
   if (!comercio) return [];
   return getTapsPorHora(comercio.id, fecha);
 }
@@ -279,25 +289,34 @@ export async function accionAgregarCompetidorPortal(
     return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
   }
   const ip = ipDelRequest(await headers());
-  if (!(await permitir(`portal-agregar-competidor:${ip}`, 20, 10 * 60_000))) {
+  // Por IP y por local: cada alta paga una llamada a Places, y el gasto es
+  // del local (muchas IPs contra el mismo local también se cortan).
+  if (
+    !(await permitir(`portal-agregar-competidor:${ip}`, 20, 10 * 60_000)) ||
+    !(await permitir(`portal-agregar-competidor-local:${comercio.id}`, 30, 60 * 60_000))
+  ) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
   if (id === comercio.googlePlaceId) return { ok: false, error: "Ese es tu propio local." };
-  const actuales = await getCompetidores(comercio.id);
-  if (actuales.some((c) => c.googlePlaceId === id)) {
-    return { ok: false, error: `${nombreLimpio} ya está en tu lista.` };
-  }
-  if (actuales.length >= MAX_COMPETIDORES_PORTAL) {
+  const alta = await crearCompetidorConTope(
+    comercio.id,
+    { nombre: nombreLimpio, googlePlaceId: id },
+    MAX_COMPETIDORES_PORTAL,
+  );
+  if (!alta.ok) {
     return {
       ok: false,
-      error: `Ya tenés ${MAX_COMPETIDORES_PORTAL} competidores. Quitá alguno para sumar otro.`,
+      error:
+        alta.motivo === "duplicado"
+          ? `${nombreLimpio} ya está en tu lista.`
+          : `Ya tenés ${MAX_COMPETIDORES_PORTAL} competidores. Quitá alguno para sumar otro.`,
     };
   }
+  const nuevo = alta.competidor;
 
-  // Se crea y se trae su calificación de una: si Google no devuelve datos
+  // Ya creado, se trae su calificación de una: si Google no devuelve datos
   // para ese lugar, no se deja una fila vacía en la lista.
-  const nuevo = await crearCompetidor(comercio.id, { nombre: nombreLimpio, googlePlaceId: id });
   const conDatos = await sincronizarCompetidor(nuevo.id).catch(() => false);
   if (!conDatos) {
     await eliminarCompetidor(nuevo.id);
@@ -326,3 +345,50 @@ export async function accionQuitarCompetidorPortal(
   return { ok: true };
 }
 
+
+// ---------- Loyalty: validar un canje en caja ----------
+// La primera escritura del portal que mueve plata del comercio (un café
+// gratis): misma autorización que el resto del portal (comercioAutorizado:
+// código + gate de Google + el local tiene que ser de esta cuenta) y además
+// un límite propio por local, para que nadie pruebe códigos al azar.
+
+export type ResultadoCanjePortal =
+  | { ok: true; beneficio: string; cliente: string; costoPuntos: number; saldo: number }
+  | { ok: false; error: string };
+
+export async function accionValidarCanjePortal(
+  codigo: string,
+  comercioId: string,
+  codigoCanje: string,
+): Promise<ResultadoCanjePortal> {
+  try {
+    const comercio = await comercioAutorizado(String(codigo), String(comercioId));
+    if (!(await permitir(`portal-canje:${comercio.id}`, 30, 10 * 60_000))) {
+      return { ok: false, error: "Demasiados intentos seguidos. Esperá unos minutos." };
+    }
+    if (!(await comercioConLoyalty(comercio.id))) {
+      return { ok: false, error: "Este local no tiene el club de beneficios activo." };
+    }
+    const r = await validarCanje(comercio.id, String(codigoCanje ?? ""), "portal");
+    if (!r.ok) return r;
+    // El canje YA quedó validado: lo que sigue es accesorio y un fallo acá no
+    // puede decirle al cajero "probá de nuevo" (vería "ya se usó" y le
+    // negaría el beneficio a quien ya pagó con sus puntos).
+    try {
+      await registrarEventoLoyalty({ comercioId: comercio.id, tipo: "canje_validado", detalle: r.codigo });
+      const membresia = await getMembresiaPorId(r.membresiaId);
+      if (membresia) await reflejarSaldoEnWallet(membresia, r.saldo);
+      revalidatePath(`/portal/${encodeURIComponent(String(codigo))}`);
+    } catch (e) {
+      console.error("Canje validado, pero falló el registro posterior:", e instanceof Error ? e.message : e);
+    }
+    return { ok: true, beneficio: r.beneficio, cliente: r.cliente, costoPuntos: r.costoPuntos, saldo: r.saldo };
+  } catch (e) {
+    // Errores de autorización (los de comercioAutorizado) se muestran; uno de
+    // la base (ej. un conflicto de concurrencia) no: se pide reintentar.
+    const mensaje = e instanceof Error ? e.message : "";
+    const deLaBase = typeof e === "object" && e !== null && "code" in e;
+    if (deLaBase) console.error("Canje: error de base al validar:", mensaje);
+    return { ok: false, error: deLaBase || !mensaje ? "No se pudo validar el código. Probá de nuevo." : mensaje };
+  }
+}

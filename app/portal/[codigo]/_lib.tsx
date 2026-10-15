@@ -8,6 +8,7 @@ import {
   IconDevice,
   IconActivity,
   IconSearch,
+  IconUsers,
   type PortalNavEntry,
 } from "@/components/portal/PortalShell";
 
@@ -92,9 +93,15 @@ export const MENSAJE_GOOGLE: Record<string, { texto: string; tono: "ok" | "error
 // tarjeta sin agregar nada que esas dos no tuvieran ya.
 export function construirNav({
   resenasPendientes,
+  conLoyalty = false,
 }: {
   resenasPendientes: number;
+  /** Solo si el local tiene el club de beneficios (Loyalty) activo. */
+  conLoyalty?: boolean;
 }): PortalNavEntry[] {
+  const loyalty: PortalNavEntry[] = conLoyalty
+    ? [{ type: "leaf", id: "loyalty", label: "Club de beneficios", icon: <IconUsers size={18} /> }]
+    : [];
   return [
     { type: "leaf", id: "resumen", label: "Resumen", icon: <IconGrid size={18} /> },
     {
@@ -122,5 +129,6 @@ export function construirNav({
         { type: "leaf", id: "mes", label: "Resumen del mes", icon: <IconActivity size={16} /> },
       ],
     },
+    ...loyalty,
   ];
 }

@@ -43,6 +43,9 @@ import { calcularResumenResenas } from "@/components/ResumenResenas";
 import { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import PortalShell, { type PortalNavEntry } from "@/components/portal/PortalShell";
 import { heroDeCalificacion, MENSAJE_GOOGLE, construirNav, datoVisible } from "./_lib";
+import PanelLoyalty from "./_components/PanelLoyalty";
+import { comercioConLoyalty, origenLoyalty } from "@/lib/loyalty";
+import { getCanjesRecientes, getMetricasLoyalty, getSociosLoyalty } from "@/lib/db/loyalty";
 import PanelResumen from "./_components/PanelResumen";
 import PanelResenas from "./_components/PanelResenas";
 import PanelDispositivos from "./_components/PanelDispositivos";
@@ -462,8 +465,15 @@ export default async function PortalPage({
     });
   }
 
+  // Club de beneficios (Loyalty) del local activo: solo si el módulo está
+  // prendido, el local lo tiene contratado y su programa está activo.
+  // Si algo de Loyalty falla (ej. la migración no corrió en esta base), el
+  // portal sigue andando sin la pestaña: nunca romper Reviews por Loyalty.
+  const loyalty = await comercioConLoyalty(activo.id).catch(() => null);
+
   const nav: PortalNavEntry[] = construirNav({
     resenasPendientes: resenasPendientesCombinadas.length,
+    conLoyalty: Boolean(loyalty),
   });
 
   const panels: Record<string, ReactNode> = {};
@@ -583,6 +593,25 @@ export default async function PortalPage({
       puedeAgregar={Boolean(process.env.GOOGLE_PLACES_API_KEY)}
     />
   );
+
+  if (loyalty) {
+    const [metricasLoyalty, sociosLoyalty, canjesLoyalty] = await Promise.all([
+      getMetricasLoyalty(activo.id),
+      getSociosLoyalty(activo.id),
+      getCanjesRecientes(activo.id),
+    ]);
+    panels.loyalty = (
+      <PanelLoyalty
+        codigoAcceso={c.codigoAcceso}
+        comercioId={activo.id}
+        nombreLocal={activo.nombre}
+        linkLanding={`${await origenLoyalty()}/l/${encodeURIComponent(activo.id)}`}
+        metricas={metricasLoyalty}
+        socios={sociosLoyalty}
+        canjes={canjesLoyalty}
+      />
+    );
+  }
 
   panels.mes = (
     <PanelMes

@@ -110,57 +110,120 @@ async function crearOActualizar(recurso: string, id: string, cuerpo: Record<stri
   }
 }
 
+/** PATCH parcial: cambia solo los campos que se mandan (saldo, estado) sin
+ * reescribir el objeto entero — así una actualización de puntos no pisa el
+ * link "Ver mi tarjeta" ni nada que se haya cargado al emitirlo. */
+async function modificar(recurso: string, id: string, cambios: Record<string, unknown>): Promise<void> {
+  const token = await obtenerAccessToken();
+  const resp = await fetch(`${WALLET_API}/${recurso}/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(cambios),
+  });
+  if (!resp.ok) {
+    throw new Error(`Google Wallet ${recurso} PATCH falló (${resp.status}): ${await resp.text()}`);
+  }
+}
+
+// La Issuer API rechaza una LoyaltyClass sin programLogo (400). Google baja
+// la imagen desde sus servidores, así que tiene que ser una URL pública de
+// PRODUCCIÓN: una preview de Vercel pide login y Google no la puede leer.
+// Por eso fuera de producción va siempre el favicon que ya está publicado
+// en app.metricsfield.com, aunque el comercio tenga logo propio.
+const BASE_PRODUCCION = "https://app.metricsfield.com";
+const LOGO_RESPALDO = `${BASE_PRODUCCION}/landing/assets/img/favicon.png`;
+
+function esProduccion(): boolean {
+  return process.env.VERCEL_ENV === "production";
+}
+
+/** Logo de la tarjeta: el del comercio si subió uno (servido en 660×660 por
+ * /api/loyalty/logo/<id>), si no el de MetricsField. */
+export function urlLogoTarjeta(comercioId: string, tieneLogoPropio: boolean): string {
+  if (!esProduccion()) return LOGO_RESPALDO;
+  return tieneLogoPropio
+    ? `${BASE_PRODUCCION}/api/loyalty/logo/${encodeURIComponent(comercioId)}`
+    : `${BASE_PRODUCCION}/wallet/logo-metricsfield.png`;
+}
+
 /** Da de alta (o actualiza) la LoyaltyClass de un comercio — una por
  * comercio, reusada por todas sus membresías. Idempotente: se puede llamar
  * en cada alta de comercio sin duplicar nada. */
-export async function crearClase(comercio: { id: string; nombre: string }): Promise<string> {
+export async function crearClase(comercio: { id: string; nombre: string; logoUrl?: string }): Promise<string> {
   const { issuerId } = credenciales();
   const classId = `${issuerId}.${comercio.id}`;
   await crearOActualizar("loyaltyClass", classId, {
     id: classId,
     issuerName: comercio.nombre,
-    programName: `${comercio.nombre} — Fidelización`,
+    programName: `${comercio.nombre} — Club de beneficios`,
+    programLogo: {
+      sourceUri: { uri: comercio.logoUrl ?? LOGO_RESPALDO },
+      contentDescription: { defaultValue: { language: "es-AR", value: comercio.nombre } },
+    },
+    hexBackgroundColor: "#10131a",
     reviewStatus: "UNDER_REVIEW",
   });
   return classId;
 }
 
+interface DatosObjeto {
+  classId: string;
+  objectId: string;
+  nombreCliente: string;
+  saldo: number;
+  /** "Ver mi tarjeta": abre /l/<comercio> con la sesión del cliente. */
+  linkTarjeta?: string;
+}
+
+function cuerpoObjeto(d: DatosObjeto): Record<string, unknown> {
+  return {
+    id: d.objectId,
+    classId: d.classId,
+    state: "ACTIVE",
+    accountName: d.nombreCliente,
+    loyaltyPoints: { balance: { int: d.saldo }, label: "Puntos" },
+    ...(d.linkTarjeta
+      ? {
+          linksModuleData: {
+            uris: [{ uri: d.linkTarjeta, description: "Ver mis puntos y beneficios", id: "tarjeta" }],
+          },
+        }
+      : {}),
+  };
+}
+
 /** Da de alta (o actualiza) el LoyaltyObject de una membresía puntual, con
- * el saldo actual. Se llama tanto al registrar al cliente como cada vez
- * que cambian los puntos (`actualizarPuntos` es un alias semántico de esta
- * misma función — PUT es upsert, no hay una operación separada de "solo
- * modificar" en la Issuer API). */
+ * el saldo actual. El id del objeto es `<issuerId>.<membresiaId>`. */
 export async function crearOActualizarObjeto(datos: {
   classId: string;
   membresiaId: string;
   nombreCliente: string;
   saldo: number;
+  linkTarjeta?: string;
 }): Promise<string> {
   const { issuerId } = credenciales();
   const objectId = `${issuerId}.${datos.membresiaId}`;
-  await crearOActualizar("loyaltyObject", objectId, {
-    id: objectId,
-    classId: datos.classId,
-    state: "ACTIVE",
-    accountName: datos.nombreCliente,
-    loyaltyPoints: { balance: { int: datos.saldo }, label: "Puntos" },
-  });
+  await crearOActualizar("loyaltyObject", objectId, cuerpoObjeto({ ...datos, objectId }));
   return objectId;
 }
 
-export const actualizarPuntos = crearOActualizarObjeto;
+/** Saldo nuevo en la tarjeta que el cliente ya tiene guardada: Google la
+ * actualiza sola en el celular, sin que el cliente haga nada. */
+export async function actualizarPuntos(objectId: string, saldo: number): Promise<void> {
+  await modificar("loyaltyObject", objectId, {
+    loyaltyPoints: { balance: { int: saldo }, label: "Puntos" },
+  });
+}
+
+/** El cliente pidió la baja: la tarjeta queda inactiva en su Wallet. */
+export async function desactivarObjeto(objectId: string): Promise<void> {
+  await modificar("loyaltyObject", objectId, { state: "INACTIVE" });
+}
 
 /** Link firmado "Agregar a Google Wallet" — el botón que ve el cliente en
- * la landing. No requiere que el objeto ya exista en el servidor de Google
- * (el JWT trae el objeto inline), pero llamamos crearOActualizarObjeto
- * antes igual para que el saldo quede sincronizado del lado de Google
- * incluso si el cliente nunca vuelve a tocar el botón. */
-export function generarLinkGuardar(datos: {
-  classId: string;
-  objectId: string;
-  nombreCliente: string;
-  saldo: number;
-}): string {
+ * la landing. Lleva el objeto completo dentro del JWT (Google lo usa si
+ * todavía no existe del lado de ellos; si ya existe, guarda ese). */
+export function generarLinkGuardar(datos: DatosObjeto): string {
   const { email, clavePrivada } = credenciales();
   const ahora = Math.floor(Date.now() / 1000);
   const jwt = firmarJwtRS256(
@@ -169,17 +232,7 @@ export function generarLinkGuardar(datos: {
       aud: "google",
       typ: "savetowallet",
       iat: ahora,
-      payload: {
-        loyaltyObjects: [
-          {
-            id: datos.objectId,
-            classId: datos.classId,
-            state: "ACTIVE",
-            accountName: datos.nombreCliente,
-            loyaltyPoints: { balance: { int: datos.saldo }, label: "Puntos" },
-          },
-        ],
-      },
+      payload: { loyaltyObjects: [cuerpoObjeto(datos)] },
     },
     clavePrivada
   );

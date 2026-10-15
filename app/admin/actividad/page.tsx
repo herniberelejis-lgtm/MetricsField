@@ -23,6 +23,13 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   reasignar_pieza_hardware: "Reasignó una pieza de hardware",
   subir_logo_comercio: "Subió el logo de un comercio",
   eliminar_logo_comercio: "Quitó el logo de un comercio",
+  prueba_wallet: "Generó una tarjeta de prueba de Google Wallet",
+  guardar_loyalty: "Configuró el club de beneficios",
+  crear_beneficio_loyalty: "Agregó un beneficio del club",
+  editar_beneficio_loyalty: "Pausó/reactivó un beneficio del club",
+  crear_mision_loyalty: "Agregó una misión del club",
+  liberar_telefono_loyalty: "Liberó un teléfono del club",
+  editar_mision_loyalty: "Pausó/reactivó una misión del club",
 };
 
 export default async function ActividadPage() {

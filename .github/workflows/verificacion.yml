@@ -21,13 +21,18 @@ on:
   schedule:
     - cron: "17 12 * * 1"
 
+# El token del workflow solo lee el repo: ningún paso necesita escribir, y
+# las actions van fijadas por commit (no por tag movible).
+permissions:
+  contents: read
+
 jobs:
   verificar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -76,10 +81,12 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/prueba
       ADMIN_PASSWORD: clave-solo-para-el-ci
       CRON_SECRET: secreto-solo-para-el-ci
+      LOYALTY_ENABLED: "true"
+      LOYALTY_PII_KEY: clave-loyalty-solo-para-el-ci
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm

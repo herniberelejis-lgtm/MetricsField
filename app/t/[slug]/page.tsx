@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { getDatosTap, getLogoActualizadoEn, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { urlSegura } from "@/lib/url";
+import { comercioConLoyalty } from "@/lib/loyalty";
+import { crearTokenVisita } from "@/lib/loyalty-firma";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
 
@@ -128,7 +130,11 @@ export default async function TapPage({
   // Sin URL propia y sin comercio de agencia: pieza libre que nadie activó
   // todavía — primer toque, mostrar el formulario para que se autoconfigure
   // (canal Mercado Libre).
+  // Pieza libre de verdad = nunca se usó (sin etiqueta). Un cartel con
+  // etiqueta que quedó sin comercio (su cliente se borró) no es inventario:
+  // no se ofrece activarlo, y reclamarlo está bloqueado en activarAutogestion.
   if (!comercio) {
+    if (link.etiqueta) notFound();
     return <ActivarCartel slug={slug} />;
   }
 
@@ -139,12 +145,14 @@ export default async function TapPage({
   // salida. Módulo aditivo: esta es la ÚNICA rama nueva en esta página.
   // Con RedireccionSuave y no redirect() de servidor, igual que el resto de
   // la página: un 3xx rompe el preview del link en WhatsApp (ver #122).
-  if (
-    link.destino === "loyalty" &&
-    comercio.tieneLoyalty &&
-    process.env.LOYALTY_ENABLED === "true"
-  ) {
-    return <RedireccionSuave url={`/l/${comercio.id}`} />;
+  // El token de visita (firmado, vale 15 min) es lo que prueba que la
+  // persona tocó el cartel: abrir /l/<comercio> de nuevo desde el historial
+  // o desde la tarjeta no suma puntos, solo un tap real.
+  // Mismo chequeo completo que la landing (flag, entitlement, programa
+  // activo, cuenta no pausada ni en baja): sin eso no se emite el token.
+  if (link.destino === "loyalty" && comercio.tieneLoyalty && (await comercioConLoyalty(comercio.id))) {
+    const visita = encodeURIComponent(crearTokenVisita(comercio.id));
+    return <RedireccionSuave url={`/l/${comercio.id}?v=${visita}`} />;
   }
 
   // Sin URL propia cargada: todo cartel va derecho a la reseña pública de
