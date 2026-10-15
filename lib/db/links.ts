@@ -141,6 +141,10 @@ export async function activarAutogestion(
       pin_hash = ${hash},
       pin_salt = ${salt}
     WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = FALSE
+      -- Solo inventario que nunca se usó: activo, sin etiqueta ni destino. Un
+      -- link que quedó sin comercio (cliente borrado, pieza devuelta) NO
+      -- vuelve a ser reclamable por cualquiera.
+      AND activo = TRUE AND etiqueta = '' AND url_destino IS NULL
     RETURNING id
   `;
   if (rows.length === 0) {
@@ -283,7 +287,7 @@ export async function asignarPiezaACliente(
       tipo = COALESCE(${datos.tipo ?? null}, tipo),
       destino = ${datos.destino},
       url_destino = ${limpiarUrl(datos.urlDestino) ?? null}
-    WHERE id = ${id} AND comercio_id IS NULL
+    WHERE id = ${id} AND comercio_id IS NULL AND autogestionado = FALSE
     RETURNING *
   `;
   if (rows.length === 0) {

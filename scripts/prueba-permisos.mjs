@@ -212,6 +212,38 @@ cuerpo = await r.text();
 registrar("quien tiene el código de B", "abrir el portal de B", "ve solo a B",
   `HTTP ${r.status}, ¿aparece A? ${cuerpo.includes("Barbería")}`, r.status === 200 && !cuerpo.includes("Barbería"));
 
+// ---------- Carteles de clientes borrados: no se pueden reclamar ----------
+// Solo es reclamable inventario nunca usado (activo, sin etiqueta ni destino).
+await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e001', 'huerfano-mostrador')`;
+await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES
+          ('p-9999-e2e001', NULL, '', 'nfc', 'e2e', 'resena'),
+          ('huerfano-mostrador', NULL, 'Mostrador', 'nfc', '', 'resena')`;
+await accionArgs("activarCartel", ["huerfano-mostrador", "Intruso", "https://malo.example/huerfano", "1234"]);
+registrar("anónimo", "reclamar un link huérfano (de un cliente borrado)", "denegado",
+  `url = '${await urlLink("huerfano-mostrador")}'`, (await urlLink("huerfano-mostrador")) === "");
+r = await fetch(`${BASE}/t/huerfano-mostrador`, { headers: { "x-real-ip": ipNueva() } });
+registrar("anónimo", "abrir el cartel de un cliente borrado", "404 (no ofrece activarlo)", `HTTP ${r.status}`, r.status === 404);
+await accionArgs("activarCartel", ["p-9999-e2e001", "Mi negocio", "https://bueno.example/", "4321"]);
+registrar("comprador", "activar una pieza de inventario (control positivo)", "permitido",
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://bueno.example/");
+
+if (MODO !== "produccion") {
+  // Borrar un cliente borra sus carteles: no quedan huérfanos reclamables.
+  await sql`DELETE FROM comercios WHERE id = 'e2e-borrable'`;
+  await sql`DELETE FROM links_nfc WHERE id = 'e2e-borrable-mesa'`;
+  await sql`INSERT INTO comercios (id, codigo_acceso, nombre, rubro, zona, plan, estado)
+            VALUES ('e2e-borrable', 'e2e-borrable-cod', 'Borrable E2E', 'Otro', 'Centro', 'Base', 'activo')`;
+  await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, destino) VALUES ('e2e-borrable-mesa', 'e2e-borrable', 'Mesa', 'resena')`;
+  await accionForm("accionEliminarCliente", { id: "e2e-borrable", confirmarNombre: "Borrable E2E" }, {
+    pagina: "/admin/clientes", cookie: await cookiePasswordValida(),
+  });
+  await accionArgs("activarCartel", ["e2e-borrable-mesa", "Intruso", "https://malo.example/borrado", "1234"]);
+  const [{ n: linkBorrado }] = await sql`SELECT count(*)::int AS n FROM links_nfc WHERE id = 'e2e-borrable-mesa'`;
+  const [{ n: comercioBorrado }] = await sql`SELECT count(*)::int AS n FROM comercios WHERE id = 'e2e-borrable'`;
+  registrar("anónimo", "reclamar el cartel de un cliente recién borrado", "no existe",
+    `comercio = ${comercioBorrado}, link = ${linkBorrado}`, comercioBorrado === 0 && linkBorrado === 0);
+}
+
 // ---------- Acciones de admin sin sesión ----------
 const [{ n: comerciosAntes }] = await sql`SELECT count(*)::int AS n FROM comercios`;
 for (const pagina of ["/portal/x", "/login", "/admin/clientes"]) {

@@ -89,14 +89,14 @@ export async function getClientePorCodigo(codigo: string): Promise<Cliente | und
 export interface DatosTap {
   link: Pick<
     LinkNFC,
-    "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio"
+    "id" | "destino" | "urlDestino" | "activo" | "autogestionado" | "nombreNegocio" | "etiqueta"
   >;
   comercio: { id: string; nombre: string; rubro: Rubro; googleReviewUrl: string } | null;
 }
 
 export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
   const rows = await sql`
-    SELECT l.id, l.destino, l.url_destino, l.activo,
+    SELECT l.id, l.destino, l.url_destino, l.activo, l.etiqueta,
            l.autogestionado, l.nombre_negocio,
            co.id AS comercio_id, co.nombre, co.rubro, co.google_review_url
     FROM links_nfc l
@@ -114,6 +114,7 @@ export async function getDatosTap(slug: string): Promise<DatosTap | undefined> {
       // las columnas son NOT NULL y siempre vienen en el SELECT
       autogestionado: Boolean(r.autogestionado),
       nombreNegocio: (r.nombre_negocio as string) ?? "",
+      etiqueta: (r.etiqueta as string) ?? "",
     },
     comercio: r.comercio_id
       ? {
@@ -351,7 +352,17 @@ export async function actualizarCliente(
 
 /** Borra el cliente y todo lo que dependía de él (reseñas, links, taps,
  * métricas, feedback, checklist, audits, competencia) — encadenado por
- * ON DELETE CASCADE en el schema. No se puede deshacer. */
+ * ON DELETE CASCADE en el schema. No se puede deshacer.
+ * Los links van aparte y primero: su FK es ON DELETE SET NULL (para piezas
+ * de inventario), y un cartel huérfano en la calle no puede quedar
+ * esperando a que lo reclame el primero que lo escanee. Se borran los del
+ * cliente y los de sus sucursales: esos carteles pasan a dar 404. */
 export async function eliminarCliente(id: string): Promise<void> {
-  await sql`DELETE FROM comercios WHERE id = ${id}`;
+  await sql.begin(async (tx) => {
+    await tx`
+      DELETE FROM links_nfc
+      WHERE comercio_id IN (SELECT c.id FROM comercios c WHERE c.id = ${id} OR c.comercio_padre_id = ${id})
+    `;
+    await tx`DELETE FROM comercios WHERE id = ${id}`;
+  });
 }

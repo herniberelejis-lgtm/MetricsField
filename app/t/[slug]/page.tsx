@@ -128,7 +128,11 @@ export default async function TapPage({
   // Sin URL propia y sin comercio de agencia: pieza libre que nadie activó
   // todavía — primer toque, mostrar el formulario para que se autoconfigure
   // (canal Mercado Libre).
+  // Pieza libre de verdad = nunca se usó (sin etiqueta). Un cartel con
+  // etiqueta que quedó sin comercio (su cliente se borró) no es inventario:
+  // no se ofrece activarlo, y reclamarlo está bloqueado en activarAutogestion.
   if (!comercio) {
+    if (link.etiqueta) notFound();
     return <ActivarCartel slug={slug} />;
   }
 
