@@ -66,7 +66,7 @@ export default function PanelLoyalty({
       </div>
       <p className="text-xs text-slate-500">
         {metricas.tarjetasEnWallet} de {metricas.tarjetas} tarjetas emitidas en Google Wallet · {aWallet} de los que se
-        registraron en 30 días tocaron &ldquo;Guardar en Google Wallet&rdquo;.
+        registraron en 30 días tocaron el botón para guardar su tarjeta en la billetera (Google o Apple).
       </p>
 
       <Card variant="glass">
