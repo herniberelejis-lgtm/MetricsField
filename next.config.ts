@@ -44,24 +44,41 @@ const nextConfig: NextConfig = {
         destination: "/login",
         permanent: false,
       },
+      // En el dominio de venta, /sitio es la home: que no quede indexada
+      // dos veces (la raíz y /sitio).
+      {
+        source: "/sitio",
+        has: [{ type: "host", value: "(www\\.)?metricsfield\\.com" }],
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
-  // metricsfield.com y www muestran la landing de venta (estática, vive en
-  // public/landing/) en la raíz del dominio, sin cambiar la URL que ve el
-  // visitante. app.metricsfield.com no entra acá: ya se resuelve antes, en
-  // redirects(), así que nunca llega a este rewrite.
+  // metricsfield.com y www muestran el sitio de venta (app/(sitio)/sitio)
+  // en la raíz del dominio, sin cambiar la URL que ve el visitante. La
+  // landing estática anterior sigue en /landing/index.html por si hay que
+  // volver atrás. app.metricsfield.com no entra acá: ya se resuelve antes,
+  // en redirects(), así que nunca llega a este rewrite.
   async rewrites() {
     return {
       beforeFiles: [
         {
           source: "/",
           has: [{ type: "host", value: "metricsfield.com" }],
-          destination: "/landing/index.html",
+          destination: "/sitio",
         },
         {
           source: "/",
           has: [{ type: "host", value: "www.metricsfield.com" }],
-          destination: "/landing/index.html",
+          destination: "/sitio",
+        },
+        // Las previews de cada rama (*.vercel.app) también abren el sitio de
+        // venta en la raíz, para poder revisarlo como lo va a ver un cliente.
+        // geo-seo-analytics.vercel.app no llega acá: lo redirige redirects().
+        {
+          source: "/",
+          has: [{ type: "host", value: ".*\\.vercel\\.app" }],
+          destination: "/sitio",
         },
       ],
       afterFiles: [],
