@@ -11,9 +11,9 @@ export const INSTAGRAM = "https://instagram.com/metricsfield";
 export const URL_RETAIL = "https://retail.metricsfield.com";
 export const URL_PANEL = "https://app.metricsfield.com";
 
-/** Ruta de la home del sitio. En producción metricsfield.com/ se reescribe
- * a /sitio (next.config.ts), así que es "/". En local y en previews, donde
- * "/" es la home del panel, poné NEXT_PUBLIC_SITIO_INICIO=/sitio. */
+/** Ruta de la home del sitio. En metricsfield.com y en las previews de
+ * Vercel, "/" se reescribe a /sitio (next.config.ts), así que es "/". En
+ * local, donde "/" es la home del panel, poné NEXT_PUBLIC_SITIO_INICIO=/sitio. */
 export const INICIO = process.env.NEXT_PUBLIC_SITIO_INICIO || "/";
 
 /** Origen público de la tienda, para las URLs de vuelta y de aviso de

@@ -72,6 +72,14 @@ const nextConfig: NextConfig = {
           has: [{ type: "host", value: "www.metricsfield.com" }],
           destination: "/sitio",
         },
+        // Las previews de cada rama (*.vercel.app) también abren el sitio de
+        // venta en la raíz, para poder revisarlo como lo va a ver un cliente.
+        // geo-seo-analytics.vercel.app no llega acá: lo redirige redirects().
+        {
+          source: "/",
+          has: [{ type: "host", value: ".*\\.vercel\\.app" }],
+          destination: "/sitio",
+        },
       ],
       afterFiles: [],
       fallback: [],
