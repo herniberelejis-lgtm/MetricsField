@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as db from "@/lib/db";
 import { requireAdmin, emailAdminActual } from "@/lib/auth";
-import { alertarResenaMala } from "@/lib/alertas";
+import { alertarResenaMala, mailResumenSemanal } from "@/lib/alertas";
 import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
+import { probarEnvioEmail } from "@/lib/email";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -190,6 +191,33 @@ export async function accionDesconectarGoogleComercio(fd: FormData): Promise<voi
   await auditar("desconectar_google_cliente", id);
   revalidatePath("/", "layout");
   redirect(`/admin/clientes/${id}`);
+}
+
+/** Manda el resumen del lunes de este cliente a la casilla que elija el
+ * admin, como prueba: confirma que el SMTP de Vercel funciona y muestra el
+ * mail real. Vuelve a la ficha con el resultado (o el motivo del error). */
+export async function accionProbarResumenSemanal(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const para = str(fd, "para").trim();
+  const volver = (q: string) => redirect(`/admin/clientes/${id}?${q}#resumen-lunes`);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) volver("mail=error&detalle=" + encodeURIComponent("Ese mail no es válido."));
+  const cliente = await db.getCliente(id);
+  if (!cliente) volver("mail=error&detalle=" + encodeURIComponent("No existe el cliente."));
+  const resumen = await db.getResumenSemanal(cliente!);
+  const contenido = resumen
+    ? await mailResumenSemanal(cliente!, resumen)
+    : {
+        asunto: "Prueba de mail — MetricsField",
+        html: `<p>Prueba de mail de MetricsField. Este cliente no tiene nada que contar esta semana, así que el lunes no se le manda resumen.</p>`,
+      };
+  const r = await probarEnvioEmail({ to: para, asunto: `[Prueba] ${contenido.asunto}`, html: contenido.html });
+  await auditar("probar_mail_resumen", `${id} → ${para}: ${r.ok ? "ok" : "error"}`);
+  volver(
+    r.ok
+      ? `mail=ok&detalle=${encodeURIComponent(`Enviado a ${para} desde ${r.remitente}. Revisá también la carpeta de spam.`)}`
+      : `mail=error&detalle=${encodeURIComponent(r.error)}`,
+  );
 }
 
 export async function accionSincronizarGoogle(fd: FormData): Promise<void> {
