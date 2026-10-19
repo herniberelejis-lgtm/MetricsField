@@ -165,8 +165,16 @@ export default function PanelResumen({
           eso va primero, antes que la calificación. El detalle completo de
           reseñas (responder cada una, ver todas) vive en la pestaña Reseñas
           — acá va compacto, con el link para saltar para allá. */}
+      {/* Debajo de las conclusiones, los números sueltos de la semana: el
+          detalle para quien quiere mirar más, no lo primero que se ve. */}
+      {conclusiones && (
+        <div className="mb-2 mt-12 border-t border-slate-200/80 pt-8">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">El detalle</p>
+          <p className="mt-1 text-xl font-extrabold tracking-tight text-slate-900">Tus números de la semana</p>
+        </div>
+      )}
       <SectionHeading
-        title="Lo que Google no te muestra"
+        title={conclusiones ? "Tu cartel y tus quejas" : "Lo que Google no te muestra"}
         subtitle={hayResenasDetalladas ? "de qué se queja la gente, y cómo usan tu cartel" : "cómo usan tu cartel"}
       />
 
