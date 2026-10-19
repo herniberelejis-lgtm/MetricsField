@@ -9,20 +9,38 @@ import "server-only";
 //   retraso, así que el número del mes en curso siempre corre un poco
 //   detrás de la realidad.
 
-/** Visitas al perfil, llamadas y "cómo llegar" salen de la Business Profile
- * Performance API, que Google todavía no nos aprobó: la cuota está en 0 y
- * todo pedido responde 429. Mientras tanto no se muestran en ningún lado (un
- * 0 fijo le hace creer al cliente que nadie lo vio) y el cron no las pide.
- * El día que llegue la aprobación: GOOGLE_BUSINESS_PROFILE_HABILITADO=true
- * en Vercel (Production) y redeploy — no hace falta tocar código. */
+/** Interruptor de las APIs de Business Profile (Performance: visitas,
+ * llamadas y "cómo llegar"; Account Management y Business Information:
+ * vincular la ficha). Google aprobó el proyecto (cuota por defecto 300 QPM);
+ * el interruptor sigue existiendo para poder apagarlo si una API falla o se
+ * agota la cuota, sin tocar código. Apagado, el cron no las pide y ningún
+ * panel muestra un 0 fijo que le haga creer al cliente que nadie lo vio.
+ * Se prende con GOOGLE_BUSINESS_PROFILE_HABILITADO=true en Vercel
+ * (Production) y redeploy. */
 export function businessProfileHabilitado(): boolean {
   return process.env.GOOGLE_BUSINESS_PROFILE_HABILITADO === "true";
 }
 
 export interface UbicacionGBP {
-  location: string; // resource name, ej. "locations/1234567890"
+  /** resource name completo, ej. "accounts/111/locations/1234567890". Es la
+   * forma que exige la Reviews API (v4); Performance usa solo la parte
+   * "locations/…" (ver ubicacionParaPerformance). */
+  location: string;
   placeId: string;
   titulo: string;
+}
+
+/** Performance identifica la ficha como "locations/{id}", sin la cuenta. */
+export function ubicacionParaPerformance(location: string): string {
+  const i = location.indexOf("locations/");
+  return i >= 0 ? location.slice(i) : location;
+}
+
+/** true si el resource name guardado incluye la cuenta ("accounts/…/"):
+ * las fichas vinculadas antes guardaban solo "locations/…", que sirve para
+ * Performance pero no para listar/responder reseñas. */
+export function ubicacionConCuenta(location: string): boolean {
+  return location.startsWith("accounts/");
 }
 
 export async function listarUbicaciones(accessToken: string): Promise<UbicacionGBP[]> {
@@ -62,7 +80,9 @@ export async function listarUbicaciones(accessToken: string): Promise<UbicacionG
       };
       for (const l of locData.locations ?? []) {
         ubicaciones.push({
-          location: l.name,
+          // Business Information devuelve "locations/{id}"; se le antepone la
+          // cuenta para poder usar el mismo valor en la Reviews API.
+          location: `${account.name}/${l.name}`,
           placeId: l.metadata?.placeId ?? "",
           titulo: l.title ?? "",
         });
@@ -106,7 +126,7 @@ export async function rendimientoDelMes(
   params.set("dailyRange.endDate.day", String(hoy.getDate()));
 
   const res = await fetch(
-    `https://businessprofileperformance.googleapis.com/v1/${location}:fetchMultiDailyMetricsTimeSeries?${params}`,
+    `https://businessprofileperformance.googleapis.com/v1/${ubicacionParaPerformance(location)}:fetchMultiDailyMetricsTimeSeries?${params}`,
     { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" },
   );
   if (!res.ok) {

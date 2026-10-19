@@ -556,3 +556,19 @@ export async function getVisitasPerfilPortfolio(
   const total = porCliente.reduce((acc, r) => acc + r.visitas, 0);
   return { total, porCliente };
 }
+
+/** Reseñas nuevas de Google de toda la cartera (solo comercios activos),
+ * sumadas mes a mes entre `mesDesde` y `mesHasta` ('YYYY-MM'). Sale de
+ * metricas_mensuales.resenas_nuevas, que llena el cron con el total que
+ * informa Places — funciona sin la Reviews API, a diferencia del conteo de
+ * `resenas` (reseña por reseña), que depende de que cada cliente conecte su
+ * Google. */
+export async function getResenasNuevasPortfolio(mesDesde: string, mesHasta: string): Promise<number> {
+  const rows = await sql`
+    SELECT COALESCE(SUM(m.resenas_nuevas), 0)::int AS n
+    FROM metricas_mensuales m
+    JOIN comercios c ON c.id = m.comercio_id
+    WHERE c.estado = 'activo' AND m.mes BETWEEN ${mesDesde} AND ${mesHasta}
+  `;
+  return Number(rows[0]?.n ?? 0);
+}
