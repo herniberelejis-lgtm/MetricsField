@@ -123,6 +123,11 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
  * el portal (lib/resumen-semanal.ts). false si no tiene email cargado. */
 export async function enviarResumenSemanal(cliente: Cliente, r: ResumenSemanal): Promise<boolean> {
   if (!cliente.emailNotificaciones) return false;
+  return enviarEmail({ to: cliente.emailNotificaciones, ...(await mailResumenSemanal(cliente, r)) });
+}
+
+/** Asunto y HTML del resumen del lunes (lo usa también la prueba del admin). */
+export async function mailResumenSemanal(cliente: Cliente, r: ResumenSemanal): Promise<{ asunto: string; html: string }> {
   const numeros = r.numeros
     .map(
       (n) =>
@@ -134,9 +139,8 @@ export async function enviarResumenSemanal(cliente: Cliente, r: ResumenSemanal):
     ${r.destacado ? `<p style="font-size:14px;font-weight:600;background:#E8F5EF;color:#0B5E40;border-radius:10px;padding:10px 12px;">${escapeHtml(r.destacado)}</p>` : ""}
     ${r.tarea ? `<p style="font-size:14px;background:#FFF4E5;color:#8A3F00;border-radius:10px;padding:10px 12px;"><strong>Para hacer:</strong> ${escapeHtml(r.tarea)}</p>` : ""}
   `;
-  return enviarEmail({
-    to: cliente.emailNotificaciones,
+  return {
     asunto: `Tu semana en Google — ${cliente.nombre}`,
     html: layout(`Tu semana en Google, ${escapeHtml(cliente.nombre)}`, cuerpo, await linkPortalDe(cliente, "")),
-  });
+  };
 }
