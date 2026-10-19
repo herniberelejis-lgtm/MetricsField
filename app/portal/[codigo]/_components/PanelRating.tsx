@@ -8,6 +8,7 @@ import { resenasParaProximaDecima, cincoEstrellasPorCadaUna, ratingDespuesDeUnaM
 import { businessProfileHabilitado } from "@/lib/gbp";
 import SemaforoResenas from "@/components/portal/SemaforoResenas";
 import type { ResenaParaSemaforo, VistaMapa } from "@/lib/semaforo";
+import type { MetaCalificacion } from "@/lib/conclusiones";
 
 // Panel "Mi Rating en Google": la calificación mes a mes, qué falta para
 // subir (próximo escalón y cuánto pesa una mala reseña) y, si hay reseñas
@@ -27,6 +28,7 @@ export default function PanelRating({
   resenasSemaforo,
   semaforoFuente,
   ritmoMensual,
+  metaExacta,
 }: {
   gbpConectado: boolean;
   diasConectado: number | null;
@@ -44,6 +46,10 @@ export default function PanelRating({
   semaforoFuente: "todas" | "google";
   /** Reseñas nuevas por mes en promedio (historial mensual). */
   ritmoMensual: number;
+  /** Cuentas con el promedio exacto (lib/conclusiones.ts) cuando tenemos
+   * todas las reseñas de Google; null si solo está el rating redondeado.
+   * Son las mismas que muestra "Tus conclusiones": un solo número. */
+  metaExacta: MetaCalificacion | null;
 }) {
   const hayReseñasPorHora = vistasMapa.some((v) => v.total > 0);
 
@@ -117,7 +123,12 @@ export default function PanelRating({
               <RatingSerieChart historico={historico} />
             </div>
           )}
-          <ObjetivosRating rating={ratingHero} total={resenasHero} ritmoMensual={ritmoMensual} />
+          <ObjetivosRating
+            rating={ratingHero}
+            total={resenasHero}
+            ritmoMensual={ritmoMensual}
+            metaExacta={metaExacta}
+          />
         </>
       )}
 
@@ -142,18 +153,23 @@ export default function PanelRating({
 
 // "Qué te falta para subir": dos cuentas sobre el rating y el total reales
 // de Google (ver lib/objetivos.ts). Aproximadas porque Google redondea el
-// promedio a un decimal.
+// promedio a un decimal — salvo que tengamos todas las reseñas sincronizadas
+// (metaExacta): ahí se usa el promedio exacto, el mismo de "Tus conclusiones".
 function ObjetivosRating({
   rating,
   total,
   ritmoMensual,
+  metaExacta,
 }: {
   rating: number;
   total: number;
   ritmoMensual: number;
+  metaExacta: MetaCalificacion | null;
 }) {
-  const proximo = resenasParaProximaDecima(rating, total);
-  const porCadaMala = cincoEstrellasPorCadaUna(rating);
+  const proximo = metaExacta
+    ? { objetivo: Number(metaExacta.siguiente.replace(",", ".")), faltan: metaExacta.faltan }
+    : resenasParaProximaDecima(rating, total);
+  const porCadaMala = metaExacta ? metaExacta.compensaUnaMala : cincoEstrellasPorCadaUna(rating);
   // Meses para llegar al próximo escalón al ritmo de reseñas de siempre —
   // en el mejor caso (todas de 5★): es un piso, no una promesa.
   const meses = proximo && ritmoMensual >= 0.5 ? Math.ceil(proximo.faltan / ritmoMensual) : null;
@@ -178,7 +194,18 @@ function ObjetivosRating({
           </>
         )}
       </Card>
-      {meses !== null && proximo && (
+      {metaExacta?.semanas != null && (
+        <Card variant="glass">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">A tu ritmo</p>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+            ~{metaExacta.semanas} semana{metaExacta.semanas === 1 ? "" : "s"}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            para llegar a {metaExacta.siguiente}★, al ritmo de tus reseñas de 5★ de los últimos 3 meses.
+          </p>
+        </Card>
+      )}
+      {!metaExacta && meses !== null && proximo && (
         <Card variant="glass">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">A tu ritmo</p>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
