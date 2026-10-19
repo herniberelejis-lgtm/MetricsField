@@ -638,22 +638,66 @@ export async function sincronizarResenasGoogle(
   let autoRespondidas = 0;
 
   const ahora = Date.now();
-  for (const rg of resenasGoogle) {
-    const existe = await sql`SELECT id, estado FROM resenas WHERE origen_google_id = ${rg.name}`;
-    if (existe.length > 0) {
-      // Ya la teníamos: si el dueño la respondió directo en Google, sacarla
-      // de "esperando tu respuesta" (también corrige las que se importaron
-      // como pendientes antes de mirar esto).
-      if (rg.yaRespondida && existe[0].estado === "nueva") {
-        await actualizarResena(existe[0].id as number, {
-          estado: "respondida",
-          respuestaPublicada: true,
-          ...(rg.respuesta ? { respuestaSugerida: rg.respuesta } : {}),
-        });
-      }
-      continue;
-    }
+  const esReciente = (fecha: string) => ahora - Date.parse(fecha) <= DIAS_RESENA_RECIENTE * 86_400_000;
 
+  // Una ficha puede tener miles de reseñas: lo que ya está guardado se trae
+  // en una sola consulta, y lo nuevo que no dispara nada (viejas o ya
+  // respondidas) se inserta en bloque. Una consulta por reseña no entraba
+  // en el tiempo del cron con fichas grandes.
+  const nombres = resenasGoogle.map((r) => r.name);
+  const existentes = new Map<string, { id: number; estado: string }>();
+  for (let i = 0; i < nombres.length; i += 1000) {
+    const rows = await sql`
+      SELECT id, estado, origen_google_id FROM resenas
+      WHERE origen_google_id IN ${sql(nombres.slice(i, i + 1000))}
+    `;
+    for (const r of rows) existentes.set(r.origen_google_id as string, { id: r.id as number, estado: r.estado as string });
+  }
+
+  // Ya las teníamos: si el dueño las respondió directo en Google, salen de
+  // "esperando tu respuesta" (también corrige las importadas como pendientes
+  // antes de mirar esto).
+  const respondidasEnGoogle = resenasGoogle
+    .filter((rg) => rg.yaRespondida && existentes.get(rg.name)?.estado === "nueva")
+    .map((rg) => existentes.get(rg.name)!.id);
+  if (respondidasEnGoogle.length > 0) {
+    await sql`
+      UPDATE resenas SET estado = 'respondida', respuesta_publicada = TRUE
+      WHERE id IN ${sql(respondidasEnGoogle)}
+    `;
+  }
+
+  const nuevasGoogle = resenasGoogle.filter((rg) => !existentes.has(rg.name));
+  // La primera sincronización trae TODA la historia de la ficha: avisar o
+  // responder solo lo reciente. Si no, conectar Google dispara un mail por
+  // cada reseña mala de los últimos años y publica de golpe respuestas a
+  // reseñas viejas. Las viejas quedan en la cola para responder a mano; las
+  // ya respondidas en Google entran como respondidas, con su respuesta.
+  const enBloque = nuevasGoogle.filter((rg) => rg.yaRespondida || !esReciente(rg.fecha));
+  for (let i = 0; i < enBloque.length; i += 500) {
+    const filas = enBloque.slice(i, i + 500).map((rg) => ({
+      comercio_id: id,
+      autor: rg.autor,
+      estrellas: rg.estrellas,
+      texto: rg.texto,
+      plataforma: "google",
+      fecha: rg.fecha.slice(0, 10),
+      creado_en: rg.fecha,
+      origen_google_id: rg.name,
+      estado: rg.yaRespondida ? "respondida" : "nueva",
+      respuesta_publicada: rg.yaRespondida,
+      respuesta_sugerida: rg.yaRespondida ? rg.respuesta : null,
+    }));
+    await sql`
+      INSERT INTO resenas ${sql(filas)}
+      ON CONFLICT (origen_google_id) WHERE origen_google_id IS NOT NULL DO NOTHING
+    `;
+  }
+  nuevas += enBloque.length;
+
+  // Lo recién llegado sin responder: de a una, porque puede avisar o
+  // responderse sola.
+  for (const rg of nuevasGoogle.filter((x) => !x.yaRespondida && esReciente(x.fecha))) {
     const creada = await crearResena(
       id,
       {
@@ -667,22 +711,6 @@ export async function sincronizarResenasGoogle(
       rg.name,
     );
     nuevas += 1;
-
-    if (rg.yaRespondida) {
-      // Ya respondida en Google: no va a la cola ni dispara nada.
-      await actualizarResena(creada.id, {
-        estado: "respondida",
-        respuestaPublicada: true,
-        ...(rg.respuesta ? { respuestaSugerida: rg.respuesta } : {}),
-      });
-      continue;
-    }
-
-    // La primera sincronización trae TODA la historia de la ficha: avisar o
-    // responder solo lo reciente. Si no, conectar Google dispara un mail por
-    // cada reseña mala de los últimos años y publica de golpe respuestas a
-    // reseñas viejas. Las viejas quedan en la cola para responder a mano.
-    if (ahora - Date.parse(rg.fecha) > DIAS_RESENA_RECIENTE * 86_400_000) continue;
 
     const esPositivaSegunUmbral = rg.estrellas >= cliente.autoResponderUmbral;
     if (cliente.autoResponderPositivas && esPositivaSegunUmbral) {

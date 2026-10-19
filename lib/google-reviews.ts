@@ -50,8 +50,9 @@ export async function listarResenasGoogle(
   const resenas: ResenaGoogleAPI[] = [];
   let pageToken = "";
 
-  // cap defensivo: 10 páginas de 50 alcanza de sobra para un comercio local
-  for (let page = 0; page < 10; page++) {
+  // Google da 50 por página. Hay fichas con miles de reseñas (La Gran Feria
+  // tiene más de 1500): tope defensivo de 100 páginas = 5000 reseñas.
+  for (let page = 0; page < 100; page++) {
     const params = new URLSearchParams({ pageSize: "50" });
     if (pageToken) params.set("pageToken", pageToken);
     const res = await fetch(
