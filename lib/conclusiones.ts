@@ -49,7 +49,18 @@ export interface Barra {
   /** 0 a 1: largo de la barra. */
   proporcion: number;
   tono: "bien" | "mal" | "neutro";
+  /** Segunda serie (gráfico "dobles"), 0 a 1. */
+  proporcion2?: number;
+  /** Marca sobre la columna ("Cartel"). */
+  marca?: string;
+  /** Lectura en una frase (gráfico "tarjetas"). */
+  lectura?: string;
 }
+
+/** Cómo se dibuja cada conclusión: barras horizontales (por defecto),
+ * columnas por mes o semana, columnas dobles (dos series), pastillas por
+ * pieza, personas del equipo o tarjetitas por búsqueda. */
+export type Grafico = "barras" | "columnas" | "dobles" | "pastillas" | "personas" | "tarjetas";
 
 export interface Conclusion {
   id: string;
@@ -58,6 +69,9 @@ export interface Conclusion {
   /** La conclusión, en una frase. */
   titulo: string;
   barras: Barra[];
+  grafico?: Grafico;
+  /** Nombres de las dos series del gráfico "dobles". */
+  leyenda?: [string, string];
   nota?: string;
   /** Qué probar, en una o dos frases. */
   accion?: string;
@@ -72,6 +86,8 @@ export interface MetaCalificacion {
   faltan: number; // reseñas de 5★
   semanas: number | null; // a su ritmo de 5★; null si no hay ritmo
   compensaUnaMala: number; // reseñas de 5★ que compensan una de 1★
+  /** 0 a 1: cuánto del camino entre la décima actual y la siguiente ya se hizo. */
+  progreso: number;
   comoLoCalculamos: string;
 }
 
@@ -274,6 +290,7 @@ export function conclusionPiezas(
   return {
     id: "piezas",
     cruce: "Toques por pieza × reseñas",
+    grafico: "pastillas",
     titulo,
     barras: piezas.slice(0, 6).map((p, i, arr) => ({
       etiqueta: p.nombre,
@@ -315,6 +332,7 @@ export function conclusionEquipo(
   return {
     id: "equipo",
     cruce: "Tarjetas del equipo × texto de reseñas",
+    grafico: "personas",
     titulo: `${top.nombre} está detrás de ${deCada10(top.total / resenas.length)} reseñas.`,
     barras: personas
       .filter((p) => p.total > 0)
@@ -419,13 +437,26 @@ export function conclusionAlerta(resenas: ResenaAnalisis[], hoy: Date): Conclusi
     id: "alerta",
     cruce: "Temas mes a mes",
     titulo: `Alerta: ${nombre} apareció en ${n} quejas en el último mes. En los 3 meses anteriores, en ninguna.`,
-    barras: nuevos.map(([tid, cant]) => ({
-      etiqueta: nombreDeTema(tid),
-      detalle: "quejas en los últimos 30 días",
-      valor: String(cant),
-      proporcion: cant / n,
-      tono: "mal",
-    })),
+    grafico: "columnas",
+    // Las últimas 8 semanas del tema: se ve que antes no estaba.
+    barras: (() => {
+      const semanas = Array.from({ length: 8 }, (_, i) => {
+        const fin = t0 - i * 7 * dia;
+        const cant = quejas.filter(
+          (r) => fin - fechaMs(r) >= 0 && fin - fechaMs(r) < 7 * dia && detectarTemas(r.texto).includes(id),
+        ).length;
+        return { etiqueta: i === 0 ? "Hoy" : `−${i}`, cant };
+      }).reverse();
+      const max = Math.max(...semanas.map((x) => x.cant), 1);
+      return semanas.map((x) => ({
+        etiqueta: x.etiqueta,
+        detalle: "quejas",
+        valor: String(x.cant),
+        proporcion: x.cant / max,
+        tono: x.cant > 0 ? ("mal" as const) : ("neutro" as const),
+      }));
+    })(),
+    nota: "Cada columna es una semana: la última es la que termina hoy.",
     accion: `leé esas ${n} reseñas: cuando algo aparece de golpe suele ser un cambio reciente (un proveedor, una máquina, un turno nuevo).`,
     tarea: `Revisar qué cambió con ${nombre}`,
     comoLoCalculamos: "Avisamos cuando un tema aparece en 3 reseñas de 3★ o menos en los últimos 30 días y no había aparecido en quejas de los 90 días anteriores.",
@@ -460,6 +491,7 @@ export function conclusionZona(comparativas: ComparativaMes[]): Conclusion | nul
   return {
     id: "zona",
     cruce: "Competencia mes a mes",
+    grafico: "columnas",
     titulo,
     barras: serie.map((s) => ({
       etiqueta: `${nombreMes(s.mes)}${s.enCurso ? " (en curso)" : ""}`,
@@ -501,6 +533,7 @@ export function metaCalificacion(
     actual: fmt1(mostrado),
     siguiente: fmt1(mostrado + 0.1),
     faltan,
+    progreso: Math.min(1, Math.max(0, (prom - (mostrado - 0.05)) / 0.1)),
     semanas: porSemana > 0 ? Math.max(1, Math.ceil(faltan / porSemana)) : null,
     compensaUnaMala: Math.max(1, Math.round((prom - 1) / (5 - prom))),
     comoLoCalculamos: `Con el promedio exacto de tus ${n} reseñas de Google (${prom.toFixed(2).replace(".", ",")}), calculamos cuántas de 5★ hacen falta para que redondee a la décima siguiente. Es aproximado: Google puede no contar alguna reseña. El ritmo sale de tus reseñas de 5★ de los últimos ${DIAS_ANALISIS} días.`,
@@ -574,12 +607,14 @@ export function conclusionDiasSemana(diarias: DiaGoogle[], taps: TapAnalisis[]):
   const plural = DIAS_SEMANA_PLURAL[elegido.w];
   const singular = DIAS_SEMANA[elegido.w];
   const comparacion = elegido.a >= maxA ? "más que ningún otro día" : "tanto como tus días más movidos";
-  const maxR = Math.max(...abiertos.map((d) => d.r));
+  const maxT = Math.max(...abiertos.map((d) => d.t));
   const orden = [1, 2, 3, 4, 5, 6, 0];
 
   return {
     id: "dias",
     cruce: "Cómo llegar (Google) × toques al cartel",
+    grafico: "dobles",
+    leyenda: ["Pedidos de cómo llegar", "Toques al cartel"],
     titulo: `Los ${plural} te piden cómo llegar ${comparacion}, pero el cartel se toca ${veces} veces menos que el resto de la semana.`,
     barras: orden
       .map((w) => abiertos.find((d) => d.w === w))
@@ -588,10 +623,11 @@ export function conclusionDiasSemana(diarias: DiaGoogle[], taps: TapAnalisis[]):
         etiqueta: DIAS_SEMANA[d.w][0].toUpperCase() + DIAS_SEMANA[d.w].slice(1),
         detalle: `${Math.round(d.a)} pedidos de cómo llegar y ${fmt1(d.t)} toques por día`,
         valor: fmt1(d.r * 10),
-        proporcion: maxR > 0 ? d.r / maxR : 0,
+        proporcion: maxA > 0 ? d.a / maxA : 0,
+        proporcion2: maxT > 0 ? d.t / maxT : 0,
         tono: d.w === elegido.w ? "mal" : "neutro",
       })),
-    nota: "El número es cuántas veces se toca el cartel por cada 10 personas que piden cómo llegar a tu local.",
+    nota: "Cada columna se dibuja contra el máximo de su serie: lo que importa es la diferencia entre las dos en cada día.",
     accion: `que el turno del ${singular} ofrezca el cartel al cobrar: es un día con mucha gente y pocas reseñas pedidas.`,
     tarea: `Que el turno del ${singular} ofrezca el cartel al cobrar`,
     comoLoCalculamos: `Pedidos de cómo llegar de Google y toques al cartel de las últimas ${SEMANAS_DIAS} semanas con datos, promediados por día de la semana. Solo miramos días en que el cartel se usó (para no contar días cerrados). Google publica sus datos con 2 o 3 días de demora.`,
@@ -673,12 +709,19 @@ export function conclusionBusquedas(
   const base = {
     id: "busquedas",
     cruce: "Búsquedas en Google × texto de reseñas",
+    grafico: "tarjetas" as const,
     barras: top.map((b): Barra => ({
       etiqueta: `"${b.palabra}"`,
       detalle: `${b.menciones === 0 ? "ninguna reseña lo menciona" : `${b.menciones} reseña${b.menciones === 1 ? "" : "s"} lo mencionan`}`,
       valor: `${b.impresiones} búsquedas`,
       proporcion: b.impresiones / max,
       tono: b.menciones <= 1 ? "mal" : b.menciones >= MIN_CASOS ? "bien" : "neutro",
+      lectura:
+        b.menciones <= 1
+          ? "Te buscan por esto y casi ninguna reseña lo cuenta."
+          : b.menciones >= MIN_CASOS
+            ? "Lo buscan y lo elogian: que tu ficha lo diga."
+            : "Algunas reseñas lo nombran.",
     })),
     nota,
     comoLoCalculamos:
@@ -741,10 +784,12 @@ export function conclusionEfectoCartel(
   return {
     id: "efecto",
     cruce: "Primer toque × reseñas por mes",
+    grafico: "columnas",
     titulo,
-    barras: meses.map((h) => ({
+    barras: meses.map((h, i) => ({
       etiqueta: nombreMes(h.mes)[0].toUpperCase() + nombreMes(h.mes).slice(1),
       detalle: h.mes < mesInicio ? "antes del cartel" : "con el cartel",
+      marca: h.mes > mesInicio && (i === 0 || meses[i - 1].mes < mesInicio) ? "Cartel" : undefined,
       valor: String(h.resenasNuevas),
       proporcion: h.resenasNuevas / max,
       tono: h.mes < mesInicio ? "neutro" : subio ? "bien" : bajo ? "mal" : "neutro",
