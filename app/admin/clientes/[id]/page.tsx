@@ -48,6 +48,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const ERRORES: Record<string, string> = {
+  "sync-google-sin-clave":
+    "No se pudo traer el rating: en este entorno no está cargada GOOGLE_PLACES_API_KEY. Si estás en una preview es normal (las claves de Google son solo de Production); en app.metricsfield.com sí funciona.",
   "sync-google":
     'No se pudo sincronizar con Google — revisá que el Place ID sea correcto (usá el buscador por nombre en "Editar suscripción" en vez de pegarlo a mano) y que GOOGLE_PLACES_API_KEY esté configurada en Vercel.',
 };
