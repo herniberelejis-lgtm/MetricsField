@@ -58,3 +58,45 @@ function enmascararEmail(email: string): string {
   if (!dominio) return "***";
   return `${usuario.slice(0, 1)}***@${dominio}`;
 }
+
+/** Qué variables de mail faltan (para el diagnóstico del admin). */
+export function variablesEmailFaltantes(): string[] {
+  return ["SMTP_HOST", "SMTP_USER", "SMTP_PASS"].filter((v) => !process.env[v]);
+}
+
+/** Traduce el error de SMTP a qué revisar. Nunca incluye la contraseña:
+ * solo el código y la respuesta del servidor. */
+export function explicarErrorEmail(e: unknown): string {
+  const err = e as { code?: string; responseCode?: number; response?: string; message?: string } | null;
+  const code = err?.code ?? "";
+  const respuesta = (err?.response ?? err?.message ?? "").slice(0, 200);
+  if (code === "EAUTH" || err?.responseCode === 535 || err?.responseCode === 534) {
+    return `El servidor rechazó el usuario o la contraseña (SMTP_USER / SMTP_PASS). Con Gmail o Google Workspace, SMTP_PASS tiene que ser una "contraseña de aplicación" de 16 letras, no la contraseña normal, y la cuenta necesita la verificación en 2 pasos activada. Respuesta: ${respuesta}`;
+  }
+  if (["ECONNECTION", "ETIMEDOUT", "ESOCKET", "EDNS", "ECONNREFUSED", "ENOTFOUND"].includes(code)) {
+    return `No se pudo conectar a SMTP_HOST en el puerto SMTP_PORT. Para Gmail: smtp.gmail.com y 587. Detalle: ${code} ${respuesta}`;
+  }
+  if (code === "EENVELOPE" || err?.responseCode === 553 || err?.responseCode === 550 || err?.responseCode === 501) {
+    return `El servidor no acepta EMAIL_FROM como remitente: tiene que ser la misma casilla de SMTP_USER (o un alias verificado de esa cuenta), por ejemplo "MetricsField <casilla@dominio.com>". Respuesta: ${respuesta}`;
+  }
+  return `Falló el envío (${code || err?.responseCode || "sin código"}): ${respuesta}`;
+}
+
+/** Envío de prueba desde el admin: a diferencia de enviarEmail, devuelve el
+ * motivo exacto si falla, para saber qué corregir en Vercel. */
+export async function probarEnvioEmail(opts: {
+  to: string;
+  asunto: string;
+  html: string;
+}): Promise<{ ok: true; remitente: string } | { ok: false; error: string }> {
+  const faltan = variablesEmailFaltantes();
+  if (faltan.length) return { ok: false, error: `Faltan cargar en Vercel (Production): ${faltan.join(", ")}.` };
+  const remitente = process.env.EMAIL_FROM || process.env.SMTP_USER || "";
+  try {
+    await getTransporter().verify();
+    await getTransporter().sendMail({ from: remitente, to: opts.to, subject: opts.asunto, html: opts.html });
+    return { ok: true, remitente };
+  } catch (e) {
+    return { ok: false, error: explicarErrorEmail(e) };
+  }
+}

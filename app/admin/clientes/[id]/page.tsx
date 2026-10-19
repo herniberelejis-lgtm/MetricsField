@@ -20,6 +20,7 @@ import {
   accionDesconectarGoogleComercio,
   accionAgregarUsuarioPortal,
   accionQuitarUsuarioPortal,
+  accionProbarResumenSemanal,
 } from "@/app/actions";
 import {
   metricaActual,
@@ -39,9 +40,12 @@ import {
 } from "@/components/ui";
 import ResumenResenas, { calcularResumenResenas } from "@/components/ResumenResenas";
 import AccionesClienteMenu from "@/components/AccionesClienteMenu";
-import { asegurarAdminPagina } from "@/lib/auth";
+import { asegurarAdminPagina, emailAdminActual } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+// "Sincronizar ahora" corre acá: la primera vez trae toda la historia de
+// Google (miles de reseñas y meses de métricas). El default de Vercel corta antes.
+export const maxDuration = 60;
 
 const ERRORES: Record<string, string> = {
   "sync-google":
@@ -63,11 +67,11 @@ export default async function ClienteDetallePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; mail?: string; detalle?: string }>;
 }) {
   await asegurarAdminPagina();
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, mail, detalle } = await searchParams;
   const [c, resenas, estadosGoogle] = await Promise.all([getCliente(id), getResenas(id), getEstadosSyncGoogle(id)]);
   if (!c) notFound();
   const resumenResenas = calcularResumenResenas(resenas);
@@ -88,9 +92,10 @@ export default async function ClienteDetallePage({
     : `/portal/${c.codigoAcceso}`;
 
   // Resumen del lunes: el mismo que llega por mail, listo para WhatsApp.
-  const [resumenSemanal, linkPortalAbsoluto] = await Promise.all([
+  const [resumenSemanal, linkPortalAbsoluto, emailAdmin] = await Promise.all([
     getResumenSemanal(c).catch(() => null),
     linkPortalDe(c, ""),
+    emailAdminActual(),
   ]);
   const textoResumen = resumenSemanal ? textoWhatsAppResumen(resumenSemanal, linkPortalAbsoluto) : null;
   const telefonoCliente = c.contacto.replace(/\D/g, "");
@@ -470,6 +475,9 @@ export default async function ClienteDetallePage({
         texto={textoResumen}
         whatsapp={textoResumen && telefonoCliente.length >= 8 ? waUrl(telefonoCliente, textoResumen) : null}
         email={c.emailNotificaciones}
+        clienteId={c.id}
+        emailAdmin={emailAdmin}
+        prueba={mail === "ok" || mail === "error" ? { ok: mail === "ok", detalle: detalle ?? "" } : null}
       />
 
       {/* KPIs del mes */}
@@ -631,14 +639,20 @@ function ResumenDelLunes({
   texto,
   whatsapp,
   email,
+  clienteId,
+  emailAdmin,
+  prueba,
 }: {
   resumen: ResumenSemanal | null;
   texto: string | null;
   whatsapp: string | null;
   email: string;
+  clienteId: string;
+  emailAdmin: string | null;
+  prueba: { ok: boolean; detalle: string } | null;
 }) {
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 scroll-mt-6" id="resumen-lunes">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Resumen del lunes</div>
@@ -673,6 +687,40 @@ function ResumenDelLunes({
       {!whatsapp && texto && (
         <p className="mt-2 text-xs text-slate-500">
           Para el botón de WhatsApp, cargá un teléfono en &quot;Contacto&quot; (Editar suscripción).
+        </p>
+      )}
+
+      {/* Prueba del mail: confirma que el SMTP de Vercel anda y muestra el
+          mail real, o dice exactamente qué corregir. */}
+      <form action={accionProbarResumenSemanal} className="mt-4 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-4">
+        <input type="hidden" name="id" value={clienteId} />
+        <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+          Mandar una prueba de este mail a
+          <input
+            type="email"
+            name="para"
+            required
+            defaultValue={emailAdmin ?? ""}
+            placeholder="tu@mail.com"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-800"
+          />
+        </label>
+        <button
+          type="submit"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400"
+        >
+          Probar mail
+        </button>
+      </form>
+      {prueba && (
+        <p
+          role="status"
+          className={`mt-3 rounded-lg px-3 py-2 text-xs leading-relaxed ${
+            prueba.ok ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+          }`}
+        >
+          <span className="font-semibold">{prueba.ok ? "✓ Mail enviado. " : "✗ No se pudo mandar. "}</span>
+          {prueba.detalle}
         </p>
       )}
     </Card>
