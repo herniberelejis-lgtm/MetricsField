@@ -22,6 +22,7 @@ import {
   getTapsDetalle,
   getMetricasDiarias,
   getBusquedas,
+  getPrimerToque,
   type TopPiezaSemana,
 } from "@/lib/db";
 import { armarConclusiones, DIAS_ANALISIS } from "@/lib/conclusiones";
@@ -152,6 +153,7 @@ export default async function PortalPage({
     tapsDetalle,
     metricasDiarias,
     busquedas,
+    primerToque,
   ] = await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
@@ -165,6 +167,7 @@ export default async function PortalPage({
       modoTodos ? Promise.resolve([]) : getTapsDetalle(activo.id, DIAS_ANALISIS),
       modoTodos ? Promise.resolve([]) : getMetricasDiarias(activo.id, DIAS_ANALISIS),
       modoTodos ? Promise.resolve([]) : getBusquedas(activo.id, 3),
+      modoTodos ? Promise.resolve(null) : getPrimerToque(activo.id),
     ]);
 
   const m = metricaActual(activo);
@@ -231,6 +234,8 @@ export default async function PortalPage({
         diarias: metricasDiarias,
         busquedas,
         nombreComercio: activo.nombre,
+        historico: activo.historico,
+        primerToque,
       });
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));

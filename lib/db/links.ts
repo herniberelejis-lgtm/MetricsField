@@ -603,3 +603,16 @@ export async function getTapsDetalle(comercioId: string, dias = 90): Promise<Tap
     };
   });
 }
+
+/** Fecha (ISO) del primer toque a cualquier pieza del comercio: desde cuándo
+ * está el cartel en uso. null si nunca se tocó. */
+export async function getPrimerToque(comercioId: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT min(t.creado_en) AS primero
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    WHERE l.comercio_id = ${comercioId}
+  `;
+  const v = rows[0]?.primero as string | Date | null | undefined;
+  return v ? new Date(v).toISOString() : null;
+}
