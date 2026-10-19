@@ -582,7 +582,10 @@ export async function sincronizarResenasGoogle(
 
     const esPositivaSegunUmbral = rg.estrellas >= cliente.autoResponderUmbral;
     if (cliente.autoResponderPositivas && esPositivaSegunUmbral) {
-      const respuesta = generarRespuestaSugerida(rg.autor, rg.estrellas, rg.texto, cliente.tonoMarca, 0);
+      // Sin nombre: esta respuesta se publica sola con la identidad del
+      // comercio, y el nombre de Google lo elige el autor (puede ser cualquier
+      // palabra). Las sugeridas que revisa una persona sí lo usan.
+      const respuesta = generarRespuestaSugerida("", rg.estrellas, rg.texto, cliente.tonoMarca, 0);
       const publicada = await responderResenaGoogle(token, rg.name, respuesta);
       if (publicada) {
         await actualizarResena(creada.id, {

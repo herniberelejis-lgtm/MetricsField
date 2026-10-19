@@ -14,7 +14,7 @@ import {
   getLink,
   actualizarLink,
   getCompetidores,
-  crearCompetidor,
+  crearCompetidorConTope,
   sincronizarCompetidor,
   eliminarCompetidor,
   type TapsPorHora,
@@ -279,25 +279,36 @@ export async function accionAgregarCompetidorPortal(
     return { ok: false, error: e instanceof Error ? e.message : "No autorizado." };
   }
   const ip = ipDelRequest(await headers());
-  if (!(await permitir(`portal-agregar-competidor:${ip}`, 20, 10 * 60_000))) {
+  // Por IP y por local: cada alta paga una llamada a Places, y el gasto es
+  // del local (muchas IPs contra el mismo local también se cortan).
+  if (
+    !(await permitir(`portal-agregar-competidor:${ip}`, 20, 10 * 60_000)) ||
+    !(await permitir(`portal-agregar-competidor-local:${comercio.id}`, 30, 60 * 60_000))
+  ) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
   if (id === comercio.googlePlaceId) return { ok: false, error: "Ese es tu propio local." };
-  const actuales = await getCompetidores(comercio.id);
-  if (actuales.some((c) => c.googlePlaceId === id)) {
-    return { ok: false, error: `${nombreLimpio} ya está en tu lista.` };
-  }
-  if (actuales.length >= MAX_COMPETIDORES_PORTAL) {
+  // Tope y duplicados se chequean dentro de la misma transacción que el
+  // alta: dos altas simultáneas no pueden pasar el tope.
+  const alta = await crearCompetidorConTope(
+    comercio.id,
+    { nombre: nombreLimpio, googlePlaceId: id },
+    MAX_COMPETIDORES_PORTAL,
+  );
+  if (!alta.ok) {
     return {
       ok: false,
-      error: `Ya tenés ${MAX_COMPETIDORES_PORTAL} competidores. Quitá alguno para sumar otro.`,
+      error:
+        alta.motivo === "duplicado"
+          ? `${nombreLimpio} ya está en tu lista.`
+          : `Ya tenés ${MAX_COMPETIDORES_PORTAL} competidores. Quitá alguno para sumar otro.`,
     };
   }
 
-  // Se crea y se trae su calificación de una: si Google no devuelve datos
+  // Ya creado, se trae su calificación de una: si Google no devuelve datos
   // para ese lugar, no se deja una fila vacía en la lista.
-  const nuevo = await crearCompetidor(comercio.id, { nombre: nombreLimpio, googlePlaceId: id });
+  const nuevo = alta.competidor;
   const conDatos = await sincronizarCompetidor(nuevo.id).catch(() => false);
   if (!conDatos) {
     await eliminarCompetidor(nuevo.id);

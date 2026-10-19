@@ -49,7 +49,10 @@ function iguales(a: string, b: string): boolean {
 // por Vercel Authentication y sin OAuth configurado) y en tu PC sí, para
 // poder seguir probando el panel.
 export function loginConPasswordPermitido(): boolean {
-  return process.env.VERCEL_ENV !== "production";
+  // Lista blanca: solo previews, desarrollo en Vercel y fuera de Vercel
+  // (local, CI). Cualquier valor nuevo o raro de VERCEL_ENV queda cerrado.
+  const entorno = process.env.VERCEL_ENV;
+  return !entorno || entorno === "preview" || entorno === "development";
 }
 
 // ---------- Cookie por contraseña compartida: "exp.firma" ----------

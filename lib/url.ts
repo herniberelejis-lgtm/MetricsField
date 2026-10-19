@@ -26,6 +26,9 @@ export function urlSegura(url: string): string | null {
   try {
     const parsed = new URL(limpia);
     if (!ESQUEMAS_PERMITIDOS.has(parsed.protocol)) return null;
+    // Forma canónica "http(s)://": Node acepta también "https:\\host" o
+    // "https:host", y otro parser podría leer otro host en ese texto.
+    if (!/^https?:\/\/[^/\\]/i.test(limpia)) return null;
     return limpia;
   } catch {
     return null;

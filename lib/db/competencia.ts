@@ -11,6 +11,7 @@ import {
   type Seguimiento,
 } from "../seguimiento-competencia";
 import { sincronizarEnLotes } from "./_compartido";
+import { permitir } from "../ratelimit";
 
 // ---------- Competencia ----------
 
@@ -63,6 +64,28 @@ export async function actualizarCompetidor(
   return mapCompetidor(rows[0]);
 }
 
+/** Alta con tope atómico: el conteo y el INSERT van en la misma transacción
+ * bajo un candado por comercio, así N altas simultáneas no pasan el tope
+ * (cada una ve el conteo real que dejó la anterior). */
+export async function crearCompetidorConTope(
+  comercioId: string,
+  datos: { nombre: string; googlePlaceId: string },
+  maximo: number,
+): Promise<{ ok: true; competidor: Competidor } | { ok: false; motivo: "duplicado" | "tope" }> {
+  return sql.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(hashtext(${`competidores:${comercioId}`}))`;
+    const actuales = await tx`SELECT google_place_id FROM competidores WHERE comercio_id = ${comercioId}`;
+    if (actuales.some((r) => r.google_place_id === datos.googlePlaceId)) return { ok: false as const, motivo: "duplicado" as const };
+    if (actuales.length >= maximo) return { ok: false as const, motivo: "tope" as const };
+    const rows = await tx`
+      INSERT INTO competidores (comercio_id, nombre, google_place_id)
+      VALUES (${comercioId}, ${datos.nombre}, ${datos.googlePlaceId})
+      RETURNING *
+    `;
+    return { ok: true as const, competidor: mapCompetidor(rows[0]) };
+  });
+}
+
 export async function eliminarCompetidor(id: number): Promise<void> {
   await sql`DELETE FROM competidores WHERE id = ${id}`;
 }
@@ -106,8 +129,8 @@ export async function sincronizarCompetidoresTodos(): Promise<{ total: number; a
  * el cliente entra a ver su portal (ver pestaña Competidores en
  * app/portal/[codigo]/page.tsx), no depende de esperar al cron diario. Solo
  * pega contra Places API si hace más de `minHoras` que no se actualiza cada
- * competidor, para no gastar cuota ni sumar latencia si alguien recarga la
- * página varias veces seguidas. */
+ * competidor Y no hubo otro intento en esa ventana, para no gastar cuota ni
+ * sumar latencia si alguien recarga la página varias veces seguidas. */
 export async function sincronizarCompetidoresDeComercio(
   comercioId: string,
   minHoras = 6,
@@ -118,7 +141,13 @@ export async function sincronizarCompetidoresDeComercio(
       AND google_place_id IS NOT NULL AND google_place_id != ''
       AND (actualizado_en IS NULL OR actualizado_en < now() - (${minHoras}::text || ' hours')::interval)
   `;
-  const ids = rows.map((r) => Number(r.id));
+  // actualizado_en solo avanza cuando Places devuelve datos: un competidor
+  // cuyo lookup falla seguiría "vencido" y cada vista del portal volvería a
+  // pagar una llamada. Cada intento (salga bien o mal) reserva la ventana.
+  const ids: number[] = [];
+  for (const r of rows) {
+    if (await permitir(`sync-competidor:${Number(r.id)}`, 1, minHoras * 3_600_000)) ids.push(Number(r.id));
+  }
   if (ids.length === 0) return;
   await sincronizarEnLotes(ids, sincronizarCompetidor);
 }
