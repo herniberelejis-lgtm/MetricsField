@@ -2,15 +2,15 @@ import "server-only";
 
 // Cliente de la Reviews API de Google Business Profile (API v4 "My
 // Business" — Google todavía no migró listar/responder reseñas a las APIs
-// nuevas que usa lib/gbp.ts). A diferencia de Performance, este endpoint en
-// particular exige una aprobación de acceso aparte de Google
-// (developers.google.com/my-business/content/prereqs) que hoy no tenemos.
+// nuevas que usa lib/gbp.ts). Requiere el proyecto aprobado para Business
+// Profile (developers.google.com/my-business/content/prereqs) y la API
+// "Google My Business" habilitada en Cloud Console.
 //
-// Por eso todo lo que llama a estas funciones (sincronizarResenasGoogle en
-// lib/db.ts) chequea antes resenasApiHabilitada() — la única pieza que falta
-// para que esto funcione de verdad es que, el día que llegue esa
-// aprobación, alguien ponga GOOGLE_REVIEWS_API_ENABLED=true en las env vars.
-// El código de acá abajo ya está escrito contra la forma real de la API.
+// Todo lo que llama a estas funciones (sincronizarResenasGoogle en
+// lib/db/google-sync.ts) chequea antes resenasApiHabilitada(): se prende con
+// GOOGLE_REVIEWS_API_ENABLED=true en las env vars. `location` es el resource
+// name completo con la cuenta ("accounts/{a}/locations/{l}"), tal como lo
+// guarda resolverLocationGBP.
 
 /** true solo cuando alguien prendió el flag a mano — nunca se auto-activa,
  * porque la aprobación de Google no es algo que el código pueda detectar. */

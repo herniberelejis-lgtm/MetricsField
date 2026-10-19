@@ -1,7 +1,7 @@
 import "server-only";
 import { sql } from "../sql";
 import { accessTokenDesdeRefresh } from "../google-oauth";
-import { listarUbicaciones } from "../gbp";
+import { listarUbicaciones, ubicacionConCuenta } from "../gbp";
 import { descifrar } from "../crypto";
 import { reportarFalla } from "../monitor";
 import type {
@@ -176,13 +176,16 @@ export async function resolverLocationGBP(id: string, token: string): Promise<st
   const rows = await sql`SELECT google_place_id, google_location FROM comercios WHERE id = ${id}`;
   if (rows.length === 0) return null;
   const location = rows[0].google_location as string;
-  if (location) return location;
+  if (location && ubicacionConCuenta(location)) return location;
 
   const placeId = rows[0].google_place_id as string;
-  if (!placeId) return null;
+  // Una ficha vinculada antes guardó solo "locations/…" (sin la cuenta que
+  // pide la Reviews API): se vuelve a resolver para completarla, y si no se
+  // puede se devuelve la vieja, que a Performance le alcanza.
+  if (!placeId) return location || null;
   const ubicaciones = await listarUbicaciones(token);
   const match = ubicaciones.find((u) => u.placeId === placeId);
-  if (!match) return null;
+  if (!match) return location || null;
   await sql`UPDATE comercios SET google_location = ${match.location} WHERE id = ${id}`;
   return match.location;
 }
