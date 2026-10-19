@@ -20,6 +20,8 @@ import {
   getCompetidores,
   sincronizarCompetidoresDeComercio,
   getTapsDetalle,
+  getMetricasDiarias,
+  getBusquedas,
   type TopPiezaSemana,
 } from "@/lib/db";
 import { armarConclusiones, DIAS_ANALISIS } from "@/lib/conclusiones";
@@ -135,8 +137,19 @@ export default async function PortalPage({
         ? MENSAJE_GOOGLE[google]
         : null;
 
-  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark, tapsDetalle] =
-    await Promise.all([
+  const [
+    tapsPorDiaSoporte,
+    horasSemana,
+    piezaMasUsada,
+    links,
+    checklist,
+    audits,
+    resenas,
+    benchmark,
+    tapsDetalle,
+    metricasDiarias,
+    busquedas,
+  ] = await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
       getPiezaMasUsadaSemana(activo.id),
@@ -147,6 +160,8 @@ export default async function PortalPage({
       getBenchmarkMensual(activo.id),
       // Las conclusiones son de UN local: en el combinado no se calculan.
       modoTodos ? Promise.resolve([]) : getTapsDetalle(activo.id, DIAS_ANALISIS),
+      modoTodos ? Promise.resolve([]) : getMetricasDiarias(activo.id, DIAS_ANALISIS),
+      modoTodos ? Promise.resolve([]) : getBusquedas(activo.id, 3),
     ]);
 
   const m = metricaActual(activo);
@@ -210,6 +225,9 @@ export default async function PortalPage({
         comparativas,
         empleados: links.map((l) => l.nombreEmpleado),
         hoy: new Date(),
+        diarias: metricasDiarias,
+        busquedas,
+        nombreComercio: activo.nombre,
       });
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));

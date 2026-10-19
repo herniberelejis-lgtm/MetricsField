@@ -95,6 +95,34 @@ CREATE TABLE IF NOT EXISTS metricas_mensuales (
   PRIMARY KEY (comercio_id, mes)
 );
 
+-- Métricas de Google Business Profile día por día (migración 017). El sync
+-- las trae con hasta 18 meses de historia la primera vez; metricas_mensuales
+-- sigue siendo la suma del mes en curso.
+CREATE TABLE IF NOT EXISTS metricas_diarias (
+  comercio_id          TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  fecha                DATE NOT NULL,                 -- día en la zona horaria de la ficha
+  impresiones_maps     INTEGER NOT NULL DEFAULT 0,    -- vistas del perfil en Maps (compu + celular)
+  impresiones_busqueda INTEGER NOT NULL DEFAULT 0,    -- vistas del perfil en la Búsqueda (compu + celular)
+  llamadas             INTEGER NOT NULL DEFAULT 0,
+  como_llegar          INTEGER NOT NULL DEFAULT 0,
+  clics_web            INTEGER NOT NULL DEFAULT 0,
+  conversaciones       INTEGER NOT NULL DEFAULT 0,
+  reservas             INTEGER NOT NULL DEFAULT 0,
+  actualizado_en       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (comercio_id, fecha)
+);
+
+-- Palabras con las que encontraron la ficha en Google, por mes (migración 017).
+CREATE TABLE IF NOT EXISTS busquedas_mensuales (
+  comercio_id  TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,
+  mes          TEXT NOT NULL,                         -- 'YYYY-MM'
+  palabra      TEXT NOT NULL,
+  impresiones  INTEGER,                               -- NULL cuando Google solo informa "menos de <umbral>"
+  umbral       INTEGER,                               -- el "menos de N" de Google; NULL si hay número exacto
+  PRIMARY KEY (comercio_id, mes, palabra)
+);
+CREATE INDEX IF NOT EXISTS idx_busquedas_comercio_mes ON busquedas_mensuales(comercio_id, mes);
+
 CREATE TABLE IF NOT EXISTS ventas_nfc (
   id                SERIAL PRIMARY KEY,
   comercio_id       TEXT NOT NULL REFERENCES comercios(id) ON DELETE CASCADE,

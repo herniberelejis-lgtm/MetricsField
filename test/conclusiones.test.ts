@@ -3,13 +3,16 @@ import {
   armarConclusiones,
   atribuirResenas,
   conclusionAlerta,
+  conclusionBusquedas,
   conclusionCartel,
+  conclusionDiasSemana,
   conclusionEquipo,
   conclusionPiezas,
   conclusionTemas,
   conclusionZona,
   deCada10,
   metaCalificacion,
+  type DiaGoogle,
   type ResenaAnalisis,
   type TapAnalisis,
 } from "@/lib/conclusiones";
@@ -222,5 +225,118 @@ describe("armarConclusiones", () => {
   it("con pocos datos no inventa nada", () => {
     const r = armarConclusiones({ taps: [], resenas: [], totalGoogle: null, comparativas: [], empleados: [], hoy: HOY });
     expect(r).toEqual({ funciona: [], cuesta: [], meta: null, tareas: [] });
+  });
+});
+
+/** 8 semanas de días hasta el 2026-10-18 (domingo). */
+function semanas(comoLlegarPorDia: (w: number) => number): DiaGoogle[] {
+  const dias: DiaGoogle[] = [];
+  const fin = Date.UTC(2026, 9, 18, 12);
+  for (let i = 0; i < 56; i++) {
+    const d = new Date(fin - i * dia);
+    dias.push({ fecha: d.toISOString().slice(0, 10), comoLlegar: comoLlegarPorDia(d.getUTCDay()) });
+  }
+  return dias;
+}
+
+/** Toques a las 13 h de Córdoba (16 UTC), `porDia(w)` por cada día. */
+function toquesSemanas(porDia: (w: number) => number): TapAnalisis[] {
+  const out: TapAnalisis[] = [];
+  const fin = Date.UTC(2026, 9, 18, 16);
+  for (let i = 0; i < 56; i++) {
+    const t = fin - i * dia;
+    const w = new Date(t).getUTCDay();
+    for (let k = 0; k < porDia(w); k++) out.push(tap(t + k * min));
+  }
+  return out;
+}
+
+describe("conclusionDiasSemana", () => {
+  it("encuentra el día con mucha gente y pocos toques", () => {
+    const diarias = semanas((w) => (w === 0 ? 12 : 6)); // domingo: el doble de cómo llegar
+    const taps = toquesSemanas((w) => (w === 0 ? 1 : 3)); // pero 1 toque contra 3
+    const c = conclusionDiasSemana(diarias, taps);
+    expect(c?.titulo).toBe(
+      "Los domingos te piden cómo llegar más que ningún otro día, pero el cartel se toca 6 veces menos que el resto de la semana.",
+    );
+    expect(c?.tarea).toBe("Que el turno del domingo ofrezca el cartel al cobrar");
+    expect(c?.barras[0].etiqueta).toBe("Lunes");
+  });
+
+  it("no confunde un día cerrado con un día flojo", () => {
+    const diarias = semanas((w) => (w === 0 ? 12 : 6));
+    const taps = toquesSemanas((w) => (w === 0 ? 0 : 3)); // domingo cerrado: ningún toque
+    expect(conclusionDiasSemana(diarias, taps)).toBeNull();
+  });
+
+  it("si todos los días rinden parecido, no dice nada", () => {
+    expect(conclusionDiasSemana(semanas(() => 6), toquesSemanas(() => 3))).toBeNull();
+  });
+
+  it("sin datos de Google, nada", () => {
+    expect(conclusionDiasSemana([], toquesSemanas(() => 3))).toBeNull();
+  });
+});
+
+describe("conclusionBusquedas", () => {
+  const resenasCon = (textos: [string, number][]) =>
+    textos.flatMap(([texto, n]) => Array.from({ length: n }, () => resena(null, 5, texto, HOY.getTime())));
+
+  it("marca lo que se busca y ninguna reseña menciona", () => {
+    const resenas = resenasCon([["Excelente café de especialidad", 8], ["Muy buena atención", 4]]);
+    const c = conclusionBusquedas(
+      [
+        { palabra: "café martínez", impresiones: 900 },
+        { palabra: "café de especialidad córdoba", impresiones: 410 },
+        { palabra: "brunch", impresiones: 280 },
+        { palabra: "desayuno cerca", impresiones: 120 },
+        { palabra: "medialunas", impresiones: null },
+      ],
+      resenas,
+      "Café Martínez",
+    );
+    expect(c?.titulo).toBe('Te buscan por "brunch" (280 veces en 3 meses) y casi ninguna reseña lo menciona.');
+    expect(c?.barras.map((b) => b.etiqueta)).toEqual([
+      '"café de especialidad córdoba"',
+      '"brunch"',
+      '"desayuno cerca"',
+    ]);
+    expect(c?.barras[0].detalle).toBe("8 reseñas lo mencionan");
+    expect(c?.nota).toBe("5 de cada 10 búsquedas no incluyen tu nombre: gente que te encontró sin conocerte.");
+  });
+
+  it("si lo más buscado también es lo más elogiado, lo dice", () => {
+    const resenas = resenasCon([["Excelente café de especialidad", 8], ["Rico el brunch", 2], ["Desayuno top", 2]]);
+    const c = conclusionBusquedas(
+      [
+        { palabra: "café de especialidad", impresiones: 410 },
+        { palabra: "brunch", impresiones: 280 },
+        { palabra: "desayuno", impresiones: 120 },
+      ],
+      resenas,
+      "Lo de Pepe",
+    );
+    expect(c?.titulo).toBe('"café de especialidad" es de lo que más te buscan y de lo que más te elogian.');
+  });
+
+  it("no le pide a las reseñas que nombren el rubro del negocio", () => {
+    const resenas = resenasCon([["Excelente atención", 12]]);
+    const c = conclusionBusquedas(
+      [
+        { palabra: "parrilla nueva córdoba", impresiones: 500 },
+        { palabra: "brunch", impresiones: 280 },
+        { palabra: "asado cerca", impresiones: 120 },
+        { palabra: "vacío", impresiones: 100 },
+      ],
+      resenas,
+      "La Parrilla de Nueva Córdoba",
+    );
+    expect(c?.titulo).toContain('"brunch"');
+    expect(c?.barras.map((b) => b.etiqueta)).not.toContain('"parrilla nueva córdoba"');
+  });
+
+  it("sin búsquedas suficientes, nada", () => {
+    const resenas = resenasCon([["Rico", 12]]);
+    expect(conclusionBusquedas([{ palabra: "brunch", impresiones: 40 }], resenas, "X")).toBeNull();
   });
 });
