@@ -172,7 +172,7 @@ export async function accessTokenGBPComercio(id: string): Promise<string | null>
  * ambas APIs identifican la ficha de la misma forma. null si falta
  * cualquier pieza: sin place_id cargado, o la cuenta conectada no administra
  * esa ficha. */
-export async function resolverLocationGBP(id: string, token: string): Promise<string | null> {
+export async function resolverLocationGBP(id: string, token: string, errores?: string[]): Promise<string | null> {
   const rows = await sql`SELECT google_place_id, google_location FROM comercios WHERE id = ${id}`;
   if (rows.length === 0) return null;
   const location = rows[0].google_location as string;
@@ -182,10 +182,23 @@ export async function resolverLocationGBP(id: string, token: string): Promise<st
   // Una ficha vinculada antes guardó solo "locations/…" (sin la cuenta que
   // pide la Reviews API): se vuelve a resolver para completarla, y si no se
   // puede se devuelve la vieja, que a Performance le alcanza.
-  if (!placeId) return location || null;
-  const ubicaciones = await listarUbicaciones(token);
+  if (!placeId) {
+    if (!location) errores?.push("El comercio no tiene Google Place ID cargado (Editar suscripción).");
+    return location || null;
+  }
+  const ubicaciones = await listarUbicaciones(token, errores);
   const match = ubicaciones.find((u) => u.placeId === placeId);
-  if (!match) return location || null;
+  if (!match) {
+    if (!location && ubicaciones.length > 0) {
+      const fichas = ubicaciones.map((u) => u.titulo || u.location).slice(0, 5).join(", ");
+      errores?.push(
+        `La cuenta de Google conectada administra otras fichas (${fichas}), no la de este comercio. O el Place ID cargado no es el de su ficha, o conectó una cuenta que no es dueña ni administradora.`,
+      );
+    } else if (!location && ubicaciones.length === 0 && (errores?.length ?? 0) === 0) {
+      errores?.push("La cuenta de Google conectada no administra ninguna ficha de Business Profile.");
+    }
+    return location || null;
+  }
   await sql`UPDATE comercios SET google_location = ${match.location} WHERE id = ${id}`;
   return match.location;
 }

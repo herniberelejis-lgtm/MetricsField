@@ -1,4 +1,5 @@
 import "server-only";
+import { describirErrorGoogle } from "./gbp";
 
 // Cliente de la Reviews API de Google Business Profile (API v4 "My
 // Business" — Google todavía no migró listar/responder reseñas a las APIs
@@ -43,6 +44,7 @@ export interface ResenaGoogleAPI {
 export async function listarResenasGoogle(
   accessToken: string,
   location: string,
+  errores?: string[],
 ): Promise<ResenaGoogleAPI[]> {
   const headers = { Authorization: `Bearer ${accessToken}` };
   const resenas: ResenaGoogleAPI[] = [];
@@ -58,6 +60,7 @@ export async function listarResenasGoogle(
     );
     if (!res.ok) {
       console.error(`Reviews API respondió ${res.status} para ${location}`);
+      errores?.push(describirErrorGoogle("Reviews API (My Business v4)", res.status));
       break;
     }
     const data = (await res.json()) as {
