@@ -683,6 +683,64 @@ export function conclusionBusquedas(
   };
 }
 
+// ---------- antes y después del cartel ----------
+
+export interface MesHistorico {
+  mes: string; // 'YYYY-MM'
+  resenasNuevas: number;
+  /** true si no se sabe cuántas hubo ese mes (lib/historico.ts). */
+  nuevasSinDato?: boolean;
+}
+
+/** Reseñas nuevas por mes antes y después del primer toque al cartel. No
+ * cuenta el mes del primer toque (quedó partido) ni el mes en curso. Dice
+ * "desde que", nunca "gracias a": puede haber otras causas. */
+export function conclusionEfectoCartel(
+  historico: MesHistorico[],
+  primerToque: string | null,
+  mesActual: string,
+): Conclusion | null {
+  if (!primerToque) return null;
+  const mesInicio = primerToque.slice(0, 7);
+  const validos = historico
+    .filter((h) => !h.nuevasSinDato && h.mes !== mesInicio && h.mes < mesActual)
+    .sort((a, b) => a.mes.localeCompare(b.mes));
+  const antes = validos.filter((h) => h.mes < mesInicio).slice(-3);
+  const despues = validos.filter((h) => h.mes > mesInicio).slice(-6);
+  if (antes.length < 2 || despues.length < 2) return null;
+
+  const a = Math.round(promedio(antes.map((h) => h.resenasNuevas)));
+  const d = Math.round(promedio(despues.map((h) => h.resenasNuevas)));
+  const subio = d >= a * 1.2 && d - a >= 2;
+  const bajo = d <= a * 0.8 && a - d >= 2;
+  const titulo = subio
+    ? `Desde que está el cartel recibís ${d} reseñas nuevas por mes. Antes eran ${a}.`
+    : bajo
+      ? `Desde que está el cartel recibís ${d} reseñas nuevas por mes, menos que antes (${a}).`
+      : `Desde que está el cartel recibís ${d} reseñas nuevas por mes, parecido a antes (${a}).`;
+  const meses = [...antes, ...despues];
+  const max = Math.max(...meses.map((h) => h.resenasNuevas), 1);
+
+  return {
+    id: "efecto",
+    cruce: "Primer toque × reseñas por mes",
+    titulo,
+    barras: meses.map((h) => ({
+      etiqueta: nombreMes(h.mes)[0].toUpperCase() + nombreMes(h.mes).slice(1),
+      detalle: h.mes < mesInicio ? "antes del cartel" : "con el cartel",
+      valor: String(h.resenasNuevas),
+      proporcion: h.resenasNuevas / max,
+      tono: h.mes < mesInicio ? "neutro" : subio ? "bien" : bajo ? "mal" : "neutro",
+    })),
+    accion: subio
+      ? undefined
+      : "revisá dónde están las piezas y si el equipo las ofrece: el cartel rinde cuando alguien lo acerca en el momento justo.",
+    tarea: subio ? undefined : "Revisar ubicación de las piezas y que el equipo las ofrezca",
+    comoLoCalculamos:
+      "Reseñas nuevas por mes en Google, antes y después del mes del primer toque a tu cartel (sin contar ese mes ni el mes en curso). Decimos \"desde que\", no \"gracias a\": en el medio pueden haber cambiado otras cosas.",
+  };
+}
+
 export interface EntradaConclusiones {
   taps: TapAnalisis[];
   /** Todas las reseñas del comercio (las del período se filtran acá). */
@@ -698,6 +756,9 @@ export interface EntradaConclusiones {
   /** Palabras de búsqueda de los últimos meses (vacío si no hay). */
   busquedas?: BusquedaAnalisis[];
   nombreComercio?: string;
+  /** Histórico mensual saneado y fecha del primer toque al cartel. */
+  historico?: MesHistorico[];
+  primerToque?: string | null;
 }
 
 export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
@@ -714,14 +775,16 @@ export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
   const alerta = conclusionAlerta(e.resenas, e.hoy);
   const dias = conclusionDiasSemana(e.diarias ?? [], e.taps);
   const busquedas = conclusionBusquedas(e.busquedas ?? [], e.resenas, e.nombreComercio ?? "");
+  const efecto = conclusionEfectoCartel(e.historico ?? [], e.primerToque ?? null, e.hoy.toISOString().slice(0, 7));
+  const efectoSubio = efecto?.accion === undefined;
   // Una búsqueda que nadie menciona es algo que cuesta; una que se busca y
   // se elogia, algo que funciona.
   const busquedaCuesta = busquedas?.titulo.startsWith("Te buscan por") ?? false;
 
-  const funciona = [cartel, piezas, equipo, zona, busquedaCuesta ? null : busquedas].filter(
+  const funciona = [efecto && efectoSubio ? efecto : null, cartel, piezas, equipo, zona, busquedaCuesta ? null : busquedas].filter(
     (c): c is Conclusion => c !== null,
   );
-  const cuesta = [temas, dias, alerta, busquedaCuesta ? busquedas : null].filter((c): c is Conclusion => c !== null);
+  const cuesta = [temas, dias, alerta, busquedaCuesta ? busquedas : null, efecto && !efectoSubio ? efecto : null].filter((c): c is Conclusion => c !== null);
   const tareas = [...cuesta, ...funciona].flatMap((c) => (c.tarea ? [c.tarea] : [])).slice(0, 3);
 
   return { funciona, cuesta, meta: metaCalificacion(e.resenas, e.totalGoogle, e.hoy), tareas };
