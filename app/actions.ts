@@ -237,7 +237,11 @@ export async function accionSincronizarGoogle(fd: FormData): Promise<void> {
     await db.sincronizarResenasGoogle(id).catch((e) => console.error("Sync reseñas:", e));
   }
   revalidatePath("/", "layout");
-  redirect(ok ? `/admin/clientes/${id}` : `/admin/clientes/${id}?error=sync-google`);
+  redirect(
+    ok
+      ? `/admin/clientes/${id}`
+      : `/admin/clientes/${id}?error=${process.env.GOOGLE_PLACES_API_KEY ? "sync-google" : "sync-google-sin-clave"}`,
+  );
 }
 
 export async function accionGuardarMetrica(fd: FormData): Promise<void> {
