@@ -34,6 +34,8 @@ export interface ResenaGoogleAPI {
   texto: string;
   fecha: string; // ISO
   yaRespondida: boolean;
+  /** Texto de la respuesta que ya tiene publicada en Google, si tiene. */
+  respuesta: string | null;
 }
 
 /** Trae todas las reseñas de una ficha, paginando. `location` es el mismo
@@ -79,6 +81,7 @@ export async function listarResenasGoogle(
         texto: r.comment ?? "",
         fecha: r.createTime ?? new Date().toISOString(),
         yaRespondida: Boolean(r.reviewReply),
+        respuesta: r.reviewReply?.comment ?? null,
       });
     }
     pageToken = data.nextPageToken ?? "";

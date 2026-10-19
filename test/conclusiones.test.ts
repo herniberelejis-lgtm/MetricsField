@@ -6,6 +6,7 @@ import {
   conclusionBusquedas,
   conclusionCartel,
   conclusionDiasSemana,
+  conclusionEfectoCartel,
   conclusionEquipo,
   conclusionPiezas,
   conclusionTemas,
@@ -338,5 +339,29 @@ describe("conclusionBusquedas", () => {
   it("sin búsquedas suficientes, nada", () => {
     const resenas = resenasCon([["Rico", 12]]);
     expect(conclusionBusquedas([{ palabra: "brunch", impresiones: 40 }], resenas, "X")).toBeNull();
+  });
+});
+
+describe("conclusionEfectoCartel", () => {
+  const h = (mes: string, resenasNuevas: number, nuevasSinDato = false) => ({ mes, resenasNuevas, nuevasSinDato });
+
+  it("compara antes y después del primer toque, sin el mes partido ni el actual", () => {
+    const historico = [h("2026-04", 4), h("2026-05", 5), h("2026-06", 3), h("2026-07", 15), h("2026-08", 28), h("2026-09", 32), h("2026-10", 40)];
+    const c = conclusionEfectoCartel(historico, "2026-07-08T15:00:00Z", "2026-10");
+    expect(c?.titulo).toBe("Desde que está el cartel recibís 30 reseñas nuevas por mes. Antes eran 4.");
+    expect(c?.barras.map((b) => b.etiqueta)).toEqual(["Abril", "Mayo", "Junio", "Agosto", "Septiembre"]);
+    expect(c?.accion).toBeUndefined();
+  });
+
+  it("dice la verdad si no cambió", () => {
+    const historico = [h("2026-05", 5), h("2026-06", 6), h("2026-08", 6), h("2026-09", 5)];
+    const c = conclusionEfectoCartel(historico, "2026-07-01T12:00:00Z", "2026-10");
+    expect(c?.titulo).toContain("parecido a antes");
+    expect(c?.tarea).toBeDefined();
+  });
+
+  it("sin meses antes del cartel, nada", () => {
+    expect(conclusionEfectoCartel([h("2026-08", 6), h("2026-09", 5)], "2026-07-01T12:00:00Z", "2026-10")).toBeNull();
+    expect(conclusionEfectoCartel([h("2026-05", 5), h("2026-06", 6), h("2026-08", 6), h("2026-09", 5)], null, "2026-10")).toBeNull();
   });
 });

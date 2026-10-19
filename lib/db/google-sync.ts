@@ -512,6 +512,10 @@ export async function sincronizarRendimientoTodos(): Promise<{ total: number; ac
  * si falta cualquier pieza — sin conectar, sin ficha vinculada, o mientras
  * `GOOGLE_REVIEWS_API_ENABLED` no esté prendido, porque esa API todavía
  * necesita una aprobación de Google que hoy no tenemos. */
+// Una reseña de Google cuenta como "recién llegada" (para avisar o responder
+// sola) si se escribió en los últimos días.
+const DIAS_RESENA_RECIENTE = 7;
+
 export async function sincronizarResenasGoogle(
   id: string,
 ): Promise<{ nuevas: number; autoRespondidas: number }> {
@@ -529,9 +533,22 @@ export async function sincronizarResenasGoogle(
   let nuevas = 0;
   let autoRespondidas = 0;
 
+  const ahora = Date.now();
   for (const rg of resenasGoogle) {
-    const existe = await sql`SELECT 1 FROM resenas WHERE origen_google_id = ${rg.name}`;
-    if (existe.length > 0) continue;
+    const existe = await sql`SELECT id, estado FROM resenas WHERE origen_google_id = ${rg.name}`;
+    if (existe.length > 0) {
+      // Ya la teníamos: si el dueño la respondió directo en Google, sacarla
+      // de "esperando tu respuesta" (también corrige las que se importaron
+      // como pendientes antes de mirar esto).
+      if (rg.yaRespondida && existe[0].estado === "nueva") {
+        await actualizarResena(existe[0].id as number, {
+          estado: "respondida",
+          respuestaPublicada: true,
+          ...(rg.respuesta ? { respuestaSugerida: rg.respuesta } : {}),
+        });
+      }
+      continue;
+    }
 
     const creada = await crearResena(
       id,
@@ -547,8 +564,24 @@ export async function sincronizarResenasGoogle(
     );
     nuevas += 1;
 
+    if (rg.yaRespondida) {
+      // Ya respondida en Google: no va a la cola ni dispara nada.
+      await actualizarResena(creada.id, {
+        estado: "respondida",
+        respuestaPublicada: true,
+        ...(rg.respuesta ? { respuestaSugerida: rg.respuesta } : {}),
+      });
+      continue;
+    }
+
+    // La primera sincronización trae TODA la historia de la ficha: avisar o
+    // responder solo lo reciente. Si no, conectar Google dispara un mail por
+    // cada reseña mala de los últimos años y publica de golpe respuestas a
+    // reseñas viejas. Las viejas quedan en la cola para responder a mano.
+    if (ahora - Date.parse(rg.fecha) > DIAS_RESENA_RECIENTE * 86_400_000) continue;
+
     const esPositivaSegunUmbral = rg.estrellas >= cliente.autoResponderUmbral;
-    if (!rg.yaRespondida && cliente.autoResponderPositivas && esPositivaSegunUmbral) {
+    if (cliente.autoResponderPositivas && esPositivaSegunUmbral) {
       const respuesta = generarRespuestaSugerida(rg.autor, rg.estrellas, rg.texto, cliente.tonoMarca, 0);
       const publicada = await responderResenaGoogle(token, rg.name, respuesta);
       if (publicada) {
