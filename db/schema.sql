@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS comercios (
   tono_marca         TEXT NOT NULL DEFAULT 'cercano', -- usado por el generador de respuestas
   fecha_alta         DATE NOT NULL DEFAULT CURRENT_DATE,
   google_place_id    TEXT NOT NULL DEFAULT '',        -- para sincronizar rating/reseñas por Places API
-  google_location    TEXT NOT NULL DEFAULT '',        -- ficha en Business Profile ("locations/…"), se vincula sola
+  google_location    TEXT NOT NULL DEFAULT '',        -- ficha en Business Profile ("accounts/…/locations/…"), se vincula sola
   rating_google       NUMERIC,                        -- último rating traído automáticamente
   resenas_google      INTEGER,                        -- último total de reseñas traído automáticamente
   google_sync_en      TIMESTAMPTZ,                     -- cuándo se sincronizó por última vez

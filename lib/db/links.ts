@@ -556,3 +556,50 @@ export async function getVisitasPerfilPortfolio(
   const total = porCliente.reduce((acc, r) => acc + r.visitas, 0);
   return { total, porCliente };
 }
+
+/** Reseñas nuevas de Google de toda la cartera (solo comercios activos),
+ * sumadas mes a mes entre `mesDesde` y `mesHasta` ('YYYY-MM'). Sale de
+ * metricas_mensuales.resenas_nuevas, que llena el cron con el total que
+ * informa Places — funciona sin la Reviews API, a diferencia del conteo de
+ * `resenas` (reseña por reseña), que depende de que cada cliente conecte su
+ * Google. */
+export async function getResenasNuevasPortfolio(mesDesde: string, mesHasta: string): Promise<number> {
+  const rows = await sql`
+    SELECT COALESCE(SUM(m.resenas_nuevas), 0)::int AS n
+    FROM metricas_mensuales m
+    JOIN comercios c ON c.id = m.comercio_id
+    WHERE c.estado = 'activo' AND m.mes BETWEEN ${mesDesde} AND ${mesHasta}
+  `;
+  return Number(rows[0]?.n ?? 0);
+}
+
+export interface TapDetalle {
+  creadoEn: string; // ISO
+  linkId: string;
+  /** Cómo la reconoce el dueño: su etiqueta, o "Tarjeta de <nombre>". */
+  pieza: string;
+  empleado: string;
+}
+
+/** Cada toque de los últimos `dias` días con la pieza que se tocó — para
+ * cruzarlo con la hora de cada reseña (lib/conclusiones.ts). */
+export async function getTapsDetalle(comercioId: string, dias = 90): Promise<TapDetalle[]> {
+  const rows = await sql`
+    SELECT t.creado_en, l.id AS link_id, l.etiqueta, l.nombre_empleado
+    FROM taps t
+    JOIN links_nfc l ON l.id = t.link_id
+    WHERE l.comercio_id = ${comercioId}
+      AND t.creado_en >= now() - (${dias}::text || ' days')::interval
+    ORDER BY t.creado_en ASC
+  `;
+  return rows.map((r) => {
+    const empleado = ((r.nombre_empleado as string) ?? "").trim();
+    const etiqueta = ((r.etiqueta as string) ?? "").trim();
+    return {
+      creadoEn: new Date(r.creado_en as string | Date).toISOString(),
+      linkId: r.link_id as string,
+      pieza: etiqueta || (empleado ? `Tarjeta de ${empleado}` : `Pieza ${r.link_id as string}`),
+      empleado,
+    };
+  });
+}

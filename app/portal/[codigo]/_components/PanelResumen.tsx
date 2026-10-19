@@ -18,6 +18,8 @@ import TapsPorHoraSemanaChart from "@/components/TapsPorHoraSemanaChart";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { datoVisible, heroDeCalificacion, hrefSucursal, hrefTodos } from "../_lib";
 import SelectorSucursales from "./SelectorSucursales";
+import Conclusiones from "@/components/portal/Conclusiones";
+import type { Conclusiones as DatosConclusiones } from "@/lib/conclusiones";
 
 // Panel "Resumen": de un vistazo, para abrir el portal y entender el estado
 // del negocio sin tener que entrar a ninguna otra sección todavía.
@@ -53,6 +55,7 @@ export default function PanelResumen({
   activoNombre,
   codigoAcceso,
   temasRecurrentes,
+  conclusiones,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
@@ -92,6 +95,8 @@ export default function PanelResumen({
   activoNombre: string;
   codigoAcceso: string;
   temasRecurrentes: TerminoFrecuente[];
+  /** null en el combinado de varios locales: las conclusiones son de uno. */
+  conclusiones: DatosConclusiones | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
@@ -147,6 +152,11 @@ export default function PanelResumen({
           </p>
         </div>
       )}
+
+      {/* Antes que nada, las conclusiones: lo que sale de cruzar cartel,
+          reseñas y competencia (lib/conclusiones.ts). No aparece si todavía
+          no hay datos suficientes para concluir algo. */}
+      {conclusiones && <Conclusiones datos={conclusiones} />}
 
       {/* TIER 1 — lo que Google no te muestra: de qué se queja la gente, y
           cómo usan tu cartel. Ninguna de las dos cosas existe en Google —

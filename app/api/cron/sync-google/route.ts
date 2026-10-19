@@ -44,8 +44,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const resenas = await sincronizarGoogleTodos();
-  // Business Profile (visitas/llamadas) todavía no está aprobado por Google:
-  // pedirlo solo genera 429 y avisos de "se desconectó" que no son reales.
+  // Business Profile (visitas/llamadas): solo corre con
+  // GOOGLE_BUSINESS_PROFILE_HABILITADO=true. Apagado, no se pide nada (así no
+  // hay 429 ni avisos de "se desconectó" que no son reales).
   const rendimiento = businessProfileHabilitado()
     ? await sincronizarRendimientoTodos()
     : { omitido: "GOOGLE_BUSINESS_PROFILE_HABILITADO apagado" };
