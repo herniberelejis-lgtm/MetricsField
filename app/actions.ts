@@ -7,6 +7,7 @@ import { requireAdmin, emailAdminActual } from "@/lib/auth";
 import { alertarResenaMala } from "@/lib/alertas";
 import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
+import { resenasApiHabilitada } from "@/lib/google-reviews";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -194,21 +195,21 @@ export async function accionDesconectarGoogleComercio(fd: FormData): Promise<voi
 export async function accionSincronizarGoogle(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
-  const ok = await db.sincronizarGoogle(id);
-  if (!ok) {
-    // Un Place ID inválido (o la API key sin configurar) no puede tirar
-    // abajo toda la página con un error sin manejar — vuelve con un
-    // parámetro y la página muestra un aviso, en vez de la pantalla en
-    // blanco de "Application error" de Next.js.
-    redirect(`/admin/clientes/${id}?error=sync-google`);
+  // Un Place ID inválido (o la API key sin configurar) no puede tirar abajo
+  // la página: se avisa con un parámetro. Y no frena lo de Business Profile,
+  // que no depende de Places (usa la cuenta que conectó el cliente).
+  const ok = await db.sincronizarGoogle(id).catch(() => false);
+  // Rendimiento y reseñas de Business Profile: el resultado de cada uno
+  // (bien o mal, y por qué) queda guardado y se muestra en la ficha del
+  // cliente — ver getEstadosSyncGoogle.
+  if (businessProfileHabilitado()) {
+    await db.sincronizarRendimiento(id).catch((e) => console.error("Sync rendimiento:", e));
   }
-  // Rendimiento (visitas/llamadas): best-effort — depende de que la cuenta
-  // de Google esté conectada y administre esta ficha. Si falta algo, el
-  // rating/reseñas ya quedaron actualizados igual. Igual que el cron: sin
-  // la API de Business Profile aprobada no se pide (Google responde 429).
-  if (businessProfileHabilitado()) await db.sincronizarRendimiento(id);
+  if (resenasApiHabilitada()) {
+    await db.sincronizarResenasGoogle(id).catch((e) => console.error("Sync reseñas:", e));
+  }
   revalidatePath("/", "layout");
-  redirect(`/admin/clientes/${id}`);
+  redirect(ok ? `/admin/clientes/${id}` : `/admin/clientes/${id}?error=sync-google`);
 }
 
 export async function accionGuardarMetrica(fd: FormData): Promise<void> {
