@@ -1,7 +1,7 @@
 import "server-only";
 import { sql } from "../sql";
 import { fetchGooglePlaceStats } from "../places";
-import { rendimientoDelMes } from "../gbp";
+import { palabrasDeBusqueda, rendimientoDiario, type RendimientoDia } from "../gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "../google-reviews";
 import { generarRespuestaSugerida } from "../respuestas";
 import { cifrar } from "../crypto";
@@ -173,13 +173,30 @@ export async function resenasDeHoy(id: string, placeId: string | null): Promise<
   return Math.max(0, stats.totalReseñas - base.total);
 }
 
-/** Trae visitas al perfil, llamadas y clics "cómo llegar" del mes en curso
- * y los guarda en metricas_mensuales, usando la cuenta de Google que ESE
- * comercio conectó. Vincula la ficha sola la primera vez, matcheando por
- * place_id contra las ubicaciones que administra esa cuenta. Devuelve false
- * (sin romper) si falta cualquier pieza: sin conectar, sin place_id, la
- * cuenta no administra esa ficha, o el refresh token venció (app en modo
- * Testing: hay que reconectar cada ~7 días hasta que Google verifique la app). */
+// Historia que se pide la primera vez que se sincroniza un comercio. Google
+// guarda unos 18 meses; si rechaza el rango largo se prueba con uno más
+// corto antes de darse por vencido.
+const DIAS_HISTORIA = [540, 365, 90];
+// Google corrige los últimos días durante un tiempo (los publica con 2-3
+// días de demora): en cada sync se vuelven a pedir los últimos 10.
+const DIAS_REVISION = 10;
+
+function sumarDias(fecha: string, dias: number): string {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Trae las métricas de Business Profile día por día (visitas al perfil en
+ * Maps y en la Búsqueda, llamadas, "cómo llegar", clics a la web, mensajes y
+ * reservas) y las guarda en metricas_diarias, usando la cuenta de Google que
+ * ESE comercio conectó. La primera vez trae toda la historia que da Google;
+ * después, solo los últimos días. Con eso actualiza el mes en curso de
+ * metricas_mensuales (como antes) y completa los meses pasados que estaban
+ * en 0, sin pisar nada cargado a mano. También trae las palabras de
+ * búsqueda de los meses cerrados. Devuelve false (sin romper) si falta
+ * cualquier pieza: sin conectar, sin place_id, la cuenta no administra esa
+ * ficha, o el refresh token venció. */
 export async function sincronizarRendimiento(id: string): Promise<boolean> {
   const token = await accessTokenGBPComercio(id);
   if (!token) return false;
@@ -187,20 +204,242 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
   const location = await resolverLocationGBP(id, token);
   if (!location) return false;
 
-  const hoy = new Date();
-  const r = await rendimientoDelMes(token, location, hoy.getFullYear(), hoy.getMonth() + 1);
-  if (!r) return false;
+  const hoy = fechaHoyCordoba();
+  let ultimaFecha: string | null;
+  try {
+    const ultima = await sql`SELECT to_char(max(fecha), 'YYYY-MM-DD') AS f FROM metricas_diarias WHERE comercio_id = ${id}`;
+    ultimaFecha = (ultima[0]?.f as string | null) ?? null;
+  } catch (e) {
+    if (!faltaTabla(e)) throw e;
+    // Migración 017 todavía sin correr en esta base: se sigue como antes,
+    // solo el mes en curso, sin guardar el detalle diario.
+    return sincronizarMesSinDiarias(id, token, location, hoy);
+  }
 
-  const mes = hoy.toISOString().slice(0, 7);
+  let desde = "";
+  let dias: RendimientoDia[] | null = null;
+  if (ultimaFecha) {
+    desde = sumarDias(ultimaFecha, -DIAS_REVISION);
+    dias = await rendimientoDiario(token, location, desde, hoy);
+  } else {
+    for (const n of DIAS_HISTORIA) {
+      desde = sumarDias(hoy, -n);
+      dias = await rendimientoDiario(token, location, desde, hoy);
+      if (dias) break;
+    }
+  }
+  if (!dias) return false;
+
+  await guardarDias(id, desde, dias);
+  await actualizarMesesDesdeDiarias(id, hoy.slice(0, 7));
+  // Las búsquedas son un extra: si fallan, el rendimiento igual quedó guardado.
+  await sincronizarBusquedas(id, token, location, hoy).catch((e) => console.error("Búsquedas:", e));
+  return true;
+}
+
+/** Error de Postgres "la tabla no existe" (42P01). */
+export function faltaTabla(e: unknown): boolean {
+  return (e as { code?: string } | null)?.code === "42P01";
+}
+
+/** Comportamiento previo a la migración 017: suma los días del mes en curso
+ * y actualiza solo metricas_mensuales. */
+async function sincronizarMesSinDiarias(id: string, token: string, location: string, hoy: string): Promise<boolean> {
+  const dias = await rendimientoDiario(token, location, `${hoy.slice(0, 7)}-01`, hoy);
+  if (!dias) return false;
+  const suma = (f: (d: RendimientoDia) => number) => dias.reduce((a, d) => a + f(d), 0);
   await sql`
     INSERT INTO metricas_mensuales (comercio_id, mes, visitas_perfil, llamadas, clics_como_llegar)
-    VALUES (${id}, ${mes}, ${r.visitas}, ${r.llamadas}, ${r.comoLlegar})
+    VALUES (${id}, ${hoy.slice(0, 7)}, ${suma((d) => d.impresionesMaps + d.impresionesBusqueda)},
+      ${suma((d) => d.llamadas)}, ${suma((d) => d.comoLlegar)})
     ON CONFLICT (comercio_id, mes) DO UPDATE SET
       visitas_perfil = EXCLUDED.visitas_perfil,
       llamadas = EXCLUDED.llamadas,
       clics_como_llegar = EXCLUDED.clics_como_llegar
   `;
   return true;
+}
+
+/** Guarda los días recibidos y completa con 0 los días sin datos entre
+ * `desde` y el último día que Google informó (Google omite los días en 0).
+ * Después de ese último día no se completa: pueden ser días que Google
+ * todavía no publicó, no días sin movimiento. */
+async function guardarDias(id: string, desde: string, dias: RendimientoDia[]): Promise<void> {
+  if (dias.length === 0) return;
+  const porFecha = new Map(dias.map((d) => [d.fecha, d]));
+  const hasta = dias[dias.length - 1].fecha;
+  const filas: Record<string, string | number>[] = [];
+  for (let f = desde; f <= hasta; f = sumarDias(f, 1)) {
+    const d = porFecha.get(f);
+    filas.push({
+      comercio_id: id,
+      fecha: f,
+      impresiones_maps: d?.impresionesMaps ?? 0,
+      impresiones_busqueda: d?.impresionesBusqueda ?? 0,
+      llamadas: d?.llamadas ?? 0,
+      como_llegar: d?.comoLlegar ?? 0,
+      clics_web: d?.clicsWeb ?? 0,
+      conversaciones: d?.conversaciones ?? 0,
+      reservas: d?.reservas ?? 0,
+    });
+  }
+  // De a 500 filas: lejos del límite de parámetros de Postgres.
+  for (let i = 0; i < filas.length; i += 500) {
+    await sql`
+      INSERT INTO metricas_diarias ${sql(filas.slice(i, i + 500))}
+      ON CONFLICT (comercio_id, fecha) DO UPDATE SET
+        impresiones_maps = EXCLUDED.impresiones_maps,
+        impresiones_busqueda = EXCLUDED.impresiones_busqueda,
+        llamadas = EXCLUDED.llamadas,
+        como_llegar = EXCLUDED.como_llegar,
+        clics_web = EXCLUDED.clics_web,
+        conversaciones = EXCLUDED.conversaciones,
+        reservas = EXCLUDED.reservas,
+        actualizado_en = now()
+    `;
+  }
+}
+
+/** El mes en curso de metricas_mensuales sale de sumar sus días (se crea si
+ * no existe, como siempre). Los meses pasados solo se completan si ya
+ * existen y tienen visitas, llamadas y "cómo llegar" en 0: no se crean filas
+ * nuevas en el histórico ni se pisa nada cargado a mano. */
+async function actualizarMesesDesdeDiarias(id: string, mesActual: string): Promise<void> {
+  await sql`
+    INSERT INTO metricas_mensuales (comercio_id, mes, visitas_perfil, llamadas, clics_como_llegar)
+    SELECT ${id}, ${mesActual},
+      COALESCE(SUM(impresiones_maps + impresiones_busqueda), 0)::int,
+      COALESCE(SUM(llamadas), 0)::int,
+      COALESCE(SUM(como_llegar), 0)::int
+    FROM metricas_diarias
+    WHERE comercio_id = ${id} AND to_char(fecha, 'YYYY-MM') = ${mesActual}
+    ON CONFLICT (comercio_id, mes) DO UPDATE SET
+      visitas_perfil = EXCLUDED.visitas_perfil,
+      llamadas = EXCLUDED.llamadas,
+      clics_como_llegar = EXCLUDED.clics_como_llegar
+  `;
+  await sql`
+    UPDATE metricas_mensuales m SET
+      visitas_perfil = d.visitas,
+      llamadas = d.llamadas,
+      clics_como_llegar = d.como_llegar
+    FROM (
+      SELECT to_char(fecha, 'YYYY-MM') AS mes,
+        SUM(impresiones_maps + impresiones_busqueda)::int AS visitas,
+        SUM(llamadas)::int AS llamadas,
+        SUM(como_llegar)::int AS como_llegar
+      FROM metricas_diarias
+      WHERE comercio_id = ${id}
+      GROUP BY 1
+    ) d
+    WHERE m.comercio_id = ${id} AND m.mes = d.mes AND m.mes < ${mesActual}
+      AND m.visitas_perfil = 0 AND m.llamadas = 0 AND m.clics_como_llegar = 0
+  `;
+}
+
+// Meses cerrados de palabras de búsqueda que se mantienen guardados.
+const MESES_BUSQUEDAS = 6;
+// Google termina de publicar las búsquedas de un mes unos días después de
+// que cierra: el último mes se vuelve a pedir hasta el día 10.
+const DIA_BUSQUEDAS_FIRMES = 10;
+
+function mesAnterior(mes: string, n = 1): string {
+  const [a, m] = mes.split("-").map(Number);
+  const d = new Date(Date.UTC(a, m - 1 - n, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+async function sincronizarBusquedas(id: string, token: string, location: string, hoy: string): Promise<void> {
+  const mesActual = hoy.slice(0, 7);
+  const guardados = new Set(
+    (await sql`SELECT DISTINCT mes FROM busquedas_mensuales WHERE comercio_id = ${id}`).map((r) => r.mes as string),
+  );
+  const ultimoCerrado = mesAnterior(mesActual);
+  const refrescarUltimo = Number(hoy.slice(8, 10)) <= DIA_BUSQUEDAS_FIRMES;
+
+  for (let n = 1; n <= MESES_BUSQUEDAS; n++) {
+    const mes = mesAnterior(mesActual, n);
+    if (guardados.has(mes) && !(mes === ultimoCerrado && refrescarUltimo)) continue;
+    const palabras = await palabrasDeBusqueda(token, location, mes);
+    if (!palabras) return; // la API rechazó: no insistir con los demás meses hoy
+    // Reemplaza el mes de ESTE comercio (nunca toca otros comercios ni meses).
+    await sql.begin(async (tx) => {
+      await tx`DELETE FROM busquedas_mensuales WHERE comercio_id = ${id} AND mes = ${mes}`;
+      if (palabras.length > 0) {
+        await tx`
+          INSERT INTO busquedas_mensuales ${tx(
+            palabras.map((p) => ({
+              comercio_id: id,
+              mes,
+              palabra: p.palabra,
+              impresiones: p.impresiones,
+              umbral: p.umbral,
+            })),
+          )}
+          ON CONFLICT (comercio_id, mes, palabra) DO NOTHING
+        `;
+      }
+    });
+  }
+}
+
+export interface DiaRendimiento {
+  fecha: string;
+  comoLlegar: number;
+  llamadas: number;
+  visitas: number;
+}
+
+/** Métricas diarias de los últimos `dias` días (para lib/conclusiones.ts). */
+export async function getMetricasDiarias(comercioId: string, dias = 90): Promise<DiaRendimiento[]> {
+  const rows = await sql`
+    SELECT to_char(fecha, 'YYYY-MM-DD') AS fecha, como_llegar, llamadas,
+      impresiones_maps + impresiones_busqueda AS visitas
+    FROM metricas_diarias
+    WHERE comercio_id = ${comercioId} AND fecha >= (now() AT TIME ZONE ${ZONA_HORARIA})::date - ${dias}::int
+    ORDER BY fecha
+  `.catch((e) => {
+    // Sin la migración 017 el portal sigue andando, sin estas conclusiones.
+    if (faltaTabla(e)) return [];
+    throw e;
+  });
+  return rows.map((r) => ({
+    fecha: r.fecha as string,
+    comoLlegar: Number(r.como_llegar),
+    llamadas: Number(r.llamadas),
+    visitas: Number(r.visitas),
+  }));
+}
+
+export interface BusquedaGuardada {
+  palabra: string;
+  impresiones: number | null;
+  umbral: number | null;
+}
+
+/** Palabras de búsqueda sumadas de los últimos `meses` meses guardados. Las
+ * que en algún mes vinieron solo como "menos de N" suman ese mes como 0 y
+ * quedan marcadas con su umbral si nunca tuvieron número. */
+export async function getBusquedas(comercioId: string, meses = 3): Promise<BusquedaGuardada[]> {
+  const rows = await sql`
+    WITH ultimos AS (
+      SELECT DISTINCT mes FROM busquedas_mensuales WHERE comercio_id = ${comercioId}
+      ORDER BY mes DESC LIMIT ${meses}
+    )
+    SELECT palabra, SUM(impresiones)::int AS impresiones, MAX(umbral)::int AS umbral
+    FROM busquedas_mensuales
+    WHERE comercio_id = ${comercioId} AND mes IN (SELECT mes FROM ultimos)
+    GROUP BY palabra
+    ORDER BY SUM(impresiones) DESC NULLS LAST, palabra
+  `.catch((e) => {
+    if (faltaTabla(e)) return [];
+    throw e;
+  });
+  return rows.map((r) => ({
+    palabra: r.palabra as string,
+    impresiones: r.impresiones === null ? null : Number(r.impresiones),
+    umbral: r.impresiones === null && r.umbral !== null ? Number(r.umbral) : null,
+  }));
 }
 
 // Cada cuántos días como máximo se repite el aviso por el MISMO comercio.

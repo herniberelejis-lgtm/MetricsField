@@ -490,6 +490,199 @@ export function metaCalificacion(
   };
 }
 
+// ---------- cruces con las métricas de Google ----------
+
+export interface DiaGoogle {
+  fecha: string; // 'YYYY-MM-DD'
+  comoLlegar: number;
+}
+
+const DIAS_SEMANA = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+const DIAS_SEMANA_PLURAL = ["domingos", "lunes", "martes", "miércoles", "jueves", "viernes", "sábados"];
+// Córdoba no tiene horario de verano: UTC-3 todo el año.
+const OFFSET_CORDOBA_MS = -3 * 3600_000;
+const SEMANAS_DIAS = 8;
+
+function mediana(nums: number[]): number {
+  const o = [...nums].sort((a, b) => a - b);
+  const m = Math.floor(o.length / 2);
+  return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
+}
+
+/** ¿Hay un día de la semana con mucha gente buscando cómo llegar y pocos
+ * toques al cartel? Cruza "cómo llegar" de Google con los toques, por día de
+ * la semana, en las últimas 8 semanas con datos. Solo mira días en que el
+ * cartel se usó al menos dos veces (si no, puede ser un día cerrado). */
+export function conclusionDiasSemana(diarias: DiaGoogle[], taps: TapAnalisis[]): Conclusion | null {
+  if (diarias.length === 0) return null;
+  const hasta = diarias.reduce((m, d) => (d.fecha > m ? d.fecha : m), diarias[0].fecha);
+  const desdeMs = new Date(`${hasta}T12:00:00Z`).getTime() - (SEMANAS_DIAS * 7 - 1) * 86_400_000;
+  const desde = new Date(desdeMs).toISOString().slice(0, 10);
+  const dias = diarias.filter((d) => d.fecha >= desde && d.fecha <= hasta);
+  if (dias.length < 28) return null;
+
+  const porDia = Array.from({ length: 7 }, () => ({ n: 0, comoLlegar: 0, toques: 0, fechasConToques: new Set<string>() }));
+  for (const d of dias) {
+    const w = new Date(`${d.fecha}T12:00:00Z`).getUTCDay();
+    porDia[w].n += 1;
+    porDia[w].comoLlegar += d.comoLlegar;
+  }
+  let totalToques = 0;
+  for (const t of taps) {
+    const fecha = new Date(msDe(t.creadoEn) + OFFSET_CORDOBA_MS).toISOString().slice(0, 10);
+    if (fecha < desde || fecha > hasta) continue;
+    const w = new Date(`${fecha}T12:00:00Z`).getUTCDay();
+    porDia[w].toques += 1;
+    porDia[w].fechasConToques.add(fecha);
+    totalToques += 1;
+  }
+  const totalComoLlegar = dias.reduce((a, d) => a + d.comoLlegar, 0);
+  if (totalComoLlegar < 50 || totalToques < 20) return null;
+
+  const abiertos = porDia
+    .map((d, w) => ({ w, a: d.n ? d.comoLlegar / d.n : 0, t: d.n ? d.toques / d.n : 0, abierto: d.fechasConToques.size >= 2 }))
+    .filter((d) => d.abierto && d.a > 0)
+    .map((d) => ({ ...d, r: d.t / d.a }));
+  if (abiertos.length < 4) return null;
+
+  const medianaA = mediana(abiertos.map((d) => d.a));
+  const medianaR = mediana(abiertos.map((d) => d.r));
+  const elegido = abiertos
+    .filter((d) => d.a >= medianaA && d.r <= medianaR * 0.5)
+    .sort((a, b) => b.a - a.a)[0];
+  if (!elegido) return null;
+
+  const maxA = Math.max(...abiertos.map((d) => d.a));
+  const veces = Math.max(2, Math.round(medianaR / elegido.r));
+  const plural = DIAS_SEMANA_PLURAL[elegido.w];
+  const singular = DIAS_SEMANA[elegido.w];
+  const comparacion = elegido.a >= maxA ? "más que ningún otro día" : "tanto como tus días más movidos";
+  const maxR = Math.max(...abiertos.map((d) => d.r));
+  const orden = [1, 2, 3, 4, 5, 6, 0];
+
+  return {
+    id: "dias",
+    cruce: "Cómo llegar (Google) × toques al cartel",
+    titulo: `Los ${plural} te piden cómo llegar ${comparacion}, pero el cartel se toca ${veces} veces menos que el resto de la semana.`,
+    barras: orden
+      .map((w) => abiertos.find((d) => d.w === w))
+      .filter((d): d is NonNullable<typeof d> => Boolean(d))
+      .map((d) => ({
+        etiqueta: DIAS_SEMANA[d.w][0].toUpperCase() + DIAS_SEMANA[d.w].slice(1),
+        detalle: `${Math.round(d.a)} pedidos de cómo llegar y ${fmt1(d.t)} toques por día`,
+        valor: fmt1(d.r * 10),
+        proporcion: maxR > 0 ? d.r / maxR : 0,
+        tono: d.w === elegido.w ? "mal" : "neutro",
+      })),
+    nota: "El número es cuántas veces se toca el cartel por cada 10 personas que piden cómo llegar a tu local.",
+    accion: `que el turno del ${singular} ofrezca el cartel al cobrar: es un día con mucha gente y pocas reseñas pedidas.`,
+    tarea: `Que el turno del ${singular} ofrezca el cartel al cobrar`,
+    comoLoCalculamos: `Pedidos de cómo llegar de Google y toques al cartel de las últimas ${SEMANAS_DIAS} semanas con datos, promediados por día de la semana. Solo miramos días en que el cartel se usó (para no contar días cerrados). Google publica sus datos con 2 o 3 días de demora.`,
+  };
+}
+
+export interface BusquedaAnalisis {
+  palabra: string;
+  /** null si Google solo dijo "menos de N". */
+  impresiones: number | null;
+}
+
+// Palabras que no dicen QUÉ busca la gente: lugares, conectores, "cerca".
+const PALABRAS_GENERICAS = new Set([
+  "de", "del", "la", "el", "los", "las", "en", "y", "a", "con", "para", "por", "un", "una",
+  "cerca", "mi", "me", "near", "cordoba", "argentina", "capital", "centro", "barrio", "zona",
+  "nueva", "general", "paz", "guemes", "alberdi", "cofico", "jardin", "cerro", "rosas",
+  "mejor", "mejores", "abierto", "abierta", "ahora", "hoy", "horario", "horarios", "24", "hs", "horas",
+]);
+// Rubros: si el nombre del comercio es "Café Martínez", "café" no es su marca.
+const RUBROS = new Set([
+  "cafe", "cafeteria", "parrilla", "restaurante", "restaurant", "resto", "bar", "pizzeria", "heladeria",
+  "panaderia", "confiteria", "barberia", "peluqueria", "gimnasio", "gym", "taller", "veterinaria",
+  "clinica", "consultorio", "odontologico", "estetica", "local", "tienda", "almacen", "kiosco",
+]);
+
+function tokens(s: string): string[] {
+  return normalizarTexto(s).match(/[a-z0-9]+/g) ?? [];
+}
+
+/** ¿Lo que la gente busca coincide con lo que cuentan las reseñas? Cruza las
+ * palabras de búsqueda de Google con el texto de las reseñas. */
+export function conclusionBusquedas(
+  busquedas: BusquedaAnalisis[],
+  resenas: ResenaAnalisis[],
+  nombreComercio: string,
+): Conclusion | null {
+  const conTexto = resenas.filter((r) => r.texto.trim()).map((r) => normalizarTexto(r.texto));
+  if (conTexto.length < MIN_CASOS * 2) return null;
+
+  const marca = new Set(
+    tokens(nombreComercio).filter((t) => t.length >= 4 && !PALABRAS_GENERICAS.has(t) && !RUBROS.has(t)),
+  );
+  const esMarca = (palabra: string) => tokens(palabra).some((t) => marca.has(t));
+
+  const conNumero = busquedas.filter((b) => b.impresiones !== null && b.impresiones > 0) as {
+    palabra: string;
+    impresiones: number;
+  }[];
+  const total = conNumero.reduce((a, b) => a + b.impresiones, 0);
+  const sinMarca = conNumero
+    .filter((b) => !esMarca(b.palabra))
+    .map((b) => {
+      // El rubro ("parrilla", "café") dice qué ES el negocio, no qué busca
+      // la gente de él: no tiene sentido pedir que las reseñas lo nombren.
+      const clave = tokens(b.palabra).filter((t) => t.length >= 3 && !PALABRAS_GENERICAS.has(t) && !RUBROS.has(t));
+      if (clave.length === 0) return null;
+      const patrones = clave.map((t) => new RegExp(`\\b${t.slice(0, 5)}`));
+      const menciones = conTexto.filter((txt) => patrones.every((p) => p.test(txt))).length;
+      return { ...b, menciones };
+    })
+    .filter((b): b is NonNullable<typeof b> => b !== null)
+    .sort((a, b) => b.impresiones - a.impresiones);
+  const totalSinMarca = sinMarca.reduce((a, b) => a + b.impresiones, 0);
+  if (sinMarca.length < 3 || totalSinMarca < 100) return null;
+
+  const top = sinMarca.slice(0, 5);
+  const hueco = top.find((b) => b.menciones <= 1 && b.impresiones >= totalSinMarca * 0.1);
+  const fortaleza = sinMarca.slice(0, 10).find((b) => b.menciones >= MIN_CASOS);
+  if (!hueco && !fortaleza) return null;
+
+  const max = top[0].impresiones;
+  const impresionesMarca = conNumero.filter((b) => esMarca(b.palabra)).reduce((a, b) => a + b.impresiones, 0);
+  const nota =
+    marca.size > 0 && impresionesMarca > 0
+      ? `${deCada10((total - impresionesMarca) / total)} búsquedas no incluyen tu nombre: gente que te encontró sin conocerte.`
+      : undefined;
+
+  const base = {
+    id: "busquedas",
+    cruce: "Búsquedas en Google × texto de reseñas",
+    barras: top.map((b): Barra => ({
+      etiqueta: `"${b.palabra}"`,
+      detalle: `${b.menciones === 0 ? "ninguna reseña lo menciona" : `${b.menciones} reseña${b.menciones === 1 ? "" : "s"} lo mencionan`}`,
+      valor: `${b.impresiones} búsquedas`,
+      proporcion: b.impresiones / max,
+      tono: b.menciones <= 1 ? "mal" : b.menciones >= MIN_CASOS ? "bien" : "neutro",
+    })),
+    nota,
+    comoLoCalculamos:
+      "Las palabras con las que te encontraron en Google en los últimos 3 meses, cruzadas con cuántas de tus reseñas las mencionan. Google no informa las búsquedas de menos de 15 veces por mes. Las que incluyen tu nombre se separan.",
+  };
+  if (hueco) {
+    return {
+      ...base,
+      titulo: `Te buscan por "${hueco.palabra}" (${hueco.impresiones} veces en 3 meses) y casi ninguna reseña lo menciona.`,
+      accion: `cuando alguien pida algo de "${hueco.palabra}", ofrecele el cartel: así tus reseñas cuentan lo que la gente busca.`,
+      tarea: `Ofrecer el cartel a quien pide "${hueco.palabra}"`,
+    };
+  }
+  return {
+    ...base,
+    titulo: `"${fortaleza!.palabra}" es de lo que más te buscan y de lo que más te elogian.`,
+    accion: `si la descripción de tu ficha de Google no lo dice, sumalo: es tu mejor carta.`,
+    tarea: `Sumar "${fortaleza!.palabra}" a la descripción de tu ficha`,
+  };
+}
+
 export interface EntradaConclusiones {
   taps: TapAnalisis[];
   /** Todas las reseñas del comercio (las del período se filtran acá). */
@@ -500,6 +693,11 @@ export interface EntradaConclusiones {
   /** Nombres de las tarjetas personales del comercio. */
   empleados: string[];
   hoy: Date;
+  /** Métricas diarias de Google (vacío si el comercio no conectó su Google). */
+  diarias?: DiaGoogle[];
+  /** Palabras de búsqueda de los últimos meses (vacío si no hay). */
+  busquedas?: BusquedaAnalisis[];
+  nombreComercio?: string;
 }
 
 export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
@@ -514,9 +712,16 @@ export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
   const zona = conclusionZona(e.comparativas);
   const temas = conclusionTemas(e.resenas);
   const alerta = conclusionAlerta(e.resenas, e.hoy);
+  const dias = conclusionDiasSemana(e.diarias ?? [], e.taps);
+  const busquedas = conclusionBusquedas(e.busquedas ?? [], e.resenas, e.nombreComercio ?? "");
+  // Una búsqueda que nadie menciona es algo que cuesta; una que se busca y
+  // se elogia, algo que funciona.
+  const busquedaCuesta = busquedas?.titulo.startsWith("Te buscan por") ?? false;
 
-  const funciona = [cartel, piezas, equipo, zona].filter((c): c is Conclusion => c !== null);
-  const cuesta = [temas, alerta].filter((c): c is Conclusion => c !== null);
+  const funciona = [cartel, piezas, equipo, zona, busquedaCuesta ? null : busquedas].filter(
+    (c): c is Conclusion => c !== null,
+  );
+  const cuesta = [temas, dias, alerta, busquedaCuesta ? busquedas : null].filter((c): c is Conclusion => c !== null);
   const tareas = [...cuesta, ...funciona].flatMap((c) => (c.tarea ? [c.tarea] : [])).slice(0, 3);
 
   return { funciona, cuesta, meta: metaCalificacion(e.resenas, e.totalGoogle, e.hoy), tareas };
