@@ -1,4 +1,4 @@
-import type { Barra, Conclusion, Conclusiones as DatosConclusiones } from "@/lib/conclusiones";
+import type { Barra, Conclusion, Conclusiones as DatosConclusiones, Pendiente } from "@/lib/conclusiones";
 
 // "Tus conclusiones": lo que sale de cruzar el cartel, las reseñas, las
 // métricas de Google y la competencia (lib/conclusiones.ts). Arriba, las tres
@@ -95,13 +95,26 @@ function tresFrases(funciona: Conclusion[], cuesta: Conclusion[]): { texto: stri
 }
 
 export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
-  const { funciona, cuesta, meta, tareas } = datos;
-  if (funciona.length === 0 && cuesta.length === 0 && !meta) return null;
+  const { funciona, cuesta, meta, tareas, pendientes, faltaGoogle } = datos;
   const frases = tresFrases(funciona, cuesta);
+  const enCamino = pendientes.filter((p) => p.tipo === "en_camino");
+  const sinNovedad = pendientes.filter((p) => p.tipo === "sin_novedad");
   let pregunta = 0;
 
   return (
     <section className="mb-10">
+      {frases.length === 0 && (
+        <div className="mb-10 rounded-3xl bg-slate-900 px-6 py-8 text-white sm:px-10 sm:py-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · en camino</p>
+          <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
+            Estamos juntando los datos de tu cartel y de tu Google. Cada conclusión aparece sola apenas tiene datos
+            suficientes para ser cierta.
+          </p>
+          <p className="mt-3 text-sm text-slate-300">Abajo ves cuánto le falta a cada una.</p>
+          {faltaGoogle && <AvisoGoogle />}
+        </div>
+      )}
+
       {frases.length > 0 && (
         <div className="mb-10 rounded-3xl bg-slate-900 px-6 py-8 text-white sm:px-10 sm:py-10">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
@@ -117,6 +130,7 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
               </li>
             ))}
           </ol>
+          {faltaGoogle && <AvisoGoogle />}
         </div>
       )}
 
@@ -194,6 +208,37 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
         </>
       )}
 
+      {(enCamino.length > 0 || sinNovedad.length > 0) && (
+        <div className="mt-10">
+          {enCamino.length > 0 && (
+            <>
+              <div className="mb-4 flex flex-col gap-1">
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">En camino</span>
+                <h3 className="text-xl font-extrabold tracking-tight text-slate-900">Se activan solas cuando haya datos</h3>
+              </div>
+              <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {enCamino.map((p) => (
+                  <EnCaminoTarjeta key={p.id} p={p} />
+                ))}
+              </div>
+            </>
+          )}
+          {sinNovedad.length > 0 && (
+            <ul className={`${TARJETA} ${enCamino.length > 0 ? "mt-5" : ""} flex flex-col gap-2`}>
+              <li className="text-xs font-bold uppercase tracking-[0.08em] text-emerald-700">Sin novedades</li>
+              {sinNovedad.map((p) => (
+                <li key={p.id} className="flex items-start gap-2 text-sm text-slate-700">
+                  <span aria-hidden className="mt-0.5 text-emerald-700">✓</span>
+                  <span>
+                    <span className="font-semibold text-slate-900">{p.titulo}:</span> {p.detalle}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <footer className="mt-8 flex flex-wrap gap-x-6 gap-y-1 border-t border-slate-200/70 pt-4 text-xs text-slate-500">
         <span>Ninguna conclusión con menos de 5 casos.</span>
         <span>Lo atribuido al cartel es aproximado.</span>
@@ -201,5 +246,35 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
         <span>Cada número tiene su &quot;cómo lo calculamos&quot;.</span>
       </footer>
     </section>
+  );
+}
+
+function EnCaminoTarjeta({ p }: { p: Pendiente }) {
+  return (
+    <article className="flex flex-col gap-2 rounded-2xl border border-dashed border-slate-300 bg-white/50 p-4">
+      <h4 className="text-[15px] font-bold leading-snug text-slate-900">{p.titulo}</h4>
+      <p className="text-xs leading-relaxed text-slate-600">{p.detalle}</p>
+      {p.progreso !== null && (
+        <div
+          className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"
+          role="progressbar"
+          aria-label={`Avance: ${p.titulo}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(p.progreso * 100)}
+        >
+          <div className="h-full rounded-full bg-slate-700" style={{ width: `${Math.max(4, Math.round(p.progreso * 100))}%` }} />
+        </div>
+      )}
+    </article>
+  );
+}
+
+function AvisoGoogle() {
+  return (
+    <p className="mt-6 rounded-2xl bg-white/10 px-4 py-3 text-sm leading-relaxed text-white">
+      <span className="font-bold">Conectá tu Google</span> con el botón &quot;Conectar con Google&quot; de arriba a la
+      derecha: con tus reseñas y tus métricas de Google se activan la mayoría de estas conclusiones.
+    </p>
   );
 }

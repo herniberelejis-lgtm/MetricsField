@@ -75,11 +75,28 @@ export interface MetaCalificacion {
   comoLoCalculamos: string;
 }
 
+/** Una conclusión que todavía no se puede mostrar ("en camino": faltan
+ * datos, con cuánto falta) o que se revisó y no encontró nada que contar
+ * ("sin novedad": también es información para el dueño). */
+export interface Pendiente {
+  id: string;
+  /** Qué te va a decir cuando esté. */
+  titulo: string;
+  tipo: "en_camino" | "sin_novedad";
+  detalle: string;
+  /** 0 a 1, cuánto falta para tener datos; null si no se puede medir. */
+  progreso: number | null;
+}
+
 export interface Conclusiones {
   funciona: Conclusion[];
   cuesta: Conclusion[];
   meta: MetaCalificacion | null;
   tareas: string[];
+  pendientes: Pendiente[];
+  /** Sin Google conectado faltan las conclusiones que usan reseñas y
+   * métricas de Google: el portal lo pide una vez, arriba. */
+  faltaGoogle: boolean;
 }
 
 // ---------- formato ----------
@@ -759,6 +776,8 @@ export interface EntradaConclusiones {
   /** Histórico mensual saneado y fecha del primer toque al cartel. */
   historico?: MesHistorico[];
   primerToque?: string | null;
+  /** El comercio conectó su Google desde el portal. */
+  googleConectado?: boolean;
 }
 
 export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
@@ -787,5 +806,69 @@ export function armarConclusiones(e: EntradaConclusiones): Conclusiones {
   const cuesta = [temas, dias, alerta, busquedaCuesta ? busquedas : null, efecto && !efectoSubio ? efecto : null].filter((c): c is Conclusion => c !== null);
   const tareas = [...cuesta, ...funciona].flatMap((c) => (c.tarea ? [c.tarea] : [])).slice(0, 3);
 
-  return { funciona, cuesta, meta: metaCalificacion(e.resenas, e.totalGoogle, e.hoy), tareas };
+  const meta = metaCalificacion(e.resenas, e.totalGoogle, e.hoy);
+
+  // Lo que todavía no se puede concluir, y cuánto falta: el dueño ve que la
+  // sección está viva aunque recién arranque, y sabe qué la destraba.
+  const pendientes: Pendiente[] = [];
+  const conectar = e.googleConectado ? "" : " Llega cuando conectes tu Google.";
+  const enCamino = (id: string, titulo: string, detalle: string, progreso: number | null) =>
+    pendientes.push({ id, titulo, tipo: "en_camino", detalle, progreso: progreso === null ? null : Math.min(1, progreso) });
+  const sinNovedad = (id: string, titulo: string, detalle: string) =>
+    pendientes.push({ id, titulo, tipo: "sin_novedad", detalle, progreso: null });
+
+  const conHora = recientes.filter((r) => r.creadoEn).length;
+  const conTexto = e.resenas.filter((r) => r.texto.trim()).length;
+  const dia = 86_400_000;
+
+  if (!cartel) {
+    if (conHora < MIN_CASOS * 2) {
+      enCamino("cartel", "Cuántas reseñas te trae el cartel", `Necesita ${MIN_CASOS * 2} reseñas de Google con hora exacta de los últimos ${DIAS_ANALISIS} días: hay ${conHora}.${conectar}`, conHora / (MIN_CASOS * 2));
+    } else {
+      enCamino("cartel", "Cuántas reseñas te trae el cartel", `Necesita ${MIN_CASOS} reseñas que lleguen después de tocar el cartel: van ${atribucion.size}.`, atribucion.size / MIN_CASOS);
+    }
+  }
+  if (!piezas) {
+    const porPieza = new Map<string, number>();
+    for (const t of tapsRecientes) porPieza.set(t.pieza, (porPieza.get(t.pieza) ?? 0) + 1);
+    const conToques = [...porPieza.values()].filter((n) => n >= 10).length;
+    enCamino("piezas", "Qué pieza funciona y cuál no", `Necesita 2 piezas con 10 toques o más (hay ${conToques}) y ${MIN_CASOS} reseñas que lleguen por el cartel (van ${atribucion.size}).`, Math.min(conToques / 2, atribucion.size / MIN_CASOS));
+  }
+  if (!equipo && e.empleados.some((n) => n.trim())) {
+    enCamino("equipo", "Quién de tu equipo trae reseñas", `Necesita ${MIN_CASOS} reseñas que lleguen por una tarjeta personal o nombren a alguien del equipo.`, null);
+  }
+  if (!zona) {
+    enCamino("zona", "Tu parte de las reseñas nuevas de la zona", e.comparativas.length === 0 ? "Se completa al cerrar el primer mes completo siguiendo a tu competencia. Sumá competidores en la pestaña Competidores." : "Necesita un mes cerrado con reseñas nuevas tuyas y de tus competidores.", null);
+  }
+  if (!temas) {
+    if (conTexto < MIN_CASOS * 2) enCamino("temas", "Qué te baja la calificación", `Necesita ${MIN_CASOS * 2} reseñas con texto: hay ${conTexto}.${conectar}`, conTexto / (MIN_CASOS * 2));
+    else sinNovedad("temas", "Qué te baja la calificación", "Ningún tema de tus reseñas te está bajando la calificación.");
+  }
+  if (!alerta) {
+    const masVieja = e.resenas.length ? Math.min(...e.resenas.map((r) => new Date(`${r.fecha}T12:00:00Z`).getTime())) : e.hoy.getTime();
+    const diasHistoria = Math.floor((e.hoy.getTime() - masVieja) / dia);
+    if (diasHistoria < 120) enCamino("alerta", "Alertas de quejas nuevas", `Necesita 4 meses de reseñas para comparar: hay ${diasHistoria} días.`, diasHistoria / 120);
+    else sinNovedad("alerta", "Alertas de quejas nuevas", "No apareció ningún tema nuevo de queja en el último mes.");
+  }
+  if (!dias) {
+    const nDias = (e.diarias ?? []).length;
+    if (nDias < 28) enCamino("dias", "Qué día te buscan y nadie pide la reseña", `Necesita 4 semanas de datos diarios de Google: hay ${nDias} días.${conectar}`, nDias / 28);
+    else if (tapsRecientes.length < 20) enCamino("dias", "Qué día te buscan y nadie pide la reseña", `Necesita 20 toques al cartel: van ${tapsRecientes.length}.`, tapsRecientes.length / 20);
+    else sinNovedad("dias", "Qué día te buscan y nadie pide la reseña", "Pedís reseñas parejo todos los días de la semana.");
+  }
+  if (!busquedas) {
+    const nBusq = (e.busquedas ?? []).filter((b) => b.impresiones !== null).length;
+    if (nBusq === 0) enCamino("busquedas", "Lo que te buscan vs. lo que dicen tus reseñas", `Llega con las palabras de búsqueda de Google del último mes cerrado.${conectar}`, null);
+    else if (conTexto < MIN_CASOS * 2) enCamino("busquedas", "Lo que te buscan vs. lo que dicen tus reseñas", `Necesita ${MIN_CASOS * 2} reseñas con texto: hay ${conTexto}.`, conTexto / (MIN_CASOS * 2));
+    else sinNovedad("busquedas", "Lo que te buscan vs. lo que dicen tus reseñas", "Todavía no hay suficientes búsquedas para comparar (Google no informa las de menos de 15 por mes).");
+  }
+  if (!efecto) {
+    enCamino("efecto", "Cómo cambiaste desde que está el cartel", e.primerToque ? "Necesita 2 meses completos antes y 2 después del primer toque al cartel." : "Arranca con el primer toque al cartel.", null);
+  }
+  if (!meta) {
+    const deGoogle = e.resenas.filter((r) => r.deGoogle).length;
+    enCamino("meta", "Cuánto te falta para subir de calificación", e.totalGoogle ? `Necesita tus reseñas de Google sincronizadas: hay ${deGoogle} de ${e.totalGoogle}.${conectar}` : `Necesita la calificación de Google sincronizada.`, e.totalGoogle ? deGoogle / (e.totalGoogle * 0.95) : null);
+  }
+
+  return { funciona, cuesta, meta, tareas, pendientes, faltaGoogle: !e.googleConectado };
 }
