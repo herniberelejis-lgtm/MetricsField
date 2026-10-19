@@ -7,8 +7,12 @@ import {
   getSucursales,
   getUsuariosPortal,
   getEstadosSyncGoogle,
+  getResumenSemanal,
   type EstadoSyncGoogle,
 } from "@/lib/db";
+import { linkPortalDe } from "@/lib/alertas";
+import { textoWhatsAppResumen, type ResumenSemanal } from "@/lib/resumen-semanal";
+import { waUrl } from "@/lib/whatsapp";
 import { oauthConfigurado, oauthVerificado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
@@ -82,6 +86,14 @@ export default async function ClienteDetallePage({
   const linkPortal = cuentaRaiz
     ? `/portal/${cuentaRaiz.codigoAcceso}?sucursal=${c.id}`
     : `/portal/${c.codigoAcceso}`;
+
+  // Resumen del lunes: el mismo que llega por mail, listo para WhatsApp.
+  const [resumenSemanal, linkPortalAbsoluto] = await Promise.all([
+    getResumenSemanal(c).catch(() => null),
+    linkPortalDe(c, ""),
+  ]);
+  const textoResumen = resumenSemanal ? textoWhatsAppResumen(resumenSemanal, linkPortalAbsoluto) : null;
+  const telefonoCliente = c.contacto.replace(/\D/g, "");
 
   const gbpConfigurable = oauthConfigurado();
   const gbpConectado = Boolean(c.googleConectadoEn);
@@ -445,6 +457,13 @@ export default async function ClienteDetallePage({
         </div>
       </Card>
 
+      <ResumenDelLunes
+        resumen={resumenSemanal}
+        texto={textoResumen}
+        whatsapp={textoResumen && telefonoCliente.length >= 8 ? waUrl(telefonoCliente, textoResumen) : null}
+        email={c.emailNotificaciones}
+      />
+
       {/* KPIs del mes */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <Kpi
@@ -593,5 +612,61 @@ function EstadoSync({ titulo, estado }: { titulo: string; estado: EstadoSyncGoog
       <span className="text-[11px] opacity-70">({new Date(estado.fecha).toLocaleString("es-AR")})</span>
       <div className="mt-0.5">{estado.mensaje}</div>
     </div>
+  );
+}
+
+// "Tu semana en Google": el resumen del lunes de este cliente. El mail sale
+// solo los lunes 9:00 (cron); por WhatsApp se manda desde acá, a mano y
+// gratis (un link wa.me con el texto ya escrito).
+function ResumenDelLunes({
+  resumen,
+  texto,
+  whatsapp,
+  email,
+}: {
+  resumen: ResumenSemanal | null;
+  texto: string | null;
+  whatsapp: string | null;
+  email: string;
+}) {
+  return (
+    <Card className="mb-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Resumen del lunes</div>
+          <p className="mt-1 text-xs text-slate-500">
+            {email
+              ? `Sale solo por mail a ${email} cada lunes a las 9.`
+              : "Sin mail de notificaciones cargado: por ahora solo se puede mandar por WhatsApp desde acá."}
+          </p>
+        </div>
+        {whatsapp && (
+          <a
+            href={whatsapp}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+          >
+            Mandar por WhatsApp
+          </a>
+        )}
+      </div>
+      {resumen && texto ? (
+        <div className="mt-3 max-w-md rounded-2xl rounded-tl-sm bg-[#ECE5DD] p-3">
+          <div className="whitespace-pre-line rounded-xl bg-white px-4 py-3 text-sm leading-relaxed text-slate-800">
+            {texto.replace(/\*/g, "")}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-slate-500">
+          Esta semana no hay nada que contar todavía (sin reseñas, toques ni conclusiones): no se manda nada.
+        </p>
+      )}
+      {!whatsapp && texto && (
+        <p className="mt-2 text-xs text-slate-500">
+          Para el botón de WhatsApp, cargá un teléfono en &quot;Contacto&quot; (Editar suscripción).
+        </p>
+      )}
+    </Card>
   );
 }

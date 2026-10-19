@@ -19,13 +19,11 @@ import {
   getSeguimientoCompetencia,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
-  getTapsDetalle,
-  getMetricasDiarias,
-  getBusquedas,
-  getPrimerToque,
+  cargarDatosConclusiones,
+  entradaConclusiones,
   type TopPiezaSemana,
 } from "@/lib/db";
-import { armarConclusiones, DIAS_ANALISIS } from "@/lib/conclusiones";
+import { armarConclusiones } from "@/lib/conclusiones";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { fetchResenasGooglePublicas } from "@/lib/places";
@@ -147,10 +145,7 @@ export default async function PortalPage({
     audits,
     resenas,
     benchmark,
-    tapsDetalle,
-    metricasDiarias,
-    busquedas,
-    primerToque,
+    datosConclusiones,
   ] = await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
@@ -161,10 +156,7 @@ export default async function PortalPage({
       getResenas(activo.id),
       getBenchmarkMensual(activo.id),
       // Las conclusiones son de UN local: en el combinado no se calculan.
-      modoTodos ? Promise.resolve([]) : getTapsDetalle(activo.id, DIAS_ANALISIS),
-      modoTodos ? Promise.resolve([]) : getMetricasDiarias(activo.id, DIAS_ANALISIS),
-      modoTodos ? Promise.resolve([]) : getBusquedas(activo.id, 3),
-      modoTodos ? Promise.resolve(null) : getPrimerToque(activo.id),
+      modoTodos ? Promise.resolve(null) : cargarDatosConclusiones(activo),
     ]);
 
   const m = metricaActual(activo);
@@ -212,29 +204,9 @@ export default async function PortalPage({
   // "Tus conclusiones" (lib/conclusiones.ts): cruces de cartel, reseñas y
   // competencia de este local. Se calcula en el servidor y al cliente solo
   // viajan las frases y los agregados, nunca el texto de las reseñas.
-  const conclusiones = modoTodos
-    ? null
-    : armarConclusiones({
-        taps: tapsDetalle,
-        resenas: resenas.map((r) => ({
-          id: r.id,
-          creadoEn: r.creadoEn,
-          fecha: r.fecha,
-          estrellas: r.estrellas,
-          texto: r.texto,
-          deGoogle: r.origenGoogleId !== null,
-        })),
-        totalGoogle: activo.resenasGoogle,
-        comparativas,
-        empleados: links.map((l) => l.nombreEmpleado),
-        hoy: new Date(),
-        diarias: metricasDiarias,
-        busquedas,
-        nombreComercio: activo.nombre,
-        historico: activo.historico,
-        primerToque,
-        googleConectado: gbpConectado,
-      });
+  const conclusiones = datosConclusiones
+    ? armarConclusiones(entradaConclusiones(activo, datosConclusiones))
+    : null;
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));
 

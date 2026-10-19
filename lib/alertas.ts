@@ -5,6 +5,7 @@ import { fmtMes, fmtNum, delta } from "./format";
 import { enviarEmail } from "./email";
 import { businessProfileHabilitado } from "./gbp";
 import { resolverCuenta } from "./db/clientes";
+import type { ResumenSemanal } from "./resumen-semanal";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
 // necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
@@ -20,12 +21,12 @@ const ESTILO = `font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color
 // El link al portal sale SIEMPRE del código de la cuenta raíz (más
 // ?sucursal= si el aviso es de una sucursal): el código propio de una
 // sucursal no es credencial del portal y no debe circular por mail.
-async function linkPortalDe(cliente: Cliente): Promise<string | null> {
+export async function linkPortalDe(cliente: Cliente, ancla = "resenas"): Promise<string | null> {
   const url = baseUrl();
   if (!url) return null;
   const cuenta = await resolverCuenta(cliente);
   const sucursal = cuenta.id === cliente.id ? "" : `?sucursal=${encodeURIComponent(cliente.id)}`;
-  return `${url}/portal/${cuenta.codigoAcceso}${sucursal}#resenas`;
+  return `${url}/portal/${cuenta.codigoAcceso}${sucursal}${ancla ? `#${ancla}` : ""}`;
 }
 
 function layout(titulo: string, cuerpo: string, linkPortal: string | null): string {
@@ -115,5 +116,27 @@ export async function enviarResumenMensual(cliente: Cliente): Promise<boolean> {
     to: cliente.emailNotificaciones,
     asunto: `Tu mes en MetricsField — ${cliente.nombre} (${fmtMes(m.mes)})`,
     html: layout(`Tu resumen de ${fmtMes(m.mes)}`, cuerpo, await linkPortalDe(cliente)),
+  });
+}
+
+/** "Tu semana en Google", cada lunes: los mismos números y conclusiones que
+ * el portal (lib/resumen-semanal.ts). false si no tiene email cargado. */
+export async function enviarResumenSemanal(cliente: Cliente, r: ResumenSemanal): Promise<boolean> {
+  if (!cliente.emailNotificaciones) return false;
+  const numeros = r.numeros
+    .map(
+      (n) =>
+        `<tr><td style="padding:6px 12px 6px 0;font-size:22px;font-weight:800;vertical-align:baseline;">${escapeHtml(n.valor)}</td><td style="padding:6px 0;font-size:14px;color:#333;">${escapeHtml(n.label)}</td></tr>`,
+    )
+    .join("");
+  const cuerpo = `
+    ${numeros ? `<table style="border-collapse:collapse;margin:4px 0 8px;">${numeros}</table>` : ""}
+    ${r.destacado ? `<p style="font-size:14px;font-weight:600;background:#E8F5EF;color:#0B5E40;border-radius:10px;padding:10px 12px;">${escapeHtml(r.destacado)}</p>` : ""}
+    ${r.tarea ? `<p style="font-size:14px;background:#FFF4E5;color:#8A3F00;border-radius:10px;padding:10px 12px;"><strong>Para hacer:</strong> ${escapeHtml(r.tarea)}</p>` : ""}
+  `;
+  return enviarEmail({
+    to: cliente.emailNotificaciones,
+    asunto: `Tu semana en Google — ${cliente.nombre}`,
+    html: layout(`Tu semana en Google, ${escapeHtml(cliente.nombre)}`, cuerpo, await linkPortalDe(cliente, "")),
   });
 }
