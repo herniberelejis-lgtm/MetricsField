@@ -83,18 +83,37 @@ function permitirMemoria(clave: string, maximo: number, ventanaMs: number): bool
  * por todas las actions con límite para que la clave no divirja entre
  * endpoints. */
 export function ipDelRequest(h: Headers): string {
-  return (
-    h.get("x-real-ip") ||
-    h.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "desconocida"
-  );
+  const ip = h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",")[0].trim() || "desconocida";
+  return claveDeIp(ip);
+}
+
+/** IPv4 tal cual; IPv6 agrupada por su /64. Un proveedor le da a cada
+ * cliente un /64 entero (2^64 direcciones): contar por dirección exacta
+ * dejaría a una sola persona rotar IPs y saltear cualquier límite. */
+export function claveDeIp(ip: string): string {
+  const limpia = ip.trim().toLowerCase().replace(/^\[|\]$/g, "").split("%")[0];
+  if (!limpia.includes(":")) return limpia;
+  // IPv4 embebida (::ffff:1.2.3.4): es una IPv4.
+  const v4 = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(limpia);
+  if (v4) return v4[1];
+  const [izq, der] = limpia.split("::");
+  const a = izq ? izq.split(":") : [];
+  const b = der !== undefined && der !== "" ? der.split(":") : [];
+  const faltan = limpia.includes("::") ? 8 - a.length - b.length : 0;
+  const grupos = [...a, ...Array(Math.max(faltan, 0)).fill("0"), ...b];
+  if (grupos.length !== 8 || !grupos.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return limpia;
+  return `${grupos.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
 /** Devuelve true si el request está permitido; false si superó el límite. */
 export async function permitir(clave: string, maximo: number, ventanaMs: number): Promise<boolean> {
   if (redis) {
     try {
-      const { success } = await limitadorRedis(maximo, ventanaMs).limit(clave);
+      const { success, reason } = await limitadorRedis(maximo, ventanaMs).limit(clave);
+      // Si Upstash no contestó a tiempo, Ratelimit deja pasar: en ese caso
+      // decide el contador en memoria, para que un Redis lento no abra
+      // login, PIN y portal de par en par.
+      if (reason === "timeout") return permitirMemoria(clave, maximo, ventanaMs);
       return success;
     } catch (err) {
       // Token inválido, Upstash caído, etc.: el límite sigue en memoria en
