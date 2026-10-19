@@ -43,6 +43,9 @@ import AccionesClienteMenu from "@/components/AccionesClienteMenu";
 import { asegurarAdminPagina, emailAdminActual } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+// "Sincronizar ahora" corre acá: la primera vez trae toda la historia de
+// Google (miles de reseñas y meses de métricas). El default de Vercel corta antes.
+export const maxDuration = 60;
 
 const ERRORES: Record<string, string> = {
   "sync-google":
