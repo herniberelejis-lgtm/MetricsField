@@ -4,7 +4,7 @@ import { fetchGooglePlaceStats } from "../places";
 import { palabrasDeBusqueda, rendimientoDiario, type RendimientoDia } from "../gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "../google-reviews";
 import { generarRespuestaSugerida } from "../respuestas";
-import { cifrar } from "../crypto";
+import { cifrar, descifrar } from "../crypto";
 import { alertarResenaMala } from "../alertas";
 import { notificar } from "../monitor";
 import { getAjuste, setAjuste } from "./ajustes";
@@ -239,9 +239,19 @@ async function prepararGoogle(
   id: string,
   errores: string[],
 ): Promise<{ token: string; location: string } | { ok: false; mensaje: string }> {
-  const conexion = await sql`SELECT google_refresh_token != '' AS conectado FROM comercios WHERE id = ${id}`;
-  if (!conexion[0]?.conectado) {
+  const conexion = await sql`SELECT google_refresh_token FROM comercios WHERE id = ${id}`;
+  const guardado = (conexion[0]?.google_refresh_token as string | undefined) ?? "";
+  if (!guardado) {
     return { ok: false, mensaje: "No conectó su Google: tiene que tocar \"Conectar\" desde su portal." };
+  }
+  try {
+    descifrar(guardado);
+  } catch {
+    return {
+      ok: false,
+      mensaje:
+        "El permiso de Google guardado no se puede leer con la clave actual (TOKEN_ENCRYPTION_KEY cambió después de que conectó). Hay que volver a conectar Google desde su portal en app.metricsfield.com: Google conectado → Desconectar → Conectar con Google.",
+    };
   }
   const token = await accessTokenGBPComercio(id);
   if (!token) {

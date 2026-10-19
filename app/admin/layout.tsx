@@ -21,6 +21,19 @@ export default function AdminLayout({
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-x-hidden">
+        {/* En una preview de Vercel las claves y los interruptores de Google
+            no están cargados (son solo de Production): nada se sincroniza
+            acá. Sin este aviso es fácil probar en la preview y creer que
+            producción no anda. */}
+        {process.env.VERCEL_ENV === "preview" && (
+          <div role="status" className="bg-amber-100 px-6 py-2 text-center text-xs font-medium text-amber-900">
+            Estás en una PREVIEW de prueba, no en producción: acá Google no se sincroniza. Para datos reales usá{" "}
+            <a href="https://app.metricsfield.com/admin" className="underline">
+              app.metricsfield.com
+            </a>
+            .
+          </div>
+        )}
         <div className="mx-auto max-w-6xl px-6 py-8 pb-24">{children}</div>
       </main>
     </div>
