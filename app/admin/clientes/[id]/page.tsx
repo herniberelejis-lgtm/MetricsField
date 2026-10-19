@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCliente, getResenas, getSucursales, getUsuariosPortal } from "@/lib/db";
+import {
+  getCliente,
+  getResenas,
+  getSucursales,
+  getUsuariosPortal,
+  getEstadosSyncGoogle,
+  type EstadoSyncGoogle,
+} from "@/lib/db";
 import { oauthConfigurado, oauthVerificado } from "@/lib/google-oauth";
 import {
   accionRegenerarCodigo,
@@ -57,7 +64,7 @@ export default async function ClienteDetallePage({
   await asegurarAdminPagina();
   const { id } = await params;
   const { error } = await searchParams;
-  const [c, resenas] = await Promise.all([getCliente(id), getResenas(id)]);
+  const [c, resenas, estadosGoogle] = await Promise.all([getCliente(id), getResenas(id), getEstadosSyncGoogle(id)]);
   if (!c) notFound();
   const resumenResenas = calcularResumenResenas(resenas);
 
@@ -416,6 +423,8 @@ export default async function ClienteDetallePage({
             </p>
           ) : (
             <>
+              <EstadoSync titulo="Visitas, llamadas y búsquedas" estado={estadosGoogle.rendimiento} />
+              <EstadoSync titulo="Reseñas de Google" estado={estadosGoogle.resenas} />
               <p className="mt-1 text-sm text-slate-800">
                 {c.googleLocation
                   ? `Ficha vinculada — visitas, llamadas y "cómo llegar" se actualizan solas cada día.`
@@ -558,6 +567,31 @@ export default async function ClienteDetallePage({
           </tbody>
         </table>
       </Card>
+    </div>
+  );
+}
+
+// Resultado de la última sincronización con Business Profile (bien o mal, y
+// por qué). Los logs de Vercel duran una hora: esto es lo que queda.
+function EstadoSync({ titulo, estado }: { titulo: string; estado: EstadoSyncGoogle | null }) {
+  if (!estado) {
+    return (
+      <p className="mt-2 text-xs text-slate-500">
+        {titulo}: todavía no se sincronizó — tocá &quot;Sincronizar ahora&quot;.
+      </p>
+    );
+  }
+  return (
+    <div
+      className={`mt-2 rounded-lg px-3 py-2 text-xs leading-relaxed ${
+        estado.ok ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+      }`}
+    >
+      <span className="font-semibold">
+        {estado.ok ? "✓" : "✗"} {titulo}
+      </span>{" "}
+      <span className="text-[11px] opacity-70">({new Date(estado.fecha).toLocaleString("es-AR")})</span>
+      <div className="mt-0.5">{estado.mensaje}</div>
     </div>
   );
 }

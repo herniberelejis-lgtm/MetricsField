@@ -21,6 +21,24 @@ export function businessProfileHabilitado(): boolean {
   return process.env.GOOGLE_BUSINESS_PROFILE_HABILITADO === "true";
 }
 
+/** Explica en castellano por qué falló un pedido a Google, para mostrarlo en
+ * el admin (no hay logs de más de una hora en Vercel Hobby). */
+export function describirErrorGoogle(api: string, status: number): string {
+  const causa =
+    status === 401
+      ? "el permiso venció o fue revocado: el cliente tiene que volver a conectar su Google"
+      : status === 403
+        ? `falta habilitar la API en Google Cloud Console o la cuenta no tiene permiso sobre la ficha`
+        : status === 404
+          ? "Google no encuentra la ficha o el recurso"
+          : status === 429
+            ? "se agotó la cuota de Google por ahora: se reintenta en el próximo sync"
+            : status >= 500
+              ? "Google tuvo un error de su lado: se reintenta en el próximo sync"
+              : "Google rechazó el pedido";
+  return `${api} respondió ${status}: ${causa}.`;
+}
+
 export interface UbicacionGBP {
   /** resource name completo, ej. "accounts/111/locations/1234567890". Es la
    * forma que exige la Reviews API (v4); Performance usa solo la parte
@@ -43,7 +61,7 @@ export function ubicacionConCuenta(location: string): boolean {
   return location.startsWith("accounts/");
 }
 
-export async function listarUbicaciones(accessToken: string): Promise<UbicacionGBP[]> {
+export async function listarUbicaciones(accessToken: string, errores?: string[]): Promise<UbicacionGBP[]> {
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const accRes = await fetch(
@@ -52,6 +70,7 @@ export async function listarUbicaciones(accessToken: string): Promise<UbicacionG
   );
   if (!accRes.ok) {
     console.error(`GBP accounts respondió ${accRes.status}`);
+    errores?.push(describirErrorGoogle("Account Management API", accRes.status));
     return [];
   }
   const accData = (await accRes.json()) as { accounts?: { name: string }[] };
@@ -72,6 +91,7 @@ export async function listarUbicaciones(accessToken: string): Promise<UbicacionG
       );
       if (!locRes.ok) {
         console.error(`GBP locations respondió ${locRes.status}`);
+        errores?.push(describirErrorGoogle("Business Information API", locRes.status));
         break;
       }
       const locData = (await locRes.json()) as {
@@ -129,6 +149,7 @@ export async function rendimientoDiario(
   location: string,
   desde: string,
   hasta: string,
+  errores?: string[],
 ): Promise<RendimientoDia[] | null> {
   const [ad, md, dd] = desde.split("-").map(Number);
   const [ah, mh, dh] = hasta.split("-").map(Number);
@@ -147,6 +168,7 @@ export async function rendimientoDiario(
   );
   if (!res.ok) {
     console.error(`GBP performance (diario) respondió ${res.status} para ${location}`);
+    errores?.push(describirErrorGoogle("Performance API", res.status));
     return null;
   }
   const data = (await res.json()) as {
@@ -199,6 +221,7 @@ export async function palabrasDeBusqueda(
   accessToken: string,
   location: string,
   mes: string,
+  errores?: string[],
 ): Promise<PalabraBusqueda[] | null> {
   const [anio, m] = mes.split("-").map(Number);
   const palabras: PalabraBusqueda[] = [];
@@ -219,6 +242,7 @@ export async function palabrasDeBusqueda(
     );
     if (!res.ok) {
       console.error(`GBP búsquedas respondió ${res.status} para ${location}`);
+      errores?.push(describirErrorGoogle("Performance API (búsquedas)", res.status));
       return pagina === 0 ? null : palabras;
     }
     const data = (await res.json()) as {

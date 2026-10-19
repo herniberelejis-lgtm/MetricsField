@@ -198,11 +198,70 @@ function sumarDias(fecha: string, dias: number): string {
  * cualquier pieza: sin conectar, sin place_id, la cuenta no administra esa
  * ficha, o el refresh token venció. */
 export async function sincronizarRendimiento(id: string): Promise<boolean> {
-  const token = await accessTokenGBPComercio(id);
-  if (!token) return false;
+  const estado = await sincronizarRendimientoConEstado(id);
+  await guardarEstadoSync("estado_gbp", id, estado);
+  return estado.ok;
+}
 
-  const location = await resolverLocationGBP(id, token);
-  if (!location) return false;
+/** Resultado de la última sincronización con Google de un comercio, para
+ * mostrarlo en el admin. Vercel Hobby guarda logs de una sola hora: sin esto,
+ * cuando algo falla nadie se entera de por qué. Vive en `ajustes` (sin
+ * migración). */
+export interface EstadoSyncGoogle {
+  fecha: string; // ISO
+  ok: boolean;
+  mensaje: string;
+}
+
+async function guardarEstadoSync(tipo: "estado_gbp" | "estado_resenas", id: string, e: Omit<EstadoSyncGoogle, "fecha">) {
+  const estado: EstadoSyncGoogle = { fecha: new Date().toISOString(), ...e };
+  await setAjuste(`${tipo}:${id}`, JSON.stringify(estado)).catch((err) => console.error("Estado de sync:", err));
+}
+
+export async function getEstadosSyncGoogle(
+  id: string,
+): Promise<{ rendimiento: EstadoSyncGoogle | null; resenas: EstadoSyncGoogle | null }> {
+  const leer = async (clave: string) => {
+    const v = await getAjuste(clave).catch(() => null);
+    if (!v) return null;
+    try {
+      return JSON.parse(v) as EstadoSyncGoogle;
+    } catch {
+      return null;
+    }
+  };
+  const [rendimiento, resenas] = await Promise.all([leer(`estado_gbp:${id}`), leer(`estado_resenas:${id}`)]);
+  return { rendimiento, resenas };
+}
+
+/** Diagnóstico de conexión común a rendimiento y reseñas: token y ficha. */
+async function prepararGoogle(
+  id: string,
+  errores: string[],
+): Promise<{ token: string; location: string } | { ok: false; mensaje: string }> {
+  const conexion = await sql`SELECT google_refresh_token != '' AS conectado FROM comercios WHERE id = ${id}`;
+  if (!conexion[0]?.conectado) {
+    return { ok: false, mensaje: "No conectó su Google: tiene que tocar \"Conectar\" desde su portal." };
+  }
+  const token = await accessTokenGBPComercio(id);
+  if (!token) {
+    return {
+      ok: false,
+      mensaje: "Google rechazó el permiso guardado (venció o lo revocaron): tiene que volver a conectar desde su portal.",
+    };
+  }
+  const location = await resolverLocationGBP(id, token, errores);
+  if (!location) {
+    return { ok: false, mensaje: errores.join(" ") || "No se pudo vincular la ficha de Business Profile." };
+  }
+  return { token, location };
+}
+
+async function sincronizarRendimientoConEstado(id: string): Promise<Omit<EstadoSyncGoogle, "fecha">> {
+  const errores: string[] = [];
+  const prep = await prepararGoogle(id, errores);
+  if ("ok" in prep) return prep;
+  const { token, location } = prep;
 
   const hoy = fechaHoyCordoba();
   let ultimaFecha: string | null;
@@ -213,28 +272,50 @@ export async function sincronizarRendimiento(id: string): Promise<boolean> {
     if (!faltaTabla(e)) throw e;
     // Migración 017 todavía sin correr en esta base: se sigue como antes,
     // solo el mes en curso, sin guardar el detalle diario.
-    return sincronizarMesSinDiarias(id, token, location, hoy);
+    const ok = await sincronizarMesSinDiarias(id, token, location, hoy, errores);
+    return ok
+      ? { ok, mensaje: "Mes actualizado. Falta correr la migración 017 para guardar el detalle diario." }
+      : { ok, mensaje: errores.join(" ") || "Google no devolvió métricas." };
   }
 
   let desde = "";
   let dias: RendimientoDia[] | null = null;
   if (ultimaFecha) {
     desde = sumarDias(ultimaFecha, -DIAS_REVISION);
-    dias = await rendimientoDiario(token, location, desde, hoy);
+    dias = await rendimientoDiario(token, location, desde, hoy, errores);
   } else {
     for (const n of DIAS_HISTORIA) {
       desde = sumarDias(hoy, -n);
-      dias = await rendimientoDiario(token, location, desde, hoy);
+      dias = await rendimientoDiario(token, location, desde, hoy, errores);
       if (dias) break;
     }
   }
-  if (!dias) return false;
+  if (!dias) return { ok: false, mensaje: [...new Set(errores)].join(" ") || "Google no devolvió métricas." };
 
   await guardarDias(id, desde, dias);
   await actualizarMesesDesdeDiarias(id, hoy.slice(0, 7));
   // Las búsquedas son un extra: si fallan, el rendimiento igual quedó guardado.
-  await sincronizarBusquedas(id, token, location, hoy).catch((e) => console.error("Búsquedas:", e));
-  return true;
+  const busquedas = await sincronizarBusquedas(id, token, location, hoy).catch((e) => {
+    console.error("Búsquedas:", e);
+    return { meses: 0, error: "Error guardando las búsquedas." };
+  });
+
+  const total = await sql`
+    SELECT count(*)::int AS n, to_char(min(fecha), 'DD/MM/YYYY') AS desde, to_char(max(fecha), 'DD/MM/YYYY') AS hasta
+    FROM metricas_diarias WHERE comercio_id = ${id}
+  `;
+  const t = total[0];
+  const partes = [
+    dias.length === 0
+      ? "Google respondió bien pero todavía no tiene métricas para esta ficha."
+      : `${t.n} días guardados (${t.desde} a ${t.hasta}).`,
+    busquedas.error
+      ? `Búsquedas: ${busquedas.error}`
+      : busquedas.meses > 0
+        ? `Búsquedas: ${busquedas.meses} mes${busquedas.meses === 1 ? "" : "es"} actualizado${busquedas.meses === 1 ? "" : "s"}.`
+        : "Búsquedas al día.",
+  ];
+  return { ok: true, mensaje: partes.join(" ") };
 }
 
 /** Error de Postgres "la tabla no existe" (42P01). */
@@ -244,8 +325,14 @@ export function faltaTabla(e: unknown): boolean {
 
 /** Comportamiento previo a la migración 017: suma los días del mes en curso
  * y actualiza solo metricas_mensuales. */
-async function sincronizarMesSinDiarias(id: string, token: string, location: string, hoy: string): Promise<boolean> {
-  const dias = await rendimientoDiario(token, location, `${hoy.slice(0, 7)}-01`, hoy);
+async function sincronizarMesSinDiarias(
+  id: string,
+  token: string,
+  location: string,
+  hoy: string,
+  errores?: string[],
+): Promise<boolean> {
+  const dias = await rendimientoDiario(token, location, `${hoy.slice(0, 7)}-01`, hoy, errores);
   if (!dias) return false;
   const suma = (f: (d: RendimientoDia) => number) => dias.reduce((a, d) => a + f(d), 0);
   await sql`
@@ -349,7 +436,12 @@ function mesAnterior(mes: string, n = 1): string {
   return d.toISOString().slice(0, 7);
 }
 
-async function sincronizarBusquedas(id: string, token: string, location: string, hoy: string): Promise<void> {
+async function sincronizarBusquedas(
+  id: string,
+  token: string,
+  location: string,
+  hoy: string,
+): Promise<{ meses: number; error?: string }> {
   const mesActual = hoy.slice(0, 7);
   const guardados = new Set(
     (await sql`SELECT DISTINCT mes FROM busquedas_mensuales WHERE comercio_id = ${id}`).map((r) => r.mes as string),
@@ -357,11 +449,15 @@ async function sincronizarBusquedas(id: string, token: string, location: string,
   const ultimoCerrado = mesAnterior(mesActual);
   const refrescarUltimo = Number(hoy.slice(8, 10)) <= DIA_BUSQUEDAS_FIRMES;
 
+  let meses = 0;
   for (let n = 1; n <= MESES_BUSQUEDAS; n++) {
     const mes = mesAnterior(mesActual, n);
     if (guardados.has(mes) && !(mes === ultimoCerrado && refrescarUltimo)) continue;
-    const palabras = await palabrasDeBusqueda(token, location, mes);
-    if (!palabras) return; // la API rechazó: no insistir con los demás meses hoy
+    const errores: string[] = [];
+    const palabras = await palabrasDeBusqueda(token, location, mes, errores);
+    // La API rechazó: no insistir con los demás meses hoy.
+    if (!palabras) return { meses, error: errores.join(" ") || "Google no devolvió las búsquedas." };
+    meses += 1;
     // Reemplaza el mes de ESTE comercio (nunca toca otros comercios ni meses).
     await sql.begin(async (tx) => {
       await tx`DELETE FROM busquedas_mensuales WHERE comercio_id = ${id} AND mes = ${mes}`;
@@ -381,6 +477,7 @@ async function sincronizarBusquedas(id: string, token: string, location: string,
       }
     });
   }
+  return { meses };
 }
 
 export interface DiaRendimiento {
@@ -521,15 +618,22 @@ export async function sincronizarResenasGoogle(
 ): Promise<{ nuevas: number; autoRespondidas: number }> {
   if (!resenasApiHabilitada()) return { nuevas: 0, autoRespondidas: 0 };
 
-  const token = await accessTokenGBPComercio(id);
-  if (!token) return { nuevas: 0, autoRespondidas: 0 };
-  const location = await resolverLocationGBP(id, token);
-  if (!location) return { nuevas: 0, autoRespondidas: 0 };
+  const errores: string[] = [];
+  const prep = await prepararGoogle(id, errores);
+  if ("ok" in prep) {
+    await guardarEstadoSync("estado_resenas", id, prep);
+    return { nuevas: 0, autoRespondidas: 0 };
+  }
+  const { token, location } = prep;
 
   const cliente = await getCliente(id);
   if (!cliente) return { nuevas: 0, autoRespondidas: 0 };
 
-  const resenasGoogle = await listarResenasGoogle(token, location);
+  const resenasGoogle = await listarResenasGoogle(token, location, errores);
+  if (errores.length > 0 && resenasGoogle.length === 0) {
+    await guardarEstadoSync("estado_resenas", id, { ok: false, mensaje: errores.join(" ") });
+    return { nuevas: 0, autoRespondidas: 0 };
+  }
   let nuevas = 0;
   let autoRespondidas = 0;
 
@@ -605,6 +709,13 @@ export async function sincronizarResenasGoogle(
   }
 
   await sql`UPDATE comercios SET resenas_sync_en = now() WHERE id = ${id}`;
+  await guardarEstadoSync("estado_resenas", id, {
+    ok: true,
+    mensaje:
+      `${resenasGoogle.length} reseña${resenasGoogle.length === 1 ? "" : "s"} en Google; ${nuevas} nueva${nuevas === 1 ? "" : "s"} importada${nuevas === 1 ? "" : "s"}` +
+      (autoRespondidas ? `, ${autoRespondidas} respondida${autoRespondidas === 1 ? "" : "s"} sola${autoRespondidas === 1 ? "" : "s"}.` : ".") +
+      (errores.length ? ` Aviso: ${errores.join(" ")}` : ""),
+  });
   return { nuevas, autoRespondidas };
 }
 
