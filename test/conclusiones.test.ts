@@ -225,7 +225,12 @@ describe("metaCalificacion", () => {
 describe("armarConclusiones", () => {
   it("con pocos datos no inventa nada", () => {
     const r = armarConclusiones({ taps: [], resenas: [], totalGoogle: null, comparativas: [], empleados: [], hoy: HOY });
-    expect(r).toEqual({ funciona: [], cuesta: [], meta: null, tareas: [] });
+    expect(r).toMatchObject({ funciona: [], cuesta: [], meta: null, tareas: [] });
+    // Pero dice qué falta para cada una, en vez de quedar en blanco.
+    expect(r.pendientes.every((p) => p.tipo === "en_camino")).toBe(true);
+    expect(r.pendientes.find((p) => p.id === "cartel")?.detalle).toContain("hay 0");
+    expect(r.pendientes.find((p) => p.id === "dias")?.detalle).toContain("cuando conectes tu Google");
+    expect(r.faltaGoogle).toBe(true);
   });
 });
 

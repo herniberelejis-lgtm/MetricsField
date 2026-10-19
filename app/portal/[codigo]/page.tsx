@@ -236,6 +236,7 @@ export default async function PortalPage({
         nombreComercio: activo.nombre,
         historico: activo.historico,
         primerToque,
+        googleConectado: gbpConectado,
       });
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));
