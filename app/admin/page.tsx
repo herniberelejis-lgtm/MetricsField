@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   getCuentas,
+  getResenasNuevasPortfolio,
   getResenasResumenPortfolio,
   getTapsResumenPortfolio,
   getVisitasPerfilPortfolio,
@@ -18,6 +19,8 @@ import {
   Sparkline,
 } from "@/components/ui";
 import { asegurarAdminPagina } from "@/lib/auth";
+import { businessProfileHabilitado } from "@/lib/gbp";
+import { resenasApiHabilitada } from "@/lib/google-reviews";
 
 export const metadata: Metadata = { title: "Panel" };
 export const dynamic = "force-dynamic";
@@ -66,8 +69,9 @@ export default async function DashboardPage({
   const mesDesde = desde.slice(0, 7);
   const mesHasta = hasta.slice(0, 7);
 
-  const [clientes, resenasResumen, tapsResumen, visitas] = await Promise.all([
+  const [clientes, resenasNuevas, resenasResumen, tapsResumen, visitas] = await Promise.all([
     getCuentas(),
+    getResenasNuevasPortfolio(mesDesde, mesHasta),
     getResenasResumenPortfolio(desde, hasta),
     getTapsResumenPortfolio(desde, hasta),
     getVisitasPerfilPortfolio(mesDesde, mesHasta),
@@ -77,6 +81,8 @@ export default async function DashboardPage({
   const mrr = sum(activos.map((c) => c.fee));
   const tapsTotal = tapsResumen.nfc + tapsResumen.qr;
   const visitasPorCliente = new Map(visitas.porCliente.map((v) => [v.comercioId, v.visitas]));
+  const conVisitas = businessProfileHabilitado();
+  const conResenasDetalle = resenasApiHabilitada();
   const maxEstrellas = Math.max(...Object.values(resenasResumen.porEstrellas), 1);
 
   return (
@@ -108,14 +114,14 @@ export default async function DashboardPage({
         <Kpi label="Ingreso recurrente (MRR)" value={fmtARS(mrr)} hint="abonos activos, hoy" />
         <Kpi label="Clientes activos" value={fmtNum(activos.length)} hint="de la cartera, hoy" />
         <Kpi
-          label="Reseñas totales"
-          value={fmtNum(resenasResumen.total)}
-          hint={periodo.label.toLowerCase()}
+          label="Reseñas nuevas en Google"
+          value={fmtNum(resenasNuevas)}
+          hint="dato mensual, no diario"
         />
         <Kpi
           label="Reseñas negativas"
           value={fmtNum(resenasResumen.negativas)}
-          hint="3★ o menos"
+          hint={conResenasDetalle ? "3★ o menos, de los clientes con Google conectado" : "se activa al conectar Google"}
         />
       </div>
 
@@ -127,8 +133,8 @@ export default async function DashboardPage({
         />
         <Kpi
           label="Vistas al perfil"
-          value={fmtNum(visitas.total)}
-          hint="dato mensual, no diario"
+          value={conVisitas ? fmtNum(visitas.total) : "—"}
+          hint={conVisitas ? "dato mensual, no diario" : "se activa con Business Profile"}
         />
         <Kpi
           label="Rating promedio cartera"
@@ -145,7 +151,11 @@ export default async function DashboardPage({
       </h2>
       <Card>
         {resenasResumen.total === 0 ? (
-          <p className="text-sm text-slate-500">No hay reseñas cargadas en este período.</p>
+          <p className="text-sm text-slate-500">
+            {conResenasDetalle
+              ? "No hay reseñas cargadas en este período."
+              : "Se llena cuando cada cliente conecta su Google desde el portal."}
+          </p>
         ) : (
           <div className="space-y-2.5">
             {([5, 4, 3, 2, 1] as const).map((n) => {
@@ -186,7 +196,7 @@ export default async function DashboardPage({
           </thead>
           <tbody>
             {clientes.map((c) => (
-              <Row key={c.id} c={c} visitas={visitasPorCliente.get(c.id) ?? 0} />
+              <Row key={c.id} c={c} visitas={conVisitas ? (visitasPorCliente.get(c.id) ?? 0) : null} />
             ))}
           </tbody>
         </table>
@@ -195,7 +205,7 @@ export default async function DashboardPage({
   );
 }
 
-function Row({ c, visitas }: { c: Cliente; visitas: number }) {
+function Row({ c, visitas }: { c: Cliente; visitas: number | null }) {
   const m = metricaActual(c);
   return (
     <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
@@ -220,7 +230,7 @@ function Row({ c, visitas }: { c: Cliente; visitas: number }) {
         {m ? <Stars rating={m.ratingPromedio} /> : "—"}
       </td>
       <td className="px-4 py-3 font-medium tabular-nums text-slate-700">
-        {c.estado === "activo" ? fmtNum(visitas) : "—"}
+        {c.estado === "activo" && visitas !== null ? fmtNum(visitas) : "—"}
       </td>
       <td className="px-4 py-3">
         <Sparkline values={c.historico.map((h) => h.resenasTotal)} />

@@ -19,8 +19,10 @@ import {
   getSeguimientoCompetencia,
   getCompetidores,
   sincronizarCompetidoresDeComercio,
+  getTapsDetalle,
   type TopPiezaSemana,
 } from "@/lib/db";
+import { armarConclusiones, DIAS_ANALISIS } from "@/lib/conclusiones";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { fetchResenasGooglePublicas } from "@/lib/places";
@@ -136,7 +138,7 @@ export default async function PortalPage({
         ? MENSAJE_GOOGLE[google]
         : null;
 
-  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark] =
+  const [tapsPorDiaSoporte, horasSemana, piezaMasUsada, links, checklist, audits, resenas, benchmark, tapsDetalle] =
     await Promise.all([
       getTapsPorDiaPorSoporte(activo.id, 14),
       getTapsPorHoraSemana(activo.id),
@@ -146,6 +148,8 @@ export default async function PortalPage({
       getAudits(activo.id),
       getResenas(activo.id),
       getBenchmarkMensual(activo.id),
+      // Las conclusiones son de UN local: en el combinado no se calculan.
+      modoTodos ? Promise.resolve([]) : getTapsDetalle(activo.id, DIAS_ANALISIS),
     ]);
 
   const m = metricaActual(activo);
@@ -190,6 +194,26 @@ export default async function PortalPage({
   // competencia y las métricas propias usan el mes en UTC (el del cron).
   const mesEnCursoUtc = new Date().toISOString().slice(0, 7);
   const comparativas = comparativaMensual(benchmark, activo.historico, mesEnCursoUtc);
+  // "Tus conclusiones" (lib/conclusiones.ts): cruces de cartel, reseñas y
+  // competencia de este local. Se calcula en el servidor y al cliente solo
+  // viajan las frases y los agregados, nunca el texto de las reseñas.
+  const conclusiones = modoTodos
+    ? null
+    : armarConclusiones({
+        taps: tapsDetalle,
+        resenas: resenas.map((r) => ({
+          id: r.id,
+          creadoEn: r.creadoEn,
+          fecha: r.fecha,
+          estrellas: r.estrellas,
+          texto: r.texto,
+          deGoogle: r.origenGoogleId !== null,
+        })),
+        totalGoogle: activo.resenasGoogle,
+        comparativas,
+        empleados: links.map((l) => l.nombreEmpleado),
+        hoy: new Date(),
+      });
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));
 
@@ -500,6 +524,7 @@ export default async function PortalPage({
       activoNombre={activo.nombre}
       codigoAcceso={c.codigoAcceso}
       temasRecurrentes={resumenResenasCombinado.temasRecurrentes}
+      conclusiones={conclusiones}
     />
   );
 
@@ -572,6 +597,7 @@ export default async function PortalPage({
       resenasSemaforo={resenasSemaforo}
       semaforoFuente={semaforoFuente}
       ritmoMensual={ritmo?.promedio ?? 0}
+      metaExacta={conclusiones?.meta ?? null}
     />
   );
 
