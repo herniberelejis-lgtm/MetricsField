@@ -158,6 +158,31 @@ export default function PanelResumen({
           no hay datos suficientes para concluir algo. */}
       {conclusiones && <Conclusiones datos={conclusiones} />}
 
+      {/* En el combinado no hay conclusiones (cruzan el cartel y las reseñas
+          de UN local): sin esta tarjeta, quien tiene varios locales nunca
+          se enteraba de que existen. */}
+      {!conclusiones && modoTodos && hayVarios && (
+        <section className="mb-10 rounded-[24px] bg-[#111111] px-6 py-8 text-white sm:px-10 sm:py-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · por local</p>
+          <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
+            Lo que Google no te muestra se calcula local por local: qué te trae el cartel, qué te baja la
+            calificación y qué día nadie pide la reseña.
+          </p>
+          <p className="mt-3 text-sm text-slate-300">Elegí un local para verlas.</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {ubicaciones.map((u) => (
+              <a
+                key={u.id}
+                href={hrefSucursal(codigoAcceso, u)}
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-200"
+              >
+                {u.nombre} →
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* TIER 1 — lo que Google no te muestra: de qué se queja la gente, y
           cómo usan tu cartel. Ninguna de las dos cosas existe en Google —
           es la razón de ser de MetricsField (no somos un espejo de tu ficha
