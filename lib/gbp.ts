@@ -21,22 +21,64 @@ export function businessProfileHabilitado(): boolean {
   return process.env.GOOGLE_BUSINESS_PROFILE_HABILITADO === "true";
 }
 
+/** Lo que Google explica en el cuerpo de un error: su código ("SERVICE_DISABLED",
+ * "ACCESS_TOKEN_SCOPE_INSUFFICIENT"…), su mensaje y, si la API está apagada,
+ * el link para habilitarla. Sin esto, un 403 no distingue "falta habilitar la
+ * API" de "la cuenta no tiene permiso sobre la ficha". */
+export interface DetalleErrorGoogle {
+  razon: string | null;
+  mensaje: string | null;
+  activarEn: string | null;
+}
+
+/** Lee el cuerpo JSON de un error de Google. Nunca tira: si el cuerpo no es
+ * el formato esperado, devuelve todo en null. */
+export function detalleErrorGoogle(cuerpo: unknown): DetalleErrorGoogle {
+  const error = (cuerpo as { error?: { message?: unknown; status?: unknown; details?: unknown } } | null)?.error;
+  const detalles = Array.isArray(error?.details) ? (error.details as { reason?: unknown; metadata?: { activationUrl?: unknown } }[]) : [];
+  const info = detalles.find((d) => typeof d?.reason === "string");
+  const activarEn = detalles.map((d) => d?.metadata?.activationUrl).find((u): u is string => typeof u === "string");
+  return {
+    razon: typeof info?.reason === "string" ? info.reason : typeof error?.status === "string" ? error.status : null,
+    mensaje: typeof error?.message === "string" ? error.message.slice(0, 300) : null,
+    // Solo links de la consola de Google: el texto termina en el admin.
+    activarEn: activarEn && /^https:\/\/console\.(developers|cloud)\.google\.com\//.test(activarEn) ? activarEn : null,
+  };
+}
+
+/** detalleErrorGoogle de una respuesta fallida (consume el cuerpo). */
+export async function leerErrorGoogle(res: Response): Promise<DetalleErrorGoogle> {
+  try {
+    return detalleErrorGoogle(await res.json());
+  } catch {
+    return { razon: null, mensaje: null, activarEn: null };
+  }
+}
+
 /** Explica en castellano por qué falló un pedido a Google, para mostrarlo en
  * el admin (no hay logs de más de una hora en Vercel Hobby). */
-export function describirErrorGoogle(api: string, status: number): string {
-  const causa =
-    status === 401
-      ? "el permiso venció o fue revocado: el cliente tiene que volver a conectar su Google"
-      : status === 403
-        ? `falta habilitar la API en Google Cloud Console o la cuenta no tiene permiso sobre la ficha`
-        : status === 404
-          ? "Google no encuentra la ficha o el recurso"
-          : status === 429
-            ? "se agotó la cuota de Google por ahora: se reintenta en el próximo sync"
-            : status >= 500
-              ? "Google tuvo un error de su lado: se reintenta en el próximo sync"
-              : "Google rechazó el pedido";
-  return `${api} respondió ${status}: ${causa}.`;
+export function describirErrorGoogle(api: string, status: number, detalle?: DetalleErrorGoogle): string {
+  const razon = detalle?.razon ?? "";
+  const mensaje = detalle?.mensaje ?? "";
+  const apagada = razon === "SERVICE_DISABLED" || /has not been used in project|is disabled/i.test(mensaje);
+  const causa = apagada
+    ? `la API no está habilitada en el proyecto de Google Cloud: habilitala ${detalle?.activarEn ? `en ${detalle.activarEn}` : "en Google Cloud Console"}, esperá unos minutos y volvé a sincronizar`
+    : razon === "ACCESS_TOKEN_SCOPE_INSUFFICIENT"
+      ? "el permiso de Google se dio sin acceso a la ficha: el cliente tiene que volver a conectar su Google"
+      : status === 401
+        ? "el permiso venció o fue revocado: el cliente tiene que volver a conectar su Google"
+        : status === 403
+          ? "falta habilitar la API en Google Cloud Console o la cuenta conectada no tiene permiso sobre la ficha"
+          : status === 404
+            ? "Google no encuentra la ficha o el recurso"
+            : status === 429
+              ? "se agotó la cuota de Google: se reintenta en el próximo sync. Si se repite en cada sync, la cuota del proyecto para esta API es 0 (el acceso no está aprobado y se pide con el formulario de acceso a la API de Business Profile)"
+              : status >= 500
+                ? "Google tuvo un error de su lado: se reintenta en el próximo sync"
+                : "Google rechazó el pedido";
+  // El mensaje original de Google, salvo cuando ya está dicho en castellano.
+  const textoGoogle = mensaje && !apagada ? ` Google dice: "${mensaje}"` : "";
+  return `${api} respondió ${status}${razon ? ` (${razon})` : ""}: ${causa}.${textoGoogle}`;
 }
 
 export interface UbicacionGBP {
@@ -69,8 +111,9 @@ export async function listarUbicaciones(accessToken: string, errores?: string[])
     { headers, cache: "no-store" },
   );
   if (!accRes.ok) {
-    console.error(`GBP accounts respondió ${accRes.status}`);
-    errores?.push(describirErrorGoogle("Account Management API", accRes.status));
+    const detalle = await leerErrorGoogle(accRes);
+    console.error(`GBP accounts respondió ${accRes.status}`, detalle.razon ?? "");
+    errores?.push(describirErrorGoogle("Account Management API", accRes.status, detalle));
     return [];
   }
   const accData = (await accRes.json()) as { accounts?: { name: string }[] };
@@ -90,8 +133,9 @@ export async function listarUbicaciones(accessToken: string, errores?: string[])
         { headers, cache: "no-store" },
       );
       if (!locRes.ok) {
-        console.error(`GBP locations respondió ${locRes.status}`);
-        errores?.push(describirErrorGoogle("Business Information API", locRes.status));
+        const detalle = await leerErrorGoogle(locRes);
+        console.error(`GBP locations respondió ${locRes.status}`, detalle.razon ?? "");
+        errores?.push(describirErrorGoogle("Business Information API", locRes.status, detalle));
         break;
       }
       const locData = (await locRes.json()) as {
@@ -167,8 +211,9 @@ export async function rendimientoDiario(
     { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" },
   );
   if (!res.ok) {
-    console.error(`GBP performance (diario) respondió ${res.status} para ${location}`);
-    errores?.push(describirErrorGoogle("Performance API", res.status));
+    const detalle = await leerErrorGoogle(res);
+    console.error(`GBP performance (diario) respondió ${res.status} para ${location}`, detalle.razon ?? "");
+    errores?.push(describirErrorGoogle("Performance API", res.status, detalle));
     return null;
   }
   const data = (await res.json()) as {
@@ -241,8 +286,9 @@ export async function palabrasDeBusqueda(
       { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" },
     );
     if (!res.ok) {
-      console.error(`GBP búsquedas respondió ${res.status} para ${location}`);
-      errores?.push(describirErrorGoogle("Performance API (búsquedas)", res.status));
+      const detalle = await leerErrorGoogle(res);
+      console.error(`GBP búsquedas respondió ${res.status} para ${location}`, detalle.razon ?? "");
+      errores?.push(describirErrorGoogle("Performance API (búsquedas)", res.status, detalle));
       return pagina === 0 ? null : palabras;
     }
     const data = (await res.json()) as {

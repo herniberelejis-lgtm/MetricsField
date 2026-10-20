@@ -1,5 +1,5 @@
 import "server-only";
-import { describirErrorGoogle } from "./gbp";
+import { describirErrorGoogle, leerErrorGoogle } from "./gbp";
 
 // Cliente de la Reviews API de Google Business Profile (API v4 "My
 // Business" — Google todavía no migró listar/responder reseñas a las APIs
@@ -60,8 +60,9 @@ export async function listarResenasGoogle(
       { headers, cache: "no-store" },
     );
     if (!res.ok) {
-      console.error(`Reviews API respondió ${res.status} para ${location}`);
-      errores?.push(describirErrorGoogle("Reviews API (My Business v4)", res.status));
+      const detalle = await leerErrorGoogle(res);
+      console.error(`Reviews API respondió ${res.status} para ${location}`, detalle.razon ?? "", detalle.mensaje ?? "");
+      errores?.push(describirErrorGoogle("Reviews API (My Business v4)", res.status, detalle));
       break;
     }
     const data = (await res.json()) as {
