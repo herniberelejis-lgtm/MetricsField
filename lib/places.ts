@@ -10,6 +10,9 @@ import "server-only";
 export interface GooglePlaceStats {
   rating: number;
   totalReseñas: number;
+  /** Ubicación del lugar (para el mapa de la zona). Google deja guardarla
+   * hasta 30 días: ver lib/db/ubicaciones.ts. */
+  ubicacion: { lat: number; lng: number } | null;
 }
 
 export async function fetchGooglePlaceStats(
@@ -22,7 +25,9 @@ export async function fetchGooglePlaceStats(
   const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
     headers: {
       "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "rating,userRatingCount",
+      // `location` es un campo Essentials: no cambia el precio del pedido,
+      // que lo define rating/userRatingCount.
+      "X-Goog-FieldMask": "rating,userRatingCount,location",
     },
     // El cron pide siempre el dato fresco. El portal (reseñas de hoy) acepta
     // uno de hasta `cacheSegundos`: Places es una API paga y sin caché cada
@@ -37,12 +42,19 @@ export async function fetchGooglePlaceStats(
     return null;
   }
 
-  const data = (await res.json()) as { rating?: number; userRatingCount?: number };
+  const data = (await res.json()) as {
+    rating?: number;
+    userRatingCount?: number;
+    location?: { latitude?: number; longitude?: number };
+  };
   if (typeof data.rating !== "number") return null;
 
+  const lat = data.location?.latitude;
+  const lng = data.location?.longitude;
   return {
     rating: data.rating,
     totalReseñas: data.userRatingCount ?? 0,
+    ubicacion: typeof lat === "number" && typeof lng === "number" ? { lat, lng } : null,
   };
 }
 

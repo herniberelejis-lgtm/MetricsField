@@ -22,10 +22,12 @@ import {
   cargarDatosConclusiones,
   entradaConclusiones,
   entradaTablero,
+  getUbicacionesZona,
   type TopPiezaSemana,
 } from "@/lib/db";
+import { urlMapaEstatico } from "@/lib/mapa";
 import { armarConclusiones } from "@/lib/conclusiones";
-import { armarTablero, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
+import { armarTablero, marcadoresZona, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
 import Conclusiones from "@/components/portal/Conclusiones";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
@@ -214,6 +216,24 @@ export default async function PortalPage({
   // conclusiones, del período elegido (?rango=7|28|90) contra el anterior.
   const rango = rangoDe(rangoParam);
   const tablero = datosConclusiones ? armarTablero(entradaTablero(activo, datosConclusiones, rango)) : null;
+  // Mapa de la zona (Google Maps Static API): solo con la clave cargada y
+  // con la ubicación del local y de algún competidor (lib/db/ubicaciones.ts).
+  const claveMapa = process.env.GOOGLE_MAPS_STATIC_KEY;
+  const mapaZona =
+    tablero && claveMapa
+      ? await (async () => {
+          const u = await getUbicacionesZona(activo.id);
+          const marcadores = marcadoresZona(u.propio, u.competidores, tablero.competencia);
+          if (marcadores.length === 0) return null;
+          return {
+            url: urlMapaEstatico(
+              marcadores.map((m) => ({ lat: m.lat, lng: m.lng, etiqueta: m.etiqueta ?? undefined, propio: m.propio })),
+              { key: claveMapa, secreto: process.env.GOOGLE_MAPS_STATIC_FIRMA || undefined },
+            ),
+            marcadores: marcadores.map(({ etiqueta, nombre, propio }) => ({ etiqueta, nombre, propio })),
+          };
+        })()
+      : null;
   const hrefsRango = Object.fromEntries(
     RANGOS.map((r) => [r, hrefRango(c.codigoAcceso, modoTodos ? null : (sucursalParam ?? null), r)]),
   ) as Record<Rango, string>;
@@ -524,6 +544,7 @@ export default async function PortalPage({
       conclusiones={conclusiones}
       hrefsRango={hrefsRango}
       totalResenas={activo.resenasGoogle ?? resenasHero}
+      mapaZona={mapaZona}
     />
   );
 
