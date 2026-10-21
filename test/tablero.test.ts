@@ -229,6 +229,12 @@ describe("búsquedas y competencia", () => {
     expect(t.busquedas).toEqual([{ palabra: "restaurants", veces: 2228, menciones: null }]);
   });
 
+  it("un barrio de Córdoba dice dónde buscan, no qué: no se cruza con reseñas", () => {
+    const resenas = Array.from({ length: 5 }, (_, i) => resena(`2026-10-0${i + 1}`, 5, "Muy rico todo"));
+    const t = armarTablero(entrada({ resenas, busquedas: [{ palabra: "chateau carreras", impresiones: 64 }] }));
+    expect(t.busquedas).toEqual([{ palabra: "chateau carreras", veces: 64, menciones: null }]);
+  });
+
   it("el nombre entero del local es marca aunque sus palabras sean genéricas", () => {
     const t = armarTablero(
       entrada({
