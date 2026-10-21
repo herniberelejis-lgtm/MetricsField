@@ -22,3 +22,4 @@ export * from "./db/portal-usuarios";
 export * from "./db/auditoria";
 export * from "./db/resumen";
 export * from "./db/conclusiones";
+export * from "./db/ubicaciones";

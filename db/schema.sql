@@ -237,6 +237,15 @@ CREATE TABLE IF NOT EXISTS competidores (
 );
 CREATE INDEX IF NOT EXISTS idx_competidores_comercio ON competidores(comercio_id);
 
+-- Ubicación para el mapa de la zona (migración 018). Sale de Google Places,
+-- que deja guardarla hasta 30 días: ver lib/db/ubicaciones.ts.
+ALTER TABLE comercios    ADD COLUMN IF NOT EXISTS lat          DOUBLE PRECISION;
+ALTER TABLE comercios    ADD COLUMN IF NOT EXISTS lng          DOUBLE PRECISION;
+ALTER TABLE comercios    ADD COLUMN IF NOT EXISTS ubicacion_en TIMESTAMPTZ;
+ALTER TABLE competidores ADD COLUMN IF NOT EXISTS lat          DOUBLE PRECISION;
+ALTER TABLE competidores ADD COLUMN IF NOT EXISTS lng          DOUBLE PRECISION;
+ALTER TABLE competidores ADD COLUMN IF NOT EXISTS ubicacion_en TIMESTAMPTZ;
+
 -- Foto mensual de cada competidor: su rating y total de reseñas "al corte"
 -- de cada mes. El snapshot del mes en curso se va pisando (upsert) en cada
 -- sincronización; cuando el mes cambia, la fila del mes anterior queda
