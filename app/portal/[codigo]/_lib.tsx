@@ -8,6 +8,7 @@ import {
   IconDevice,
   IconActivity,
   IconSearch,
+  IconBulb,
   type PortalNavEntry,
 } from "@/components/portal/PortalShell";
 
@@ -39,6 +40,14 @@ export function datoVisible(valor: string | null | undefined): string | null {
 // combinado de todos" (ver hrefTodos).
 export function hrefSucursal(codigoAcceso: string, s: { id: string }): string {
   return `/portal/${codigoAcceso}?sucursal=${s.id}#resumen`;
+}
+
+// Mismo local, otro período del tablero del Resumen (?rango=7|28|90).
+export function hrefRango(codigoAcceso: string, sucursal: string | null, rango: number): string {
+  const p = new URLSearchParams();
+  if (sucursal) p.set("sucursal", sucursal);
+  p.set("rango", String(rango));
+  return `/portal/${codigoAcceso}?${p}#resumen`;
 }
 
 // Vuelve a la vista combinada (todos los locales sumados) — es el estado
@@ -97,6 +106,7 @@ export function construirNav({
 }): PortalNavEntry[] {
   return [
     { type: "leaf", id: "resumen", label: "Resumen", icon: <IconGrid size={18} /> },
+    { type: "leaf", id: "conclusiones", label: "Conclusiones", icon: <IconBulb size={18} /> },
     {
       type: "leaf",
       id: "resenas",

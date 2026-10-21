@@ -21,9 +21,12 @@ import {
   sincronizarCompetidoresDeComercio,
   cargarDatosConclusiones,
   entradaConclusiones,
+  entradaTablero,
   type TopPiezaSemana,
 } from "@/lib/db";
 import { armarConclusiones } from "@/lib/conclusiones";
+import { armarTablero, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
+import Conclusiones from "@/components/portal/Conclusiones";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { fetchResenasGooglePublicas } from "@/lib/places";
@@ -45,7 +48,7 @@ import { comparativaMensual, mesSiguiente, primerMesComparable } from "@/lib/com
 import { calcularResumenResenas } from "@/components/ResumenResenas";
 import { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import PortalShell, { type PortalNavEntry } from "@/components/portal/PortalShell";
-import { heroDeCalificacion, MENSAJE_GOOGLE, construirNav, datoVisible } from "./_lib";
+import { heroDeCalificacion, MENSAJE_GOOGLE, construirNav, datoVisible, hrefRango } from "./_lib";
 import PanelResumen from "./_components/PanelResumen";
 import PanelResenas from "./_components/PanelResenas";
 import PanelDispositivos from "./_components/PanelDispositivos";
@@ -63,10 +66,10 @@ export default async function PortalPage({
   searchParams,
 }: {
   params: Promise<{ codigo: string }>;
-  searchParams: Promise<{ google?: string; sucursal?: string }>;
+  searchParams: Promise<{ google?: string; sucursal?: string; rango?: string }>;
 }) {
   const { codigo } = await params;
-  const { google, sucursal: sucursalParam } = await searchParams;
+  const { google, sucursal: sucursalParam, rango: rangoParam } = await searchParams;
 
   // Límite por IP antes de tocar la base: el código de acceso es la única
   // credencial del portal (sin usuario/contraseña), así que frenar la
@@ -207,6 +210,13 @@ export default async function PortalPage({
   const conclusiones = datosConclusiones
     ? armarConclusiones(entradaConclusiones(activo, datosConclusiones))
     : null;
+  // El tablero del Resumen (lib/tablero.ts): mismos datos que las
+  // conclusiones, del período elegido (?rango=7|28|90) contra el anterior.
+  const rango = rangoDe(rangoParam);
+  const tablero = datosConclusiones ? armarTablero(entradaTablero(activo, datosConclusiones, rango)) : null;
+  const hrefsRango = Object.fromEntries(
+    RANGOS.map((r) => [r, hrefRango(c.codigoAcceso, modoTodos ? null : (sucursalParam ?? null), r)]),
+  ) as Record<Rango, string>;
   const primerMesComparativa =
     comparativas.length > 0 ? null : (primerMesComparable(benchmark) ?? mesSiguiente(mesEnCursoUtc));
 
@@ -510,8 +520,36 @@ export default async function PortalPage({
       activoNombre={activo.nombre}
       codigoAcceso={c.codigoAcceso}
       temasRecurrentes={resumenResenasCombinado.temasRecurrentes}
+      tablero={tablero}
       conclusiones={conclusiones}
+      hrefsRango={hrefsRango}
+      totalResenas={activo.resenasGoogle ?? resenasHero}
     />
+  );
+
+  // Todas las conclusiones, con su gráfico y "cómo lo calculamos": el
+  // Resumen muestra las principales en su panel lateral y "Ver más" trae
+  // acá. Son de un local: en el combinado se elige uno.
+  panels.conclusiones = conclusiones ? (
+    <Conclusiones datos={conclusiones} />
+  ) : (
+    <section className="rounded-[24px] bg-[#111111] px-6 py-8 text-white sm:px-10 sm:py-10">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · por local</p>
+      <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
+        Lo que Google no te muestra se calcula local por local. Elegí un local para verlas.
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {ubicaciones.map((u) => (
+          <a
+            key={u.id}
+            href={`/portal/${c.codigoAcceso}?sucursal=${u.id}#conclusiones`}
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-200"
+          >
+            {u.nombre} →
+          </a>
+        ))}
+      </div>
+    </section>
   );
 
   // Gestión de reseñas: el dueño edita/aprueba (o aprueba todas de una) la
