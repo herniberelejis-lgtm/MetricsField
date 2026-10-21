@@ -652,6 +652,10 @@ export const RUBROS = new Set([
   "cafe", "cafeteria", "parrilla", "restaurante", "restaurant", "resto", "bar", "pizzeria", "heladeria",
   "panaderia", "confiteria", "barberia", "peluqueria", "gimnasio", "gym", "taller", "veterinaria",
   "clinica", "consultorio", "odontologico", "estetica", "local", "tienda", "almacen", "kiosco",
+  // Plurales y en inglés: Google informa las búsquedas tal como se escribieron.
+  "cafes", "cafeterias", "parrillas", "restaurantes", "restaurants", "restos", "bares", "pizzerias", "heladerias",
+  "panaderias", "confiterias", "barberias", "peluquerias", "gimnasios", "talleres", "veterinarias", "clinicas",
+  "consultorios", "tiendas", "locales", "coffee", "pizza", "pizzas", "burger", "burgers", "hamburgueseria", "hamburgueserias",
 ]);
 
 export function tokens(s: string): string[] {
