@@ -646,6 +646,11 @@ export const PALABRAS_GENERICAS = new Set([
   "cerca", "mi", "me", "near", "cordoba", "argentina", "capital", "centro", "barrio", "zona",
   "nueva", "general", "paz", "guemes", "alberdi", "cofico", "jardin", "cerro", "rosas",
   "mejor", "mejores", "abierto", "abierta", "ahora", "hoy", "horario", "horarios", "24", "hs", "horas",
+  // Barrios y zonas de Córdoba: dicen DÓNDE buscan, no QUÉ.
+  "chateau", "carreras", "arguello", "valle", "escondido", "villa", "belgrano", "urca", "providencia", "alta",
+  "poeta", "lugones", "espinillo", "tablada", "quebrada", "horizonte", "palmar", "ciudad", "universitaria",
+  "norte", "sur", "este", "oeste", "country", "barrio", "zona", "san", "vicente", "martin", "juan", "pueyrredon",
+  "colinas", "jockey", "kennedy", "maipu", "alberdi", "observatorio", "marques", "sobremonte", "yofre", "residencial",
 ]);
 // Rubros: si el nombre del comercio es "Café Martínez", "café" no es su marca.
 export const RUBROS = new Set([
