@@ -662,6 +662,10 @@ export default function Tablero({
             }
           />
           {datos.piezas.length > 0 ? (
+            <>
+            {datos.piezas[0].resenas === null && (
+              <p className="text-[12.5px] text-slate-600">Las reseñas de cada pieza aparecen cuando se sincronicen tus reseñas de Google.</p>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full min-w-[340px] border-collapse text-[13px]">
                 <thead>
@@ -677,15 +681,16 @@ export default function Tablero({
                     <tr key={p.pieza} className="border-t border-[#EEF0F3]">
                       <td className="px-1.5 py-2.5 font-semibold text-slate-900">{p.pieza}</td>
                       <td className="px-1.5 py-2.5 text-right">{miles(p.toques)}</td>
-                      <td className="px-1.5 py-2.5 text-right">{p.resenas}</td>
+                      <td className="px-1.5 py-2.5 text-right">{p.resenas ?? <span className="text-slate-400">—</span>}</td>
                       <td className="px-1.5 py-2.5 text-right">
-                        <Pastilla tono={p.tono}>{p.rinde}</Pastilla>
+                        {p.resenas === null ? <span className="text-slate-400">—</span> : <Pastilla tono={p.tono}>{p.rinde}</Pastilla>}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            </>
           ) : (
             <p className="text-sm text-slate-600">Sin toques en este período.</p>
           )}

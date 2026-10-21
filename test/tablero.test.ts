@@ -195,6 +195,14 @@ describe("equipo", () => {
   });
 });
 
+describe("piezas del cartel", () => {
+  it("sin reseñas de Google sincronizadas no dice \"sin reseñas\": no se sabe", () => {
+    const taps = Array.from({ length: 12 }, () => toque("2026-10-15T15:00:00Z"));
+    const t = armarTablero(entrada({ taps }));
+    expect(t.piezas[0]).toMatchObject({ pieza: "Caja", toques: 12, resenas: null, rinde: "—" });
+  });
+});
+
 describe("búsquedas y competencia", () => {
   it("saca las búsquedas por tu nombre y cuenta cuántas reseñas nombran cada una", () => {
     const resenas = Array.from({ length: 5 }, (_, i) => resena(`2026-10-0${i + 1}`, 5, i < 2 ? "El mejor brunch" : "Rico café"));

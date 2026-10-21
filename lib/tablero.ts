@@ -209,7 +209,8 @@ export interface FilaBusqueda {
 export interface FilaPieza {
   pieza: string;
   toques: number;
-  resenas: number;
+  /** null sin reseñas de Google sincronizadas: no se puede saber. */
+  resenas: number | null;
   rinde: string;
   tono: "bien" | "mal" | "neutro";
 }
@@ -740,6 +741,9 @@ function piezas(e: EntradaTablero, atribucion: Map<number, TapAnalisis>, hoyFech
     const p = porPieza.get(t.pieza);
     if (p) p.resenas += 1;
   }
+  // Sin reseñas de Google sincronizadas no hay con qué cruzar los toques:
+  // "sin reseñas" sería falso.
+  const sinDatos = !e.resenas.some((r) => r.deGoogle && r.creadoEn);
   const filas = [...porPieza.entries()].map(([pieza, v]) => ({ pieza, ...v, tasa: v.toques ? v.resenas / v.toques : 0 }));
   const conBase = filas.filter((f) => f.toques >= 10);
   const mejor = Math.max(0, ...conBase.map((f) => f.tasa));
@@ -749,9 +753,9 @@ function piezas(e: EntradaTablero, atribucion: Map<number, TapAnalisis>, hoyFech
     .map((f) => ({
       pieza: f.pieza,
       toques: f.toques,
-      resenas: f.resenas,
-      rinde: f.resenas === 0 ? "sin reseñas" : Math.round(f.toques / f.resenas) <= 1 ? "casi todos" : `1 de cada ${Math.round(f.toques / f.resenas)}`,
-      tono: f.toques < 10 || conBase.length < 2 ? "neutro" : f.tasa >= mejor * 0.75 && f.resenas > 0 ? "bien" : f.tasa <= mejor * 0.4 ? "mal" : "neutro",
+      resenas: sinDatos ? null : f.resenas,
+      rinde: sinDatos ? "—" : f.resenas === 0 ? "sin reseñas" : Math.round(f.toques / f.resenas) <= 1 ? "casi todos" : `1 de cada ${Math.round(f.toques / f.resenas)}`,
+      tono: sinDatos || f.toques < 10 || conBase.length < 2 ? "neutro" : f.tasa >= mejor * 0.75 && f.resenas > 0 ? "bien" : f.tasa <= mejor * 0.4 ? "mal" : "neutro",
     }));
 }
 
