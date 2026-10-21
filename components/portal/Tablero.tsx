@@ -9,6 +9,42 @@ import GraficoMetricas from "./GraficoMetricas";
 // competencia, las búsquedas y las piezas. Cada bloque aparece solo si hay
 // datos para llenarlo (lib/tablero.ts); si no, dice qué falta.
 
+/** Mapa de la zona: imagen de Google Maps Static API (lib/mapa.ts). */
+export interface MapaZona {
+  url: string;
+  marcadores: { etiqueta: string | null; nombre: string; propio: boolean }[];
+}
+
+function Mapa({ mapa }: { mapa: MapaZona }) {
+  return (
+    <figure className="m-0 flex flex-col gap-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={mapa.url}
+        alt={`Mapa de tu zona: vos y ${mapa.marcadores.length - 1} competidor${mapa.marcadores.length === 2 ? "" : "es"}`}
+        width={640}
+        height={320}
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+        className="block aspect-[2/1] h-auto w-full rounded-xl bg-[#EEF1F4] object-cover"
+      />
+      <figcaption className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-slate-700">
+        {mapa.marcadores.map((m) => (
+          <span key={`${m.etiqueta}-${m.nombre}`} className="flex items-center gap-1.5">
+            <span
+              className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${m.propio ? "bg-[#111111]" : "bg-[#2F5F94]"}`}
+              aria-hidden="true"
+            >
+              {m.propio ? "•" : (m.etiqueta ?? "·")}
+            </span>
+            {m.nombre}
+          </span>
+        ))}
+      </figcaption>
+    </figure>
+  );
+}
+
 const TARJETA = "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white";
 
 const COLOR: Record<ColorSegmento, string> = {
@@ -211,11 +247,13 @@ export default function Tablero({
   conclusiones,
   hrefRango,
   totalResenas,
+  mapa = null,
 }: {
   datos: DatosTablero;
   conclusiones: Conclusiones | null;
   hrefRango: Record<Rango, string>;
   totalResenas: number | null;
+  mapa?: MapaZona | null;
 }) {
   const calificacion = datos.kpis.find((k) => k.id === "calificacion");
   const { loQueDicen, calor, equipo, competencia } = datos;
@@ -563,13 +601,14 @@ export default function Tablero({
         <section className={`${TARJETA} flex flex-col gap-3.5 p-5`}>
           <Encabezado
             titulo="Tu competencia"
-            sub={competencia ? `Reseñas nuevas de ${competencia.enCurso ? "este mes (en curso)" : "el último mes cerrado"} en tu zona, y quién se lleva cada parte` : undefined}
+            sub={competencia ? `Reseñas nuevas ${competencia.enCurso ? "de este mes (en curso)" : "del último mes cerrado"} en tu zona, y quién se lleva cada parte` : undefined}
             extra={
               <a href="#competidores" className="text-xs font-semibold text-[#1F4E80] hover:underline">
                 {competencia ? "Ver competidores →" : "Sumar competidores →"}
               </a>
             }
           />
+          {mapa && <Mapa mapa={mapa} />}
           {competencia ? (
             <>
               <div className="overflow-x-auto">

@@ -1,6 +1,7 @@
 import "server-only";
 import { sql } from "../sql";
 import { fetchGooglePlaceStats } from "../places";
+import { guardarUbicacion } from "./ubicaciones";
 import { palabrasDeBusqueda, rendimientoDiario, type RendimientoDia } from "../gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "../google-reviews";
 import { generarRespuestaSugerida } from "../respuestas";
@@ -62,6 +63,7 @@ export async function sincronizarGoogle(id: string): Promise<boolean> {
       google_sync_en = now()
     WHERE id = ${id}
   `;
+  await guardarUbicacion("comercio", id, stats.ubicacion);
 
   const mesActual = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
   const anteriores = await sql`
