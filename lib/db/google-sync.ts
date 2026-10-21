@@ -494,14 +494,20 @@ export interface DiaRendimiento {
   fecha: string;
   comoLlegar: number;
   llamadas: number;
+  /** Maps + Búsqueda. */
   visitas: number;
+  visitasMaps: number;
+  visitasBusqueda: number;
+  clicsWeb: number;
+  conversaciones: number;
+  reservas: number;
 }
 
-/** Métricas diarias de los últimos `dias` días (para lib/conclusiones.ts). */
+/** Métricas diarias de los últimos `dias` días (lib/conclusiones.ts y el tablero del portal). */
 export async function getMetricasDiarias(comercioId: string, dias = 90): Promise<DiaRendimiento[]> {
   const rows = await sql`
     SELECT to_char(fecha, 'YYYY-MM-DD') AS fecha, como_llegar, llamadas,
-      impresiones_maps + impresiones_busqueda AS visitas
+      impresiones_maps, impresiones_busqueda, clics_web, conversaciones, reservas
     FROM metricas_diarias
     WHERE comercio_id = ${comercioId} AND fecha >= (now() AT TIME ZONE ${ZONA_HORARIA})::date - ${dias}::int
     ORDER BY fecha
@@ -514,7 +520,12 @@ export async function getMetricasDiarias(comercioId: string, dias = 90): Promise
     fecha: r.fecha as string,
     comoLlegar: Number(r.como_llegar),
     llamadas: Number(r.llamadas),
-    visitas: Number(r.visitas),
+    visitas: Number(r.impresiones_maps) + Number(r.impresiones_busqueda),
+    visitasMaps: Number(r.impresiones_maps),
+    visitasBusqueda: Number(r.impresiones_busqueda),
+    clicsWeb: Number(r.clics_web),
+    conversaciones: Number(r.conversaciones),
+    reservas: Number(r.reservas),
   }));
 }
 

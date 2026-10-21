@@ -641,20 +641,20 @@ export interface BusquedaAnalisis {
 }
 
 // Palabras que no dicen QUÉ busca la gente: lugares, conectores, "cerca".
-const PALABRAS_GENERICAS = new Set([
+export const PALABRAS_GENERICAS = new Set([
   "de", "del", "la", "el", "los", "las", "en", "y", "a", "con", "para", "por", "un", "una",
   "cerca", "mi", "me", "near", "cordoba", "argentina", "capital", "centro", "barrio", "zona",
   "nueva", "general", "paz", "guemes", "alberdi", "cofico", "jardin", "cerro", "rosas",
   "mejor", "mejores", "abierto", "abierta", "ahora", "hoy", "horario", "horarios", "24", "hs", "horas",
 ]);
 // Rubros: si el nombre del comercio es "Café Martínez", "café" no es su marca.
-const RUBROS = new Set([
+export const RUBROS = new Set([
   "cafe", "cafeteria", "parrilla", "restaurante", "restaurant", "resto", "bar", "pizzeria", "heladeria",
   "panaderia", "confiteria", "barberia", "peluqueria", "gimnasio", "gym", "taller", "veterinaria",
   "clinica", "consultorio", "odontologico", "estetica", "local", "tienda", "almacen", "kiosco",
 ]);
 
-function tokens(s: string): string[] {
+export function tokens(s: string): string[] {
   return normalizarTexto(s).match(/[a-z0-9]+/g) ?? [];
 }
 

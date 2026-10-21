@@ -72,6 +72,14 @@ export function IconActivity(p: { size?: number; className?: string }) {
     </IconBase>
   );
 }
+export function IconBulb(p: { size?: number; className?: string }) {
+  return (
+    <IconBase {...p}>
+      <path d="M9 18h6M10 21h4" />
+      <path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z" />
+    </IconBase>
+  );
+}
 export function IconSearch(p: { size?: number; className?: string }) {
   return (
     <IconBase {...p}>
