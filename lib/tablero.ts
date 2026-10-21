@@ -848,3 +848,94 @@ export function marcadoresZona(
     ...ordenados.map((c, i) => ({ etiqueta: i < 9 ? String(i + 1) : null, nombre: c.nombre, propio: false, lat: c.lat, lng: c.lng })),
   ];
 }
+
+// ---------- varios locales ----------
+
+/** Junta los datos de varios locales en una sola entrada, para el tablero
+ * del combinado ("Todos"): suma las métricas de Google día por día, junta
+ * toques y reseñas, y suma el histórico y las búsquedas. La competencia es
+ * de cada barrio: en el combinado no va. Las piezas llevan el nombre del
+ * local adelante para no confundir dos "Caja". */
+export function combinarEntradas(locales: { nombre: string; entrada: EntradaTablero }[]): EntradaTablero {
+  if (locales.length === 0) throw new Error("combinarEntradas: sin locales");
+  const base = locales[0].entrada;
+  const varios = locales.length > 1;
+
+  const porFecha = new Map<string, DiaTablero>();
+  for (const { entrada } of locales) {
+    for (const d of entrada.diarias) {
+      const a = porFecha.get(d.fecha);
+      porFecha.set(
+        d.fecha,
+        a
+          ? {
+              fecha: d.fecha,
+              visitas: a.visitas + d.visitas,
+              visitasMaps: a.visitasMaps + d.visitasMaps,
+              visitasBusqueda: a.visitasBusqueda + d.visitasBusqueda,
+              comoLlegar: a.comoLlegar + d.comoLlegar,
+              llamadas: a.llamadas + d.llamadas,
+              clicsWeb: a.clicsWeb + d.clicsWeb,
+              conversaciones: a.conversaciones + d.conversaciones,
+              reservas: a.reservas + d.reservas,
+            }
+          : { ...d },
+      );
+    }
+  }
+
+  const porMes = new Map<string, MesTablero & { conRating: number; sumaRating: number }>();
+  for (const { entrada } of locales) {
+    for (const h of entrada.historico) {
+      const a = porMes.get(h.mes) ?? { mes: h.mes, resenasNuevas: 0, ratingPromedio: 0, conRating: 0, sumaRating: 0 };
+      a.resenasNuevas += h.resenasNuevas;
+      if (h.nuevasSinDato) a.nuevasSinDato = true;
+      if (h.ratingPromedio > 0) {
+        a.conRating += 1;
+        a.sumaRating += h.ratingPromedio;
+      }
+      porMes.set(h.mes, a);
+    }
+  }
+
+  const busquedas = new Map<string, number | null>();
+  for (const { entrada } of locales) {
+    for (const b of entrada.busquedas) {
+      const previo = busquedas.get(b.palabra);
+      busquedas.set(b.palabra, b.impresiones === null ? (previo ?? null) : (previo ?? 0) + b.impresiones);
+    }
+  }
+
+  // Calificación de todos: promedio de cada local pesado por su cantidad de reseñas.
+  const conRating = locales.filter((l) => l.entrada.rating !== null);
+  const totalResenas = locales.reduce((a, l) => a + (l.entrada.totalResenas ?? 0), 0);
+  const pesoTotal = conRating.reduce((a, l) => a + (l.entrada.totalResenas ?? 0), 0);
+  const rating =
+    conRating.length === 0
+      ? null
+      : pesoTotal > 0
+        ? conRating.reduce((a, l) => a + l.entrada.rating! * (l.entrada.totalResenas ?? 0), 0) / pesoTotal
+        : conRating.reduce((a, l) => a + l.entrada.rating!, 0) / conRating.length;
+
+  const primeros = locales.map((l) => l.entrada.primerToque).filter((x): x is string => x !== null).sort();
+
+  return {
+    hoy: base.hoy,
+    dias: base.dias,
+    diarias: [...porFecha.values()].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    taps: locales.flatMap(({ nombre, entrada }) =>
+      varios ? entrada.taps.map((t) => ({ ...t, pieza: `${nombre} · ${t.pieza}` })) : entrada.taps,
+    ),
+    resenas: locales.flatMap((l) => l.entrada.resenas),
+    historico: [...porMes.values()]
+      .sort((a, b) => a.mes.localeCompare(b.mes))
+      .map(({ conRating: n, sumaRating, ...h }) => ({ ...h, ratingPromedio: n ? sumaRating / n : 0 })),
+    primerToque: primeros[0] ?? null,
+    rating,
+    totalResenas: locales.some((l) => l.entrada.totalResenas !== null) ? totalResenas : null,
+    busquedas: [...busquedas.entries()].map(([palabra, impresiones]) => ({ palabra, impresiones })),
+    nombreComercio: locales.map((l) => l.nombre).join(" "),
+    empleados: locales.flatMap((l) => l.entrada.empleados),
+    comparativas: [],
+  };
+}

@@ -58,7 +58,7 @@ export function urlMapaEstatico(
     p.set("zoom", "15");
   }
   for (const pt of puntos) {
-    const partes = [`color:${pt.propio ? "0x111111" : "0x2F5F94"}`];
+    const partes = [`color:${pt.propio ? "0x9B86DB" : "0x6F9BCF"}`];
     if (pt.etiqueta && /^[A-Z0-9]$/.test(pt.etiqueta)) partes.push(`label:${pt.etiqueta}`);
     partes.push(`${coord(pt.lat)},${coord(pt.lng)}`);
     p.append("markers", partes.join("|"));

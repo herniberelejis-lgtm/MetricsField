@@ -9,7 +9,7 @@ describe("mapa de la zona (Maps Static API)", () => {
     );
   });
 
-  it("marca al comercio en negro y a cada competidor con su número", () => {
+  it("marca al comercio en lavanda y a cada competidor con su número", () => {
     const url = new URL(
       urlMapaEstatico(
         [
@@ -22,9 +22,9 @@ describe("mapa de la zona (Maps Static API)", () => {
     );
     expect(url.origin + url.pathname).toBe("https://maps.googleapis.com/maps/api/staticmap");
     expect(url.searchParams.getAll("markers")).toEqual([
-      "color:0x111111|-31.420000,-64.180000",
-      "color:0x2F5F94|label:1|-31.421235,-64.190000",
-      "color:0x2F5F94|-31.430000,-64.200000",
+      "color:0x9B86DB|-31.420000,-64.180000",
+      "color:0x6F9BCF|label:1|-31.421235,-64.190000",
+      "color:0x6F9BCF|-31.430000,-64.200000",
     ]);
     expect(url.searchParams.get("key")).toBe("CLAVE");
     expect(url.searchParams.get("center")).toBeNull();

@@ -21,7 +21,7 @@ import SelectorSucursales from "./SelectorSucursales";
 import Tablero from "@/components/portal/Tablero";
 import type { Conclusiones as DatosConclusiones } from "@/lib/conclusiones";
 import type { Rango, Tablero as DatosTablero } from "@/lib/tablero";
-import type { MapaZona } from "@/components/portal/Tablero";
+import type { MapaZona, ResumenLocal } from "@/components/portal/Tablero";
 
 // Panel "Resumen": de un vistazo, para abrir el portal y entender el estado
 // del negocio sin tener que entrar a ninguna otra sección todavía.
@@ -62,6 +62,7 @@ export default function PanelResumen({
   hrefsRango,
   totalResenas,
   mapaZona,
+  locales,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
@@ -101,14 +102,16 @@ export default function PanelResumen({
   activoNombre: string;
   codigoAcceso: string;
   temasRecurrentes: TerminoFrecuente[];
-  /** Tablero del local (lib/tablero.ts); null en el combinado de varios
-   * locales, que sigue con el resumen sumado de siempre. */
+  /** Tablero (lib/tablero.ts): del local, o de todos juntos en "Todos"
+   * (con `locales`). null solo si no se pudieron cargar los datos. */
   tablero: DatosTablero | null;
   /** null en el combinado de varios locales: las conclusiones son de uno. */
   conclusiones: DatosConclusiones | null;
   hrefsRango: Record<Rango, string>;
   totalResenas: number | null;
   mapaZona: MapaZona | null;
+  /** "Todos": adelanto de cada local para el tablero combinado. */
+  locales: ResumenLocal[] | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
@@ -174,6 +177,7 @@ export default function PanelResumen({
           hrefRango={hrefsRango}
           totalResenas={totalResenas}
           mapa={mapaZona}
+          locales={locales}
         />
       )}
 
