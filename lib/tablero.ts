@@ -939,3 +939,17 @@ export function combinarEntradas(locales: { nombre: string; entrada: EntradaTabl
     comparativas: [],
   };
 }
+
+/** Nombre para mostrar de un competidor: algunos llegan de Google con la
+ * dirección pegada ("X [Valle Escondido], Avenida …, Córdoba, Argentina") o
+ * con letras "decorativas" (𝘍𝑟𝑖𝑐ℎ). Se pasa a letras comunes y se corta la
+ * dirección; si no queda nada, se devuelve tal cual. */
+export function nombreCorto(nombre: string): string {
+  let n = nombre.normalize("NFKC").replace(/\s*\[[^\]]*\]/g, "");
+  const partes = n.split(/,\s*/);
+  if (partes.length > 1 && /c[oó]rdoba|argentina|avenida|\bav\.|\bcalle\b|\bpaseo\b|\bbv\.|boulevard/i.test(partes.slice(1).join(", "))) {
+    n = partes[0];
+  }
+  n = n.replace(/\s+/g, " ").trim();
+  return n || nombre;
+}

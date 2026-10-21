@@ -63,6 +63,7 @@ export default function PanelResumen({
   totalResenas,
   mapaZona,
   locales,
+  competidoresHoy,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
@@ -112,6 +113,7 @@ export default function PanelResumen({
   mapaZona: MapaZona | null;
   /** "Todos": adelanto de cada local para el tablero combinado. */
   locales: ResumenLocal[] | null;
+  competidoresHoy: { nombre: string; rating: number | null; total: number | null; esPropio: boolean }[] | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
@@ -178,6 +180,7 @@ export default function PanelResumen({
           totalResenas={totalResenas}
           mapa={mapaZona}
           locales={locales}
+          competidoresHoy={competidoresHoy}
         />
       )}
 

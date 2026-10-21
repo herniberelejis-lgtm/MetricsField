@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ComparativaMes } from "@/lib/comparativa-competencia";
 import type { TapAnalisis } from "@/lib/conclusiones";
-import { armarTablero, combinarEntradas, marcadoresZona, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
+import { armarTablero, combinarEntradas, marcadoresZona, nombreCorto, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
 
 // Mediodía en Córdoba del martes 20/10/2026.
 const HOY = new Date("2026-10-20T15:00:00Z");
@@ -223,6 +223,12 @@ describe("búsquedas y competencia", () => {
     ]);
   });
 
+  it("el rubro en plural o en inglés no es algo que \"te buscan\" para cruzar con reseñas", () => {
+    const resenas = Array.from({ length: 5 }, (_, i) => resena(`2026-10-0${i + 1}`, 5, "Muy rico todo"));
+    const t = armarTablero(entrada({ resenas, busquedas: [{ palabra: "restaurants", impresiones: 2228 }] }));
+    expect(t.busquedas).toEqual([{ palabra: "restaurants", veces: 2228, menciones: null }]);
+  });
+
   it("el nombre entero del local es marca aunque sus palabras sean genéricas", () => {
     const t = armarTablero(
       entrada({
@@ -317,5 +323,16 @@ describe("varios locales", () => {
     expect(c.busquedas).toEqual([{ palabra: "asado", impresiones: 150 }, { palabra: "vacio", impresiones: null }]);
     expect(c.comparativas).toEqual([]);
     expect(armarTablero(c).kpis.find((k) => k.id === "toques")!.valor).toBe("2");
+  });
+});
+
+describe("nombreCorto", () => {
+  it("saca la dirección pegada y las letras decorativas de Google", () => {
+    expect(nombreCorto("𝘍𝑟𝑖𝑐ℎ 'N FRIES [Valle Escondido], Avenida República de China, Córdoba, Argentina")).toBe("Frich 'N FRIES");
+    expect(nombreCorto("Teppanyaki Sushi Delivery Valle Escondido, Paseo Acaece, Avenida República de China, Córdoba, Argentina")).toBe(
+      "Teppanyaki Sushi Delivery Valle Escondido",
+    );
+    expect(nombreCorto("Restaurante Rancho Viejo - zona norte")).toBe("Restaurante Rancho Viejo - zona norte");
+    expect(nombreCorto("Pan, Vino y Queso")).toBe("Pan, Vino y Queso");
   });
 });
