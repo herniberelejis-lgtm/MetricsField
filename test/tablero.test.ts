@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ComparativaMes } from "@/lib/comparativa-competencia";
 import type { TapAnalisis } from "@/lib/conclusiones";
-import { armarTablero, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
+import { armarTablero, marcadoresZona, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
 
 // Mediodía en Córdoba del martes 20/10/2026.
 const HOY = new Date("2026-10-20T15:00:00Z");
@@ -254,5 +254,32 @@ describe("búsquedas y competencia", () => {
     const c = armarTablero(entrada({ comparativas })).competencia!;
     expect(c.filas.map((f) => f.parte)).toEqual([75, 25]);
     expect(c.lectura).toBe("Sos el que más reseñas nuevas suma en tu zona: el 75% del mes. Panadería Norte tiene mejor calificación (4,7).");
+  });
+});
+
+describe("mapa de la zona", () => {
+  it("numera a los competidores en el orden de la tabla; sin tu ubicación no hay mapa", () => {
+    const competencia = {
+      mes: "2026-09",
+      enCurso: false,
+      lectura: null,
+      filas: [
+        { id: 2, nombre: "B", esPropio: false, rating: 4.5, nuevas: 20, parte: 50 },
+        { id: "propio" as const, nombre: "Vos", esPropio: true, rating: 4.6, nuevas: 12, parte: 30 },
+        { id: 1, nombre: "A", esPropio: false, rating: 4.1, nuevas: 8, parte: 20 },
+      ],
+    };
+    const comps = [
+      { id: 1, nombre: "A", lat: 1, lng: 1 },
+      { id: 3, nombre: "C", lat: 3, lng: 3 },
+      { id: 2, nombre: "B", lat: 2, lng: 2 },
+    ];
+    expect(marcadoresZona({ lat: 0, lng: 0 }, comps, competencia).map((m) => [m.etiqueta, m.nombre])).toEqual([
+      [null, "Vos"],
+      ["1", "B"],
+      ["2", "A"],
+      ["3", "C"],
+    ]);
+    expect(marcadoresZona(null, comps, competencia)).toEqual([]);
   });
 });

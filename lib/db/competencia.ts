@@ -1,6 +1,7 @@
 import "server-only";
 import { sql } from "../sql";
 import { fetchGooglePlaceStats } from "../places";
+import { guardarUbicacion } from "./ubicaciones";
 import type { BenchmarkMes, Competidor } from "../types";
 import { getAjuste, setAjuste } from "./ajustes";
 import {
@@ -109,6 +110,7 @@ export async function sincronizarCompetidor(id: number): Promise<boolean> {
       actualizado_en = now()
     WHERE id = ${id}
   `;
+  await guardarUbicacion("competidor", id, stats.ubicacion);
   return true;
 }
 

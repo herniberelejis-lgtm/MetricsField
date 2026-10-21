@@ -9,6 +9,7 @@ import {
   snapshotCompetenciaMensual,
   enviarResumenesMensuales,
   avisarGoogleDesconectado,
+  borrarUbicacionesVencidas,
 } from "@/lib/db";
 
 // Job diario (ver vercel.json) que actualiza rating/reseñas de todos los
@@ -60,6 +61,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // Congela la foto de competencia del mes en curso con los ratings recién
   // sincronizados — así el benchmarking histórico se arma solo.
   const competencia = await snapshotCompetenciaMensual();
+  // Coordenadas de Places: Google deja guardarlas hasta 30 días. Las que el
+  // sync de arriba no renovó se borran (lib/db/ubicaciones.ts).
+  const ubicacionesBorradas = await borrarUbicacionesVencidas();
 
   // Resumen mensual: solo el día 1, para no mandarlo todos los días. Si el
   // cron falla justo ese día no hay reintento hasta el próximo mes — es un
@@ -81,6 +85,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     resenasDetalle,
     competidores,
     competencia,
+    ubicacionesBorradas,
     resumenes,
     desconectados,
   });

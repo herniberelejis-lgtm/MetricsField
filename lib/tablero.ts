@@ -218,7 +218,7 @@ export interface FilaPieza {
 export interface Competencia {
   mes: string;
   enCurso: boolean;
-  filas: { nombre: string; esPropio: boolean; rating: number | null; nuevas: number; parte: number }[];
+  filas: { id: "propio" | number; nombre: string; esPropio: boolean; rating: number | null; nuevas: number; parte: number }[];
   lectura: string | null;
 }
 
@@ -765,7 +765,7 @@ function competencia(e: EntradaTablero): Competencia | null {
   const conDatos = e.comparativas.filter((c) => c.filas.filter((f) => f.nuevas !== null).length >= 2);
   const ultima = conDatos[conDatos.length - 1];
   if (!ultima) return null;
-  const filas = ultima.filas.filter((f) => f.nuevas !== null).map((f) => ({ nombre: f.nombre, esPropio: f.esPropio, rating: f.rating, nuevas: f.nuevas! }));
+  const filas = ultima.filas.filter((f) => f.nuevas !== null).map((f) => ({ id: f.id, nombre: f.nombre, esPropio: f.esPropio, rating: f.rating, nuevas: f.nuevas! }));
   const total = suma(filas.map((f) => f.nuevas));
   if (total <= 0) return null;
   const pcts = porcentajes(filas.map((f) => f.nuevas));
@@ -818,4 +818,33 @@ export function armarTablero(e: EntradaTablero): Tablero {
     piezas: piezas(e, atribucion, hoyFecha),
     competencia: competencia(e),
   };
+}
+
+// ---------- mapa de la zona ----------
+
+export interface MarcadorZona {
+  etiqueta: string | null; // "1".."9"; null para el propio
+  nombre: string;
+  propio: boolean;
+  lat: number;
+  lng: number;
+}
+
+/** Marcadores del mapa: el comercio y cada competidor con ubicación, en el
+ * orden de la tabla de competencia (los que no están en la tabla, después).
+ * Google acepta una sola letra o número por marcador: hasta 9 numerados. */
+export function marcadoresZona(
+  propio: { lat: number; lng: number } | null,
+  competidores: { id: number; nombre: string; lat: number; lng: number }[],
+  competencia: Competencia | null,
+): MarcadorZona[] {
+  if (!propio || competidores.length === 0) return [];
+  const orden = new Map((competencia?.filas ?? []).filter((f) => !f.esPropio).map((f, i) => [f.id, i]));
+  const ordenados = [...competidores].sort(
+    (a, b) => (orden.get(a.id) ?? 99) - (orden.get(b.id) ?? 99) || a.nombre.localeCompare(b.nombre),
+  );
+  return [
+    { etiqueta: null, nombre: "Vos", propio: true, lat: propio.lat, lng: propio.lng },
+    ...ordenados.map((c, i) => ({ etiqueta: i < 9 ? String(i + 1) : null, nombre: c.nombre, propio: false, lat: c.lat, lng: c.lng })),
+  ];
 }

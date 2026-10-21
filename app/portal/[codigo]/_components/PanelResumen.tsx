@@ -21,6 +21,7 @@ import SelectorSucursales from "./SelectorSucursales";
 import Tablero from "@/components/portal/Tablero";
 import type { Conclusiones as DatosConclusiones } from "@/lib/conclusiones";
 import type { Rango, Tablero as DatosTablero } from "@/lib/tablero";
+import type { MapaZona } from "@/components/portal/Tablero";
 
 // Panel "Resumen": de un vistazo, para abrir el portal y entender el estado
 // del negocio sin tener que entrar a ninguna otra sección todavía.
@@ -60,6 +61,7 @@ export default function PanelResumen({
   conclusiones,
   hrefsRango,
   totalResenas,
+  mapaZona,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
@@ -106,6 +108,7 @@ export default function PanelResumen({
   conclusiones: DatosConclusiones | null;
   hrefsRango: Record<Rango, string>;
   totalResenas: number | null;
+  mapaZona: MapaZona | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
@@ -165,7 +168,13 @@ export default function PanelResumen({
       {/* Un local: el tablero (métricas, conclusiones, tortas, horarios,
           equipo, competencia). El combinado sigue con lo de abajo. */}
       {tablero && (
-        <Tablero datos={tablero} conclusiones={conclusiones} hrefRango={hrefsRango} totalResenas={totalResenas} />
+        <Tablero
+          datos={tablero}
+          conclusiones={conclusiones}
+          hrefRango={hrefsRango}
+          totalResenas={totalResenas}
+          mapa={mapaZona}
+        />
       )}
 
       {/* En el combinado no hay conclusiones (cruzan el cartel y las reseñas
