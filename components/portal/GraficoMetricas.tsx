@@ -95,7 +95,7 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
             <>
               <span className="flex items-center gap-2">
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${activa ? "bg-[#2F5F94] text-white" : "bg-[#E8EFF6] text-[#2F5F94]"}`}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${activa ? "bg-[#A9C5E6] text-[#123A63]" : "bg-[#EEF4FB] text-[#4F7AA8]"}`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d={ICONOS[m.id]} />
@@ -108,7 +108,7 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
             </>
           );
           const clases = `flex min-h-[112px] flex-col items-start gap-1.5 border-b-[3px] px-4 pb-3 pt-4 text-left ${
-            activa ? "border-[#2F5F94] bg-[#F4F7FB]" : "border-transparent bg-white"
+            activa ? "border-[#8AAFD6] bg-[#F4F8FC]" : "border-transparent bg-white"
           }`;
           return m.serie ? (
             <button
@@ -141,12 +141,12 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
             </div>
             <div className="flex gap-4 text-xs text-slate-700">
               <span className="flex items-center gap-1.5">
-                <span className="h-[3px] w-[18px] rounded bg-[#2F5F94]" />
+                <span className="h-[3px] w-[18px] rounded bg-[#6F9BCF]" />
                 Últimos {dias} días
               </span>
               {serie.anterior && (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-[18px] border-t-2 border-dashed border-[#8A8F99]" />
+                  <span className="w-[18px] border-t-2 border-dashed border-[#B8BEC8]" />
                   {dias} días anteriores
                 </span>
               )}
@@ -180,12 +180,12 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
                     <line key={y} x1="0" y1={y + 0.5} x2={W} y2={y + 0.5} stroke="#EEF0F3" vectorEffect="non-scaling-stroke" />
                   ))}
                   <line x1="0" y1={H - 0.5} x2={W} y2={H - 0.5} stroke="#D6D9DE" vectorEffect="non-scaling-stroke" />
-                  <path d={camino(serie.actual, tope, true)} fill="#2F5F94" fillOpacity="0.08" />
+                  <path d={camino(serie.actual, tope, true)} fill="#6F9BCF" fillOpacity="0.08" />
                   {serie.anterior && (
                     <path
                       d={camino(serie.anterior, tope, false)}
                       fill="none"
-                      stroke="#8A8F99"
+                      stroke="#B8BEC8"
                       strokeWidth="2"
                       strokeDasharray="5 5"
                       vectorEffect="non-scaling-stroke"
@@ -194,7 +194,7 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
                   <path
                     d={camino(serie.actual, tope, false)}
                     fill="none"
-                    stroke="#2F5F94"
+                    stroke="#6F9BCF"
                     strokeWidth="2.5"
                     strokeLinejoin="round"
                     vectorEffect="non-scaling-stroke"
@@ -205,7 +205,7 @@ export default function GraficoMetricas({ kpis, dias }: { kpis: Kpi[]; dias: num
                       y1="0"
                       x2={(xPct(punto) / 100) * W}
                       y2={H}
-                      stroke="#2F5F94"
+                      stroke="#6F9BCF"
                       strokeOpacity="0.35"
                       vectorEffect="non-scaling-stroke"
                     />

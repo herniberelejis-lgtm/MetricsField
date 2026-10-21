@@ -27,7 +27,8 @@ import {
 } from "@/lib/db";
 import { urlMapaEstatico } from "@/lib/mapa";
 import { armarConclusiones } from "@/lib/conclusiones";
-import { armarTablero, marcadoresZona, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
+import { armarTablero, combinarEntradas, marcadoresZona, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
+import type { ResumenLocal } from "@/components/portal/Tablero";
 import Conclusiones from "@/components/portal/Conclusiones";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { businessProfileHabilitado } from "@/lib/gbp";
@@ -215,15 +216,58 @@ export default async function PortalPage({
   // El tablero del Resumen (lib/tablero.ts): mismos datos que las
   // conclusiones, del período elegido (?rango=7|28|90) contra el anterior.
   const rango = rangoDe(rangoParam);
-  const tablero = datosConclusiones ? armarTablero(entradaTablero(activo, datosConclusiones, rango)) : null;
+  const tableroLocal = datosConclusiones ? armarTablero(entradaTablero(activo, datosConclusiones, rango)) : null;
+
+  // "Todos" (más de un local): el tablero de todos juntos y, arriba, un
+  // adelanto de cada local con sus números clave y su conclusión principal.
+  const porLocal = modoTodos
+    ? await Promise.all(
+        ubicaciones.map(async (u) => {
+          const datos = await cargarDatosConclusiones(u);
+          const entrada = entradaTablero(u, datos, rango);
+          return { u, entrada, tablero: armarTablero(entrada), conclusiones: armarConclusiones(entradaConclusiones(u, datos)) };
+        }),
+      )
+    : null;
+  const tablero = porLocal
+    ? armarTablero(combinarEntradas(porLocal.map((l) => ({ nombre: l.u.nombre, entrada: l.entrada }))))
+    : tableroLocal;
+  const resumenLocales: ResumenLocal[] | null = porLocal
+    ? (() => {
+        const toquesDe = (t: (typeof porLocal)[number]["tablero"]) =>
+          t.kpis.find((k) => k.id === "toques")?.serie?.actual.reduce((a, n) => a + n, 0) ?? 0;
+        const totalToques = porLocal.reduce((a, l) => a + toquesDe(l.tablero), 0);
+        const metricas: [string, string][] = [
+          ["vistas", "Te vieron en Google"],
+          ["llegar", "Cómo llegar"],
+          ["toques", "Toques al cartel"],
+          ["resenas", "Reseñas nuevas"],
+        ];
+        return porLocal.map(({ u, tablero: t, conclusiones: cs }) => {
+          const kpi = (id: string) => t.kpis.find((k) => k.id === id);
+          const principal = cs.cuesta[0] ? { titulo: cs.cuesta[0].titulo, bien: false } : cs.funciona[0] ? { titulo: cs.funciona[0].titulo, bien: true } : null;
+          return {
+            id: u.id,
+            nombre: u.nombre,
+            href: hrefRango(c.codigoAcceso, u.id, rango),
+            calificacion: kpi("calificacion")?.valor ?? null,
+            totalResenas: u.resenasGoogle ?? null,
+            metricas: metricas.map(([id, label]) => ({ label, valor: kpi(id)?.valor ?? null, delta: kpi(id)?.delta ?? null })),
+            parteToques: totalToques > 0 ? toquesDe(t) / totalToques : null,
+            conclusion: principal,
+            enCamino: cs.pendientes.filter((p) => p.tipo === "en_camino").length,
+          };
+        });
+      })()
+    : null;
   // Mapa de la zona (Google Maps Static API): solo con la clave cargada y
   // con la ubicación del local y de algún competidor (lib/db/ubicaciones.ts).
   const claveMapa = process.env.GOOGLE_MAPS_STATIC_KEY;
   const mapaZona =
-    tablero && claveMapa
+    tableroLocal && claveMapa
       ? await (async () => {
           const u = await getUbicacionesZona(activo.id);
-          const marcadores = marcadoresZona(u.propio, u.competidores, tablero.competencia);
+          const marcadores = marcadoresZona(u.propio, u.competidores, tableroLocal.competencia);
           if (marcadores.length === 0) return null;
           return {
             url: urlMapaEstatico(
@@ -543,8 +587,11 @@ export default async function PortalPage({
       tablero={tablero}
       conclusiones={conclusiones}
       hrefsRango={hrefsRango}
-      totalResenas={activo.resenasGoogle ?? resenasHero}
+      totalResenas={
+        modoTodos ? ubicaciones.reduce((a, u) => a + (u.resenasGoogle ?? 0), 0) : (activo.resenasGoogle ?? resenasHero)
+      }
       mapaZona={mapaZona}
+      locales={resumenLocales}
     />
   );
 

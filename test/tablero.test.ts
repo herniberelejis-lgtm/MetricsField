@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ComparativaMes } from "@/lib/comparativa-competencia";
 import type { TapAnalisis } from "@/lib/conclusiones";
-import { armarTablero, marcadoresZona, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
+import { armarTablero, combinarEntradas, marcadoresZona, rangoDe, type DiaTablero, type EntradaTablero, type ResenaTablero } from "@/lib/tablero";
 
 // Mediodía en Córdoba del martes 20/10/2026.
 const HOY = new Date("2026-10-20T15:00:00Z");
@@ -281,5 +281,41 @@ describe("mapa de la zona", () => {
       ["3", "C"],
     ]);
     expect(marcadoresZona(null, comps, competencia)).toEqual([]);
+  });
+});
+
+describe("varios locales", () => {
+  it("suma Google día por día, junta toques y reseñas y pesa la calificación por reseñas", () => {
+    const a = entrada({
+      diarias: [dia("2026-10-17", { visitas: 10 })],
+      taps: [toque("2026-10-19T15:00:00Z")],
+      resenas: [resena("2026-10-15", 5)],
+      rating: 4.8,
+      totalResenas: 300,
+      historico: [{ mes: "2026-09", resenasNuevas: 10, ratingPromedio: 4.8 }],
+      busquedas: [{ palabra: "asado", impresiones: 100 }],
+    });
+    const b = entrada({
+      diarias: [dia("2026-10-17", { visitas: 5 }), dia("2026-10-16", { visitas: 7 })],
+      taps: [toque("2026-10-19T16:00:00Z")],
+      resenas: [resena("2026-10-14", 3)],
+      rating: 4.2,
+      totalResenas: 100,
+      historico: [{ mes: "2026-09", resenasNuevas: 4, ratingPromedio: 4.2, nuevasSinDato: true }],
+      busquedas: [{ palabra: "asado", impresiones: 50 }, { palabra: "vacio", impresiones: null }],
+    });
+    const c = combinarEntradas([
+      { nombre: "Centro", entrada: a },
+      { nombre: "Norte", entrada: b },
+    ]);
+    expect(c.diarias).toEqual([dia("2026-10-16", { visitas: 7 }), dia("2026-10-17", { visitas: 15, visitasMaps: 12, visitasBusqueda: 8, comoLlegar: 4, llamadas: 2, clicsWeb: 2 })]);
+    expect(c.taps.map((t) => t.pieza)).toEqual(["Centro · Caja", "Norte · Caja"]);
+    expect(c.resenas).toHaveLength(2);
+    expect(c.rating).toBeCloseTo(4.65);
+    expect(c.totalResenas).toBe(400);
+    expect(c.historico).toEqual([{ mes: "2026-09", resenasNuevas: 14, nuevasSinDato: true, ratingPromedio: 4.5 }]);
+    expect(c.busquedas).toEqual([{ palabra: "asado", impresiones: 150 }, { palabra: "vacio", impresiones: null }]);
+    expect(c.comparativas).toEqual([]);
+    expect(armarTablero(c).kpis.find((k) => k.id === "toques")!.valor).toBe("2");
   });
 });
