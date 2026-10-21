@@ -18,8 +18,9 @@ import TapsPorHoraSemanaChart from "@/components/TapsPorHoraSemanaChart";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { datoVisible, heroDeCalificacion, hrefSucursal, hrefTodos } from "../_lib";
 import SelectorSucursales from "./SelectorSucursales";
-import Conclusiones from "@/components/portal/Conclusiones";
+import Tablero from "@/components/portal/Tablero";
 import type { Conclusiones as DatosConclusiones } from "@/lib/conclusiones";
+import type { Rango, Tablero as DatosTablero } from "@/lib/tablero";
 
 // Panel "Resumen": de un vistazo, para abrir el portal y entender el estado
 // del negocio sin tener que entrar a ninguna otra sección todavía.
@@ -55,7 +56,10 @@ export default function PanelResumen({
   activoNombre,
   codigoAcceso,
   temasRecurrentes,
+  tablero,
   conclusiones,
+  hrefsRango,
+  totalResenas,
 }: {
   mensajeGoogle: { texto: string; tono: "ok" | "error" } | null;
   /** true = viendo el combinado de todos los locales (default con >1 local); false = un local puntual elegido. */
@@ -95,8 +99,13 @@ export default function PanelResumen({
   activoNombre: string;
   codigoAcceso: string;
   temasRecurrentes: TerminoFrecuente[];
+  /** Tablero del local (lib/tablero.ts); null en el combinado de varios
+   * locales, que sigue con el resumen sumado de siempre. */
+  tablero: DatosTablero | null;
   /** null en el combinado de varios locales: las conclusiones son de uno. */
   conclusiones: DatosConclusiones | null;
+  hrefsRango: Record<Rango, string>;
+  totalResenas: number | null;
 }) {
   const hayVarios = ubicaciones.length > 1;
   // Taps de los últimos 7 días (misma grilla que el heatmap de abajo). El
@@ -153,15 +162,16 @@ export default function PanelResumen({
         </div>
       )}
 
-      {/* Antes que nada, las conclusiones: lo que sale de cruzar cartel,
-          reseñas y competencia (lib/conclusiones.ts). No aparece si todavía
-          no hay datos suficientes para concluir algo. */}
-      {conclusiones && <Conclusiones datos={conclusiones} />}
+      {/* Un local: el tablero (métricas, conclusiones, tortas, horarios,
+          equipo, competencia). El combinado sigue con lo de abajo. */}
+      {tablero && (
+        <Tablero datos={tablero} conclusiones={conclusiones} hrefRango={hrefsRango} totalResenas={totalResenas} />
+      )}
 
       {/* En el combinado no hay conclusiones (cruzan el cartel y las reseñas
           de UN local): sin esta tarjeta, quien tiene varios locales nunca
           se enteraba de que existen. */}
-      {!conclusiones && modoTodos && hayVarios && (
+      {!tablero && modoTodos && hayVarios && (
         <section className="mb-10 rounded-[24px] bg-[#111111] px-6 py-8 text-white sm:px-10 sm:py-10">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · por local</p>
           <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
@@ -190,16 +200,10 @@ export default function PanelResumen({
           eso va primero, antes que la calificación. El detalle completo de
           reseñas (responder cada una, ver todas) vive en la pestaña Reseñas
           — acá va compacto, con el link para saltar para allá. */}
-      {/* Debajo de las conclusiones, los números sueltos de la semana: el
-          detalle para quien quiere mirar más, no lo primero que se ve. */}
-      {conclusiones && (
-        <div className="mb-2 mt-12 border-t border-slate-200/80 pt-8">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">El detalle</p>
-          <p className="mt-1 text-xl font-extrabold tracking-tight text-slate-900">Tus números de la semana</p>
-        </div>
-      )}
+      {!tablero && (
+      <>
       <SectionHeading
-        title={conclusiones ? "Tu cartel y tus quejas" : "Lo que Google no te muestra"}
+        title="Lo que Google no te muestra"
         subtitle={hayResenasDetalladas ? "de qué se queja la gente, y cómo usan tu cartel" : "cómo usan tu cartel"}
       />
 
@@ -407,7 +411,8 @@ export default function PanelResumen({
           )}
         </>
       )}
-
+      </>
+      )}
     </>
   );
 }
