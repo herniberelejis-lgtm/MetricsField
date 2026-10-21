@@ -223,6 +223,12 @@ describe("búsquedas y competencia", () => {
     ]);
   });
 
+  it("el rubro en plural o en inglés no es algo que \"te buscan\" para cruzar con reseñas", () => {
+    const resenas = Array.from({ length: 5 }, (_, i) => resena(`2026-10-0${i + 1}`, 5, "Muy rico todo"));
+    const t = armarTablero(entrada({ resenas, busquedas: [{ palabra: "restaurants", impresiones: 2228 }] }));
+    expect(t.busquedas).toEqual([{ palabra: "restaurants", veces: 2228, menciones: null }]);
+  });
+
   it("el nombre entero del local es marca aunque sus palabras sean genéricas", () => {
     const t = armarTablero(
       entrada({
