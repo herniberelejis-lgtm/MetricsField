@@ -602,6 +602,14 @@ export default async function PortalPage({
       }
       mapaZona={mapaZona}
       locales={resumenLocales}
+      competidoresHoy={
+        modoTodos || competidoresLive.length === 0
+          ? null
+          : [
+              { nombre: activo.nombre, rating: ratingHero, total: resenasHero, esPropio: true },
+              ...competidoresLive.map((comp) => ({ nombre: comp.nombre, rating: comp.rating, total: comp.totalResenas, esPropio: false })),
+            ].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.total ?? 0) - (a.total ?? 0))
+      }
     />
   );
 

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Conclusion, Conclusiones } from "@/lib/conclusiones";
 import {
   miles,
+  nombreCorto,
   RANGOS,
   type ColorSegmento,
   type Delta,
@@ -45,7 +46,7 @@ function Mapa({ mapa }: { mapa: MapaZona }) {
             >
               {m.propio ? "•" : (m.etiqueta ?? "·")}
             </span>
-            {m.nombre}
+            {nombreCorto(m.nombre)}
           </span>
         ))}
       </figcaption>
@@ -369,6 +370,7 @@ export default function Tablero({
   totalResenas,
   mapa = null,
   locales = null,
+  competidoresHoy = null,
 }: {
   datos: DatosTablero;
   conclusiones: Conclusiones | null;
@@ -378,9 +380,13 @@ export default function Tablero({
   /** Vista "Todos": el adelanto de cada local. Sin competencia ni
    * conclusiones (son de cada local). */
   locales?: ResumenLocal[] | null;
+  /** Calificación y reseñas de hoy del local y sus competidores: lo que se
+   * muestra mientras no hay un mes cerrado para comparar reseñas nuevas. */
+  competidoresHoy?: { nombre: string; rating: number | null; total: number | null; esPropio: boolean }[] | null;
 }) {
   const calificacion = datos.kpis.find((k) => k.id === "calificacion");
   const { loQueDicen, calor, equipo, competencia } = datos;
+  const hayCompetidores = (competidoresHoy ?? []).some((c) => !c.esPropio);
 
   return (
     <div className="flex flex-col gap-5">
@@ -417,11 +423,13 @@ export default function Tablero({
               sub={
                 competencia
                   ? `Reseñas nuevas ${competencia.enCurso ? "de este mes (en curso)" : "del último mes cerrado"} en tu zona, y quién se lleva cada parte`
-                  : undefined
+                  : hayCompetidores
+                    ? "Calificación y reseñas de hoy. Al cerrar el primer mes completo vas a ver cuántas reseñas nuevas se lleva cada uno."
+                    : undefined
               }
               extra={
                 <a href="#competidores" className="text-xs font-semibold text-[#1F4E80] hover:underline">
-                  {competencia ? "Ver competidores →" : "Sumar competidores →"}
+                  {competencia || hayCompetidores ? "Ver competidores →" : "Sumar competidores →"}
                 </a>
               }
             />
@@ -450,7 +458,9 @@ export default function Tablero({
                       {competencia.filas.map((f, i) => (
                         <tr key={`${f.nombre}-${i}`} className={`border-t border-[#EEF0F3] ${f.esPropio ? "bg-[#F4F7FB]" : ""}`}>
                           <td className="px-1.5 py-2.5 font-semibold text-slate-900">
-                            {f.esPropio && f.nombre.toLowerCase() !== "vos" ? `${f.nombre} (vos)` : f.nombre}
+                            {f.esPropio && f.nombre.toLowerCase() !== "vos"
+                              ? `${nombreCorto(f.nombre)} (vos)`
+                              : nombreCorto(f.nombre)}
                           </td>
                           <td className="px-1.5 py-2.5 text-right">
                             {f.rating !== null ? `${f.rating.toFixed(1).replace(".", ",")} ★` : "—"}
@@ -474,6 +484,37 @@ export default function Tablero({
                 </div>
                 {competencia.lectura && <Nota>{competencia.lectura}</Nota>}
               </>
+            ) : hayCompetidores ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[300px] border-collapse text-[13px]">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+                      <th scope="col" className="px-1.5 py-2 font-semibold">
+                        Comercio
+                      </th>
+                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        Calif.
+                      </th>
+                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        Reseñas
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {competidoresHoy!.map((f, i) => (
+                      <tr key={`${f.nombre}-${i}`} className={`border-t border-[#EEF0F3] ${f.esPropio ? "bg-[#F4F7FB]" : ""}`}>
+                        <td className="px-1.5 py-2.5 font-semibold text-slate-900">
+                          {f.esPropio ? `${nombreCorto(f.nombre)} (vos)` : nombreCorto(f.nombre)}
+                        </td>
+                        <td className="px-1.5 py-2.5 text-right">
+                          {f.rating !== null ? `${f.rating.toFixed(1).replace(".", ",")} ★` : "—"}
+                        </td>
+                        <td className="px-1.5 py-2.5 text-right">{f.total !== null ? miles(f.total) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p className="text-sm text-slate-600">
                 Sumá a tus competidores en la pestaña Competidores: al cerrar el primer mes vas a ver cuántas reseñas nuevas se
