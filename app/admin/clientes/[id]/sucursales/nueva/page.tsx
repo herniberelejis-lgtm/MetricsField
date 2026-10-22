@@ -23,7 +23,7 @@ export default async function NuevaSucursalPage({
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-4 text-sm">
-        <Link href={`/admin/clientes/${cuenta.id}`} className="text-slate-500 hover:text-brand-fg">
+        <Link href={`/admin/clientes/${cuenta.id}`} className="text-slate-600 hover:text-[#1F4E80]">
           ← {cuenta.nombre}
         </Link>
       </div>

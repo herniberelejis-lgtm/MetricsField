@@ -22,7 +22,6 @@ export default function ChartCard({
   legend,
   table,
   children,
-  variant = "solid",
 }: {
   title: string;
   subtitle?: string;
@@ -34,11 +33,10 @@ export default function ChartCard({
   variant?: "solid" | "glass";
 }) {
   const [view, setView] = useState<"chart" | "table">("chart");
-  const portal = variant === "glass";
-  const wrapClass =
-    variant === "glass"
-      ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6"
-      : "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm";
+  // Admin y portal con el mismo estilo (DESIGN.md); la variante queda por
+  // compatibilidad.
+  const portal = true;
+  const wrapClass = "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6";
 
   return (
     <div className={wrapClass}>

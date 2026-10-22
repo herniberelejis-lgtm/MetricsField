@@ -28,7 +28,7 @@ import {
   citasIA,
   ingresoNFC,
 } from "@/lib/types";
-import { fmtARS, fmtNum, fmtMes, delta } from "@/lib/format";
+import { fmtARS, fmtNum, fmtMes, delta, fmtDec } from "@/lib/format";
 import {
   Card,
   Kpi,
@@ -125,24 +125,24 @@ export default async function ClienteDetallePage({
   return (
     <div>
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
           {ERRORES[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
         </div>
       )}
       <div className="mb-4 text-sm">
         {cuentaRaiz ? (
-          <Link href={`/admin/clientes/${cuentaRaiz.id}`} className="text-slate-500 hover:text-brand-fg">
+          <Link href={`/admin/clientes/${cuentaRaiz.id}`} className="text-slate-600 hover:text-[#1F4E80]">
             ← {cuentaRaiz.nombre}
           </Link>
         ) : (
-          <Link href="/admin/clientes" className="text-slate-500 hover:text-brand-fg">
+          <Link href="/admin/clientes" className="text-slate-600 hover:text-[#1F4E80]">
             ← Clientes
           </Link>
         )}
       </div>
 
       {cuentaRaiz && (
-        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
           Sucursal de {cuentaRaiz.nombre}
         </div>
       )}
@@ -164,13 +164,13 @@ export default async function ClienteDetallePage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/admin/clientes/${c.id}/metricas`}
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+            className="inline-flex min-h-[36px] items-center rounded-full bg-[#1F4E80] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#183F68]"
           >
             + Cargar métricas
           </Link>
           <Link
             href={`/admin/clientes/${c.id}/loyalty`}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="inline-flex min-h-[36px] items-center rounded-full border border-[#D6D9DE] bg-white px-3.5 py-1.5 text-sm font-medium text-slate-800 hover:border-[#A9C5E6] hover:bg-[#F7F9FC]"
           >
             Club de beneficios
           </Link>
@@ -182,10 +182,10 @@ export default async function ClienteDetallePage({
       {/* Acceso del cliente a su portal — vive en la cuenta raíz; una
           sucursal no tiene portal propio. */}
       {!c.comercioPadreId && (
-        <div className="mb-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
+        <div className="mb-4 rounded-2xl bg-[#F4F7FB] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wide text-brand-fg">
+              <div className="text-xs font-medium text-[#1F4E80]">
                 Portal del cliente
               </div>
               <div className="mt-1 text-sm text-slate-700">
@@ -193,18 +193,18 @@ export default async function ClienteDetallePage({
                 <code className="rounded bg-white px-2 py-0.5 font-mono text-sm font-semibold text-slate-900">
                   {c.codigoAcceso}
                 </code>
-                <span className="ml-3 text-slate-500">
+                <span className="ml-3 text-slate-600">
                   Link:{" "}
                   <Link
                     href={`/portal/${c.codigoAcceso}`}
-                    className="font-medium text-brand-fg hover:underline"
+                    className="font-medium text-[#1F4E80] hover:underline"
                     target="_blank"
                   >
                     /portal/{c.codigoAcceso}
                   </Link>
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-600">
                 Compartile este link por WhatsApp: ve solo sus datos, su evolución
                 y las recomendaciones del mes.
               </p>
@@ -213,7 +213,7 @@ export default async function ClienteDetallePage({
               <input type="hidden" name="id" value={c.id} />
               <button
                 type="submit"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:border-slate-400"
+                className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs text-slate-600 hover:border-slate-400"
               >
                 Regenerar código
               </button>
@@ -227,28 +227,28 @@ export default async function ClienteDetallePage({
           alcanzar solo: ese email tiene que loguearse con Google para ver
           el portal (ver lib/portal-auth.ts). */}
       {!c.comercioPadreId && (
-        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="mb-4 rounded-xl border border-[#E4E6EA] bg-white p-4">
+          <div className="text-xs font-medium text-slate-600">
             Login con Google del portal
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-600">
             {usuariosPortal.length > 0
               ? "El portal exige loguearse con una de estas cuentas de Google además del link."
               : "Sin ningún email cargado, el portal sigue abriendo solo con el link (como siempre)."}
           </p>
 
           {usuariosPortal.length > 0 && (
-            <ul className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-100">
+            <ul className="mt-3 divide-y divide-[#EEF0F3] rounded-lg border border-[#EEF0F3]">
               {usuariosPortal.map((u) => (
                 <li key={u.email} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <span>
                     {u.email}
-                    {u.nombre && <span className="ml-2 text-slate-400">({u.nombre})</span>}
+                    {u.nombre && <span className="ml-2 text-slate-600">({u.nombre})</span>}
                   </span>
                   <form action={accionQuitarUsuarioPortal}>
                     <input type="hidden" name="id" value={c.id} />
                     <input type="hidden" name="email" value={u.email} />
-                    <button type="submit" className="text-xs text-rose-600 hover:underline">
+                    <button type="submit" className="text-xs text-[#8A3F00] hover:underline">
                       Quitar
                     </button>
                   </form>
@@ -264,17 +264,17 @@ export default async function ClienteDetallePage({
               name="email"
               required
               placeholder="email@delcliente.com"
-              className="min-w-[220px] flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              className="min-w-[220px] flex-1 rounded-lg border border-[#D6D9DE] px-3 py-1.5 text-sm"
             />
             <input
               type="text"
               name="nombre"
               placeholder="Nombre (opcional)"
-              className="w-40 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+              className="w-40 rounded-lg border border-[#D6D9DE] px-3 py-1.5 text-sm"
             />
             <button
               type="submit"
-              className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+              className="inline-flex min-h-[36px] items-center rounded-full bg-[#1F4E80] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#183F68]"
             >
               Agregar
             </button>
@@ -284,13 +284,13 @@ export default async function ClienteDetallePage({
 
       {/* Sucursales de esta cuenta */}
       {!c.comercioPadreId && (
-        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mb-4 rounded-xl border border-[#E4E6EA] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <div className="text-xs font-medium text-slate-600">
                 Sucursales
               </div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-600">
                 {sucursales.length === 0
                   ? "Todavía gestiona un solo local. Agregá una sucursal si abre otro."
                   : `${sucursales.length} local${sucursales.length === 1 ? "" : "es"}, cada uno con su propia ficha de Google.`}
@@ -298,13 +298,13 @@ export default async function ClienteDetallePage({
             </div>
             <Link
               href={`/admin/clientes/${c.id}/sucursales/nueva`}
-              className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+              className="shrink-0 rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
             >
               + Agregar sucursal
             </Link>
           </div>
           {sucursales.length > 0 && (
-            <div className="mt-3 divide-y divide-slate-100 border-t border-slate-100">
+            <div className="mt-3 divide-y divide-[#EEF0F3] border-t border-[#EEF0F3]">
               {sucursales.map((s) => {
                 const sm = metricaActual(s);
                 return (
@@ -315,10 +315,10 @@ export default async function ClienteDetallePage({
                   >
                     <div className="min-w-0">
                       <div className="font-medium text-slate-800">{s.nombre}</div>
-                      <div className="text-xs text-slate-500">{s.zona}</div>
+                      <div className="text-xs text-slate-600">{s.zona}</div>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      {sm ? <Stars rating={sm.ratingPromedio} /> : <span className="text-xs text-slate-400">sin datos</span>}
+                      {sm ? <Stars rating={sm.ratingPromedio} /> : <span className="text-xs text-slate-600">sin datos</span>}
                       <EstadoBadge estado={s.estado} />
                     </div>
                   </Link>
@@ -332,7 +332,7 @@ export default async function ClienteDetallePage({
       {/* Ficha */}
       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-xs font-medium text-slate-600">
             Contacto
           </div>
           <div className="mt-1 text-sm text-slate-800">{c.contacto}</div>
@@ -340,22 +340,22 @@ export default async function ClienteDetallePage({
             href={c.googleReviewUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-block text-xs text-brand-fg hover:underline"
+            className="mt-2 inline-block text-xs text-[#1F4E80] hover:underline"
           >
             Link de reseñas (NFC) ↗
           </a>
         </Card>
         <Card>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-xs font-medium text-slate-600">
             Búsqueda clave
           </div>
           <div className="mt-1 text-sm text-slate-800">“{c.busquedaClave}”</div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-600">
             Cómo lo busca la gente en Google (rubro + zona).
           </p>
         </Card>
         <Card>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-xs font-medium text-slate-600">
             {c.comercioPadreId ? "Producto NFC vendido" : "Facturación"}
           </div>
           {c.comercioPadreId ? (
@@ -365,7 +365,7 @@ export default async function ClienteDetallePage({
               <div className="mt-1 text-sm text-slate-800">
                 Abono mensual {fmtARS(c.fee)}
               </div>
-              <div className="mt-2 text-xs text-slate-500">
+              <div className="mt-2 text-xs text-slate-600">
                 Producto NFC vendido: {fmtARS(ingresoNFC(c))}
               </div>
             </>
@@ -377,24 +377,24 @@ export default async function ClienteDetallePage({
       <Card className="mb-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <div className="text-xs font-medium text-slate-600">
               Rating y reseñas — automático (Google Places API)
             </div>
             {c.googlePlaceId ? (
               c.googleSyncEn ? (
                 <div className="mt-1 text-sm text-slate-800">
-                  {c.ratingGoogle?.toFixed(1)}★ · {fmtNum(c.resenasGoogle ?? 0)} reseñas
-                  <span className="ml-2 text-xs text-slate-400">
+                  {c.ratingGoogle != null ? fmtDec(c.ratingGoogle) : "—"}★ · {fmtNum(c.resenasGoogle ?? 0)} reseñas
+                  <span className="ml-2 text-xs text-slate-600">
                     actualizado {new Date(c.googleSyncEn).toLocaleString("es-AR")}
                   </span>
                 </div>
               ) : (
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-slate-600">
                   Todavía no se sincronizó — tocá "Sincronizar ahora".
                 </div>
               )
             ) : (
-              <div className="mt-1 text-sm text-slate-500">
+              <div className="mt-1 text-sm text-slate-600">
                 Cargá el Google Place ID en "Editar suscripción" para activar esto.
               </div>
             )}
@@ -404,7 +404,7 @@ export default async function ClienteDetallePage({
               <input type="hidden" name="id" value={c.id} />
               <button
                 type="submit"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+                className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
               >
                 Sincronizar ahora
               </button>
@@ -416,9 +416,9 @@ export default async function ClienteDetallePage({
             desde su portal — el admin acá solo ve el estado, no dispara la
             conexión (no es cuenta del admin la que hace falta, es la del
             dueño de la ficha). */}
-        <div className="mt-3 border-t border-slate-100 pt-3">
+        <div className="mt-3 border-t border-[#EEF0F3] pt-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <div className="text-xs font-medium text-slate-600">
               Visitas, llamadas y "cómo llegar" — automático (Business Profile)
             </div>
             {gbpConectado && (
@@ -426,7 +426,7 @@ export default async function ClienteDetallePage({
                 <input type="hidden" name="id" value={c.id} />
                 <button
                   type="submit"
-                  className="text-xs font-medium text-slate-400 hover:text-rose-600"
+                  className="text-xs font-medium text-slate-600 hover:text-[#8A3F00]"
                 >
                   Desconectar
                 </button>
@@ -434,15 +434,15 @@ export default async function ClienteDetallePage({
             )}
           </div>
           {!gbpConfigurable ? (
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-600">
               Para activarlo hay que configurar el OAuth de Google
               (GOOGLE_OAUTH_CLIENT_ID y GOOGLE_OAUTH_CLIENT_SECRET en Vercel).
             </p>
           ) : !gbpConectado ? (
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-600">
               Todavía no conectó su cuenta de Google. Se conecta desde SU
               portal (
-              <Link href={linkPortal} className="text-brand-fg hover:underline" target="_blank">
+              <Link href={linkPortal} className="text-[#1F4E80] hover:underline" target="_blank">
                 {linkPortal}
               </Link>
               ) — mandale el link y decile que toque "Conectar tu Google
@@ -457,11 +457,11 @@ export default async function ClienteDetallePage({
                   ? `Ficha vinculada — visitas, llamadas y "cómo llegar" se actualizan solas cada día.`
                   : "Cuenta conectada — la ficha se vincula sola en la próxima sincronización."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-600">
                 Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
               </p>
               {gbpPorVencer && (
-                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                <p className="mt-2 rounded-lg bg-[#FFF4E8] px-3 py-2 text-xs text-[#8A3F00]">
                   Mientras MetricsField no esté verificada por Google, este permiso
                   vence a los 7 días. Pedile al cliente que vuelva a tocar
                   "Conectar" desde su portal esta semana.
@@ -527,7 +527,7 @@ export default async function ClienteDetallePage({
           una reseña puntual o cargar una a mano, ese detalle sigue en /crm. */}
       <h2 className="mb-3 mt-8 flex items-center justify-between text-sm font-semibold text-slate-900">
         Reseñas
-        <Link href={`/admin/clientes/${c.id}/crm`} className="text-xs font-medium text-brand-fg hover:underline">
+        <Link href={`/admin/clientes/${c.id}/crm`} className="text-xs font-medium text-[#1F4E80] hover:underline">
           Gestionar todas las reseñas →
         </Link>
       </h2>
@@ -572,7 +572,7 @@ export default async function ClienteDetallePage({
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
               <th className="px-4 py-3 font-medium">Mes</th>
               <th className="px-4 py-3 font-medium">Reseñas nuevas</th>
               <th className="px-4 py-3 font-medium">Total</th>
@@ -586,14 +586,14 @@ export default async function ClienteDetallePage({
             {[...c.historico].reverse().map((h) => (
               <tr
                 key={h.mes}
-                className="border-b border-slate-100 last:border-0"
+                className="border-b border-[#EEF0F3] last:border-0"
               >
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {fmtMes(h.mes)}
                 </td>
                 <td className="px-4 py-3">{fmtNum(h.resenasNuevas)}</td>
                 <td className="px-4 py-3">{fmtNum(h.resenasTotal)}</td>
-                <td className="px-4 py-3">{h.ratingPromedio.toFixed(1)}</td>
+                <td className="px-4 py-3">{fmtDec(h.ratingPromedio)}</td>
                 <td className="px-4 py-3">{fmtNum(h.visitasPerfil)}</td>
                 <td className="px-4 py-3">{fmtNum(h.llamadas)}</td>
                 {esPremium && (
@@ -613,7 +613,7 @@ export default async function ClienteDetallePage({
 function EstadoSync({ titulo, estado }: { titulo: string; estado: EstadoSyncGoogle | null }) {
   if (!estado) {
     return (
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-600">
         {titulo}: todavía no se sincronizó — tocá &quot;Sincronizar ahora&quot;.
       </p>
     );
@@ -621,7 +621,7 @@ function EstadoSync({ titulo, estado }: { titulo: string; estado: EstadoSyncGoog
   return (
     <div
       className={`mt-2 rounded-lg px-3 py-2 text-xs leading-relaxed ${
-        estado.ok ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+        estado.ok ? "bg-[#EAF7F0] text-[#0B5E40]" : "bg-[#FFF4E8] text-[#8A3F00]"
       }`}
     >
       <span className="font-semibold">
@@ -657,8 +657,8 @@ function ResumenDelLunes({
     <Card className="mb-4 scroll-mt-6" id="resumen-lunes">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Resumen del lunes</div>
-          <p className="mt-1 text-xs text-slate-500">
+          <div className="text-xs font-medium text-slate-600">Resumen del lunes</div>
+          <p className="mt-1 text-xs text-slate-600">
             {email
               ? `Sale solo por mail a ${email} cada lunes a las 9.`
               : "Sin mail de notificaciones cargado: por ahora solo se puede mandar por WhatsApp desde acá."}
@@ -669,7 +669,7 @@ function ResumenDelLunes({
             href={whatsapp}
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+            className="rounded-lg bg-[#0B5E40] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#094A33]"
           >
             Mandar por WhatsApp
           </a>
@@ -682,19 +682,19 @@ function ResumenDelLunes({
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-slate-600">
           Esta semana no hay nada que contar todavía (sin reseñas, toques ni conclusiones): no se manda nada.
         </p>
       )}
       {!whatsapp && texto && (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-600">
           Para el botón de WhatsApp, cargá un teléfono en &quot;Contacto&quot; (Editar suscripción).
         </p>
       )}
 
       {/* Prueba del mail: confirma que el SMTP de Vercel anda y muestra el
           mail real, o dice exactamente qué corregir. */}
-      <form action={accionProbarResumenSemanal} className="mt-4 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-4">
+      <form action={accionProbarResumenSemanal} className="mt-4 flex flex-wrap items-end gap-2 border-t border-[#EEF0F3] pt-4">
         <input type="hidden" name="id" value={clienteId} />
         <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
           Mandar una prueba de este mail a
@@ -704,12 +704,12 @@ function ResumenDelLunes({
             required
             defaultValue={emailAdmin ?? ""}
             placeholder="tu@mail.com"
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-800"
+            className="rounded-lg border border-[#D6D9DE] px-3 py-1.5 text-sm text-slate-800"
           />
         </label>
         <button
           type="submit"
-          className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400"
+          className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400"
         >
           Probar mail
         </button>
@@ -718,7 +718,7 @@ function ResumenDelLunes({
         <p
           role="status"
           className={`mt-3 rounded-lg px-3 py-2 text-xs leading-relaxed ${
-            prueba.ok ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+            prueba.ok ? "bg-[#EAF7F0] text-[#0B5E40]" : "bg-[#FFF4E8] text-[#8A3F00]"
           }`}
         >
           <span className="font-semibold">{prueba.ok ? "✓ Mail enviado. " : "✗ No se pudo mandar. "}</span>

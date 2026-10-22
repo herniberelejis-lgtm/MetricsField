@@ -66,20 +66,20 @@ export default function GooglePlaceIdField({ defaultValue }: { defaultValue?: st
           type="button"
           onClick={buscar}
           disabled={buscando || query.trim().length < 3}
-          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-slate-400 disabled:opacity-50"
+          className="shrink-0 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:border-slate-400 disabled:opacity-50"
         >
           {buscando ? "Buscando…" : "Buscar"}
         </button>
       </div>
 
-      {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-[#8A3F00]">{error}</p>}
 
       {resultados && resultados.length === 0 && (
-        <p className="mt-1.5 text-xs text-slate-400">Sin resultados.</p>
+        <p className="mt-1.5 text-xs text-slate-600">Sin resultados.</p>
       )}
 
       {resultados && resultados.length > 0 && (
-        <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200">
+        <ul className="mt-2 divide-y divide-[#EEF0F3] rounded-lg border border-[#E4E6EA]">
           {resultados.map((r) => (
             <li key={r.placeId}>
               <button
@@ -91,7 +91,7 @@ export default function GooglePlaceIdField({ defaultValue }: { defaultValue?: st
                 className="block w-full px-3 py-2 text-left text-xs hover:bg-slate-50"
               >
                 <div className="font-medium text-slate-800">{r.nombre}</div>
-                <div className="text-slate-400">{r.direccion}</div>
+                <div className="text-slate-600">{r.direccion}</div>
               </button>
             </li>
           ))}
