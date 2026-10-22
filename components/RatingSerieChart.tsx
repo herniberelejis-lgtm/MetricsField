@@ -3,10 +3,11 @@
 import { useState } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { INK } from "@/lib/palette";
-import { fmtMes } from "@/lib/format";
+import { PORTAL } from "@/lib/palette";
+import { fmtMes, fmtDec } from "@/lib/format";
 import type { MetricaMensual } from "@/lib/types";
 import { mesSiguiente } from "@/lib/comparativa-competencia";
+import { useAncho } from "@/components/charts/useAncho";
 
 // Línea de calificación mes a mes — panel "Mi Rating en Google".
 //
@@ -37,6 +38,7 @@ export default function RatingSerieChart({
   historico: MetricaMensual[];
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  const [W, refAncho] = useAncho(640);
   const n = historico.length;
   if (n === 0) return null;
 
@@ -44,7 +46,6 @@ export default function RatingSerieChart({
   const indiceMes = new Map(meses.map((m, i) => [m, i]));
   const totalMeses = meses.length;
 
-  const W = 640;
   const H = 200;
   const M = { top: 18, right: 40, bottom: 24, left: 34 };
   const plotW = W - M.left - M.right;
@@ -80,17 +81,17 @@ export default function RatingSerieChart({
     n === 1
       ? fmtMes(ultimo.mes)
       : Math.abs(cambio) < 0.05
-        ? `Estable en ${ultimo.ratingPromedio.toFixed(1)}★ desde ${fmtMes(primero.mes)}`
-        : `${cambio > 0 ? "+" : "−"}${Math.abs(cambio).toFixed(1)}★ desde ${fmtMes(primero.mes)}`;
+        ? `Estable en ${fmtDec(ultimo.ratingPromedio, 1)}★ desde ${fmtMes(primero.mes)}`
+        : `${cambio > 0 ? "+" : "−"}${fmtDec(Math.abs(cambio))}★ desde ${fmtMes(primero.mes)}`;
 
   const table = {
     head: ["Mes", "Calificación"],
-    rows: historico.map((m) => [fmtMes(m.mes), m.ratingPromedio.toFixed(1)]),
+    rows: historico.map((m) => [fmtMes(m.mes), fmtDec(m.ratingPromedio, 1)]),
   };
 
   return (
     <ChartCard variant="glass" title="Tu calificación en Google" subtitle={subtitulo} table={table}>
-      <div className="relative">
+      <div className="relative" ref={refAncho}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -99,9 +100,9 @@ export default function RatingSerieChart({
         >
           {marcasY.map((v) => (
             <g key={`y-${v}`}>
-              <line x1={M.left} x2={W - M.right} y1={y(v)} y2={y(v)} stroke={INK.grid} strokeWidth={1} />
-              <text x={M.left - 6} y={y(v) + 3} textAnchor="end" fontSize={9} fill={INK.muted}>
-                {Number.isInteger(v) ? `${v}★` : v.toFixed(1)}
+              <line x1={M.left} x2={W - M.right} y1={y(v)} y2={y(v)} stroke={PORTAL.grilla} strokeWidth={1} />
+              <text x={M.left - 6} y={y(v) + 3} textAnchor="end" fontSize={11} fill={PORTAL.textoSec}>
+                {Number.isInteger(v) ? `${v}★` : fmtDec(v, 1)}
               </text>
             </g>
           ))}
@@ -113,8 +114,8 @@ export default function RatingSerieChart({
                 x={xMes(mes)}
                 y={H - 6}
                 textAnchor="middle"
-                fontSize={9}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
                 opacity={historico.some((h) => h.mes === mes) ? 1 : 0.5}
               >
                 {fmtMes(mes).slice(0, 3)}
@@ -129,7 +130,7 @@ export default function RatingSerieChart({
               y1={y(t.desde.ratingPromedio)}
               x2={xMes(t.hasta.mes)}
               y2={y(t.hasta.ratingPromedio)}
-              stroke={t.seguido ? INK.primary : INK.muted}
+              stroke={t.seguido ? PORTAL.dato : PORTAL.textoSec}
               strokeWidth={2}
               strokeDasharray={t.seguido ? undefined : "4 4"}
               strokeLinecap="round"
@@ -142,10 +143,10 @@ export default function RatingSerieChart({
               cx={xMes(m.mes)}
               cy={y(m.ratingPromedio)}
               r={hover === i ? 5 : 4}
-              fill={INK.primary}
+              fill={PORTAL.dato}
               tabIndex={0}
               role="button"
-              aria-label={`${fmtMes(m.mes)}: ${m.ratingPromedio.toFixed(1)} estrellas`}
+              aria-label={`${fmtMes(m.mes)}: ${fmtDec(m.ratingPromedio, 1)} estrellas`}
               onPointerEnter={() => setHover(i)}
               onPointerLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
@@ -158,11 +159,11 @@ export default function RatingSerieChart({
           <text
             x={xMes(ultimo.mes) + 8}
             y={y(ultimo.ratingPromedio) + 3}
-            fontSize={11}
+            fontSize={12}
             fontWeight={600}
-            fill={INK.primary}
+            fill={PORTAL.texto}
           >
-            {ultimo.ratingPromedio.toFixed(1)}★
+            {fmtDec(ultimo.ratingPromedio, 1)}★
           </text>
         </svg>
 
@@ -171,12 +172,12 @@ export default function RatingSerieChart({
             title={fmtMes(historico[hover].mes)}
             leftPct={(xMes(historico[hover].mes) / W) * 100}
             topPct={(y(historico[hover].ratingPromedio) / H) * 100}
-            rows={[{ label: "calificación", value: historico[hover].ratingPromedio.toFixed(1), color: INK.primary }]}
+            rows={[{ label: "calificación", value: fmtDec(historico[hover].ratingPromedio, 1), color: PORTAL.dato }]}
           />
         )}
       </div>
       {hayHuecos && (
-        <p className="mt-2 text-xs text-slate-400">La línea punteada cruza meses sin dato.</p>
+        <p className="mt-2 text-xs text-slate-600">La línea punteada cruza meses sin dato.</p>
       )}
     </ChartCard>
   );

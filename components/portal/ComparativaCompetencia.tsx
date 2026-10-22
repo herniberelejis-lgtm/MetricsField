@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { fmtMes, fmtNum } from "@/lib/format";
+import { fmtMes, fmtNum, fmtDec } from "@/lib/format";
 import type { ComparativaMes, FilaComparativa } from "@/lib/comparativa-competencia";
 
 // Mes a mes contra la competencia: reseñas captadas EN el mes (barra para
@@ -10,10 +10,10 @@ import type { ComparativaMes, FilaComparativa } from "@/lib/comparativa-competen
 
 function fmtDelta(d: number | null): { texto: string; clase: string } {
   if (d === null) return { texto: "—", clase: "text-slate-300" };
-  if (Math.abs(d) < 0.05) return { texto: "=", clase: "text-slate-400" };
+  if (Math.abs(d) < 0.05) return { texto: "=", clase: "text-slate-600" };
   return d > 0
-    ? { texto: `+${d.toFixed(1)}`, clase: "text-emerald-700" }
-    : { texto: `−${Math.abs(d).toFixed(1)}`, clase: "text-rose-600" };
+    ? { texto: `+${fmtDec(d, 1)}`, clase: "text-[#0B5E40]" }
+    : { texto: `−${fmtDec(Math.abs(d))}`, clase: "text-[#8A3F00]" };
 }
 
 export default function ComparativaCompetencia({
@@ -26,13 +26,13 @@ export default function ComparativaCompetencia({
 }) {
   const [sel, setSel] = useState(0);
   const card =
-    "rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl";
+    "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6";
 
   if (meses.length === 0) {
     if (!primerMes) return null;
     return (
       <div className={card}>
-        <h3 className="text-sm font-semibold text-slate-900">Mes a mes vs tu competencia</h3>
+        <h3 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h3>
         <p className="mt-1 text-sm text-slate-600">
           La comparación arranca en <strong>{fmtMes(primerMes)}</strong>: cada noche guardamos cómo está tu
           competencia y, cuando cerremos el primer mes, vas a ver cuántas reseñas captó cada uno contra vos y
@@ -50,14 +50,14 @@ export default function ComparativaCompetencia({
     <div className={card}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Mes a mes vs tu competencia</h3>
-          <p className="mt-0.5 text-xs text-slate-500">Reseñas captadas en el mes y calificación al cierre</p>
+          <h3 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h3>
+          <p className="mt-0.5 text-xs text-slate-600">Reseñas captadas en el mes y calificación al cierre</p>
         </div>
         {meses.length > 1 && (
           <select
             value={sel}
             onChange={(e) => setSel(Number(e.target.value))}
-            className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700"
+            className="shrink-0 rounded-lg border border-[#D6D9DE] bg-white px-2.5 py-1 text-xs text-slate-700"
             aria-label="Elegir mes"
           >
             {meses.map((m, i) => (
@@ -71,7 +71,7 @@ export default function ComparativaCompetencia({
       </div>
 
       {vos && (vos.nuevas !== null || vos.rating !== null) && (
-        <div className="mb-4 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white">
+        <div className="mb-4 rounded-2xl bg-[#F4F7FB] px-4 py-3 text-sm text-slate-700">
           {vos.nuevas !== null && (
             <p>
               En {etiquetaMes} captaste <strong>{fmtNum(vos.nuevas)}</strong> reseña{vos.nuevas === 1 ? "" : "s"}
@@ -82,7 +82,7 @@ export default function ComparativaCompetencia({
               )}
               .
               {mes.promedioCompetencia !== null && (
-                <span className="text-white/70">
+                <span className="text-slate-600">
                   {" "}
                   Tu competencia promedió {mes.promedioCompetencia.toFixed(mes.promedioCompetencia < 10 ? 1 : 0)}.
                 </span>
@@ -90,10 +90,10 @@ export default function ComparativaCompetencia({
             </p>
           )}
           {vos.rating !== null && (
-            <p className="mt-1 text-white/80">
-              Tu calificación: {vos.rating.toFixed(1)}★
+            <p className="mt-1 text-slate-700">
+              Tu calificación: {fmtDec(vos.rating, 1)}★
               {vos.deltaRating !== null && Math.abs(vos.deltaRating) >= 0.05 && ` (${fmtDelta(vos.deltaRating).texto})`}
-              {mes.ratingCompetencia !== null && ` · competencia promedio ${mes.ratingCompetencia.toFixed(1)}★`}
+              {mes.ratingCompetencia !== null && ` · competencia promedio ${fmtDec(mes.ratingCompetencia, 1)}★`}
             </p>
           )}
         </div>
@@ -101,7 +101,7 @@ export default function ComparativaCompetencia({
 
       <TablaComparativa filas={mes.filas} />
       {mes.enCurso && (
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-600">
           El mes todavía no terminó: es lo captado hasta hoy, igual para todos.
         </p>
       )}
@@ -122,9 +122,9 @@ export function TablaComparativa({
   const maxNuevas = Math.max(1, ...filas.map((f) => f.nuevas ?? 0));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm tabular-nums">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
             <th className="px-2 py-2 font-medium">Comercio</th>
             <th className="px-2 py-2 font-medium">Reseñas captadas</th>
             <th className="px-2 py-2 font-medium">Calificación</th>
@@ -137,20 +137,20 @@ export function TablaComparativa({
             return (
               <tr
                 key={String(f.id)}
-                className={`border-b border-slate-100 last:border-0 ${f.esPropio ? "bg-brand/5" : ""}`}
+                className={`border-b border-[#EEF0F3] last:border-0 ${f.esPropio ? "bg-[#F4F7FB]" : ""}`}
               >
-                <td className={`px-2 py-2 ${f.esPropio ? "font-semibold text-brand-fg" : "text-slate-700"}`}>
+                <td className={`px-2 py-2 ${f.esPropio ? "font-semibold text-[#1F4E80]" : "text-slate-700"}`}>
                   {f.esPropio ? "Vos" : f.nombre}
-                  {notaFila?.(f) && <span className="ml-1.5 text-xs font-normal text-slate-400">{notaFila(f)}</span>}
+                  {notaFila?.(f) && <span className="ml-1.5 text-xs font-normal text-slate-600">{notaFila(f)}</span>}
                 </td>
                 <td className="px-2 py-2">
                   {f.nuevas === null ? (
-                    <span className="text-slate-300">—</span>
+                    <span className="text-slate-600">—</span>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-slate-100 sm:w-32" aria-hidden>
+                      <div className="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-[#EEF0F3] sm:w-32" aria-hidden>
                         <div
-                          className={`h-full rounded-full ${f.esPropio ? "bg-slate-900" : "bg-slate-400"}`}
+                          className={`h-full rounded-full ${f.esPropio ? "bg-[#6F9BCF]" : "bg-[#D3D9E2]"}`}
                           style={{ width: `${(f.nuevas / maxNuevas) * 100}%` }}
                         />
                       </div>
@@ -159,7 +159,7 @@ export function TablaComparativa({
                   )}
                 </td>
                 <td className="px-2 py-2 tabular-nums text-slate-700">
-                  {f.rating === null ? "—" : `${f.rating.toFixed(1)}★`}
+                  {f.rating === null ? "—" : `${fmtDec(f.rating, 1)}★`}
                 </td>
                 <td className={`px-2 py-2 tabular-nums font-medium ${delta.clase}`}>{delta.texto}</td>
               </tr>

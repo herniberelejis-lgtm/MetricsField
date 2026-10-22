@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { TonoMarca } from "@/lib/types";
 import type { ResenaGooglePublica } from "@/lib/places";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
-import { btnSecondary } from "@/components/ui";
+import { btnPortal, btnPortalSec } from "@/components/ui";
 
 // Reseñas públicas de Google (hasta 5 por local, las que elige Google — ver
 // fetchResenasGooglePublicas en lib/places.ts) con una respuesta sugerida
@@ -14,11 +14,11 @@ import { btnSecondary } from "@/components/ui";
 // "aprobar" publica la respuesta directo).
 
 const COLOR_BADGE: Record<number, string> = {
-  1: "bg-slate-100 text-slate-500",
-  2: "bg-slate-100 text-slate-500",
-  3: "bg-slate-200 text-slate-700",
-  4: "bg-slate-900 text-white",
-  5: "bg-slate-900 text-white",
+  1: "bg-[#FFF4E8] text-[#8A3F00]",
+  2: "bg-[#FFF4E8] text-[#8A3F00]",
+  3: "bg-slate-100 text-slate-700",
+  4: "bg-[#EAF7F0] text-[#0B5E40]",
+  5: "bg-[#EAF7F0] text-[#0B5E40]",
 };
 
 export interface LocalConResenasGoogle {
@@ -52,10 +52,10 @@ function TarjetaResenaGoogle({ resena, tonoMarca }: { resena: ResenaGooglePublic
   }
 
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+    <div className="rounded-2xl border border-[#E4E6EA] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EEF4FB] text-sm font-semibold text-[#1F4E80]">
             {(resena.autor || "?").trim().slice(0, 1).toUpperCase()}
           </div>
           <div>
@@ -72,28 +72,28 @@ function TarjetaResenaGoogle({ resena, tonoMarca }: { resena: ResenaGooglePublic
             ) : (
               <div className="text-sm font-medium text-slate-900">{resena.autor}</div>
             )}
-            {resena.haceCuanto && <div className="text-xs text-slate-400">{resena.haceCuanto}</div>}
+            {resena.haceCuanto && <div className="text-xs text-slate-600">{resena.haceCuanto}</div>}
           </div>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}
+          aria-label={`${resena.estrellas} de 5 estrellas`}
+        >
           {"★".repeat(resena.estrellas)}
-          {/* Estrellas vacías visibles también sobre el fondo oscuro (4★ se veía como 5★). */}
-          <span className={resena.estrellas >= 4 ? "text-slate-500" : "text-slate-300"}>
-            {"★".repeat(5 - resena.estrellas)}
-          </span>
+          <span className="opacity-30">{"★".repeat(5 - resena.estrellas)}</span>
         </span>
       </div>
 
-      <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-        {resena.texto || <span className="text-slate-400">(sin comentario, solo estrellas)</span>}
+      <p className="mt-3 rounded-lg bg-[#F7F9FC] px-3 py-2 text-sm leading-relaxed text-slate-800">
+        {resena.texto || <span className="text-slate-600">(sin comentario, solo estrellas)</span>}
       </p>
 
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <span className="text-[11px] font-medium text-slate-600">
             Respuesta sugerida — editala si querés
           </span>
-          <button type="button" onClick={regenerar} className="text-[11px] font-medium text-brand-fg hover:underline">
+          <button type="button" onClick={regenerar} className="min-h-[32px] px-1 text-xs font-medium text-[#1F4E80] hover:underline">
             Regenerar
           </button>
         </div>
@@ -101,12 +101,12 @@ function TarjetaResenaGoogle({ resena, tonoMarca }: { resena: ResenaGooglePublic
           value={respuesta}
           onChange={(e) => setRespuesta(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none"
+          className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm leading-relaxed text-slate-800 focus:border-[#4F7AA8] focus:outline-none"
         />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
+        <button type="button" onClick={copiar} className={btnPortal}>
           {copiado ? "¡Copiada!" : "Copiar respuesta"}
         </button>
         {resena.urlResena && (
@@ -114,7 +114,7 @@ function TarjetaResenaGoogle({ resena, tonoMarca }: { resena: ResenaGooglePublic
             href={resena.urlResena}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-brand-fg hover:underline"
+            className={btnPortalSec}
           >
             Responder en Google →
           </a>
@@ -137,7 +137,7 @@ export default function ResenasGoogle({
   return (
     <div className="space-y-5">
       {total === 0 && (
-        <p className="text-sm text-slate-500">Google todavía no muestra reseñas para tu ficha.</p>
+        <p className="text-sm text-slate-600">Google todavía no muestra reseñas para tu ficha.</p>
       )}
       {locales.map((local) => (
         <div key={local.comercioId}>
@@ -152,14 +152,14 @@ export default function ResenasGoogle({
               href={local.urlFicha}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 block rounded-2xl border border-slate-200 bg-white/60 px-4 py-2.5 text-sm font-medium text-brand-fg transition hover:border-slate-300 hover:bg-white"
+              className="mt-3 flex min-h-[44px] items-center rounded-2xl border border-[#E4E6EA] bg-white px-4 py-2.5 text-sm font-medium text-[#1F4E80] transition hover:border-[#A9C5E6] hover:bg-[#F7F9FC]"
             >
               Ver todas las reseñas{varios ? ` de ${local.nombre}` : ""} en Google →
             </a>
           )}
         </div>
       ))}
-      <p className="text-[11px] text-slate-400">Reseñas de Google.</p>
+      <p className="text-[11px] text-slate-600">Reseñas de Google.</p>
     </div>
   );
 }

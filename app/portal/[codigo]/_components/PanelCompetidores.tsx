@@ -1,5 +1,5 @@
 import type { Cliente, Competidor } from "@/lib/types";
-import { fmtNum } from "@/lib/format";
+import { fmtNum, fmtDec } from "@/lib/format";
 import type { ComparativaMes } from "@/lib/comparativa-competencia";
 import ComparativaCompetencia from "@/components/portal/ComparativaCompetencia";
 import SeguimientoCompetencia from "@/components/portal/SeguimientoCompetencia";
@@ -75,7 +75,7 @@ export default function PanelCompetidores({
             />
           </div>
           {modoTodos && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-600">
               La competencia es por local — elegí una sucursal arriba para verla (la de un barrio no es la de otro).
             </p>
           )}
@@ -84,7 +84,7 @@ export default function PanelCompetidores({
 
       {!modoTodos && (
         <>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-slate-600">
             Cómo estás parado frente a los locales de tu zona, ahora mismo — se sincroniza solo cuando entrás a ver.
           </p>
 
@@ -101,11 +101,11 @@ export default function PanelCompetidores({
           )}
 
           {competidores.length > 0 ? (
-            <div className="mb-4 overflow-hidden rounded-3xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+            <div className="mb-4 overflow-hidden rounded-2xl border border-[#E4E6EA] bg-white">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                       <th className="px-4 py-3 font-medium">Ficha</th>
                       <th className="px-4 py-3 font-medium">Calificación</th>
                       <th className="px-4 py-3 font-medium">Reseñas</th>
@@ -114,10 +114,10 @@ export default function PanelCompetidores({
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-slate-100 bg-brand/5">
-                      <td className="px-4 py-3 font-semibold text-brand-fg">{nombreLocal} (vos)</td>
+                    <tr className="border-b border-[#EEF0F3] bg-[#F4F7FB]">
+                      <td className="px-4 py-3 font-semibold text-[#1F4E80]">{nombreLocal} (vos)</td>
                       <td className="px-4 py-3 tabular-nums font-medium text-slate-800">
-                        {ratingLocal === null ? "—" : ratingLocal.toFixed(1)}
+                        {ratingLocal === null ? "—" : fmtDec(ratingLocal, 1)}
                       </td>
                       <td className="px-4 py-3 tabular-nums font-medium text-slate-800">{fmtNum(resenasLocal)}</td>
                       {mesEnCurso && (
@@ -128,9 +128,9 @@ export default function PanelCompetidores({
                       {puedeAgregar && <td className="px-2 py-3" />}
                     </tr>
                     {filasCompetencia.map((c) => (
-                      <tr key={c.id} className="border-b border-slate-100 text-slate-600 last:border-0">
+                      <tr key={c.id} className="border-b border-[#EEF0F3] text-slate-600 last:border-0">
                         <td className="px-4 py-3">{c.nombre}</td>
-                        <td className="px-4 py-3 tabular-nums">{c.rating === null ? "—" : c.rating.toFixed(1)}</td>
+                        <td className="px-4 py-3 tabular-nums">{c.rating === null ? "—" : fmtDec(c.rating, 1)}</td>
                         <td className="px-4 py-3 tabular-nums">
                           {c.totalResenas === null ? "—" : fmtNum(c.totalResenas)}
                         </td>
@@ -155,7 +155,7 @@ export default function PanelCompetidores({
             </div>
           ) : (
             !puedeAgregar && (
-              <p className="mb-4 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 text-sm text-slate-500">
+              <p className="mb-4 rounded-2xl border border-[#E4E6EA] bg-white px-4 py-3 text-sm text-slate-600">
                 Todavía no cargamos competidores para tu zona — pedile a tu contacto en MetricsField que los agregue
                 para ver esta comparación.
               </p>

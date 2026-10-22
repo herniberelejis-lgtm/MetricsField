@@ -163,7 +163,7 @@ function PanelConclusiones({ datos }: { datos: Conclusiones | null }) {
           </p>
         </div>
         {lista.length > 0 && (
-          <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-white">{lista.length}</span>
+          <span className="shrink-0 rounded-full bg-[#EEF4FB] px-2.5 py-1 text-[11px] font-bold tabular-nums text-[#1F4E80]">{lista.length}</span>
         )}
       </div>
 
@@ -406,7 +406,7 @@ export default function Tablero({
               key={r}
               href={hrefRango[r]}
               aria-current={r === datos.dias ? "page" : undefined}
-              className={`rounded-lg px-3 py-2 text-[13px] font-semibold ${r === datos.dias ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"}`}
+              className={`rounded-lg px-3 py-2 text-[13px] font-semibold ${r === datos.dias ? "bg-[#EEF4FB] text-[#1F4E80] ring-1 ring-[#A9C5E6]" : "text-slate-700 hover:bg-[#F7F9FC]"}`}
             >
               {r} días
             </a>

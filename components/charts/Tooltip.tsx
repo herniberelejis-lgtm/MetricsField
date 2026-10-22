@@ -29,7 +29,7 @@ export default function Tooltip({
       }}
       role="status"
     >
-      <div className="mb-1 text-[11px] font-medium text-slate-500">{title}</div>
+      <div className="mb-1 text-[11px] font-medium text-slate-600">{title}</div>
       <div className="space-y-0.5">
         {rows.map((r) => (
           <div key={r.label} className="flex items-center gap-2 text-xs">
@@ -42,7 +42,7 @@ export default function Tooltip({
             <span className="font-semibold text-slate-900 tabular-nums">
               {r.value}
             </span>
-            <span className="text-slate-500">{r.label}</span>
+            <span className="text-slate-600">{r.label}</span>
           </div>
         ))}
       </div>

@@ -46,6 +46,39 @@ export const RATING_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
   5: "#1f8a3d",
 };
 
+// Portal del cliente (DESIGN.md §2): cada color significa una sola cosa. El
+// dato va en celeste; lo anterior o secundario, en grises; verde y durazno
+// solo para "bien" y "para mejorar".
+export const PORTAL = {
+  dato: "#6F9BCF",
+  barra: "#7FA7D3",
+  medio: "#A9C5E6",
+  suave: "#D9E6F4",
+  anterior: "#B8BEC8",
+  neutro: "#D3D9E2",
+  grilla: "#EEF0F3",
+  eje: "#D6D9DE",
+  texto: "#1A1A1A",
+  textoSec: "#666666",
+  bien: "#0B5E40",
+  bienBarra: "#8FD1AE",
+  bienFondo: "#EAF7F0",
+  mal: "#8A3F00",
+  malBarra: "#F4B886",
+  malFondo: "#FFF4E8",
+} as const;
+
+// Calificación 1★..5★ en el portal: la misma idea que RATING_COLORS (de
+// "para mejorar" a "bien") pero en los tonos pastel del portal. Igual que
+// aquella, nunca va sola: siempre con el número al lado o en el tooltip.
+export const RATING_PASTEL: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: "#E8907E",
+  2: "#F4B886",
+  3: "#EDD38A",
+  4: "#B9DCA0",
+  5: "#8FD1AE",
+};
+
 /** Ticks "lindos" para un eje 0..max: devuelve [0, paso, 2·paso, …]. */
 export function niceTicks(max: number, count = 4): number[] {
   if (max <= 0) return [0, 1];

@@ -25,10 +25,10 @@ export default function SelectorSucursales({
         const chipTodos = (
           <a
             href={hrefTodos(codigoAcceso)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
+            className={`inline-flex min-h-[40px] shrink-0 items-center rounded-full px-3.5 py-2 text-sm font-medium transition ${
               modoTodos
-                ? "bg-brand text-white"
-                : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+                ? "bg-[#EEF4FB] font-semibold text-[#1F4E80] ring-1 ring-[#A9C5E6]"
+                : "bg-white text-slate-700 ring-1 ring-[#E4E6EA] hover:bg-[#F7F9FC]"
             }`}
           >
             Todos
@@ -47,10 +47,10 @@ export default function SelectorSucursales({
         const chip = (
           <a
             href={hrefSucursal(codigoAcceso, s)}
-            className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
+            className={`inline-flex min-h-[40px] shrink-0 items-center rounded-full px-3.5 py-2 text-sm font-medium transition ${
               activa
-                ? "bg-brand text-white"
-                : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+                ? "bg-[#EEF4FB] font-semibold text-[#1F4E80] ring-1 ring-[#A9C5E6]"
+                : "bg-white text-slate-700 ring-1 ring-[#E4E6EA] hover:bg-[#F7F9FC]"
             }`}
           >
             {s.nombre}

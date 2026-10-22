@@ -95,6 +95,14 @@ export const btnSecondary =
   "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
 export const btnGhost =
   "inline-flex items-center justify-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+// Botones del portal del cliente (DESIGN.md): la acción principal en el azul
+// de los links, sin sombra; 40px de alto para que se toquen bien.
+export const btnPortal =
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-[#1F4E80] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#183F68] disabled:cursor-not-allowed disabled:opacity-50";
+export const btnPortalSec =
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-[#D6D9DE] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[#A9C5E6] hover:bg-[#F7F9FC] disabled:cursor-not-allowed disabled:opacity-50";
+export const btnPortalGhost =
+  "inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-3 text-sm font-medium text-slate-600 transition hover:bg-[#F7F9FC] hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 export const btnSuccess =
   "inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -115,7 +123,7 @@ export function SectionHeading({
     <div id={id} className="mb-3 mt-9 scroll-mt-6 flex items-end justify-between gap-3 first:mt-0">
       <div>
         <h2 className="text-base font-semibold tracking-tight text-slate-900">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-xs text-slate-600">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -131,14 +139,14 @@ export function Card({
   children: ReactNode;
   className?: string;
   id?: string;
-  /** "glass" es el look de vidrio esmerilado del portal del cliente (fondo
-   * con degradé) — "solid" (default) es el look de siempre, el que usa
-   * /admin, y no cambia. */
+  /** "glass" es la tarjeta del portal del cliente (DESIGN.md: blanca, borde
+   * de 1px, sin sombra) — el nombre quedó de cuando era vidrio esmerilado.
+   * "solid" (default) es el look de siempre, el que usa /admin. */
   variant?: "solid" | "glass";
 }) {
   const base =
     variant === "glass"
-      ? "rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
+      ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6"
       : "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm";
   return (
     <div id={id} className={`${base} ${className}`}>
@@ -188,29 +196,46 @@ export function Kpi({
 }) {
   const deltaColor =
     !delta || delta.dir === "flat"
-      ? "text-slate-400"
+      ? variant === "glass"
+        ? "text-slate-600"
+        : "text-slate-400"
       : variant === "glass"
         ? delta.good
-          ? "text-slate-900"
-          : "text-slate-400"
+          ? "font-semibold text-[#0B5E40]"
+          : "font-semibold text-[#8A3F00]"
         : delta.good
           ? "text-emerald-600"
           : "text-rose-600";
   const arrow =
     delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "→";
+  // En el portal (glass): etiqueta en minúscula normal, cifra de 26px y
+  // grises que se leen (DESIGN.md §3-4).
+  const portal = variant === "glass";
   return (
     <Card variant={variant}>
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div
+        className={
+          portal ? "text-[13px] font-medium text-slate-600" : "text-xs font-medium uppercase tracking-wide text-slate-500"
+        }
+      >
         {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold text-slate-900">{value}</div>
-      <div className="mt-1 flex items-center gap-2 text-xs">
+      <div
+        className={
+          portal
+            ? "mt-1.5 text-[26px] font-medium leading-tight tracking-tight text-slate-900 tabular-nums"
+            : "mt-2 text-2xl font-semibold text-slate-900"
+        }
+      >
+        {value}
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
         {delta && (
           <span className={deltaColor}>
             {arrow} {delta.text}
           </span>
         )}
-        {hint && <span className="text-slate-400">{hint}</span>}
+        {hint && <span className={portal ? "text-slate-600" : "text-slate-400"}>{hint}</span>}
       </div>
     </Card>
   );
@@ -228,7 +253,8 @@ export function Sparkline({
   width?: number;
   height?: number;
   invert?: boolean; // true cuando "menos es mejor" para esta métrica
-  /** Sin color: siempre negro, sin distinguir tendencia buena/mala por tinta. */
+  /** Portal: el celeste de los datos (DESIGN.md), sin distinguir tendencia
+   * buena/mala por tinta. */
   mono?: boolean;
 }) {
   if (values.length === 0) return null;
@@ -236,7 +262,7 @@ export function Sparkline({
     // un solo dato: todavía no hay tendencia que dibujar — un punto
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <circle cx={width / 2} cy={height / 2} r={4} fill={mono ? "#1A1A1A" : "#3D5A80"} stroke="#ffffff" strokeWidth={2} />
+        <circle cx={width / 2} cy={height / 2} r={4} fill={mono ? "#6F9BCF" : "#3D5A80"} stroke="#ffffff" strokeWidth={2} />
       </svg>
     );
   }
@@ -251,7 +277,7 @@ export function Sparkline({
   });
   const rising = values[values.length - 1] >= values[0];
   const good = invert ? !rising : rising;
-  const stroke = mono ? "#1A1A1A" : good ? "#2F6D4D" : "#8A3B3B";
+  const stroke = mono ? "#6F9BCF" : good ? "#2F6D4D" : "#8A3B3B";
   return (
     <svg
       width={width}
@@ -274,7 +300,7 @@ export function Sparkline({
 export function PlanBadge({ plan, mono = false }: { plan: Plan; mono?: boolean }) {
   const cls = mono
     ? plan === "Premium"
-      ? "bg-slate-900 text-white"
+      ? "bg-[#EEF4FB] text-[#1F4E80]"
       : "bg-slate-100 text-slate-700"
     : plan === "Premium"
       ? "bg-violet-100 text-violet-700"

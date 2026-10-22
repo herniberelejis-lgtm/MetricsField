@@ -121,7 +121,10 @@ export function construirNav({
       icon: <IconStarNav size={18} />,
       badge:
         resenasPendientes > 0 ? (
-          <span className="rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
+          <span
+            className="rounded-full bg-[#FFF4E8] px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-[#8A3F00]"
+            aria-label={`${resenasPendientes} sin responder`}
+          >
             {resenasPendientes}
           </span>
         ) : undefined,
@@ -134,7 +137,7 @@ export function construirNav({
       items: [
         { type: "leaf", id: "dispositivos", label: "Dispositivos", icon: <IconDevice size={16} /> },
         { type: "leaf", id: "escaneos", label: "Escaneos", icon: <IconWave size={16} /> },
-        { type: "leaf", id: "rating", label: "Mi Rating en Google", icon: <IconStarNav size={16} /> },
+        { type: "leaf", id: "rating", label: "Calificación en Google", icon: <IconStarNav size={16} /> },
         { type: "leaf", id: "competidores", label: "Competidores", icon: <IconSearch size={16} /> },
         { type: "leaf", id: "mes", label: "Resumen del mes", icon: <IconActivity size={16} /> },
       ],
