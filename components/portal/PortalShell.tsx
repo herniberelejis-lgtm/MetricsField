@@ -138,6 +138,11 @@ function IconGoogleG({ size = 14, className = "" }: { size?: number; className?:
   );
 }
 
+// Ítem elegido: fondo apenas tintado y una línea de 2px a la izquierda, sin
+// sombra ni color de fondo fuerte (DESIGN.md §2).
+const ACTIVO = "bg-[#F1F4F8] font-semibold text-slate-900 shadow-[inset_2px_0_0_#6F9BCF]";
+const INACTIVO = "font-medium text-slate-600 hover:bg-[#F7F9FC] hover:text-slate-900";
+
 export type PortalNavLeaf = {
   type: "leaf";
   id: string;
@@ -255,23 +260,17 @@ export default function PortalShell({
     .map((x) => ({ key: x.key, label: x.label, active: x.isActive, onClick: () => goTo(x.target) }));
 
   return (
-    <div className="relative isolate min-h-screen lg:grid lg:grid-cols-[264px_1fr]">
-      {/* Fondo del panel: gris muy claro de marca (F7F7F7), con el mismo
-          efecto vidrio-esmerilado en sidebar/header/cards de siempre, pero
-          sin el degradé rosa/lavanda/durazno — reemplazado por la paleta
-          monocromática del Manual de Marca. */}
-      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-slate-50">
-        <div className="absolute -left-32 -top-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.04),_transparent_70%)] blur-2xl" />
-        <div className="absolute -right-24 -top-24 h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.045),_transparent_70%)] blur-2xl" />
-        <div className="absolute -bottom-40 right-10 h-[440px] w-[440px] rounded-full bg-[radial-gradient(circle,_rgba(0,0,0,0.035),_transparent_70%)] blur-2xl" />
-      </div>
+    // Plano y tranquilo (DESIGN.md): fondo gris claro liso, superficies
+    // blancas con borde de 1px, sin vidrio ni sombras en lo que está quieto.
+    // La clase "portal" da el foco visible y la selección (globals.css).
+    <div className="portal relative isolate min-h-screen bg-[#F4F5F7] lg:grid lg:grid-cols-[264px_1fr]">
 
       <button
         type="button"
         onClick={() => setNavOpen((v) => !v)}
         aria-label={navOpen ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={navOpen}
-        className="fixed left-3.5 top-3.5 z-50 grid h-11 w-11 place-items-center rounded-xl border border-white/60 bg-white/80 text-slate-700 shadow-sm backdrop-blur-lg lg:hidden"
+        className="fixed left-3.5 top-3.5 z-50 grid h-11 w-11 place-items-center rounded-xl border border-[#E4E6EA] bg-white text-slate-700 lg:hidden"
       >
         {navOpen ? <IconClose size={20} /> : <IconMenuBars size={20} />}
       </button>
@@ -280,12 +279,12 @@ export default function PortalShell({
           type="button"
           aria-label="Cerrar menú"
           onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/30 lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto border-r border-white/60 bg-white/60 text-slate-600 shadow-xl backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[264px] shrink-0 flex-col overflow-y-auto border-r border-[#E4E6EA] bg-white text-slate-600 shadow-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${
           navOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -297,7 +296,7 @@ export default function PortalShell({
           )}
           <div className="min-w-0">
             <div className="truncate text-sm font-bold tracking-tight text-slate-900">METRICSFIELD</div>
-            <div className="text-[10.5px] text-slate-500">Portal de cliente</div>
+            <div className="text-[11px] text-slate-600">Portal de cliente</div>
           </div>
         </div>
 
@@ -318,8 +317,8 @@ export default function PortalShell({
                   type="button"
                   onClick={() => goTo(entry.id)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex min-h-[40px] items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-medium transition-colors ${
-                    isActive ? "bg-white/90 text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/50 hover:text-slate-800"
+                  className={`flex min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition-colors ${
+                    isActive ? ACTIVO : INACTIVO
                   }`}
                 >
                   {entry.icon}
@@ -338,14 +337,14 @@ export default function PortalShell({
                   type="button"
                   onClick={() => setGroupOpen((g) => ({ ...g, [entry.id]: !open }))}
                   aria-expanded={open}
-                  className="flex min-h-[40px] w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-medium text-slate-500 transition-colors hover:bg-white/50 hover:text-slate-800"
+                  className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition-colors ${INACTIVO}`}
                 >
                   {entry.icon}
                   <span className="flex-1 truncate">{entry.label}</span>
                   <IconChevron size={16} className={`transition-transform ${open ? "rotate-90" : ""}`} />
                 </button>
                 <div className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                  <div className="flex min-h-0 flex-col gap-0.5 py-0.5 pl-4">
+                  <div className="ml-[18px] flex min-h-0 flex-col gap-0.5 border-l border-[#EEF0F3] py-0.5 pl-2">
                     {visibleItems.map((item) => {
                       const isActive = active === item.id;
                       return (
@@ -354,8 +353,8 @@ export default function PortalShell({
                           type="button"
                           onClick={() => goTo(item.id)}
                           aria-current={isActive ? "page" : undefined}
-                          className={`flex min-h-[38px] items-center gap-2.5 rounded-xl border-l border-white/70 px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors ${
-                            isActive ? "bg-white/90 text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/50 hover:text-slate-800"
+                          className={`flex min-h-[44px] items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] transition-colors ${
+                            isActive ? ACTIVO : INACTIVO
                           }`}
                         >
                           {item.icon}
@@ -371,13 +370,13 @@ export default function PortalShell({
           })}
         </nav>
 
-        <div className="border-t border-white/60 px-5 py-4 text-[11px] leading-snug text-slate-500">
+        <div className="border-t border-[#EEF0F3] px-5 py-4 text-[11px] leading-snug text-slate-600">
           Portal privado de <b className="text-slate-700">{clienteNombre}</b>. No compartas este link.
           <div className="mt-2 flex gap-3">
-            <a href="/privacy" className="underline underline-offset-2 hover:text-slate-700">
+            <a href="/privacy" className="underline underline-offset-2 hover:text-slate-900">
               Privacidad
             </a>
-            <a href="/terms" className="underline underline-offset-2 hover:text-slate-700">
+            <a href="/terms" className="underline underline-offset-2 hover:text-slate-900">
               Términos
             </a>
           </div>
@@ -385,13 +384,9 @@ export default function PortalShell({
       </aside>
 
       <div className="min-w-0">
-        {/* bg-white/95 (no /70): con menos opacidad, cualquier chip o
-            tarjeta que quede justo debajo al scrollear un poco se ve
-            "rebanado" a través del blur en vez de desaparecer limpio detrás
-            del header — pasaba con el selector de sucursales apenas se
-            scrolleaba, porque ahora es lo primero del contenido (antes
-            "Necesita tu atención" ocupaba ese primer tramo). */}
-        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/50 bg-white/95 px-5 py-4 backdrop-blur-xl lg:px-8 lg:pl-8">
+        {/* Blanco opaco: lo que pasa por debajo al scrollear desaparece limpio
+            detrás del encabezado. */}
+        <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[#E4E6EA] bg-white px-5 py-3.5 lg:px-8 lg:pl-8">
           <h1 className="truncate pl-11 text-lg font-semibold tracking-tight text-slate-900 lg:pl-0">
             {activeLeaf?.label ?? "Resumen"}
           </h1>
@@ -401,16 +396,16 @@ export default function PortalShell({
                 <button
                   type="button"
                   onClick={() => goTo(google.perfilPanelId)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[#E4E6EA] bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-[#F7F9FC]"
                 >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" aria-hidden />
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-[#8FD1AE]" aria-hidden />
                   Google conectado
-                  <IconChevron size={13} className="text-slate-400" />
+                  <IconChevron size={13} className="text-slate-600" />
                 </button>
               ) : (
                 <a
                   href={google.conectarHref}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[#E4E6EA] bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:border-[#C9D3DF] hover:bg-[#F7F9FC]"
                 >
                   <IconGoogleG size={13} />
                   Conectar con Google
@@ -428,8 +423,8 @@ export default function PortalShell({
                 <span className="hidden lg:inline">Hablar con tu agencia</span>
               </a>
             )}
-            <div className="flex items-center gap-2.5 border-l border-slate-200/70 pl-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+            <div className="flex items-center gap-2.5 border-l border-[#E4E6EA] pl-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EEF4FB] text-xs font-bold text-[#1F4E80]">
                 {clienteNombre.trim().charAt(0).toUpperCase() || "?"}
               </span>
               <div className="hidden min-w-0 leading-tight lg:block">
@@ -437,7 +432,7 @@ export default function PortalShell({
                   <span className="truncate text-[13px] font-semibold text-slate-800">{clienteNombre}</span>
                   {planBadge}
                 </div>
-                <span className="truncate text-[11px] text-slate-500">{clienteSub}</span>
+                <span className="truncate text-[11px] text-slate-600">{clienteSub}</span>
               </div>
             </div>
           </div>
@@ -446,7 +441,7 @@ export default function PortalShell({
         <main className="mx-auto max-w-4xl px-5 py-7 pb-24 lg:px-8">{currentPanel}</main>
       </div>
 
-      <FloatingBottomNav items={floatingItems} />
+      <FloatingBottomNav items={floatingItems} tono="portal" />
     </div>
   );
 }

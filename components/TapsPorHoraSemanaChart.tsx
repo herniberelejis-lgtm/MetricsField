@@ -3,9 +3,10 @@
 import { useState } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { INK } from "@/lib/palette";
+import { PORTAL } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
 import type { TapsPorHoraDia } from "@/lib/db";
+import { useAncho } from "@/components/charts/useAncho";
 
 // Mapa de calor día×hora: a qué hora te tocan el cartel, últimos 7 días.
 // Heatmap con una sola tinta (más taps = más oscuro) en vez de líneas —
@@ -29,11 +30,11 @@ function fechaCorta(fecha: string): string {
 
 export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[] }) {
   const [hover, setHover] = useState<{ fila: number; hora: number } | null>(null);
+  const [W, refAncho] = useAncho(640);
 
   const max = Math.max(...dias.flatMap((d) => d.horas), 1);
   const hayActividad = max > 0;
 
-  const W = 640;
   const H = 190;
   const M = { top: 4, right: 8, bottom: 16, left: 34 };
   const plotW = W - M.left - M.right;
@@ -55,7 +56,7 @@ export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[
       table={table}
     >
       {hayActividad ? (
-        <div className="relative">
+        <div className="relative" ref={refAncho}>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Taps por hora, últimos 7 días">
             {dias.map((d, fila) => (
               <text
@@ -63,8 +64,8 @@ export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[
                 x={M.left - 6}
                 y={M.top + fila * filaH + filaH / 2 + 3}
                 textAnchor="end"
-                fontSize={9}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
               >
                 {etiquetaDia(d.fecha)}
               </text>
@@ -76,8 +77,8 @@ export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[
                 x={M.left + h * colW + colW / 2}
                 y={H - 4}
                 textAnchor="middle"
-                fontSize={9}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
               >
                 {String(h).padStart(2, "0")}h
               </text>
@@ -94,9 +95,9 @@ export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[
                     width={colW - gap}
                     height={filaH - gap}
                     rx={2}
-                    fill={INK.primary}
-                    fillOpacity={v === 0 ? 0.05 : 0.12 + (v / max) * 0.88}
-                    stroke={activa ? INK.primary : "none"}
+                    fill={v === 0 ? "#F3F6FA" : PORTAL.dato}
+                    fillOpacity={v === 0 ? 1 : 0.2 + (v / max) * 0.8}
+                    stroke={activa ? PORTAL.texto : "none"}
                     strokeWidth={activa ? 1.5 : 0}
                     tabIndex={0}
                     role="button"
@@ -117,12 +118,12 @@ export default function TapsPorHoraSemanaChart({ dias }: { dias: TapsPorHoraDia[
               title={`${etiquetaDia(dias[hover.fila].fecha)} ${fechaCorta(dias[hover.fila].fecha)}, ${String(hover.hora).padStart(2, "0")}h`}
               leftPct={((M.left + hover.hora * colW + colW / 2) / W) * 100}
               topPct={((M.top + hover.fila * filaH) / H) * 100}
-              rows={[{ label: "taps", value: fmtNum(dias[hover.fila].horas[hover.hora]), color: INK.primary }]}
+              rows={[{ label: "taps", value: fmtNum(dias[hover.fila].horas[hover.hora]), color: PORTAL.dato }]}
             />
           )}
         </div>
       ) : (
-        <p className="py-6 text-center text-sm text-slate-400">Todavía no hay actividad del cartel esta semana.</p>
+        <p className="py-6 text-center text-sm text-slate-600">Todavía no hay actividad del cartel esta semana.</p>
       )}
     </ChartCard>
   );

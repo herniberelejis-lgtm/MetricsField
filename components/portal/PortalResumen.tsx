@@ -102,7 +102,7 @@ export function StatChip({
   chipClass?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-3xl border border-white/60 bg-white/65 p-4 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+    <div className="flex items-center gap-3 rounded-2xl border border-[#E4E6EA] bg-white p-4">
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-700">
         {icon}
       </span>
@@ -110,7 +110,7 @@ export function StatChip({
         <div className="text-xl font-semibold leading-tight tracking-tight text-slate-900 tabular-nums">
           {value}
         </div>
-        <div className="text-xs leading-tight text-slate-500">{label}</div>
+        <div className="text-xs leading-tight text-slate-600">{label}</div>
       </div>
     </div>
   );
@@ -142,16 +142,16 @@ export function CalificacionGoogleCard({
 
   return (
     <div
-      className={`rounded-3xl border p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl ${
+      className={`rounded-3xl border p-6 ${
         hero ? "border-slate-900 bg-slate-900 text-white" : "border-white/60 bg-white/65"
       }`}
     >
       <div
-        className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
-          hero ? "text-white/60" : "text-slate-500"
+        className={`flex items-center gap-1.5 text-xs font-semibold ${
+          hero ? "text-white/60" : "text-slate-600"
         }`}
       >
-        <IconPin size={13} className={hero ? "text-white/50" : "text-slate-400"} />
+        <IconPin size={13} className={hero ? "text-white/50" : "text-slate-600"} />
         Calificación Google
       </div>
 
@@ -162,19 +162,19 @@ export function CalificacionGoogleCard({
             <span className={hero ? "text-white" : "text-slate-900"}>{"★".repeat(full)}</span>
             <span className={hero ? "text-white/25" : "text-slate-200"}>{"★".repeat(5 - full)}</span>
           </div>
-          <p className={`mt-1 text-xs ${hero ? "text-white/60" : "text-slate-500"}`}>{fmtNum(totalResenas)} reseñas</p>
+          <p className={`mt-1 text-xs ${hero ? "text-white/60" : "text-slate-600"}`}>{fmtNum(totalResenas)} reseñas</p>
 
           {deltaRating !== null && deltaResenas !== null && (
-            <div className={`mt-3 border-t pt-3 ${hero ? "border-white/15" : "border-slate-100"}`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-wide ${hero ? "text-white/40" : "text-slate-400"}`}>
+            <div className={`mt-3 border-t pt-3 ${hero ? "border-white/15" : "border-[#EEF0F3]"}`}>
+              <p className={`text-[10px] font-semibold ${hero ? "text-white/40" : "text-slate-600"}`}>
                 Desde que usás MetricsField
               </p>
               <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-                <span className={deltaRating >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-400"}>
+                <span className={deltaRating >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-600"}>
                   {deltaRating >= 0 ? "+" : ""}
                   {deltaRating.toFixed(1)}★
                 </span>
-                <span className={deltaResenas >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-400"}>
+                <span className={deltaResenas >= 0 ? (hero ? "text-white" : "text-slate-900") : hero ? "text-white/40" : "text-slate-600"}>
                   {deltaResenas >= 0 ? "+" : ""}
                   {fmtNum(deltaResenas)} reseñas
                 </span>
@@ -185,7 +185,7 @@ export function CalificacionGoogleCard({
       </div>
 
       <p className={`mt-4 text-sm font-semibold ${hero ? "text-white" : "text-slate-800"}`}>{nombre}</p>
-      <p className={`text-xs ${hero ? "text-white/60" : "text-slate-500"}`}>{subtitulo}</p>
+      <p className={`text-xs ${hero ? "text-white/60" : "text-slate-600"}`}>{subtitulo}</p>
     </div>
   );
 }

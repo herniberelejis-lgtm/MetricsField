@@ -3,8 +3,9 @@
 import { useState } from "react";
 import ChartCard, { type LegendItem } from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { INK, RATING_COLORS } from "@/lib/palette";
+import { PORTAL, RATING_PASTEL } from "@/lib/palette";
 import type { VistaMapa } from "@/lib/semaforo";
+import { useAncho } from "@/components/charts/useAncho";
 
 // Mapa de calor día de la semana × hora de CUÁNDO llegan las reseñas de
 // Google, sobre las reseñas del mes o las últimas 100 (lib/semaforo.ts) —
@@ -20,7 +21,7 @@ const HORAS_ETIQUETA = [0, 3, 6, 9, 12, 15, 18, 21];
 
 const LEYENDA: LegendItem[] = ([1, 2, 3, 4, 5] as const).map((n) => ({
   label: `${n}★`,
-  color: RATING_COLORS[n],
+  color: RATING_PASTEL[n],
   mark: "rect",
 }));
 
@@ -30,12 +31,12 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
   // Arranca en "Este mes" si ya llegó alguna; si no, en las últimas 100.
   const inicial = vistas.find((v) => v.total > 0)?.clave ?? vistas[0]?.clave;
   const [clave, setClave] = useState(inicial);
+  const [W, refAncho] = useAncho(640);
   const [hover, setHover] = useState<{ fila: number; hora: number } | null>(null);
   const vista = vistas.find((v) => v.clave === clave) ?? vistas[0];
   if (!vista) return null;
   const filas = vista.filas;
 
-  const W = 640;
   const H = 190;
   const M = { top: 4, right: 8, bottom: 16, left: 34 };
   const plotW = W - M.left - M.right;
@@ -62,7 +63,7 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
       table={table}
     >
       {vistas.length > 1 && (
-        <div className="mb-3 inline-flex rounded-full bg-slate-100 p-0.5 text-xs" role="tablist">
+        <div className="mb-3 inline-flex gap-1 rounded-full bg-[#F1F4F8] p-1 text-xs" role="tablist">
           {vistas.map((v) => (
             <button
               key={v.clave}
@@ -73,8 +74,8 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
                 setClave(v.clave);
                 setHover(null);
               }}
-              className={`rounded-full px-3 py-1 font-medium transition ${
-                v.clave === vista.clave ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              className={`min-h-[32px] rounded-full px-3 py-1 font-medium transition ${
+                v.clave === vista.clave ? "bg-white font-semibold text-slate-900 ring-1 ring-[#E4E6EA]" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {v.nombre}
@@ -84,7 +85,7 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
       )}
 
       {vista.total > 0 ? (
-        <div className="relative">
+        <div className="relative" ref={refAncho}>
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="w-full"
@@ -97,8 +98,8 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
                 x={M.left - 6}
                 y={M.top + fila * filaH + filaH / 2 + 3}
                 textAnchor="end"
-                fontSize={9}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
               >
                 {f.etiqueta}
               </text>
@@ -110,8 +111,8 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
                 x={M.left + h * colW + colW / 2}
                 y={H - 4}
                 textAnchor="middle"
-                fontSize={9}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
               >
                 {hh(h)}
               </text>
@@ -129,9 +130,8 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
                     width={colW - gap}
                     height={filaH - gap}
                     rx={2}
-                    fill={vacia ? INK.primary : RATING_COLORS[c.rating!]}
-                    fillOpacity={vacia ? 0.05 : 1}
-                    stroke={activa ? INK.primary : "none"}
+                    fill={vacia ? "#F3F6FA" : RATING_PASTEL[c.rating!]}
+                    stroke={activa ? PORTAL.texto : "none"}
                     strokeWidth={activa ? 1.5 : 0}
                     tabIndex={vacia ? -1 : 0}
                     role={vacia ? undefined : "button"}
@@ -160,14 +160,14 @@ export default function RatingPorHoraChart({ vistas }: { vistas: VistaMapa[] }) 
                 {
                   label: `reseña${celda.cantidad === 1 ? "" : "s"}, promedio`,
                   value: `${celda.cantidad} · ${celda.rating}★`,
-                  color: RATING_COLORS[celda.rating],
+                  color: RATING_PASTEL[celda.rating],
                 },
               ]}
             />
           )}
         </div>
       ) : (
-        <p className="py-6 text-center text-sm text-slate-400">
+        <p className="py-6 text-center text-sm text-slate-600">
           {vista.clave === "mes"
             ? "Todavía no llegó ninguna reseña de Google este mes."
             : "Todavía no hay reseñas de Google con hora para armar el mapa."}

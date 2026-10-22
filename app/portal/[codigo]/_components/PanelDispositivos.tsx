@@ -28,18 +28,18 @@ export default function PanelDispositivos({
 
   return (
     <>
-      <p className="mb-3 text-xs text-slate-500">
+      <p className="mb-3 text-sm text-slate-600">
         Tocá &ldquo;Editar&rdquo; en cualquier dispositivo para cambiar a dónde manda — el cartel impreso no cambia,
         solo a dónde redirige.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-[#E4E6EA] bg-white">
         <DispositivosTabla
           links={linksConTaps}
           codigo={codigoAcceso}
           comercioId={comercioId}
           tieneSoporteQr={tieneSoporteQr}
           iconoDispositivo={
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-500">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#F4F7FB] text-slate-600">
               <IconDevice size={16} />
             </span>
           }
@@ -48,26 +48,26 @@ export default function PanelDispositivos({
 
       {linksConTaps.length > 1 && totalTapsHistorico > 0 && (
         <Card variant="glass" className="mt-4">
-          <p className="text-sm font-medium text-slate-700">Taps por cartel</p>
-          <p className="mt-0.5 text-xs text-slate-500">histórico total, desde que se instaló cada uno</p>
+          <p className="text-[15px] font-bold text-slate-900">Toques por pieza</p>
+          <p className="mt-0.5 text-xs text-slate-600">Desde que se instaló cada una</p>
           <div className="mt-3 space-y-2">
             {linksConTaps.map((l) => (
               <div key={l.id} className="flex items-center gap-3">
                 <span className="w-28 shrink-0 truncate text-xs text-slate-600">
                   {l.etiqueta}
                   {tieneSoporteQr && (
-                    <span className="ml-1 text-[10px] uppercase text-slate-400">
+                    <span className="ml-1 text-[10px] text-slate-600">
                       · {l.tipo === "ambos" ? "NFC+QR" : l.tipo}
                     </span>
                   )}
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#EEF0F3]">
                   <div
-                    className="h-full rounded-full bg-brand"
-                    style={{ width: totalTapsHistorico ? `${Math.max(4, (l.taps / totalTapsHistorico) * 100)}%` : "0%" }}
+                    className="h-full rounded-full bg-[#7FA7D3]"
+                    style={{ width: totalTapsHistorico && l.taps ? `${Math.max(2, (l.taps / totalTapsHistorico) * 100)}%` : "0%" }}
                   />
                 </div>
-                <span className="w-8 shrink-0 text-right text-xs font-medium tabular-nums text-slate-700">{l.taps}</span>
+                <span className="w-12 shrink-0 text-right text-xs font-medium tabular-nums text-slate-900">{l.taps}</span>
               </div>
             ))}
           </div>
