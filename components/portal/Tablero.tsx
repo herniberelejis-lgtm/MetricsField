@@ -66,6 +66,10 @@ const COLOR: Record<ColorSegmento, string> = {
   naranja: "#F4B886",
 };
 
+// Cada persona del equipo con su tinte pálido (identidad, no dato): tonos
+// separados unos 60° para que no se confundan entre sí.
+const TINTES_PERSONA = ["#DCE7F5", "#E9E2F7", "#DDF1E6", "#F8E8D8", "#F5E0E8", "#DDEFF1"];
+
 const NIVEL = ["#F3F6FA", "#DCE7F3", "#C3D6EC", "#A7C3E2", "#8AAFD6"];
 
 const TEMA_CONCLUSION: Record<string, string> = {
@@ -85,7 +89,7 @@ function Encabezado({ titulo, sub, extra }: { titulo: string; sub?: string; extr
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div className="flex flex-col gap-0.5">
         <h3 className="text-[15px] font-bold text-slate-900">{titulo}</h3>
-        {sub && <p className="text-xs text-slate-500">{sub}</p>}
+        {sub && <p className="text-xs text-slate-600">{sub}</p>}
       </div>
       {extra}
     </div>
@@ -154,7 +158,7 @@ function PanelConclusiones({ datos }: { datos: Conclusiones | null }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-0.5">
           <h3 className="text-[15px] font-extrabold text-slate-900">Conclusiones</h3>
-          <p className="text-xs leading-snug text-slate-500">
+          <p className="text-xs leading-snug text-slate-600">
             Lo que Google no te muestra: cruces de tu cartel, tus reseñas, tus horarios y tu competencia
           </p>
         </div>
@@ -178,7 +182,7 @@ function PanelConclusiones({ datos }: { datos: Conclusiones | null }) {
               <p className="text-[13.5px] font-bold leading-snug text-slate-900">{c.titulo}</p>
               <MiniGrafico c={c} />
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500">{c.cruce}</span>
+                <span className="text-slate-600">{c.cruce}</span>
                 <a href="#conclusiones" className="shrink-0 font-semibold text-[#1F4E80] hover:underline">
                   Ver más
                 </a>
@@ -225,7 +229,7 @@ function TortaCard({ t }: { t: Torta }) {
           aria-label={`${t.titulo}: ${t.segmentos.map((s) => `${s.label} ${s.pct}%`).join(", ")}`}
           className="shrink-0"
         >
-          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#EEF0F3" strokeWidth="6" />
+          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#EEF0F3" strokeWidth="3.5" />
           {t.segmentos.map((s) => {
             const offset = 25 - acumulado;
             acumulado += s.pct;
@@ -237,7 +241,7 @@ function TortaCard({ t }: { t: Torta }) {
                 r="15.9155"
                 fill="none"
                 stroke={COLOR[s.color]}
-                strokeWidth="6"
+                strokeWidth="3.5"
                 strokeDasharray={`${s.pct} ${100 - s.pct}`}
                 strokeDashoffset={offset}
               />
@@ -259,7 +263,7 @@ function TortaCard({ t }: { t: Torta }) {
               </span>
               <span className="pl-4">
                 <strong className="text-[15px] text-slate-900">{s.pct}%</strong>{" "}
-                <span className="text-slate-500">· {miles(s.valor)}</span>
+                <span className="text-slate-600">· {miles(s.valor)}</span>
               </span>
             </li>
           ))}
@@ -313,7 +317,7 @@ function TusLocales({ locales, dias }: { locales: ResumenLocal[]; dias: number }
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-[15px] font-bold leading-snug text-slate-900">{l.nombre}</span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-600">
                 {l.calificacion ?? "Sin calificación"}
                 {l.totalResenas !== null ? ` · ${miles(l.totalResenas)} reseñas` : ""}
               </span>
@@ -322,7 +326,7 @@ function TusLocales({ locales, dias }: { locales: ResumenLocal[]; dias: number }
             <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
               {l.metricas.map((m) => (
                 <div key={m.label} className="flex flex-col">
-                  <span className="text-[11px] text-slate-500">{m.label}</span>
+                  <span className="text-[11px] text-slate-600">{m.label}</span>
                   <span className="flex items-baseline gap-1.5">
                     <strong className="text-lg text-slate-900">{m.valor ?? "—"}</strong>
                     <DeltaTexto d={m.delta} />
@@ -332,7 +336,7 @@ function TusLocales({ locales, dias }: { locales: ResumenLocal[]; dias: number }
             </div>
             {l.parteToques !== null && (
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-600">
                   {Math.round(l.parteToques * 100)}% de los toques de todos tus locales
                 </span>
                 <Barra proporcion={l.parteToques} color="#A9C5E6" />
@@ -389,7 +393,7 @@ export default function Tablero({
   const hayCompetidores = (competidoresHoy ?? []).some((c) => !c.esPropio);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="tablero flex flex-col gap-5 tabular-nums">
       {/* Período */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-600">
@@ -439,17 +443,17 @@ export default function Tablero({
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[300px] border-collapse text-[13px]">
                     <thead>
-                      <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                        <th scope="col" className="px-1.5 py-2 font-semibold">
+                      <tr className="text-left text-xs text-slate-600">
+                        <th scope="col" className="px-1.5 py-2 font-medium">
                           Comercio
                         </th>
-                        <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        <th scope="col" className="px-1.5 py-2 text-right font-medium">
                           Calif.
                         </th>
-                        <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        <th scope="col" className="px-1.5 py-2 text-right font-medium">
                           Nuevas
                         </th>
-                        <th scope="col" className="w-[30%] px-1.5 py-2 font-semibold">
+                        <th scope="col" className="w-[30%] px-1.5 py-2 font-medium">
                           Parte
                         </th>
                       </tr>
@@ -462,7 +466,7 @@ export default function Tablero({
                               ? `${nombreCorto(f.nombre)} (vos)`
                               : nombreCorto(f.nombre)}
                           </td>
-                          <td className="px-1.5 py-2.5 text-right">
+                          <td className="whitespace-nowrap px-1.5 py-2.5 text-right">
                             {f.rating !== null ? `${f.rating.toFixed(1).replace(".", ",")} ★` : "—"}
                           </td>
                           <td className="px-1.5 py-2.5 text-right font-bold">{f.nuevas}</td>
@@ -488,14 +492,14 @@ export default function Tablero({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[300px] border-collapse text-[13px]">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                      <th scope="col" className="px-1.5 py-2 font-semibold">
+                    <tr className="text-left text-xs text-slate-600">
+                      <th scope="col" className="px-1.5 py-2 font-medium">
                         Comercio
                       </th>
-                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                      <th scope="col" className="px-1.5 py-2 text-right font-medium">
                         Calif.
                       </th>
-                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                      <th scope="col" className="px-1.5 py-2 text-right font-medium">
                         Reseñas
                       </th>
                     </tr>
@@ -506,7 +510,7 @@ export default function Tablero({
                         <td className="px-1.5 py-2.5 font-semibold text-slate-900">
                           {f.esPropio ? `${nombreCorto(f.nombre)} (vos)` : nombreCorto(f.nombre)}
                         </td>
-                        <td className="px-1.5 py-2.5 text-right">
+                        <td className="whitespace-nowrap px-1.5 py-2.5 text-right">
                           {f.rating !== null ? `${f.rating.toFixed(1).replace(".", ",")} ★` : "—"}
                         </td>
                         <td className="px-1.5 py-2.5 text-right">{f.total !== null ? miles(f.total) : "—"}</td>
@@ -536,7 +540,7 @@ export default function Tablero({
                   >
                     {calor.filas.map((f) => (
                       <div key={f.dia} className="flex items-center gap-[3px]">
-                        <span className="w-8 shrink-0 text-[11px] text-slate-500">{f.dia}</span>
+                        <span className="w-8 shrink-0 text-[11px] text-slate-600">{f.dia}</span>
                         {f.celdas.map((c) => (
                           <span
                             key={c.hora}
@@ -547,7 +551,7 @@ export default function Tablero({
                         ))}
                       </div>
                     ))}
-                    <div className="flex gap-[3px] pl-[35px] text-[10px] text-slate-500">
+                    <div className="flex gap-[3px] pl-[35px] text-[10px] text-slate-600">
                       {calor.horas.map((h) => (
                         <span key={h} className="flex-1 text-center">
                           {h % 4 === 0 ? `${h}h` : ""}
@@ -557,14 +561,14 @@ export default function Tablero({
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
                     Menos
                     {NIVEL.map((c) => (
                       <span key={c} className="h-2.5 w-3.5 rounded-sm" style={{ background: c }} />
                     ))}
                     Más
                   </div>
-                  <span className="text-[11px] text-slate-500">{miles(calor.total)} toques</span>
+                  <span className="text-[11px] text-slate-600">{miles(calor.total)} toques</span>
                 </div>
                 {calor.lectura && <Nota>{calor.lectura}</Nota>}
               </>
@@ -660,7 +664,7 @@ export default function Tablero({
                   {titulo}
                 </span>
                 {temas.length === 0 && (
-                  <p className="text-[13px] text-slate-500">
+                  <p className="text-[13px] text-slate-600">
                     {bien ? "Todavía ningún tema se repite en las reseñas buenas." : "Ninguna queja se repite: buena señal."}
                   </p>
                 )}
@@ -673,7 +677,7 @@ export default function Tablero({
                       </span>
                     </div>
                     <Barra proporcion={t.proporcion} color={bien ? "#8FD1AE" : "#F4B886"} />
-                    {t.cita && <span className="text-xs italic text-slate-500">“{t.cita}”</span>}
+                    {t.cita && <span className="text-xs italic text-slate-600">“{t.cita}”</span>}
                   </div>
                 ))}
               </div>
@@ -711,13 +715,13 @@ export default function Tablero({
             {calificacion?.valor && (
               <div className="flex flex-col">
                 <span className="text-3xl font-extrabold tracking-tight text-slate-900">{calificacion.valor}</span>
-                {totalResenas !== null && <span className="text-xs text-slate-500">{miles(totalResenas)} reseñas en Google</span>}
+                {totalResenas !== null && <span className="text-xs text-slate-600">{miles(totalResenas)} reseñas en Google</span>}
               </div>
             )}
             {datos.respondidas && (
               <div className="flex flex-col">
                 <span className="text-3xl font-extrabold tracking-tight text-slate-900">{datos.respondidas.pct}%</span>
-                <span className="text-xs text-slate-500">respondidas</span>
+                <span className="text-xs text-slate-600">respondidas</span>
               </div>
             )}
           </div>
@@ -745,7 +749,7 @@ export default function Tablero({
                   ));
                 })()}
               </div>
-              <div className="-mt-2 flex gap-2.5 text-[11px] text-slate-500">
+              <div className="-mt-2 flex gap-2.5 text-[11px] text-slate-600">
                 {datos.meses.map((m) => (
                   <span key={m.mes} className="flex-1 text-center">
                     {m.etiqueta}
@@ -778,10 +782,10 @@ export default function Tablero({
                   <div className="flex-1">
                     <Barra proporcion={f.pct / 100} color={f.estrellas >= 4 ? "#7FA7D3" : "#F4B886"} />
                   </div>
-                  <span className="w-9 text-right text-slate-500">{f.pct}%</span>
+                  <span className="w-9 text-right text-slate-600">{f.pct}%</span>
                 </div>
               ))}
-              <span className="text-[11px] text-slate-500">Sobre las {miles(datos.estrellas.total)} reseñas sincronizadas.</span>
+              <span className="text-[11px] text-slate-600">Sobre las {miles(datos.estrellas.total)} reseñas sincronizadas.</span>
             </div>
           )}
         </section>
@@ -795,14 +799,14 @@ export default function Tablero({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[340px] border-collapse text-[13px]">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                      <th scope="col" className="px-1.5 py-2 font-semibold">
+                    <tr className="text-left text-xs text-slate-600">
+                      <th scope="col" className="px-1.5 py-2 font-medium">
                         Búsqueda
                       </th>
-                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                      <th scope="col" className="px-1.5 py-2 text-right font-medium">
                         Veces
                       </th>
-                      <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                      <th scope="col" className="px-1.5 py-2 text-right font-medium">
                         En reseñas
                       </th>
                     </tr>
@@ -814,7 +818,7 @@ export default function Tablero({
                         <td className="px-1.5 py-2.5 text-right">{miles(b.veces)}</td>
                         <td className="px-1.5 py-2.5 text-right">
                           {b.menciones === null ? (
-                            <span className="text-slate-400">—</span>
+                            <span className="text-slate-500">—</span>
                           ) : (
                             <Pastilla tono={b.menciones >= 5 ? "bien" : b.menciones <= 1 ? "mal" : "neutro"}>
                               {b.menciones === 0 ? "ninguna" : `${b.menciones} reseña${b.menciones === 1 ? "" : "s"}`}
@@ -852,17 +856,17 @@ export default function Tablero({
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[340px] border-collapse text-[13px]">
                     <thead>
-                      <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
-                        <th scope="col" className="px-1.5 py-2 font-semibold">
+                      <tr className="text-left text-xs text-slate-600">
+                        <th scope="col" className="px-1.5 py-2 font-medium">
                           Pieza
                         </th>
-                        <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        <th scope="col" className="px-1.5 py-2 text-right font-medium">
                           Toques
                         </th>
-                        <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        <th scope="col" className="px-1.5 py-2 text-right font-medium">
                           Reseñas
                         </th>
-                        <th scope="col" className="px-1.5 py-2 text-right font-semibold">
+                        <th scope="col" className="px-1.5 py-2 text-right font-medium">
                           Rinde
                         </th>
                       </tr>
@@ -872,10 +876,10 @@ export default function Tablero({
                         <tr key={p.pieza} className="border-t border-[#EEF0F3]">
                           <td className="px-1.5 py-2.5 font-semibold text-slate-900">{p.pieza}</td>
                           <td className="px-1.5 py-2.5 text-right">{miles(p.toques)}</td>
-                          <td className="px-1.5 py-2.5 text-right">{p.resenas ?? <span className="text-slate-400">—</span>}</td>
+                          <td className="px-1.5 py-2.5 text-right">{p.resenas ?? <span className="text-slate-500">—</span>}</td>
                           <td className="px-1.5 py-2.5 text-right">
                             {p.resenas === null ? (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-slate-500">—</span>
                             ) : (
                               <Pastilla tono={p.tono}>{p.rinde}</Pastilla>
                             )}
@@ -900,16 +904,15 @@ export default function Tablero({
             sub="A quién nombran los clientes en sus reseñas, y cuántas llegaron por su tarjeta en los últimos 90 días"
           />
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-            {equipo.map((p) => (
+            {equipo.map((p, i) => (
               <article
                 key={p.nombre}
                 className={`flex flex-col gap-3.5 rounded-xl border p-4 ${p.destacado ? "border-[#7FA7D3] bg-[#F4F7FB]" : "border-[#ECEEF1] bg-white"}`}
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-extrabold text-slate-800 ${
-                      p.tono === "mal" ? "bg-[#F4B886]" : p.destacado ? "bg-[#A9C5E6]" : "bg-[#D9E6F4]"
-                    }`}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-bold text-slate-800"
+                    style={{ background: TINTES_PERSONA[i % TINTES_PERSONA.length] }}
                     aria-hidden="true"
                   >
                     {p.nombre.charAt(0).toUpperCase()}
@@ -918,7 +921,7 @@ export default function Tablero({
                     <span className="truncate text-sm font-bold text-slate-900">{p.nombre}</span>
                     {p.etiqueta && (
                       <span
-                        className={`text-[11px] font-bold ${p.tono === "mal" ? "text-[#8A3F00]" : p.tono === "bien" ? "text-[#0B5E40]" : "text-slate-500"}`}
+                        className={`text-[11px] font-bold ${p.tono === "mal" ? "text-[#8A3F00]" : p.tono === "bien" ? "text-[#0B5E40]" : "text-slate-600"}`}
                       >
                         {p.etiqueta}
                       </span>
@@ -935,13 +938,13 @@ export default function Tablero({
                   ).map(([v, l]) => (
                     <div key={l} className="flex flex-col gap-0.5">
                       <strong className="whitespace-nowrap text-lg text-slate-900">{v}</strong>
-                      <span className="text-[10.5px] leading-tight text-slate-500">{l}</span>
+                      <span className="text-[10.5px] leading-tight text-slate-600">{l}</span>
                     </div>
                   ))}
                 </div>
                 {p.temas.length > 0 && (
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-[11px] text-slate-500">Lo que dicen de {p.nombre.split(/\s+/)[0]}</span>
+                    <span className="text-[11px] text-slate-600">Lo que dicen de {p.nombre.split(/\s+/)[0]}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {p.temas.map((t) => (
                         <span
@@ -957,13 +960,13 @@ export default function Tablero({
               </article>
             ))}
           </div>
-          <p className="text-[11.5px] text-slate-500">
+          <p className="text-[11.5px] text-slate-600">
             "Lo nombran" busca el nombre en el texto de cada reseña: si un cliente se llama igual, puede sumar de más.
           </p>
         </section>
       )}
 
-      <p className="text-[11.5px] leading-relaxed text-slate-500">
+      <p className="text-[11.5px] leading-relaxed text-slate-600">
         Ninguna conclusión con menos de 5 casos. Lo atribuido al cartel es aproximado: decimos "desde que", nunca "gracias a".
         Visitas, búsquedas y acciones vienen de Google Business Profile, que las publica con 2 o 3 días de demora.
       </p>
