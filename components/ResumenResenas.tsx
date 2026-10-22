@@ -1,5 +1,6 @@
 import { terminosFrecuentes, type TerminoFrecuente } from "@/lib/keywords";
 import type { ResenaCRM } from "@/lib/types";
+import { fmtDec } from "@/lib/format";
 
 // Resumen calculado en el servidor a partir de TODAS las reseñas del
 // comercio — no solo las pendientes. Da una foto rápida de "cómo van las
@@ -59,10 +60,11 @@ const COLOR_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   down: "text-rose-600",
   flat: "text-slate-400",
 };
+// Portal (DESIGN.md): el color dice bien o mal.
 const COLOR_TENDENCIA_MONO: Record<"up" | "down" | "flat", string> = {
-  up: "text-slate-900",
-  down: "text-slate-400",
-  flat: "text-slate-400",
+  up: "font-semibold text-[#0B5E40]",
+  down: "font-semibold text-[#8A3F00]",
+  flat: "text-slate-600",
 };
 const FLECHA_TENDENCIA: Record<"up" | "down" | "flat", string> = {
   up: "▲",
@@ -75,26 +77,30 @@ export default function ResumenResenas({
   variant = "solid",
 }: {
   data: ResumenResenasData;
-  /** "glass" es el look de vidrio esmerilado del portal del cliente —
+  /** "glass" es la tarjeta del portal del cliente (DESIGN.md) —
    * "solid" (default) es el que sigue usando la ficha de /admin. */
   variant?: "solid" | "glass";
 }) {
   const { distribucion, total, promedio, tendencia, temasRecurrentes } = data;
   const max = Math.max(...distribucion.map((d) => d.cantidad), 1);
   const colorTendencia = variant === "glass" ? COLOR_TENDENCIA_MONO : COLOR_TENDENCIA;
-  const wrapClass =
-    variant === "glass"
-      ? "rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl"
-      : "rounded-xl border border-slate-200 bg-white p-4";
+  const portal = variant === "glass";
+  const wrapClass = portal
+    ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5"
+    : "rounded-xl border border-slate-200 bg-white p-4";
+  const gris = portal ? "text-slate-600" : "text-slate-500";
+  const grisClaro = portal ? "text-slate-600" : "text-slate-400";
 
   return (
     <div className={wrapClass}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-slate-700">Cómo van tus reseñas</p>
+        <p className={portal ? "text-[15px] font-bold text-slate-900" : "text-sm font-medium text-slate-700"}>
+          Cómo van tus reseñas
+        </p>
         {promedio !== null && (
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold tabular-nums text-slate-900">
-              {promedio.toFixed(1)}★
+              {fmtDec(promedio, 1)}★
             </span>
             {tendencia && (
               <span className={`text-xs font-medium ${colorTendencia[tendencia.dir]}`}>
@@ -106,16 +112,16 @@ export default function ResumenResenas({
       </div>
 
       {total === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">Todavía no tenés reseñas cargadas.</p>
+        <p className={`mt-2 text-sm ${gris}`}>Todavía no tenés reseñas cargadas.</p>
       ) : (
         <>
           <div className="mt-3 space-y-1.5">
             {distribucion.map((d) => (
               <div key={d.estrellas} className="flex items-center gap-2">
-                <span className="w-8 shrink-0 text-xs text-slate-500">{d.estrellas}★</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <span className={`w-8 shrink-0 text-xs ${gris}`}>{d.estrellas}★</span>
+                <div className={`h-2 flex-1 overflow-hidden rounded-full ${portal ? "bg-[#EEF0F3]" : "bg-slate-100"}`}>
                   <div
-                    className="h-full rounded-full bg-brand"
+                    className={`h-full rounded-full ${portal ? (d.estrellas >= 4 ? "bg-[#8FD1AE]" : d.estrellas <= 2 ? "bg-[#F4B886]" : "bg-[#D3D9E2]") : "bg-brand"}`}
                     style={{ width: d.cantidad ? `${Math.max(4, (d.cantidad / max) * 100)}%` : "0%" }}
                   />
                 </div>
@@ -126,8 +132,12 @@ export default function ResumenResenas({
             ))}
           </div>
 
-          <div className="mt-3 border-t border-slate-100 pt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className={`mt-3 border-t pt-3 ${portal ? "border-[#EEF0F3]" : "border-slate-100"}`}>
+            <p
+              className={
+                portal ? "text-xs font-medium text-slate-600" : "text-xs font-medium uppercase tracking-wide text-slate-400"
+              }
+            >
               Lo que más se repite en las quejas
             </p>
             {temasRecurrentes.length > 0 ? (
@@ -135,15 +145,17 @@ export default function ResumenResenas({
                 {temasRecurrentes.map((t) => (
                   <span
                     key={t.termino}
-                    className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${
+                      portal ? "bg-[#FFF4E8] text-[#8A3F00]" : "bg-slate-50 text-slate-700 ring-1 ring-slate-200"
+                    }`}
                   >
                     {t.termino}
-                    <span className="tabular-nums text-slate-400">{t.conteo}</span>
+                    <span className={`tabular-nums ${portal ? "opacity-80" : "text-slate-400"}`}>{t.conteo}</span>
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className={`mt-1.5 text-xs ${grisClaro}`}>
                 No hay ninguna queja que se repita — buena señal.
               </p>
             )}

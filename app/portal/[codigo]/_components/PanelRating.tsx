@@ -1,11 +1,12 @@
 import type { MetricaMensual } from "@/lib/types";
-import { Card, btnPrimary, btnSecondary, IconClock } from "@/components/ui";
+import { Card, btnPortal, btnPortalSec, IconClock } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import DesconectarGoogleBoton from "@/components/portal/DesconectarGoogleBoton";
 import RatingSerieChart from "@/components/RatingSerieChart";
 import RatingPorHoraChart from "@/components/RatingPorHoraChart";
 import { resenasParaProximaDecima, cincoEstrellasPorCadaUna, ratingDespuesDeUnaMala } from "@/lib/objetivos";
 import { businessProfileHabilitado } from "@/lib/gbp";
+import TiraMetricas from "@/components/portal/TiraMetricas";
 import SemaforoResenas from "@/components/portal/SemaforoResenas";
 import type { ResenaParaSemaforo, VistaMapa } from "@/lib/semaforo";
 import type { MetaCalificacion } from "@/lib/conclusiones";
@@ -63,27 +64,27 @@ export default function PanelRating({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <span
-                className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-slate-900" : "bg-slate-300"}`}
+                className={`mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full ${gbpConectado ? "bg-[#8FD1AE]" : "bg-[#D3D9E2]"}`}
                 aria-hidden
               />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-slate-800">Google Business Profile</p>
+                  <p className="text-[15px] font-bold text-slate-900">Google Business Profile</p>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                      gbpConectado ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      gbpConectado ? "bg-[#EAF7F0] text-[#0B5E40]" : "bg-slate-100 text-slate-700"
                     }`}
                   >
                     {gbpConectado ? "Conectado" : "No conectado"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-600">
                   {gbpConectado
                     ? "Así traemos solas las visitas, llamadas y clics de “cómo llegar” de tu ficha."
                     : "Autorizá con tu cuenta de Google (la que administra tu ficha) para que las visitas y llamadas se carguen solas, sin que nadie tenga que anotarlas a mano."}
                 </p>
                 {gbpConectado && (
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-600">
                     Conectado {diasConectado === 0 ? "hoy" : `hace ${diasConectado} día${diasConectado === 1 ? "" : "s"}`}.
                   </p>
                 )}
@@ -92,7 +93,7 @@ export default function PanelRating({
             <div className="flex shrink-0 items-center gap-2">
               <a
                 href={`/api/portal/google/oauth/start?codigo=${codigoAcceso}&comercioId=${comercioId}`}
-                className={gbpConectado ? btnSecondary : btnPrimary}
+                className={gbpConectado ? btnPortalSec : btnPortal}
               >
                 {gbpConectado ? "Reconectar" : "Conectar con Google"}
               </a>
@@ -102,7 +103,7 @@ export default function PanelRating({
             </div>
           </div>
           {gbpPorVencer && (
-            <p className="mt-3 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
+            <p className="mt-3 flex items-start gap-2 rounded-lg bg-[#F4F7FB] px-3 py-2 text-xs leading-relaxed text-slate-700">
               <IconClock size={14} className="mt-0.5 shrink-0" />
               <span>
                 Todavía estamos terminando de verificar la app con Google — mientras tanto, este
@@ -173,74 +174,58 @@ function ObjetivosRating({
   // Meses para llegar al próximo escalón al ritmo de reseñas de siempre —
   // en el mejor caso (todas de 5★): es un piso, no una promesa.
   const meses = proximo && ritmoMensual >= 0.5 ? Math.ceil(proximo.faltan / ritmoMensual) : null;
-  return (
-    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <Card variant="glass">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tu próximo escalón</p>
-        {proximo ? (
-          <>
-            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-              {proximo.objetivo.toFixed(1)}★
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Te faltan ≈ {fmtNum(proximo.faltan)} reseña{proximo.faltan === 1 ? "" : "s"} de 5★ seguidas para que
-              Google muestre {proximo.objetivo.toFixed(1)}★.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">5.0★</div>
-            <p className="mt-1 text-xs text-slate-500">Estás en el máximo que muestra Google. Ahora se trata de sostenerlo.</p>
-          </>
-        )}
-      </Card>
-      {metaExacta?.semanas != null && (
-        <Card variant="glass">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">A tu ritmo</p>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-            ~{metaExacta.semanas} semana{metaExacta.semanas === 1 ? "" : "s"}
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            para llegar a {metaExacta.siguiente}★, al ritmo de tus reseñas de 5★ de los últimos 3 meses.
-          </p>
-        </Card>
-      )}
-      {!metaExacta && meses !== null && proximo && (
-        <Card variant="glass">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">A tu ritmo</p>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-            {meses > 24 ? "+2 años" : `${meses} mes${meses === 1 ? "" : "es"}`}
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            para llegar a {proximo.objetivo.toFixed(1)}★ con tus ~{ritmoMensual.toFixed(0)} reseñas nuevas por mes, y
-            eso si todas fueran de 5★.{" "}
-            {meses > 6 ? "Para acortarlo: más clientes tocando el cartel." : ""}
-          </p>
-        </Card>
-      )}
-      <Card variant="glass">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cuánto pesa una mala reseña</p>
-        {porCadaMala !== null ? (
-          <>
-            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-              {fmtNum(porCadaMala)} de 5★
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              hacen falta para compensar una sola de 1★ con tu promedio actual. Por eso conviene que cada cliente
-              contento deje la suya.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-              {ratingDespuesDeUnaMala(rating, total).toFixed(2)}★
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              sería tu promedio después de una sola reseña de 1★: con 5.0★, cualquier mala reseña se nota.
-            </p>
-          </>
-        )}
-      </Card>
-    </div>
+  const celdas: { etiqueta: string; valor: string; texto: string }[] = [];
+  celdas.push(
+    proximo
+      ? {
+          etiqueta: "Tu próximo escalón",
+          valor: `${decimal(proximo.objetivo)} ★`,
+          texto: `Te faltan ≈ ${fmtNum(proximo.faltan)} reseña${proximo.faltan === 1 ? "" : "s"} de 5★ seguidas para que Google muestre ${decimal(proximo.objetivo)}★.`,
+        }
+      : {
+          etiqueta: "Tu próximo escalón",
+          valor: "5,0 ★",
+          texto: "Estás en el máximo que muestra Google. Ahora se trata de sostenerlo.",
+        },
   );
+  if (metaExacta?.semanas != null) {
+    celdas.push({
+      etiqueta: "A tu ritmo",
+      valor: `~${metaExacta.semanas} semana${metaExacta.semanas === 1 ? "" : "s"}`,
+      texto: `para llegar a ${metaExacta.siguiente}★, al ritmo de tus reseñas de 5★ de los últimos 3 meses.`,
+    });
+  } else if (meses !== null && proximo) {
+    celdas.push({
+      etiqueta: "A tu ritmo",
+      valor: meses > 24 ? "+2 años" : `${meses} mes${meses === 1 ? "" : "es"}`,
+      texto: `para llegar a ${decimal(proximo.objetivo)}★ con tus ~${ritmoMensual.toFixed(0)} reseñas nuevas por mes, y eso si todas fueran de 5★.${
+        meses > 6 ? " Para acortarlo: más clientes tocando el cartel." : ""
+      }`,
+    });
+  }
+  celdas.push(
+    porCadaMala !== null
+      ? {
+          etiqueta: "Cuánto pesa una mala reseña",
+          valor: `${fmtNum(porCadaMala)} de 5★`,
+          texto:
+            "hacen falta para compensar una sola de 1★ con tu promedio actual. Por eso conviene que cada cliente contento deje la suya.",
+        }
+      : {
+          etiqueta: "Cuánto pesa una mala reseña",
+          valor: `${ratingDespuesDeUnaMala(rating, total).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ★`,
+          texto: "sería tu promedio después de una sola reseña de 1★: con 5,0★, cualquier mala reseña se nota.",
+        },
+  );
+  return (
+    <TiraMetricas
+      etiqueta="Qué te falta para subir"
+      className="mb-4"
+      celdas={celdas.map((c) => ({ etiqueta: c.etiqueta, valor: c.valor, detalle: c.texto }))}
+    />
+  );
+}
+
+function decimal(n: number): string {
+  return n.toLocaleString("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }

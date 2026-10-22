@@ -3,18 +3,19 @@
 import { useState, useTransition } from "react";
 import ChartCard from "@/components/charts/ChartCard";
 import Tooltip from "@/components/charts/Tooltip";
-import { INK, niceTicks } from "@/lib/palette";
+import { PORTAL, niceTicks } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
 import { accionObtenerTapsPorHora } from "@/app/portal/actions";
+import { useAncho } from "@/components/charts/useAncho";
 
 // Taps por día, separados por soporte (NFC vs QR) — mismo eje, misma unidad
-// (cantidad de taps), así que van juntos en un solo gráfico con 2 series. Sin
-// color (panel del cliente: solo blanco y negro del manual de marca) — se
-// distinguen por tinta (negro/gris) y por trazo (sólido/punteado). Si el
+// (cantidad de taps), así que van juntos en un solo gráfico con 2 series. NFC
+// en el celeste de los datos y QR en gris (DESIGN.md), además del trazo
+// (sólido/punteado) para no depender solo del color. Si el
 // comercio no tiene ningún link con QR habilitado, se muestra solo la línea
 // de NFC (sin leyenda, una serie).
-const COLOR_NFC = "#1A1A1A";
-const COLOR_QR = "#8A8A8A";
+const COLOR_NFC = PORTAL.dato;
+const COLOR_QR = PORTAL.anterior;
 
 export default function TapsPorSoporteChart({
   labels,
@@ -36,6 +37,7 @@ export default function TapsPorSoporteChart({
   comercioId: string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  const [W, refAncho] = useAncho(640);
   const [diaAbierto, setDiaAbierto] = useState<number | null>(null);
   const [horas, setHoras] = useState<{ hora: number; taps: number }[] | null>(null);
   const [pendiente, startTransition] = useTransition();
@@ -54,7 +56,6 @@ export default function TapsPorSoporteChart({
     });
   }
 
-  const W = 640;
   const H = 230;
   const M = { top: 14, right: 20, bottom: 24, left: 44 };
   const plotW = W - M.left - M.right;
@@ -82,14 +83,14 @@ export default function TapsPorSoporteChart({
   const areaQr = areaDe(pathQr, qr);
 
   const table = {
-    head: mostrarQr ? ["Día", "Taps NFC", "Taps QR"] : ["Día", "Taps"],
+    head: mostrarQr ? ["Día", "Toques NFC", "Toques QR"] : ["Día", "Toques"],
     rows: labels.map((l, i) => (mostrarQr ? [l, fmtNum(nfc[i]), fmtNum(qr[i])] : [l, fmtNum(nfc[i])])),
   };
 
   return (
     <ChartCard
       variant="glass"
-      title="Taps por día"
+      title="Toques por día"
       subtitle={`Últimos ${labels.length} días${mostrarQr ? " · separados por NFC y QR" : ""}`}
       legend={
         mostrarQr
@@ -101,8 +102,8 @@ export default function TapsPorSoporteChart({
       }
       table={table}
     >
-      <div className="relative">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Taps por día">
+      <div className="relative" ref={refAncho}>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Toques por día">
           <defs>
             <linearGradient id="tapsNfcGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={COLOR_NFC} stopOpacity={0.22} />
@@ -120,15 +121,15 @@ export default function TapsPorSoporteChart({
                 x2={W - M.right}
                 y1={yAt(t)}
                 y2={yAt(t)}
-                stroke={t === 0 ? INK.axis : INK.grid}
+                stroke={t === 0 ? PORTAL.eje : PORTAL.grilla}
                 strokeWidth={1}
               />
               <text
                 x={M.left - 6}
                 y={yAt(t) + 3}
                 textAnchor="end"
-                fontSize={10}
-                fill={INK.muted}
+                fontSize={11}
+                fill={PORTAL.textoSec}
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {fmtNum(t)}
@@ -137,13 +138,13 @@ export default function TapsPorSoporteChart({
           ))}
 
           {labels.map((label, i) => (
-            <text key={label} x={xAt(i)} y={H - 8} textAnchor="middle" fontSize={10} fill={INK.muted}>
+            <text key={label} x={xAt(i)} y={H - 8} textAnchor="middle" fontSize={11} fill={PORTAL.textoSec}>
               {label}
             </text>
           ))}
 
           {hover !== null && (
-            <line x1={xAt(hover)} x2={xAt(hover)} y1={M.top} y2={M.top + plotH} stroke={INK.axis} strokeWidth={1} />
+            <line x1={xAt(hover)} x2={xAt(hover)} y1={M.top} y2={M.top + plotH} stroke={PORTAL.eje} strokeWidth={1} />
           )}
 
           {mostrarQr && <path d={areaQr} fill="url(#tapsQrGradient)" />}
@@ -161,16 +162,16 @@ export default function TapsPorSoporteChart({
             />
           )}
 
-          <circle cx={xAt(last)} cy={yAt(nfc[last])} r={4} fill={COLOR_NFC} stroke={INK.surface} strokeWidth={2} />
+          <circle cx={xAt(last)} cy={yAt(nfc[last])} r={4} fill={COLOR_NFC} stroke={"#FFFFFF"} strokeWidth={2} />
           {mostrarQr && (
-            <circle cx={xAt(last)} cy={yAt(qr[last])} r={4} fill={COLOR_QR} stroke={INK.surface} strokeWidth={2} />
+            <circle cx={xAt(last)} cy={yAt(qr[last])} r={4} fill={COLOR_QR} stroke={"#FFFFFF"} strokeWidth={2} />
           )}
 
           {hover !== null && (
             <>
-              <circle cx={xAt(hover)} cy={yAt(nfc[hover])} r={4} fill={COLOR_NFC} stroke={INK.surface} strokeWidth={2} />
+              <circle cx={xAt(hover)} cy={yAt(nfc[hover])} r={4} fill={COLOR_NFC} stroke={"#FFFFFF"} strokeWidth={2} />
               {mostrarQr && (
-                <circle cx={xAt(hover)} cy={yAt(qr[hover])} r={4} fill={COLOR_QR} stroke={INK.surface} strokeWidth={2} />
+                <circle cx={xAt(hover)} cy={yAt(qr[hover])} r={4} fill={COLOR_QR} stroke={"#FFFFFF"} strokeWidth={2} />
               )}
             </>
           )}
@@ -182,7 +183,7 @@ export default function TapsPorSoporteChart({
               y={M.top}
               width={band}
               height={plotH}
-              fill={diaAbierto === i ? INK.grid : "transparent"}
+              fill={diaAbierto === i ? PORTAL.grilla : "transparent"}
               tabIndex={0}
               role="button"
               aria-label={
@@ -217,27 +218,27 @@ export default function TapsPorSoporteChart({
         )}
       </div>
 
-      <p className="mt-1 text-center text-[11px] text-slate-400">Tocá un día para ver a qué hora te tocaron el cartel.</p>
+      <p className="mt-1 text-center text-[11px] text-slate-600">Tocá un día para ver a qué hora te tocaron el cartel.</p>
 
       {diaAbierto !== null && (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+        <div className="mt-3 rounded-lg border border-[#E4E6EA] bg-[#F7F9FC] p-3">
           <p className="mb-2 text-xs font-medium text-slate-600">{labels[diaAbierto]} · por hora</p>
           {pendiente || !horas ? (
-            <p className="text-xs text-slate-400">Cargando…</p>
+            <p className="text-xs text-slate-600">Cargando…</p>
           ) : horas.every((h) => h.taps === 0) ? (
-            <p className="text-xs text-slate-400">No hubo taps ese día.</p>
+            <p className="text-xs text-slate-600">No hubo toques ese día.</p>
           ) : (
             <div className="space-y-1">
               {horas
                 .filter((h) => h.taps > 0)
                 .map((h) => (
                   <div key={h.hora} className="flex items-center gap-2">
-                    <span className="w-11 shrink-0 text-right text-[11px] tabular-nums text-slate-500">
+                    <span className="w-11 shrink-0 text-right text-[11px] tabular-nums text-slate-600">
                       {String(h.hora).padStart(2, "0")}:00
                     </span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#EEF0F3]">
                       <div
-                        className="h-full rounded-full bg-brand"
+                        className="h-full rounded-full bg-[#7FA7D3]"
                         style={{ width: `${Math.max(6, (h.taps / Math.max(...horas.map((x) => x.taps))) * 100)}%` }}
                       />
                     </div>
