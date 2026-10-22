@@ -209,6 +209,12 @@ export default function PortalShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Aviso del panel visible para las estadísticas de uso
+  // (components/portal/AnaliticaPortal.tsx). Sin Analytics, nadie lo escucha.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("portal:panel", { detail: active }));
+  }, [active]);
+
   useEffect(() => {
     const grupo = nav.find((e) => e.type === "group" && e.items.some((i) => i.id === active));
     if (grupo) setGroupOpen((g) => ({ ...g, [grupo.id]: true }));
