@@ -131,6 +131,22 @@ export default function PrivacidadPage() {
               </section>
 
               <section>
+                <h2 className={h2}>Estadísticas de uso del portal</h2>
+                <p className="mt-2">
+                  En el portal de cada comercio usamos Google Analytics para saber qué
+                  secciones se usan y mejorar el servicio (por ejemplo, cuántas veces
+                  se abre el resumen o la pestaña de conclusiones). No le enviamos el
+                  código de acceso del portal, ni datos obtenidos de las APIs de
+                  Google, ni datos de las personas que tocan el cartel. Google
+                  Analytics usa sus propias cookies; se puede desactivar con el{" "}
+                  <a href="https://tools.google.com/dlpage/gaoptout" className="underline">
+                    complemento de inhabilitación de Google
+                  </a>
+                  .
+                </p>
+              </section>
+
+              <section>
                 <h2 className={h2}>Personas que tocan el cartel</h2>
                 <p className="mt-2">
                   Cuando alguien toca un cartel NFC o escanea un QR de MetricsField,
@@ -333,6 +349,22 @@ export default function PrivacidadPage() {
                   infrastructure; each business&rsquo;s Google access token is
                   stored encrypted. We do not sell this data, we do not use it for
                   advertising, and we do not share it with third parties.
+                </p>
+              </section>
+
+              <section>
+                <h2 className={h2}>Portal Usage Statistics</h2>
+                <p className="mt-2">
+                  On each business&rsquo;s portal we use Google Analytics to learn
+                  which sections are used and to improve the service (for example,
+                  how often the summary or the conclusions tab is opened). We do not
+                  send it the portal&rsquo;s access code, any data obtained from
+                  Google APIs, or any data about people who tap the display. Google
+                  Analytics uses its own cookies; it can be disabled with the{" "}
+                  <a href="https://tools.google.com/dlpage/gaoptout" className="underline">
+                    Google Analytics opt-out browser add-on
+                  </a>
+                  .
                 </p>
               </section>
 
