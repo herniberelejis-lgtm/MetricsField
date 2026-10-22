@@ -9,3 +9,17 @@
 body {
   @apply bg-slate-50 text-slate-800 antialiased;
 }
+
+/* Tablero del portal (components/portal/Tablero.tsx): foco visible en
+   links y botones para quien navega con teclado, y la selección de texto
+   con el celeste del tablero en vez del azul del navegador. */
+.tablero a:focus-visible,
+.tablero button:focus-visible {
+  outline: 2px solid #4f7aa8;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.tablero ::selection {
+  background: #d9e6f4;
+  color: #111111;
+}
