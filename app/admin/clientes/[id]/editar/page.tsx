@@ -58,7 +58,7 @@ export default async function EditarClientePage({
       <div className="mb-4 text-sm">
         <Link
           href={`/admin/clientes/${c.id}`}
-          className="text-slate-500 hover:text-brand-fg"
+          className="text-slate-600 hover:text-[#1F4E80]"
         >
           ← {c.nombre}
         </Link>
@@ -73,14 +73,14 @@ export default async function EditarClientePage({
         Logo para la miniatura de WhatsApp
       </h2>
       <Card>
-        <p className="mb-4 text-xs text-slate-500">
+        <p className="mb-4 text-xs text-slate-600">
           Cuando alguien comparte el link del cartel de este comercio por WhatsApp, la
           tarjeta que aparece usa este logo. Sin uno cargado, muestra el isotipo genérico
           de MetricsField.
         </p>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
             {ERRORES_LOGO[error] ?? "No se pudo guardar — probá de nuevo."}
           </div>
         )}
@@ -93,13 +93,13 @@ export default async function EditarClientePage({
             <img
               src={`data:${logo.contentType};base64,${logo.datos.toString("base64")}`}
               alt={`Logo de ${c.nombre}`}
-              className="h-16 w-auto max-w-[200px] rounded border border-slate-200 bg-white object-contain p-1"
+              className="h-16 w-auto max-w-[200px] rounded border border-[#E4E6EA] bg-white object-contain p-1"
             />
             <form action={accionEliminarLogoComercio}>
               <input type="hidden" name="id" value={c.id} />
               <button
                 type="submit"
-                className="text-xs font-medium text-rose-600 hover:underline"
+                className="text-xs font-medium text-[#8A3F00] hover:underline"
               >
                 Quitar logo
               </button>
@@ -174,7 +174,7 @@ export default async function EditarClientePage({
         {c.ventasNFC.length > 0 && (
           <table className="mt-6 w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                 <th className="py-2 font-medium">Fecha</th>
                 <th className="py-2 font-medium">Formato</th>
                 <th className="py-2 font-medium">Cant.</th>
@@ -183,7 +183,7 @@ export default async function EditarClientePage({
             </thead>
             <tbody>
               {[...c.ventasNFC].reverse().map((v, i) => (
-                <tr key={i} className="border-b border-slate-100 last:border-0">
+                <tr key={i} className="border-b border-[#EEF0F3] last:border-0">
                   <td className="py-2 text-slate-600">
                     {new Date(v.fecha).toLocaleDateString("es-AR")}
                   </td>

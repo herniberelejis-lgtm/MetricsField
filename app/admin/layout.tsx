@@ -18,7 +18,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="admin flex min-h-screen bg-[#F4F5F7]">
       <Sidebar />
       <main className="flex-1 overflow-x-hidden">
         {/* En una preview de Vercel las claves y los interruptores de Google
@@ -26,7 +26,7 @@ export default function AdminLayout({
             acá. Sin este aviso es fácil probar en la preview y creer que
             producción no anda. */}
         {process.env.VERCEL_ENV === "preview" && (
-          <div role="status" className="bg-amber-100 px-6 py-2 text-center text-xs font-medium text-amber-900">
+          <div role="status" className="bg-[#FFF4E8] px-6 py-2 text-center text-xs font-medium text-[#8A3F00]">
             Estás en una PREVIEW de prueba, no en producción: acá Google no se sincroniza. Para datos reales usá{" "}
             <a href="https://app.metricsfield.com/admin" className="underline">
               app.metricsfield.com

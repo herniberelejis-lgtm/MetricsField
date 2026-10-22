@@ -33,14 +33,14 @@ export default function AccionesClienteMenu({ id, nombre }: { id: string; nombre
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400"
       >
         Más acciones
         <span aria-hidden className={`text-xs transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 z-10 w-64 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg">
+        <div className="absolute right-0 top-9 z-10 w-64 rounded-lg border border-[#E4E6EA] bg-white p-1.5 shadow-lg">
           {!confirmando ? (
             <>
               <Link href={`/admin/clientes/${id}/editar`} className="block rounded-md px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
@@ -52,11 +52,11 @@ export default function AccionesClienteMenu({ id, nombre }: { id: string; nombre
               <Link href={`/admin/clientes/${id}/competencia`} className="block rounded-md px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
                 Competencia
               </Link>
-              <div className="my-1 border-t border-slate-100" />
+              <div className="my-1 border-t border-[#EEF0F3]" />
               <button
                 type="button"
                 onClick={() => setConfirmando(true)}
-                className="block w-full rounded-md px-2.5 py-1.5 text-left text-sm text-rose-600 hover:bg-rose-50"
+                className="block w-full rounded-md px-2.5 py-1.5 text-left text-sm text-[#8A3F00] hover:bg-[#FFF4E8]"
               >
                 Eliminar cliente
               </button>
@@ -64,7 +64,7 @@ export default function AccionesClienteMenu({ id, nombre }: { id: string; nombre
           ) : (
             <form action={accionEliminarCliente} className="space-y-2 p-1">
               <input type="hidden" name="id" value={id} />
-              <p className="px-0.5 text-[11px] text-slate-500">
+              <p className="px-0.5 text-[11px] text-slate-600">
                 Escribí <b>{nombre}</b> para confirmar. Borra todo (reseñas,
                 métricas, links, sucursales, portal) y no se puede deshacer.
               </p>
@@ -72,19 +72,19 @@ export default function AccionesClienteMenu({ id, nombre }: { id: string; nombre
                 name="confirmarNombre"
                 placeholder={nombre}
                 autoFocus
-                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                className="w-full rounded-md border border-[#D6D9DE] px-2 py-1 text-xs"
               />
               <div className="flex gap-1.5">
                 <button
                   type="button"
                   onClick={() => setConfirmando(false)}
-                  className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                  className="flex-1 rounded-md border border-[#D6D9DE] px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-md bg-rose-600 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
+                  className="flex-1 rounded-md bg-[#8A3F00] px-2 py-1 text-xs font-medium text-white hover:bg-[#6F3300]"
                 >
                   Borrar
                 </button>

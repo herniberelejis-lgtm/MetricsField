@@ -13,7 +13,7 @@ export default async function NuevoClientePage() {
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-4 text-sm">
-        <Link href="/admin/clientes" className="text-slate-500 hover:text-brand-fg">
+        <Link href="/admin/clientes" className="text-slate-600 hover:text-[#1F4E80]">
           ← Clientes
         </Link>
       </div>

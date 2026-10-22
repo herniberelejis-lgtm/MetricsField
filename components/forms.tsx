@@ -35,7 +35,7 @@ export const FORMATOS_NFC = [
 ] as const;
 
 export const inputCls =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none";
+  "w-full rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-500 focus:border-[#4F7AA8] focus:outline-none";
 
 export function Field({
   label,
@@ -48,11 +48,11 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+      <span className="mb-1 block text-xs font-medium text-slate-700">
         {label}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-600">{hint}</span>}
     </label>
   );
 }
@@ -61,7 +61,7 @@ export function SubmitButton({ children }: { children: ReactNode }) {
   return (
     <button
       type="submit"
-      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+      className="inline-flex min-h-[40px] items-center rounded-full bg-[#1F4E80] px-4 py-2 text-sm font-semibold text-white hover:bg-[#183F68]"
     >
       {children}
     </button>

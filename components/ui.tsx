@@ -90,11 +90,11 @@ export function IconShield({ size, className }: { size?: number; className?: str
 // pantalla inventando su propio padding/radio) — foco visible siempre,
 // para teclado y lectores de pantalla.
 export const btnPrimary =
-  "inline-flex items-center justify-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-[#1F4E80] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#183F68] disabled:cursor-not-allowed disabled:opacity-50";
 export const btnSecondary =
-  "inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full border border-[#D6D9DE] bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:border-[#A9C5E6] hover:bg-[#F7F9FC] disabled:cursor-not-allowed disabled:opacity-50";
 export const btnGhost =
-  "inline-flex items-center justify-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1 rounded-full px-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 // Botones del portal del cliente (DESIGN.md): la acción principal en el azul
 // de los links, sin sombra; 40px de alto para que se toquen bien.
 export const btnPortal =
@@ -104,7 +104,7 @@ export const btnPortalSec =
 export const btnPortalGhost =
   "inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-3 text-sm font-medium text-slate-600 transition hover:bg-[#F7F9FC] hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 export const btnSuccess =
-  "inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full bg-[#1F4E80] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#183F68] disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Encabezado de sección reutilizable: título + descripción corta, mismo
  * peso tipográfico en toda la app en vez de que cada pantalla lo reinvente. */
@@ -147,7 +147,7 @@ export function Card({
   const base =
     variant === "glass"
       ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6"
-      : "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm";
+      : "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-6";
   return (
     <div id={id} className={`${base} ${className}`}>
       {children}
@@ -170,7 +170,7 @@ export function PageHeader({
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">
           {title}
         </h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1 max-w-prose text-sm text-slate-600">{subtitle}</p>}
       </div>
       {/* min-w-0 para que un `actions` ancho (ej. varios chips de filtro) no
           empuje el header entero fuera de pantalla en mobile — el propio
@@ -196,46 +196,27 @@ export function Kpi({
 }) {
   const deltaColor =
     !delta || delta.dir === "flat"
-      ? variant === "glass"
-        ? "text-slate-600"
-        : "text-slate-400"
-      : variant === "glass"
-        ? delta.good
-          ? "font-semibold text-[#0B5E40]"
-          : "font-semibold text-[#8A3F00]"
-        : delta.good
-          ? "text-emerald-600"
-          : "text-rose-600";
+      ? "text-slate-600"
+      : delta.good
+        ? "font-semibold text-[#0B5E40]"
+        : "font-semibold text-[#8A3F00]";
   const arrow =
     delta?.dir === "up" ? "▲" : delta?.dir === "down" ? "▼" : "→";
   // En el portal (glass): etiqueta en minúscula normal, cifra de 26px y
   // grises que se leen (DESIGN.md §3-4).
-  const portal = variant === "glass";
+  // Admin y portal usan la misma métrica (DESIGN.md §3-4): etiqueta en
+  // minúscula normal, cifra de 26px y grises que se leen.
   return (
     <Card variant={variant}>
-      <div
-        className={
-          portal ? "text-[13px] font-medium text-slate-600" : "text-xs font-medium uppercase tracking-wide text-slate-500"
-        }
-      >
-        {label}
-      </div>
-      <div
-        className={
-          portal
-            ? "mt-1.5 text-[26px] font-medium leading-tight tracking-tight text-slate-900 tabular-nums"
-            : "mt-2 text-2xl font-semibold text-slate-900"
-        }
-      >
-        {value}
-      </div>
+      <div className="text-[13px] font-medium text-slate-600">{label}</div>
+      <div className="mt-1.5 text-[26px] font-medium leading-tight tracking-tight text-slate-900 tabular-nums">{value}</div>
       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
         {delta && (
           <span className={deltaColor}>
             {arrow} {delta.text}
           </span>
         )}
-        {hint && <span className={portal ? "text-slate-600" : "text-slate-400"}>{hint}</span>}
+        {hint && <span className="text-slate-600">{hint}</span>}
       </div>
     </Card>
   );
@@ -247,14 +228,12 @@ export function Sparkline({
   width = 120,
   height = 32,
   invert = false,
-  mono = false,
 }: {
   values: number[];
   width?: number;
   height?: number;
   invert?: boolean; // true cuando "menos es mejor" para esta métrica
-  /** Portal: el celeste de los datos (DESIGN.md), sin distinguir tendencia
-   * buena/mala por tinta. */
+  /** Sin efecto: la línea va siempre en el celeste de los datos (DESIGN.md). */
   mono?: boolean;
 }) {
   if (values.length === 0) return null;
@@ -262,7 +241,7 @@ export function Sparkline({
     // un solo dato: todavía no hay tendencia que dibujar — un punto
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <circle cx={width / 2} cy={height / 2} r={4} fill={mono ? "#6F9BCF" : "#3D5A80"} stroke="#ffffff" strokeWidth={2} />
+        <circle cx={width / 2} cy={height / 2} r={4} fill="#6F9BCF" stroke="#ffffff" strokeWidth={2} />
       </svg>
     );
   }
@@ -275,9 +254,9 @@ export function Sparkline({
     const y = invert ? norm * height : height - norm * height;
     return `${(i * step).toFixed(1)},${y.toFixed(1)}`;
   });
-  const rising = values[values.length - 1] >= values[0];
-  const good = invert ? !rising : rising;
-  const stroke = mono ? "#6F9BCF" : good ? "#2F6D4D" : "#8A3B3B";
+  // Una línea es un dato, no un juicio: siempre el celeste de los datos
+  // (DESIGN.md). `invert` sigue sirviendo para dibujar "menos es mejor".
+  const stroke = "#6F9BCF";
   return (
     <svg
       width={width}
@@ -303,8 +282,8 @@ export function PlanBadge({ plan, mono = false }: { plan: Plan; mono?: boolean }
       ? "bg-[#EEF4FB] text-[#1F4E80]"
       : "bg-slate-100 text-slate-700"
     : plan === "Premium"
-      ? "bg-violet-100 text-violet-700"
-      : "bg-sky-100 text-sky-700";
+      ? "bg-[#EEF4FB] text-[#1F4E80]"
+      : "bg-slate-100 text-slate-700";
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
       {plan}
@@ -312,11 +291,12 @@ export function PlanBadge({ plan, mono = false }: { plan: Plan; mono?: boolean }
   );
 }
 
+// Estados con los tonos de DESIGN.md: bien, para mejorar, dato y neutro.
 const estadoStyles: Record<EstadoCliente, string> = {
-  activo: "bg-emerald-100 text-emerald-700",
-  pausado: "bg-amber-100 text-amber-700",
-  prospecto: "bg-slate-100 text-slate-600",
-  baja: "bg-rose-100 text-rose-700",
+  activo: "bg-[#EAF7F0] text-[#0B5E40]",
+  pausado: "bg-[#FFF4E8] text-[#8A3F00]",
+  prospecto: "bg-[#EEF4FB] text-[#1F4E80]",
+  baja: "bg-slate-100 text-slate-700",
 };
 
 export function EstadoBadge({ estado }: { estado: EstadoCliente }) {
@@ -329,11 +309,11 @@ export function EstadoBadge({ estado }: { estado: EstadoCliente }) {
   );
 }
 
-export function Stars({ rating, mono = false }: { rating: number; mono?: boolean }) {
+export function Stars({ rating }: { rating: number; /** Sin efecto: ahora siempre en tinta (DESIGN.md). */ mono?: boolean }) {
   const full = Math.round(rating);
   return (
     <span className="inline-flex items-center gap-1">
-      <span className={mono ? "text-slate-900" : "text-amber-400"} aria-hidden>
+      <span className="text-slate-900" aria-hidden>
         {"★".repeat(full)}
         <span className="text-slate-200">{"★".repeat(5 - full)}</span>
       </span>

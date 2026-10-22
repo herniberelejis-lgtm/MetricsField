@@ -55,11 +55,6 @@ export function calcularResumenResenas(resenas: ResenaCRM[]): ResumenResenasData
   return { distribucion, total, promedio, tendencia, temasRecurrentes };
 }
 
-const COLOR_TENDENCIA: Record<"up" | "down" | "flat", string> = {
-  up: "text-emerald-600",
-  down: "text-rose-600",
-  flat: "text-slate-400",
-};
 // Portal (DESIGN.md): el color dice bien o mal.
 const COLOR_TENDENCIA_MONO: Record<"up" | "down" | "flat", string> = {
   up: "font-semibold text-[#0B5E40]",
@@ -74,7 +69,6 @@ const FLECHA_TENDENCIA: Record<"up" | "down" | "flat", string> = {
 
 export default function ResumenResenas({
   data,
-  variant = "solid",
 }: {
   data: ResumenResenasData;
   /** "glass" es la tarjeta del portal del cliente (DESIGN.md) —
@@ -83,8 +77,9 @@ export default function ResumenResenas({
 }) {
   const { distribucion, total, promedio, tendencia, temasRecurrentes } = data;
   const max = Math.max(...distribucion.map((d) => d.cantidad), 1);
-  const colorTendencia = variant === "glass" ? COLOR_TENDENCIA_MONO : COLOR_TENDENCIA;
-  const portal = variant === "glass";
+  const colorTendencia = COLOR_TENDENCIA_MONO;
+  // Admin y portal con el mismo estilo (DESIGN.md).
+  const portal = true;
   const wrapClass = portal
     ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5"
     : "rounded-xl border border-slate-200 bg-white p-4";

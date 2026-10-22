@@ -8,7 +8,7 @@ import {
   getVisitasPerfilPortfolio,
 } from "@/lib/db";
 import { metricaActual, type Cliente } from "@/lib/types";
-import { fmtARS, fmtNum } from "@/lib/format";
+import { fmtARS, fmtNum, fmtDec } from "@/lib/format";
 import {
   Card,
   Kpi,
@@ -91,7 +91,7 @@ export default async function DashboardPage({
         title="Panel"
         subtitle="Métricas clave de la cartera"
         actions={
-          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-slate-200 bg-white p-1">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-[#E4E6EA] bg-white p-1">
             {PERIODOS.map((p) => (
               <Link
                 key={p.key}
@@ -99,7 +99,7 @@ export default async function DashboardPage({
                 aria-current={p.key === periodo.key ? "true" : undefined}
                 className={
                   p.key === periodo.key
-                    ? "shrink-0 rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                    ? "shrink-0 rounded-full bg-[#EEF4FB] px-3 py-1 text-xs font-semibold text-[#1F4E80] ring-1 ring-[#A9C5E6]"
                     : "shrink-0 rounded-full px-3 py-1 text-xs text-slate-600 hover:bg-slate-100"
                 }
               >
@@ -138,10 +138,10 @@ export default async function DashboardPage({
         />
         <Kpi
           label="Rating promedio cartera"
-          value={(
-            sum(activos.map((c) => metricaActual(c)?.ratingPromedio ?? 0)) /
-            (activos.length || 1)
-          ).toFixed(2)}
+          value={fmtDec(
+            sum(activos.map((c) => metricaActual(c)?.ratingPromedio ?? 0)) / (activos.length || 1),
+            2,
+          )}
           hint="estrellas Google, hoy"
         />
       </div>
@@ -151,7 +151,7 @@ export default async function DashboardPage({
       </h2>
       <Card>
         {resenasResumen.total === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {conResenasDetalle
               ? "No hay reseñas cargadas en este período."
               : "Se llena cuando cada cliente conecta su Google desde el portal."}
@@ -162,10 +162,10 @@ export default async function DashboardPage({
               const cantidad = resenasResumen.porEstrellas[n];
               return (
                 <div key={n} className="flex items-center gap-3">
-                  <span className="w-8 shrink-0 text-xs text-slate-500">{n}★</span>
-                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <span className="w-8 shrink-0 text-xs text-slate-600">{n}★</span>
+                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#EEF0F3]">
                     <div
-                      className={`h-full rounded-full ${n <= 3 ? "bg-rose-500" : "bg-emerald-600"}`}
+                      className={`h-full rounded-full ${n <= 2 ? "bg-[#F4B886]" : n === 3 ? "bg-[#D3D9E2]" : "bg-[#8FD1AE]"}`}
                       style={{ width: cantidad ? `${Math.max(4, (cantidad / maxEstrellas) * 100)}%` : "0%" }}
                     />
                   </div>
@@ -185,7 +185,7 @@ export default async function DashboardPage({
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
               <th className="px-4 py-3 font-medium">Negocio</th>
               <th className="px-4 py-3 font-medium">Plan</th>
               <th className="px-4 py-3 font-medium">Estado</th>
@@ -208,15 +208,15 @@ export default async function DashboardPage({
 function Row({ c, visitas }: { c: Cliente; visitas: number | null }) {
   const m = metricaActual(c);
   return (
-    <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+    <tr className="border-b border-[#EEF0F3] last:border-0 hover:bg-slate-50">
       <td className="px-4 py-3">
         <Link
           href={`/admin/clientes/${c.id}`}
-          className="font-medium text-slate-900 hover:text-brand-fg"
+          className="font-medium text-slate-900 hover:text-[#1F4E80]"
         >
           {c.nombre}
         </Link>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-slate-600">
           {c.rubro} · {c.zona}
         </div>
       </td>

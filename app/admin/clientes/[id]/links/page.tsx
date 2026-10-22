@@ -47,8 +47,8 @@ const LABEL_TIPO: Record<string, string> = {
 
 const COLOR_TIPO: Record<string, string> = {
   nfc: "bg-slate-100 text-slate-600",
-  qr: "bg-indigo-50 text-indigo-700",
-  ambos: "bg-brand/10 text-brand-fg",
+  qr: "bg-[#F1F4F8] text-slate-700",
+  ambos: "bg-[#EEF4FB] text-[#1F4E80]",
 };
 
 const ERRORES_LINK: Record<string, string> = {
@@ -91,7 +91,7 @@ export default async function LinksPage({
   return (
     <div>
       <div className="mb-4 text-sm">
-        <Link href={`/admin/clientes/${c.id}`} className="text-slate-500 hover:text-brand-fg">
+        <Link href={`/admin/clientes/${c.id}`} className="text-slate-600 hover:text-[#1F4E80]">
           ← {c.nombre}
         </Link>
       </div>
@@ -101,36 +101,36 @@ export default async function LinksPage({
       />
 
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
           {ERRORES_LINK[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
         </div>
       )}
 
       {links.length > 0 && (
         <Card className="mb-6">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-xs font-medium text-slate-600">
             Inventario y desempeño por soporte
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <div className="text-lg font-semibold text-slate-900">{totalConNfc}</div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">chips NFC instalados</div>
+              <div className="text-[11px] text-slate-600">chips NFC instalados</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">{totalConQr}</div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">QR impresos instalados</div>
+              <div className="text-[11px] text-slate-600">QR impresos instalados</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">
                 {fmtNum(resumenTipo.nfc.taps)}
               </div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps solo-NFC</div>
+              <div className="text-[11px] text-slate-600">taps solo-NFC</div>
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">
                 {fmtNum(resumenTipo.qr.taps + resumenTipo.ambos.taps)}
               </div>
-              <div className="text-[11px] uppercase tracking-wide text-slate-400">taps con QR habilitado</div>
+              <div className="text-[11px] text-slate-600">taps con QR habilitado</div>
             </div>
           </div>
         </Card>
@@ -219,21 +219,21 @@ export default async function LinksPage({
                         {LABEL_TIPO[l.tipo]}
                       </span>
                       {l.nombreEmpleado && (
-                        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+                        <span className="rounded-full bg-[#F4F7FB] px-2 py-0.5 text-[11px] font-medium text-[#1F4E80]">
                           Tarjeta de {l.nombreEmpleado}
                         </span>
                       )}
                       {!l.activo && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
                           desactivado
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-slate-600">
                       <Link
                         href={`/t/${l.id}`}
                         target="_blank"
-                        className="font-mono text-brand-fg hover:underline"
+                        className="font-mono text-[#1F4E80] hover:underline"
                       >
                         /t/{l.id}
                       </Link>
@@ -251,12 +251,12 @@ export default async function LinksPage({
                           alt={`QR de ${l.etiqueta}`}
                           width={56}
                           height={56}
-                          className="rounded border border-slate-200"
+                          className="rounded border border-[#E4E6EA]"
                         />
                         <a
                           href={`/api/admin/qr?linkId=${l.id}&download=1`}
                           download={`qr-${l.id}.png`}
-                          className="text-[11px] font-medium text-brand-fg hover:underline"
+                          className="text-[11px] font-medium text-[#1F4E80] hover:underline"
                         >
                           Descargar
                         </a>
@@ -266,15 +266,15 @@ export default async function LinksPage({
                       <div className="text-lg font-semibold text-slate-900">
                         {fmtNum(l.taps)}
                       </div>
-                      <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                      <div className="text-[11px] text-slate-600">
                         taps
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <details className="mt-3 border-t border-slate-100 pt-3">
-                  <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+                <details className="mt-3 border-t border-[#EEF0F3] pt-3">
+                  <summary className="cursor-pointer text-xs font-medium text-slate-600 hover:text-slate-700">
                     Editar / desactivar
                   </summary>
                   <form action={accionActualizarLink} className="mt-3 space-y-3">
@@ -356,7 +356,7 @@ export default async function LinksPage({
                     <input type="hidden" name="comercioId" value={c.id} />
                     <button
                       type="submit"
-                      className="text-xs text-rose-500 hover:text-rose-700"
+                      className="text-xs text-[#8A3F00] hover:text-[#8A3F00]"
                     >
                       Eliminar link
                     </button>
