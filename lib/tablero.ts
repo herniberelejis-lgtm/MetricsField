@@ -456,7 +456,7 @@ function tortas(e: EntradaTablero, hoyFecha: string, atribucion: Map<number, Tap
     const delCartel = recientes.filter((r) => atribucion.has(r.id)).length;
     out.push(
       torta("quien-trae", "Quién trae tus reseñas", "Reseñas nuevas del período", "reseñas", [
-        { label: "Después de tocar el cartel", valor: delCartel, color: "negro" },
+        { label: "Después de tocar el cartel", valor: delCartel, color: "fuerte" },
         { label: "Por su cuenta", valor: recientes.length - delCartel, color: "gris" },
       ], delCartel === 0
         ? "Ninguna llegó en la media hora después de un toque: el cartel no se está ofreciendo."
