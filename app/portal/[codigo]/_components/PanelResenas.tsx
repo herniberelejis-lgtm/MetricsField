@@ -1,7 +1,6 @@
 import type { Cliente, ResenaCRM, TonoMarca } from "@/lib/types";
 import type { MencionEmpleado } from "@/lib/empleados";
 import { Card } from "@/components/ui";
-import { IconUsers } from "@/components/portal/PortalShell";
 import MencionesEmpleados from "@/components/MencionesEmpleados";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import GestionResenas from "@/components/GestionResenas";
@@ -23,6 +22,15 @@ import ResenasGoogle, { type LocalConResenasGoogle } from "@/components/portal/R
 // (antes era su propio ítem de menú): son menciones dentro del texto de
 // las reseñas, tiene más sentido leerlas junto a ellas que en una sección
 // aparte.
+function Encabezado({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h2 className="text-[15px] font-bold text-slate-900">{titulo}</h2>
+      <p className="mt-0.5 max-w-prose text-sm leading-relaxed text-slate-600">{children}</p>
+    </div>
+  );
+}
+
 export default function PanelResenas({
   resenasPendientes,
   resenasAutomaticas,
@@ -73,7 +81,7 @@ export default function PanelResenas({
               codigoAcceso={codigoAcceso}
             />
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             Viendo:{" "}
             <span className="font-semibold text-slate-800">
               {modoTodos ? `todos tus locales (${ubicaciones.length})` : activoNombre}
@@ -81,7 +89,7 @@ export default function PanelResenas({
             {!modoTodos && (
               <>
                 {" — "}
-                <a href={hrefTodos(codigoAcceso)} className="font-medium text-brand-fg hover:underline">
+                <a href={hrefTodos(codigoAcceso)} className="font-medium text-[#1F4E80] hover:underline">
                   ver todos combinados
                 </a>
               </>
@@ -93,36 +101,29 @@ export default function PanelResenas({
       {!hayResenasDetalladas ? (
         // Sin la API de reseñas aprobada (ni reseñas cargadas a mano), lo
         // único automático y real son las que Google muestra en la ficha.
-        <Card variant="glass">
-          <p className="text-sm font-medium text-slate-700">Tus reseñas en Google</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Las que Google muestra en tu ficha (hasta 5 por local, elegidas por Google). Para
-            cada una te sugerimos una respuesta: copiala y pegala en Google. Cuando Google
-            apruebe la conexión completa, vas a ver todas acá y responderlas sin salir del portal.
-          </p>
-          <div className="mt-4">
-            {resenasGoogle ? (
-              <ResenasGoogle locales={resenasGoogle} tonoMarca={tonoMarca} />
-            ) : (
-              <p className="text-sm text-slate-500">
-                Todavía no está vinculada tu ficha de Google. Escribinos por WhatsApp y la
-                dejamos lista.
+        <section className="flex flex-col gap-4">
+          <Encabezado titulo="Tus reseñas en Google">
+            Las que Google muestra en tu ficha (hasta 5 por local, elegidas por Google). Para cada una te sugerimos
+            una respuesta: copiala y pegala en Google. Cuando Google apruebe la conexión completa, vas a ver todas
+            acá y responderlas sin salir del portal.
+          </Encabezado>
+          {resenasGoogle ? (
+            <ResenasGoogle locales={resenasGoogle} tonoMarca={tonoMarca} />
+          ) : (
+            <Card variant="glass">
+              <p className="text-sm text-slate-700">
+                Todavía no está vinculada tu ficha de Google. Escribinos por WhatsApp y la dejamos lista.
               </p>
-            )}
-          </div>
-        </Card>
+            </Card>
+          )}
+        </section>
       ) : (
-        <Card variant="glass">
-          <p className="text-sm font-medium text-slate-700">Gestión de reseñas</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Te sugerimos una respuesta para cada reseña, la editás si querés y la copiás a
-            Google vos mismo — todavía no publicamos nada en tu nombre.
-          </p>
-          <div className="mt-3">
+        // Sin tarjetas dentro de tarjetas (DESIGN.md §4): cada pieza es su
+        // propia tarjeta y el encabezado de la sección va suelto.
+        <section className="flex flex-col gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${resenasApiHabilitada() ? "lg:grid-cols-2" : ""}`}>
             <ResumenResenas data={resumenResenas} variant="glass" />
-          </div>
-          {resenasApiHabilitada() && (
-            <div className="mt-3">
+            {resenasApiHabilitada() && (
               <AutomatizacionResenas
                 codigo={codigoAcceso}
                 comercioId={comercioId}
@@ -131,28 +132,24 @@ export default function PanelResenas({
                 apiHabilitada
                 resenasAutomaticas={resenasAutomaticas}
               />
-            </div>
-          )}
-          <div className="mt-3">
-            <GestionResenas resenasIniciales={resenasPendientes} tonoMarca={tonoMarca} codigo={codigoAcceso} />
+            )}
           </div>
-        </Card>
+          <Encabezado titulo="Para responder">
+            Te sugerimos una respuesta para cada reseña: la editás si querés y la aprobás. Si ya tenemos acceso a tu
+            ficha, se publica sola en Google; si no, la copiamos para que la pegues vos.
+          </Encabezado>
+          <GestionResenas resenasIniciales={resenasPendientes} tonoMarca={tonoMarca} codigo={codigoAcceso} />
+        </section>
       )}
 
       {personalEmpleados.length > 0 && (
-        <Card variant="glass" className="mt-4">
-          <div className="flex items-center gap-2">
-            <IconUsers size={16} className="text-slate-500" />
-            <p className="text-sm font-medium text-slate-700">Tu equipo</p>
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Cada mozo o empleado con tarjeta NFC propia, con sus taps (dato exacto) y las
-            reseñas que lo nombran en el texto (señal, no atribución exacta).
-          </p>
-          <div className="mt-3">
-            <MencionesEmpleados menciones={personalEmpleados} />
-          </div>
-        </Card>
+        <section className="mt-8 flex flex-col gap-4">
+          <Encabezado titulo="Tu equipo">
+            Cada persona con tarjeta propia: sus toques (dato exacto) y las reseñas que la nombran en el texto
+            (señal, no atribución exacta).
+          </Encabezado>
+          <MencionesEmpleados menciones={personalEmpleados} />
+        </section>
       )}
     </>
   );

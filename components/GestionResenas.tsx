@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import type { ResenaCRM, TonoMarca } from "@/lib/types";
 import { generarRespuestaSugerida } from "@/lib/respuestas";
 import { accionAprobarResenaPortal, accionDescartarResenaPortal } from "@/app/portal/actions";
-import { btnSuccess, btnSecondary, btnGhost, IconCheck } from "@/components/ui";
+import { btnPortal, btnPortalSec, btnPortalGhost, IconCheck } from "@/components/ui";
 
 // Gestión de reseñas desde el portal del cliente: el dueño ve sus reseñas
 // pendientes, edita/regenera la respuesta sugerida (gratis, sin IA paga —
@@ -15,13 +15,23 @@ import { btnSuccess, btnSecondary, btnGhost, IconCheck } from "@/components/ui";
 // para que el dueño la pegue él mismo — nunca se promete una publicación
 // que no pasó de verdad.
 
+// Pastillas de calificación: "para mejorar" (durazno) para 1-2★, neutra para
+// 3★ y "bien" (verde) para 4-5★ (DESIGN.md §2).
 const COLOR_BADGE: Record<number, string> = {
-  1: "bg-slate-100 text-slate-500",
-  2: "bg-slate-100 text-slate-500",
-  3: "bg-slate-200 text-slate-700",
-  4: "bg-slate-900 text-white",
-  5: "bg-slate-900 text-white",
+  1: "bg-[#FFF4E8] text-[#8A3F00]",
+  2: "bg-[#FFF4E8] text-[#8A3F00]",
+  3: "bg-slate-100 text-slate-700",
+  4: "bg-[#EAF7F0] text-[#0B5E40]",
+  5: "bg-[#EAF7F0] text-[#0B5E40]",
 };
+
+const POR_PAGINA = 10;
+
+const FILTROS = [
+  { id: "todas", etiqueta: "Todas", pasa: () => true },
+  { id: "mejorar", etiqueta: "Para mejorar (1–3★)", pasa: (r: ResenaCRM) => r.estrellas <= 3 },
+  { id: "buenas", etiqueta: "Buenas (4–5★)", pasa: (r: ResenaCRM) => r.estrellas >= 4 },
+] as const;
 
 function fechaCorta(v: string): string {
   return new Date(v).toLocaleDateString("es-AR");
@@ -121,13 +131,13 @@ function TarjetaResena({
 
   return (
     <div
-      className={`rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl transition-all duration-300 ${
+      className={`rounded-2xl border border-[#E4E6EA] bg-white p-5 transition-all duration-300 ${
         saliendo ? "-translate-x-2 opacity-0" : "opacity-100"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EEF4FB] text-sm font-semibold text-[#1F4E80]">
             {iniciales(resena.autor)}
           </div>
           <div>
@@ -136,31 +146,35 @@ function TarjetaResena({
                 usar un espacio distinto antes de "a. m./p. m." según la versión de
                 ICU del motor (Node del server vs. el navegador) — mismo texto visible,
                 pero React lo marca como mismatch y re-renderiza el árbol entero. */}
-            <div className="text-xs text-slate-400" suppressHydrationWarning>
+            <div className="text-xs text-slate-600" suppressHydrationWarning>
               {fechaConHora(resena)}
             </div>
           </div>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}>
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${COLOR_BADGE[resena.estrellas]}`}
+          aria-label={`${resena.estrellas} de 5 estrellas`}
+        >
           {"★".repeat(resena.estrellas)}
-          {/* Estrellas vacías visibles también sobre el fondo oscuro (4★ se veía como 5★). */}
-          <span className={resena.estrellas >= 4 ? "text-slate-500" : "text-slate-300"}>
-            {"★".repeat(5 - resena.estrellas)}
-          </span>
+          <span className="opacity-30">{"★".repeat(5 - resena.estrellas)}</span>
         </span>
       </div>
 
-      <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">{resena.texto}</p>
+      {resena.texto ? (
+        <p className="mt-3 rounded-lg bg-[#F7F9FC] px-3 py-2 text-sm leading-relaxed text-slate-800">{resena.texto}</p>
+      ) : (
+        <p className="mt-3 text-xs text-slate-600">Dejó solo la calificación, sin texto.</p>
+      )}
 
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <span className="text-[11px] font-medium text-slate-600">
             Respuesta sugerida — editala si querés
           </span>
           <button
             type="button"
             onClick={regenerar}
-            className="text-[11px] font-medium text-brand-fg hover:underline"
+            className="min-h-[32px] px-1 text-xs font-medium text-[#1F4E80] hover:underline"
           >
             Regenerar
           </button>
@@ -169,12 +183,12 @@ function TarjetaResena({
           value={respuesta}
           onChange={(e) => setRespuesta(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none"
+          className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm leading-relaxed text-slate-800 focus:border-[#4F7AA8] focus:outline-none"
         />
       </div>
 
       {resultado ? (
-        <p className="mt-3 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white">
+        <p className="mt-3 rounded-lg bg-[#EAF7F0] px-3 py-2 text-xs font-medium text-[#0B5E40]">
           {resultado === "publicada"
             ? "✓ Publicada en tu ficha de Google."
             : "✓ Copiada al portapapeles — pegala vos como respuesta de la reseña en Google."}
@@ -182,26 +196,22 @@ function TarjetaResena({
       ) : (
         <>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" disabled={pendiente} onClick={aprobar} className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}>
+            <button type="button" disabled={pendiente} onClick={aprobar} className={btnPortal}>
               <IconCheck size={13} /> Aprobar respuesta
             </button>
-            <button type="button" onClick={copiar} className={`${btnSecondary} !px-3.5 !py-1.5 !text-xs`}>
+            <button type="button" onClick={copiar} className={btnPortalSec}>
               {copiado ? "¡Copiada!" : "Copiar texto"}
             </button>
             <button
               type="button"
               disabled={pendiente}
               onClick={descartar}
-              className={`${btnGhost} ml-auto !text-xs hover:!text-slate-900`}
+              className={`${btnPortalGhost} ml-auto`}
             >
               Descartar
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-slate-400">
-            Si ya tenemos acceso a tu ficha de Google, aprobar la publica directo. Si todavía no, la
-            copiamos para que la pegues vos como respuesta de la reseña.
-          </p>
-          {error && <p className="mt-2 text-xs font-bold text-slate-900">⚠ {error}</p>}
+          {error && <p className="mt-2 text-xs font-semibold text-[#8A3F00]">{error}</p>}
         </>
       )}
     </div>
@@ -218,12 +228,16 @@ export default function GestionResenas({
   codigo: string;
 }) {
   const [pendientes, setPendientes] = useState(resenasIniciales);
+  // Con cientos de reseñas la página se volvía interminable: de a 10, con
+  // filtro por calificación (las que piden atención primero a mano).
+  const [filtro, setFiltro] = useState<"todas" | "mejorar" | "buenas">("todas");
+  const [visibles, setVisibles] = useState(POR_PAGINA);
   const [aprobandoTodas, startAprobarTodas] = useTransition();
   const [resumenBulk, setResumenBulk] = useState<{ publicadas: number; total: number } | null>(null);
 
   if (pendientes.length === 0) {
     return (
-      <div className="rounded-3xl border border-white/60 bg-white/65 p-5 text-sm text-slate-500 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+      <div className="rounded-2xl border border-[#E4E6EA] bg-white p-5 text-sm text-slate-600">
         {resumenBulk ? (
           resumenBulk.publicadas === resumenBulk.total ? (
             <>✓ Se publicaron las {resumenBulk.total} respuestas directo en Google.</>
@@ -268,25 +282,58 @@ export default function GestionResenas({
     });
   }
 
+  const filtradas = pendientes.filter(FILTROS.find((f) => f.id === filtro)!.pasa);
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">
-          {pendientes.length} reseña{pendientes.length === 1 ? "" : "s"} esperando respuesta.
+        <p className="text-sm text-slate-700">
+          <span className="font-semibold tabular-nums text-slate-900">{pendientes.length}</span> reseña
+          {pendientes.length === 1 ? "" : "s"} esperando respuesta
         </p>
         {pendientes.length > 1 && (
           <button
             type="button"
             disabled={aprobandoTodas}
             onClick={aprobarTodas}
-            className={`${btnSuccess} !px-3.5 !py-1.5 !text-xs`}
+            className={btnPortal}
           >
             <IconCheck size={13} /> {aprobandoTodas ? "Aprobando…" : "Aprobar todas"}
           </button>
         )}
       </div>
+      <div role="group" aria-label="Filtrar por calificación" className="mb-3 flex flex-wrap gap-2">
+        {FILTROS.map((f) => {
+          const n = pendientes.filter(f.pasa).length;
+          const activo = filtro === f.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={activo}
+              onClick={() => {
+                setFiltro(f.id);
+                setVisibles(POR_PAGINA);
+              }}
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-medium transition ${
+                activo
+                  ? "bg-[#EEF4FB] font-semibold text-[#1F4E80] ring-1 ring-[#A9C5E6]"
+                  : "bg-white text-slate-700 ring-1 ring-[#E4E6EA] hover:bg-[#F7F9FC]"
+              }`}
+            >
+              {f.etiqueta}
+              <span className="tabular-nums text-slate-600">{n}</span>
+            </button>
+          );
+        })}
+      </div>
       <div className="space-y-3">
-        {pendientes.map((r) => (
+        {filtradas.length === 0 && (
+          <p className="rounded-2xl border border-[#E4E6EA] bg-white p-5 text-sm text-slate-600">
+            No hay reseñas de este tipo esperando respuesta.
+          </p>
+        )}
+        {filtradas.slice(0, visibles).map((r) => (
           <TarjetaResena
             key={r.id}
             resena={r}
@@ -296,6 +343,16 @@ export default function GestionResenas({
           />
         ))}
       </div>
+      {filtradas.length > visibles && (
+        <div className="mt-4 flex flex-col items-center gap-1">
+          <button type="button" onClick={() => setVisibles((v) => v + POR_PAGINA)} className={btnPortalSec}>
+            Ver {Math.min(POR_PAGINA, filtradas.length - visibles)} más
+          </button>
+          <span className="text-xs tabular-nums text-slate-600">
+            Mostrando {visibles} de {filtradas.length}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

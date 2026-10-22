@@ -23,14 +23,14 @@ export default function PortalGateGoogle({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+      <div className="w-full max-w-sm rounded-xl border border-[#E4E6EA] bg-white p-8 shadow-sm text-center">
         <div className="mb-6">
           <div className="text-sm font-semibold tracking-tight text-slate-900">MetricsField</div>
-          <div className="mt-0.5 text-xs text-slate-500">Portal privado del cliente</div>
+          <div className="mt-0.5 text-xs text-slate-600">Portal privado del cliente</div>
         </div>
 
         {mensajeError && (
-          <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-600">{mensajeError}</p>
+          <p className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-xs text-[#8A3F00]">{mensajeError}</p>
         )}
 
         <p className="mb-5 text-sm text-slate-600">
@@ -39,7 +39,7 @@ export default function PortalGateGoogle({
 
         <a
           href={`/api/portal/google/oauth/start?codigo=${codigo}`}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[#A9C5E6] hover:bg-slate-50"
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
             <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z" />
@@ -50,7 +50,7 @@ export default function PortalGateGoogle({
           Continuar con Google
         </a>
 
-        <p className="mt-6 text-xs text-slate-400">
+        <p className="mt-6 text-xs text-slate-600">
           ¿No tenés acceso todavía? Pedile a tu agencia que sume tu cuenta de Google al portal.
         </p>
       </div>

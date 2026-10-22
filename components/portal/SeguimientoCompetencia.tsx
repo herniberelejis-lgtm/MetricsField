@@ -1,6 +1,6 @@
 "use client";
 
-import { fmtNum } from "@/lib/format";
+import { fmtNum, fmtDec } from "@/lib/format";
 import type { Seguimiento } from "@/lib/seguimiento-competencia";
 import { TablaComparativa } from "./ComparativaCompetencia";
 
@@ -17,12 +17,12 @@ export default function SeguimientoCompetencia({ seguimiento }: { seguimiento: S
   const { desde, dias, filas, puesto, promedioCompetencia, ratingCompetencia } = seguimiento;
   const vos = filas.find((f) => f.esPropio) ?? null;
   const card =
-    "rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl";
+    "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6";
 
   return (
     <div className={`${card} mb-4`}>
-      <h3 className="text-sm font-semibold text-slate-900">Desde que seguimos a tu competencia</h3>
-      <p className="mt-0.5 text-xs text-slate-500">
+      <h3 className="text-[15px] font-bold text-slate-900">Desde que seguimos a tu competencia</h3>
+      <p className="mt-0.5 text-xs text-slate-600">
         Reseñas captadas desde el {fmtDia(desde)}
         {dias > 0 ? ` (${dias} día${dias === 1 ? "" : "s"})` : ""}, mientras se completa el primer mes
       </p>
@@ -35,7 +35,7 @@ export default function SeguimientoCompetencia({ seguimiento }: { seguimiento: S
       ) : (
         <>
           {vos && vos.nuevas !== null && (
-            <div className="mb-4 mt-4 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white">
+            <div className="mb-4 mt-4 rounded-2xl bg-[#F4F7FB] px-4 py-3 text-sm text-slate-700">
               <p>
                 Desde el {fmtDia(desde)} captaste <strong>{fmtNum(vos.nuevas)}</strong> reseña
                 {vos.nuevas === 1 ? "" : "s"}
@@ -46,15 +46,15 @@ export default function SeguimientoCompetencia({ seguimiento }: { seguimiento: S
                 )}
                 .
                 {promedioCompetencia !== null && (
-                  <span className="text-white/70">
+                  <span className="text-slate-600">
                     {" "}
                     Tu competencia promedió {promedioCompetencia.toFixed(promedioCompetencia < 10 ? 1 : 0)}.
                   </span>
                 )}
               </p>
               {vos.rating !== null && ratingCompetencia !== null && (
-                <p className="mt-1 text-white/80">
-                  Tu calificación: {vos.rating.toFixed(1)}★ · competencia promedio {ratingCompetencia.toFixed(1)}★
+                <p className="mt-1 text-slate-700">
+                  Tu calificación: {fmtDec(vos.rating, 1)}★ · competencia promedio {fmtDec(ratingCompetencia, 1)}★
                 </p>
               )}
             </div>

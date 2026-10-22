@@ -10,16 +10,21 @@ body {
   @apply bg-slate-50 text-slate-800 antialiased;
 }
 
-/* Tablero del portal (components/portal/Tablero.tsx): foco visible en
-   links y botones para quien navega con teclado, y la selección de texto
-   con el celeste del tablero en vez del azul del navegador. */
-.tablero a:focus-visible,
-.tablero button:focus-visible {
+/* Portal del cliente (components/portal/PortalShell.tsx, DESIGN.md): foco
+   visible en links, botones y campos para quien navega con teclado, y la
+   selección de texto con el celeste de los datos en vez del azul del
+   navegador. */
+.portal a:focus-visible,
+.portal button:focus-visible,
+.portal summary:focus-visible,
+.portal input:focus-visible,
+.portal select:focus-visible,
+.portal textarea:focus-visible {
   outline: 2px solid #4f7aa8;
   outline-offset: 2px;
   border-radius: 6px;
 }
-.tablero ::selection {
+.portal ::selection {
   background: #d9e6f4;
   color: #111111;
 }

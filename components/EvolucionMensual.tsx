@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { MetricaMensual } from "@/lib/types";
 import { citasIA } from "@/lib/types";
-import { fmtMes, fmtNum } from "@/lib/format";
+import { fmtMes, fmtNum, fmtDec } from "@/lib/format";
 import type { TerminoFrecuente } from "@/lib/keywords";
 
 // Detalle ya calculado en el servidor (no viaja texto crudo de reseñas ni
@@ -36,16 +36,16 @@ export default function EvolucionMensual({
   const cols = 4 + (mostrarVisitas ? 1 : 0) + (esPremium ? 1 : 0);
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/65 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-2xl border border-[#E4E6EA] bg-white">
+      <table className="w-full text-sm tabular-nums">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
             <th className="px-4 py-3 font-medium">Mes</th>
-            <th className="px-4 py-3 font-medium">Reseñas nuevas</th>
-            <th className="px-4 py-3 font-medium">Total</th>
-            <th className="px-4 py-3 font-medium">Rating</th>
-            {mostrarVisitas && <th className="px-4 py-3 font-medium">Visitas</th>}
-            {esPremium && <th className="px-4 py-3 font-medium">Citas IA</th>}
+            <th className="px-4 py-3 text-right font-medium">Reseñas nuevas</th>
+            <th className="px-4 py-3 text-right font-medium">Total</th>
+            <th className="px-4 py-3 text-right font-medium">Calificación</th>
+            {mostrarVisitas && <th className="px-4 py-3 text-right font-medium">Visitas</th>}
+            {esPremium && <th className="px-4 py-3 text-right font-medium">Citas IA</th>}
           </tr>
         </thead>
         <tbody>
@@ -95,26 +95,26 @@ function FilaMes({
   return (
     <>
       <tr
-        className={`border-b border-slate-100 ${expandible ? "cursor-pointer hover:bg-slate-50" : ""}`}
+        className={`border-b border-[#EEF0F3] ${expandible ? "cursor-pointer hover:bg-[#F7F9FC]" : ""}`}
         onClick={expandible ? onToggle : undefined}
         aria-expanded={expandible ? open : undefined}
       >
         <td className="px-4 py-2.5 font-medium text-slate-800">
-          {expandible && <span className="mr-1.5 inline-block text-slate-400">{open ? "▾" : "▸"}</span>}
+          {expandible && <span className="mr-1.5 inline-block text-slate-600">{open ? "▾" : "▸"}</span>}
           {fmtMes(h.mes)}
         </td>
-        <td className="px-4 py-2.5 tabular-nums">{h.nuevasSinDato ? "—" : fmtNum(h.resenasNuevas)}</td>
-        <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.resenasTotal)}</td>
-        <td className="px-4 py-2.5 tabular-nums">{h.ratingPromedio.toFixed(1)}</td>
-        {mostrarVisitas && <td className="px-4 py-2.5 tabular-nums">{fmtNum(h.visitasPerfil)}</td>}
-        {esPremium && <td className="px-4 py-2.5 tabular-nums">{fmtNum(citasIA(h))}</td>}
+        <td className="px-4 py-2.5 text-right text-slate-800">{h.nuevasSinDato ? "—" : fmtNum(h.resenasNuevas)}</td>
+        <td className="px-4 py-2.5 text-right text-slate-800">{fmtNum(h.resenasTotal)}</td>
+        <td className="px-4 py-2.5 text-right text-slate-800">{fmtDec(h.ratingPromedio, 1)} ★</td>
+        {mostrarVisitas && <td className="px-4 py-2.5 text-right text-slate-800">{fmtNum(h.visitasPerfil)}</td>}
+        {esPremium && <td className="px-4 py-2.5 text-right text-slate-800">{fmtNum(citasIA(h))}</td>}
       </tr>
       {open && expandible && (
-        <tr className="border-b border-slate-100 bg-slate-50/60">
+        <tr className="border-b border-[#EEF0F3] bg-[#F7F9FC]">
           <td colSpan={cols} className="px-4 py-4">
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium text-slate-600">
                   Temas más repetidos este mes
                 </p>
                 {detalle && detalle.terminos.length > 0 && (
@@ -123,14 +123,14 @@ function FilaMes({
                       {detalle.terminos.map((t) => (
                         <span
                           key={t.termino}
-                          className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
+                          className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs text-slate-700 ring-1 ring-[#E4E6EA]"
                         >
                           {t.termino}
-                          <span className="tabular-nums text-slate-400">{t.conteo}</span>
+                          <span className="tabular-nums text-slate-600">{t.conteo}</span>
                         </span>
                       ))}
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-slate-600">
                       Sobre {detalle.nResenasTexto} reseña
                       {detalle.nResenasTexto === 1 ? "" : "s"} y feedback con texto de ese mes.
                     </p>

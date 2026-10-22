@@ -12,16 +12,16 @@ export default function SugerenciasRepetidas({
   apiHabilitada: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/65 p-6 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
+    <div className="min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6">
       <p className="text-sm font-semibold text-slate-800">Sugerencias repetidas</p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-600">
         {apiHabilitada
           ? "Se arma sola con cada reseña nueva de Google — palabras que más se repiten en las que tienen 3★ o menos."
           : "Hoy se arma con las reseñas que cargamos a mano. Cuando esté aprobada la conexión con la API de Google, se va a actualizar sola con cada reseña nueva."}
       </p>
 
       {temas.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-600">
           Todavía no hay suficientes reseñas con texto para detectar un patrón repetido.
         </p>
       ) : (
@@ -32,7 +32,7 @@ export default function SugerenciasRepetidas({
               className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-700 ring-1 ring-slate-200"
             >
               {t.termino}
-              <span className="tabular-nums text-slate-400">{t.conteo}</span>
+              <span className="tabular-nums text-slate-600">{t.conteo}</span>
             </span>
           ))}
         </div>

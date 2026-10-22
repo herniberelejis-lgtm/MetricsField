@@ -128,8 +128,9 @@ export default function PanelResumen({
     <>
       {mensajeGoogle && (
         <div
-          className={`mb-4 rounded-lg px-3 py-2 text-sm ${
-            mensajeGoogle.tono === "ok" ? "bg-slate-100 text-slate-800" : "border border-slate-300 text-slate-700"
+          role="status"
+          className={`mb-4 rounded-2xl px-4 py-3 text-sm ${
+            mensajeGoogle.tono === "ok" ? "bg-[#EAF7F0] text-[#0B5E40]" : "bg-[#FFF4E8] text-[#8A3F00]"
           }`}
         >
           {mensajeGoogle.texto}
@@ -153,7 +154,7 @@ export default function PanelResumen({
               codigoAcceso={codigoAcceso}
             />
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             Viendo:{" "}
             <span className="font-semibold text-slate-800">
               {modoTodos ? `todos tus locales (${ubicaciones.length})` : activoNombre}
@@ -161,7 +162,7 @@ export default function PanelResumen({
             {!modoTodos && (
               <>
                 {" — "}
-                <a href={hrefTodos(codigoAcceso)} className="font-medium text-brand-fg hover:underline">
+                <a href={hrefTodos(codigoAcceso)} className="font-medium text-[#1F4E80] hover:underline">
                   ver todos combinados
                 </a>
               </>
@@ -188,19 +189,19 @@ export default function PanelResumen({
           de UN local): sin esta tarjeta, quien tiene varios locales nunca
           se enteraba de que existen. */}
       {!tablero && modoTodos && hayVarios && (
-        <section className="mb-10 rounded-[24px] bg-[#111111] px-6 py-8 text-white sm:px-10 sm:py-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · por local</p>
-          <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
+        <section className="mb-10 rounded-2xl border border-[#E4E6EA] bg-white p-5 sm:p-6">
+          <p className="text-[13px] font-medium text-slate-600">Tus conclusiones, por local</p>
+          <p className="mt-3 text-xl font-semibold leading-snug text-slate-900">
             Lo que Google no te muestra se calcula local por local: qué te trae el cartel, qué te baja la
             calificación y qué día nadie pide la reseña.
           </p>
-          <p className="mt-3 text-sm text-slate-300">Elegí un local para verlas.</p>
+          <p className="mt-2 text-sm text-slate-600">Elegí un local para verlas.</p>
           <div className="mt-6 flex flex-wrap gap-2">
             {ubicaciones.map((u) => (
               <a
                 key={u.id}
                 href={hrefSucursal(codigoAcceso, u)}
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-200"
+                className="inline-flex min-h-[40px] items-center rounded-full bg-[#EEF4FB] px-4 py-2 text-sm font-semibold text-[#1F4E80] hover:bg-[#D9E6F4]"
               >
                 {u.nombre} →
               </a>
@@ -280,7 +281,7 @@ export default function PanelResumen({
 
       <a
         href="#resenas"
-        className="mt-3 block rounded-2xl border border-slate-200 bg-white/60 px-4 py-2.5 text-sm font-medium text-brand-fg transition hover:border-slate-300 hover:bg-white"
+        className="mt-3 block rounded-2xl border border-[#E4E6EA] bg-white px-4 py-2.5 text-sm font-medium text-[#1F4E80] transition hover:border-[#D6D9DE] hover:bg-white"
       >
         Ver y responder todas tus reseñas →
       </a>
@@ -340,7 +341,7 @@ export default function PanelResumen({
           Cada tarjeta es el drill-down a ese local puntual; ninguna se
           marca "hero" en modo combinado, porque ahí no hay uno activo. */}
       <div className="mb-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <p className="mb-2 text-xs font-semibold text-slate-600">
           Rendimiento · {ubicaciones.length} local{ubicaciones.length === 1 ? "" : "es"}
         </p>
         <div className="flex flex-wrap gap-4">
@@ -359,10 +360,10 @@ export default function PanelResumen({
                   hero={activa}
                 />
               ) : (
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="rounded-3xl border border-[#E4E6EA] bg-white p-6 shadow-sm">
                   <p className="text-sm font-semibold text-slate-800">{s.nombre}</p>
-                  {datoVisible(s.zona) && <p className="text-xs text-slate-500">{datoVisible(s.zona)}</p>}
-                  <p className="mt-3 text-xs text-slate-400">Sin datos de Google todavía.</p>
+                  {datoVisible(s.zona) && <p className="text-xs text-slate-600">{datoVisible(s.zona)}</p>}
+                  <p className="mt-3 text-xs text-slate-600">Sin datos de Google todavía.</p>
                 </div>
               );
             if (!hayVarios) return <div key={s.id} className="min-w-[240px] max-w-sm flex-1">{tarjeta}</div>;
@@ -420,7 +421,7 @@ export default function PanelResumen({
           ) : (
             <a
               href="#rating"
-              className="mb-4 block rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4 text-sm text-slate-600 transition hover:border-slate-400 hover:bg-white"
+              className="mb-4 block rounded-3xl border border-dashed border-[#D6D9DE] bg-white/50 p-4 text-sm text-slate-600 transition hover:border-[#A9C5E6] hover:bg-white"
             >
               Conectá tu Google Business Profile para ver cuánta gente te vio, te llamó o pidió cómo llegar. →
             </a>

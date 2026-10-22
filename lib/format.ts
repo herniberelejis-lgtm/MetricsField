@@ -16,6 +16,11 @@ export function fmtNum(v: number): string {
   return num.format(v);
 }
 
+/** Decimal con coma y cantidad fija de decimales: 4.6 → "4,6". */
+export function fmtDec(v: number, decimales = 1): string {
+  return v.toLocaleString("es-AR", { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+}
+
 export function fmtMes(mes: string): string {
   // "2026-06" -> "Jun 2026"
   if (!/^\d{4}-\d{2}$/.test(mes)) return mes;

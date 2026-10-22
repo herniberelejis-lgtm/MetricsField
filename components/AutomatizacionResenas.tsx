@@ -58,8 +58,8 @@ export default function AutomatizacionResenas({
   }
 
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/65 p-5 shadow-[0_8px_30px_-14px_rgba(17,17,17,0.14)] backdrop-blur-xl">
-      <p className="text-sm font-medium text-slate-700">Respuestas automáticas a reseñas positivas</p>
+    <div className="rounded-2xl border border-[#E4E6EA] bg-white p-5">
+      <p className="text-[15px] font-bold text-slate-900">Respuestas automáticas a reseñas positivas</p>
 
       {apiHabilitada ? (
         <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-700">
@@ -67,7 +67,7 @@ export default function AutomatizacionResenas({
           Activo: en cuanto llega una reseña de {umbralLocal}★ o más, se responde sola.
         </p>
       ) : (
-        <p className="mt-1.5 flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700">
+        <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-[#F4F7FB] px-3 py-2 text-xs leading-relaxed text-slate-700">
           <IconClock size={14} className="mt-0.5 shrink-0" />
           <span>
             Esta función ya está lista, pero en pausa: todavía estamos esperando que
@@ -79,7 +79,7 @@ export default function AutomatizacionResenas({
         </p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#EEF0F3] pt-3">
         <label className="inline-flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
@@ -88,7 +88,7 @@ export default function AutomatizacionResenas({
               setActivaLocal(e.target.checked);
               guardar(e.target.checked, umbralLocal);
             }}
-            className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+            className="h-4 w-4 rounded border-[#D6D9DE] accent-[#1F4E80]"
           />
           Responder solas mis reseñas positivas
         </label>
@@ -100,37 +100,37 @@ export default function AutomatizacionResenas({
             setUmbralLocal(v);
             guardar(activaLocal, v);
           }}
-          className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs text-slate-700 disabled:opacity-50"
+          className="min-h-[36px] rounded-lg border border-[#D6D9DE] bg-white px-2 py-1.5 text-xs text-slate-800 disabled:opacity-50"
         >
           <option value={4}>de 4★ para arriba</option>
           <option value={5}>solo 5★</option>
         </select>
         {(pendiente || guardado) && (
-          <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-            {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-slate-900" /></>}
+          <span className="inline-flex items-center gap-1 text-xs text-slate-600">
+            {pendiente ? "Guardando…" : <>Guardado <IconCheck size={12} className="text-[#0B5E40]" /></>}
           </span>
         )}
       </div>
-      {error && <p className="mt-2 text-xs font-bold text-slate-900">⚠ {error}</p>}
+      {error && <p className="mt-2 text-xs font-semibold text-[#8A3F00]">{error}</p>}
 
-      <div className="mt-3 border-t border-slate-100 pt-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <div className="mt-3 border-t border-[#EEF0F3] pt-3">
+        <p className="text-xs font-medium text-slate-600">
           Respondidas automáticamente
         </p>
         {resenasAutomaticas.length === 0 ? (
-          <p className="mt-1.5 text-xs text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-600">
             Todavía no se respondió ninguna sola — van a aparecer acá apenas se active
             la publicación automática.
           </p>
         ) : (
           <div className="mt-2 space-y-2">
             {resenasAutomaticas.map((r) => (
-              <div key={r.id} className="rounded-lg bg-slate-50 px-3 py-2 text-xs">
-                <div className="flex items-center gap-2 text-slate-500">
+              <div key={r.id} className="rounded-lg bg-[#F7F9FC] px-3 py-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-600">
                   <span className="font-medium text-slate-700">{r.autor}</span>
-                  <span className="text-slate-900">{"★".repeat(r.estrellas)}</span>
+                  <span className="text-[#0B5E40]">{"★".repeat(r.estrellas)}</span>
                   <span>{fechaCorta(r.fecha)}</span>
-                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-slate-900 px-2 py-0.5 font-medium text-white">
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-[#EAF7F0] px-2 py-0.5 font-medium text-[#0B5E40]">
                     <IconZap size={11} /> respondida sola
                   </span>
                 </div>

@@ -1,6 +1,7 @@
-import { Card, IconWave } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import TapsPorSoporteChart from "@/components/TapsPorSoporteChart";
+import TiraMetricas from "@/components/portal/TiraMetricas";
 
 // Panel "Escaneos": total de taps del cartel y su evolución diaria — se
 // actualiza solo, apenas pasa, nadie tiene que cargar nada.
@@ -27,35 +28,38 @@ export default function PanelEscaneos({
   codigoAcceso: string;
   comercioId: string;
 }) {
+  // Métricas arriba en una tira (components/portal/TiraMetricas.tsx): sin
+  // íconos en círculos ni cifras de 48px.
+  const porDia = nfcPorDia.map((n, i) => n + (qrPorDia[i] ?? 0));
+  const enPeriodo = porDia.reduce((a, b) => a + b, 0);
+  const mejor = porDia.reduce((m, v, i) => (v > (porDia[m] ?? -1) ? i : m), 0);
+  const celdas: { etiqueta: string; valor: string; detalle: string }[] = [
+    {
+      etiqueta: "Desde que se instaló",
+      valor: fmtNum(totalTapsHistorico),
+      detalle: tieneSoporteQr ? `${fmtNum(totalTapsNfc)} NFC · ${fmtNum(totalTapsQr)} QR (aprox.)` : "toques al cartel",
+    },
+    ...(porDia.length > 0
+      ? [
+          { etiqueta: `Últimos ${porDia.length} días`, valor: fmtNum(enPeriodo), detalle: "toques" },
+          {
+            etiqueta: "Promedio por día",
+            valor: (enPeriodo / porDia.length).toLocaleString("es-AR", { maximumFractionDigits: 1 }),
+            detalle: "toques",
+          },
+          { etiqueta: "Mejor día", valor: fmtNum(porDia[mejor]), detalle: labelsTaps[mejor] ?? "" },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <p className="mb-4 text-sm text-slate-500">Esto se actualiza solo, apenas pasa — nadie tiene que cargar nada.</p>
-      <Card variant="glass" className="mb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-slate-700">Taps del cartel</p>
-            <p className="mt-2 text-5xl font-semibold tracking-tight text-slate-900 tabular-nums">
-              {fmtNum(totalTapsHistorico)}
-            </p>
-            <p className="mt-1.5 text-xs text-slate-500">veces que alguien tocó o escaneó tu cartel desde que se instaló</p>
-          </div>
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-fg" aria-hidden>
-            <IconWave size={22} />
-          </span>
-        </div>
-        {tieneSoporteQr && (
-          <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-600">
-              <span className="font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsNfc)}</span>
-              vía NFC
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-600">
-              <span className="font-semibold tabular-nums text-slate-900">{fmtNum(totalTapsQr)}</span>
-              vía QR (aprox.)
-            </span>
-          </div>
-        )}
-      </Card>
+      <p className="mb-4 text-sm text-slate-600">Se actualiza solo, apenas alguien toca o escanea tu cartel.</p>
+      <TiraMetricas
+        etiqueta="Toques al cartel"
+        className="mb-5"
+        celdas={celdas.map((c) => ({ etiqueta: c.etiqueta, valor: c.valor, detalle: c.detalle }))}
+      />
 
       {diasConTaps.length > 0 ? (
         <TapsPorSoporteChart
