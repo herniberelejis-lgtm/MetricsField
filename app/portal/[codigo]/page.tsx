@@ -51,6 +51,7 @@ import { comparativaMensual, mesSiguiente, primerMesComparable } from "@/lib/com
 import { calcularResumenResenas } from "@/components/ResumenResenas";
 import { type Prioridad } from "@/components/portal/PrioridadesPanel";
 import PortalShell, { type PortalNavEntry } from "@/components/portal/PortalShell";
+import AnaliticaPortal from "@/components/portal/AnaliticaPortal";
 import { heroDeCalificacion, MENSAJE_GOOGLE, construirNav, datoVisible, hrefRango } from "./_lib";
 import PanelResumen from "./_components/PanelResumen";
 import PanelResenas from "./_components/PanelResenas";
@@ -736,34 +737,41 @@ export default async function PortalPage({
     />
   );
 
+  // Estadísticas de uso del portal (Google Analytics), solo si hay ID.
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const nonce = gaId ? ((await headers()).get("x-nonce") ?? undefined) : undefined;
+
   return (
-    <PortalShell
-      clienteNombre={c.nombre}
-      clienteSub={[
-        // "Otro"/"Otra" son los valores por defecto del alta: no dicen nada,
-        // no se muestran ("Otro · Otra · datos a Oct 2026").
-        datoVisible(activo.rubro),
-        datoVisible(activo.zona),
-        sucursales.length > 0 ? (modoTodos ? `Todos los locales (${ubicaciones.length})` : activo.nombre) : null,
-        m ? `datos a ${fmtMes(m.mes)}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")}
-      planBadge={<PlanBadge plan={c.plan} mono />}
-      // "Conectar con Google" siempre visible (celular y compu), aunque la
-      // API de Business Profile todavía no esté aprobada: la conexión queda
-      // hecha y las visitas/llamadas aparecen solas el día que se prenda
-      // GOOGLE_BUSINESS_PROFILE_HABILITADO.
-      google={{
-        conectado: gbpConectado,
-        conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
-        perfilPanelId: "rating",
-      }}
-      whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
-      prioridades={prioridades}
-      nav={nav}
-      panels={panels}
-      defaultPanel="resumen"
-    />
+    <>
+      {gaId && <AnaliticaPortal gaId={gaId} nonce={nonce} comercio={c.nombre} />}
+      <PortalShell
+        clienteNombre  ={c.nombre}
+        clienteSub={[
+          // "Otro"/"Otra" son los valores por defecto del alta: no dicen nada,
+          // no se muestran ("Otro · Otra · datos a Oct 2026").
+          datoVisible(activo.rubro),
+          datoVisible(activo.zona),
+          sucursales.length > 0 ? (modoTodos ? `Todos los locales (${ubicaciones.length})` : activo.nombre) : null,
+          m ? `datos a ${fmtMes(m.mes)}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        planBadge={<PlanBadge plan={c.plan} mono />}
+        // "Conectar con Google" siempre visible (celular y compu), aunque la
+        // API de Business Profile todavía no esté aprobada: la conexión queda
+        // hecha y las visitas/llamadas aparecen solas el día que se prenda
+        // GOOGLE_BUSINESS_PROFILE_HABILITADO.
+        google={{
+          conectado: gbpConectado,
+          conectarHref: `/api/portal/google/oauth/start?codigo=${c.codigoAcceso}&comercioId=${activo.id}`,
+          perfilPanelId: "rating",
+        }}
+        whatsappHref={AGENCIA_WHATSAPP ? waUrl(AGENCIA_WHATSAPP, `Hola! Te escribo por mi panel de ${c.nombre}`) : null}
+        prioridades={prioridades}
+        nav={nav}
+        panels={panels}
+        defaultPanel="resumen"
+      />
+    </>
   );
 }
