@@ -39,7 +39,7 @@ export default async function ActividadPage() {
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
               <th className="px-4 py-3 font-medium">Cuándo</th>
               <th className="px-4 py-3 font-medium">Quién</th>
               <th className="px-4 py-3 font-medium">Acción</th>
@@ -48,24 +48,24 @@ export default async function ActividadPage() {
           </thead>
           <tbody>
             {entradas.map((e) => (
-              <tr key={e.id} className="border-b border-slate-100 last:border-0">
-                <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
+              <tr key={e.id} className="border-b border-[#EEF0F3] last:border-0">
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                   {new Date(e.creadoEn).toLocaleString("es-AR")}
                 </td>
                 <td className="px-4 py-3 text-slate-800">
                   {e.adminEmail || (
-                    <span className="text-slate-400">equipo (sin identificar)</span>
+                    <span className="text-slate-600">equipo (sin identificar)</span>
                   )}
                 </td>
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {ETIQUETAS_ACCION[e.accion] ?? e.accion}
                 </td>
-                <td className="px-4 py-3 text-slate-500">{e.detalle || "—"}</td>
+                <td className="px-4 py-3 text-slate-600">{e.detalle || "—"}</td>
               </tr>
             ))}
             {entradas.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-600">
                   Todavía no hay actividad registrada.
                 </td>
               </tr>

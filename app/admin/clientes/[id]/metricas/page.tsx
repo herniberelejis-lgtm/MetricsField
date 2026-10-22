@@ -5,7 +5,7 @@ import { getCliente } from "@/lib/db";
 import { accionEliminarMetrica, accionGuardarMetrica } from "@/app/actions";
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
-import { fmtMes, fmtNum } from "@/lib/format";
+import { fmtMes, fmtNum, fmtDec } from "@/lib/format";
 import { citasIA, metricaActual } from "@/lib/types";
 import { asegurarAdminPagina } from "@/lib/auth";
 
@@ -40,7 +40,7 @@ export default async function MetricasPage({
       <div className="mb-4 text-sm">
         <Link
           href={`/admin/clientes/${c.id}`}
-          className="text-slate-500 hover:text-brand-fg"
+          className="text-slate-600 hover:text-[#1F4E80]"
         >
           ← {c.nombre}
         </Link>
@@ -107,8 +107,8 @@ export default async function MetricasPage({
           </div>
 
           {esPremium && (
-            <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
-              <div className="mb-3 text-xs font-medium uppercase tracking-wide text-violet-700">
+            <div className="rounded-lg border border-[#E4E6EA] bg-[#F4F7FB] p-4">
+              <div className="mb-3 text-xs font-medium text-[#1F4E80]">
                 Citaciones en IA (Premium)
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -137,7 +137,7 @@ export default async function MetricasPage({
           <Card className="overflow-x-auto p-0">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Mes</th>
                   <th className="px-4 py-3 font-medium">Reseñas</th>
                   <th className="px-4 py-3 font-medium">Rating</th>
@@ -147,7 +147,7 @@ export default async function MetricasPage({
               </thead>
               <tbody>
                 {[...c.historico].reverse().map((h) => (
-                  <tr key={h.mes} className="border-b border-slate-100 last:border-0">
+                  <tr key={h.mes} className="border-b border-[#EEF0F3] last:border-0">
                     <td className="px-4 py-2.5 font-medium text-slate-800">
                       {fmtMes(h.mes)}
                     </td>
@@ -155,7 +155,7 @@ export default async function MetricasPage({
                       +{fmtNum(h.resenasNuevas)} ({fmtNum(h.resenasTotal)})
                     </td>
                     <td className="px-4 py-2.5 tabular-nums text-slate-600">
-                      {h.ratingPromedio.toFixed(1)}
+                      {fmtDec(h.ratingPromedio)}
                     </td>
                     {esPremium && (
                       <td className="px-4 py-2.5 tabular-nums text-slate-600">
@@ -168,7 +168,7 @@ export default async function MetricasPage({
                         <input type="hidden" name="mes" value={h.mes} />
                         <button
                           type="submit"
-                          className="text-xs text-rose-500 hover:text-rose-700"
+                          className="text-xs text-[#8A3F00] hover:text-[#8A3F00]"
                         >
                           Eliminar
                         </button>

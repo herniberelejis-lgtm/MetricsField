@@ -12,6 +12,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import GooglePlaceIdField from "@/components/GooglePlaceIdField";
 import { asegurarAdminPagina } from "@/lib/auth";
+import { fmtDec } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -54,12 +55,12 @@ export default async function CompetenciaPage({
   return (
     <div>
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
           {ERRORES[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
         </div>
       )}
       <div className="mb-4 text-sm">
-        <Link href={`/admin/clientes/${c.id}`} className="text-slate-500 hover:text-brand-fg">
+        <Link href={`/admin/clientes/${c.id}`} className="text-slate-600 hover:text-[#1F4E80]">
           ← {c.nombre}
         </Link>
       </div>
@@ -72,7 +73,7 @@ export default async function CompetenciaPage({
         <Card className="mb-4 overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Negocio</th>
                 <th className="px-4 py-3 font-medium">Rating</th>
@@ -81,11 +82,11 @@ export default async function CompetenciaPage({
             </thead>
             <tbody>
               {filaCompetencia.map((f, i) => (
-                <tr key={f.nombre} className={`border-b border-slate-100 last:border-0 ${f.soyYo ? "bg-brand/5" : ""}`}>
-                  <td className="px-4 py-2.5 text-slate-500">{i + 1}</td>
+                <tr key={f.nombre} className={`border-b border-[#EEF0F3] last:border-0 ${f.soyYo ? "bg-[#F4F7FB]" : ""}`}>
+                  <td className="px-4 py-2.5 text-slate-600">{i + 1}</td>
                   <td className="px-4 py-2.5 font-medium text-slate-800">{f.nombre}</td>
                   <td className="px-4 py-2.5 text-slate-700">
-                    {f.rating !== null ? `${Number(f.rating).toFixed(1)}★` : "—"}
+                    {f.rating !== null ? `${fmtDec(Number(f.rating))}★` : "—"}
                   </td>
                   <td className="px-4 py-2.5 text-slate-600">{f.total ?? "—"}</td>
                 </tr>
@@ -97,7 +98,7 @@ export default async function CompetenciaPage({
 
       <Card>
         <h3 className="text-sm font-semibold text-slate-900">Agregar competidor</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-600">
           Si le cargás el Google Place ID, el rating y las reseñas se sincronizan solos
           todos los días (mismo mecanismo que usa tu propio negocio) — no hace falta
           tipear nada a mano ni pedirle permiso al dueño, es dato público de Maps.
@@ -122,8 +123,8 @@ export default async function CompetenciaPage({
         </form>
 
         {competidores.length > 0 && (
-          <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className="mt-6 space-y-3 border-t border-[#EEF0F3] pt-4">
+            <p className="text-xs font-medium text-slate-600">
               Competidores cargados
             </p>
             {competidores.map((comp) => (
@@ -133,24 +134,24 @@ export default async function CompetenciaPage({
                   <form action={accionEliminarCompetidor}>
                     <input type="hidden" name="id" value={comp.id} />
                     <input type="hidden" name="comercioId" value={c.id} />
-                    <button type="submit" className="text-xs text-rose-500 hover:text-rose-700">
+                    <button type="submit" className="text-xs text-[#8A3F00] hover:text-[#8A3F00]">
                       Eliminar
                     </button>
                   </form>
                 </div>
 
                 {comp.googlePlaceId ? (
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#EEF0F3] pt-3">
                     <div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF7F0] px-2 py-0.5 text-[11px] font-medium text-[#0B5E40]">
                         Automático · Google Places
                       </span>
                       <p className="mt-1.5 text-sm text-slate-800">
-                        {comp.rating !== null ? `${Number(comp.rating).toFixed(1)}★` : "—"}
+                        {comp.rating !== null ? `${fmtDec(Number(comp.rating))}★` : "—"}
                         {" · "}
                         {comp.totalResenas ?? "—"} reseñas
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-400">
+                      <p className="mt-0.5 text-xs text-slate-600">
                         Actualizado {new Date(comp.actualizadoEn).toLocaleString("es-AR")} · se refresca solo todos los días
                       </p>
                     </div>
@@ -159,13 +160,13 @@ export default async function CompetenciaPage({
                       <input type="hidden" name="comercioId" value={c.id} />
                       <button
                         type="submit"
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+                        className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
                       >
                         Sincronizar ahora
                       </button>
                     </form>
                     {comp.rating === null && comp.totalResenas === null && (
-                      <p className="w-full rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                      <p className="w-full rounded-lg bg-[#FFF4E8] px-3 py-2 text-xs text-[#8A3F00]">
                         Este Place ID no trae datos de Google, así que no aparece en el portal del cliente.
                         Revisalo abajo en &quot;Cambiar Place ID&quot; (si arranca con &quot;_&quot; o &quot;-&quot;, está cortado).
                       </p>
@@ -173,7 +174,7 @@ export default async function CompetenciaPage({
                     {/* Antes, con el Place ID cargado no había forma de corregirlo
                         sin borrar el competidor (y su historial mensual). */}
                     <details className="w-full" open={comp.rating === null && comp.totalResenas === null}>
-                      <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+                      <summary className="cursor-pointer text-xs font-medium text-slate-600 hover:text-slate-700">
                         Cambiar Place ID
                       </summary>
                       <form action={accionActualizarCompetidor} className="mt-2 space-y-3">
@@ -187,7 +188,7 @@ export default async function CompetenciaPage({
                     </details>
                   </div>
                 ) : (
-                  <form action={accionActualizarCompetidor} className="mt-3 space-y-3 border-t border-slate-100 pt-3">
+                  <form action={accionActualizarCompetidor} className="mt-3 space-y-3 border-t border-[#EEF0F3] pt-3">
                     <input type="hidden" name="id" value={comp.id} />
                     <input type="hidden" name="comercioId" value={c.id} />
                     <Field label="Google Place ID" hint="cargalo para que deje de ser manual">

@@ -1,9 +1,11 @@
-# DESIGN.md — Portal y tablero de MetricsField
+# DESIGN.md — Portal, tablero y panel de MetricsField
 
 Cómo se ve y cómo se construye la interfaz del portal del cliente
-(`/portal/[codigo]`) y en especial su tablero (`components/portal/Tablero.tsx`,
-`components/portal/GraficoMetricas.tsx`). Leelo antes de tocar cualquier
-pantalla del portal: lo que está acá es el criterio, no una sugerencia.
+(`/portal/[codigo]`, con su tablero en `components/portal/Tablero.tsx`) y del
+panel del equipo (`/admin`). Las dos superficies comparten las mismas piezas
+(`components/ui.tsx`, `components/forms.tsx`, `components/charts/`) y las mismas
+reglas. Leelo antes de tocar cualquier pantalla: lo que está acá es el criterio,
+no una sugerencia.
 
 Armado siguiendo cuatro guías de diseño de interfaces de trabajo: *taste-skill*
 (estudio de 23 pantallas reales de producto), *Impeccable* (modo "Operate" y su
