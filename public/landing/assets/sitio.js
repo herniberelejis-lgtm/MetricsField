@@ -126,6 +126,13 @@
   } catch (e) {
     cart = [];
   }
+  // Un carrito guardado antes de un cambio de precios toma el precio vigente
+  // de los botones de la página.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-add][data-price]"), function (b) {
+    if (b.getAttribute("data-tipo") === "servicio") return;
+    var x = cart.filter(function (y) { return y.nombre === b.getAttribute("data-add"); })[0];
+    if (x) x.precio = Number(b.getAttribute("data-price")) || x.precio;
+  });
   function guardar() {
     try {
       localStorage.setItem("mf-carrito", JSON.stringify(cart));
