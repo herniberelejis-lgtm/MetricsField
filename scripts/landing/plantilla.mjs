@@ -142,13 +142,19 @@ ${cuerpo}
 </main>
 ${pie()}
 <div class="backdrop" data-backdrop></div>
-<aside class="drawer" aria-label="Carrito" aria-hidden="true" data-drawer>
-  <div class="drawer-head"><b>Tu carrito</b><button class="btn" type="button" data-cart-close>Cerrar</button></div>
-  <div class="drawer-items" data-cart-items><p class="muted">Todavía no agregaste piezas.</p></div>
+<aside class="drawer" aria-label="Tu pedido" aria-hidden="true" data-drawer>
+  <div class="drawer-head"><b>Tu pedido</b><button class="btn" type="button" data-cart-close>Cerrar</button></div>
+  <div class="drawer-items" data-cart-items><p class="muted">Todavía no agregaste nada. Sumá piezas desde la tienda o el software que quieras probar.</p></div>
   <div class="cart-total">
-    <div style="display:flex;justify-content:space-between"><b>Total</b><b data-cart-total>$ 0</b></div>
-    <p class="muted" style="font-size:.78rem">IVA y envío se confirman antes del pago. Acá no se cobra nada: el pedido se coordina por WhatsApp.</p>
-    <a class="btn dark" style="width:100%" data-cart-wa href="${wa("Hola, quiero finalizar mi pedido de MetricsField")}" target="_blank" rel="noopener">Coordinar compra por WhatsApp</a>
+    <div style="display:flex;justify-content:space-between"><b>Total piezas</b><b data-cart-total>$ 0</b></div>
+    <p class="muted" style="font-size:.76rem;margin:4px 0 12px">Pago único. IVA y envío se confirman por WhatsApp. El software se coordina aparte.</p>
+    <div class="pedido-datos">
+      <label>Tu nombre<input data-pedido="nombre" autocomplete="name" maxlength="80"></label>
+      <label>Comercio<input data-pedido="comercio" autocomplete="organization" maxlength="80"></label>
+      <label>Ciudad<input data-pedido="ciudad" autocomplete="address-level2" maxlength="80"></label>
+    </div>
+    <a class="btn dark" style="width:100%" data-cart-wa href="${wa("Hola, quiero hacer un pedido a MetricsField")}" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
+    <p class="muted" style="font-size:.72rem;margin:8px 0 0">Acá no se cobra nada: te respondemos por WhatsApp para confirmar y coordinar el pago.</p>
   </div>
 </aside>
 <div class="toast" data-toast role="status">Agregado al carrito</div>

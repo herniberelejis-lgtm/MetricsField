@@ -78,6 +78,16 @@ const PIEZAS = [
 ];
 const pesos = (n) => "$" + n.toLocaleString("es-AR");
 
+// Software que se puede sumar al pedido por WhatsApp (no suma al total de
+// piezas: es mensual o una prueba). Lo usan la tienda y las verticales.
+const SOFTWARE = {
+  reputacion: { nombre: "Panel de Reputación", detalle: "$25.000/mes + IVA, sin permanencia", precio: "$25.000/mes + IVA", texto: "Toques, reseñas con respuesta sugerida y tu visibilidad en Google.", href: "/reputacion" },
+  retail: { nombre: "Prueba de Retail", detalle: "30 días gratis, sin tarjeta", precio: "30 días gratis", texto: "La ganancia real de cada venta en Mercado Libre.", href: "/retail" },
+  loyalty: { nombre: "Piloto de Loyalty", detalle: "Programa piloto, a coordinar", precio: "Piloto · a coordinar", texto: "Club de beneficios con la tarjeta en Google Wallet.", href: "/loyalty" },
+};
+const sumarSoftware = (id, texto = "Sumar a mi pedido", clase = "btn") =>
+  `<button class="${clase}" type="button" data-add="${SOFTWARE[id].nombre}" data-tipo="servicio" data-detalle="${SOFTWARE[id].detalle}" data-price="0">${texto}</button>`;
+
 function tienda() {
   return `<section id="tienda"><div class="wrap">${encabezado(
     "Piezas NFC + QR",
@@ -85,7 +95,14 @@ function tienda() {
     "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia.",
   )}<div class="shop-grid" data-revelar>${PIEZAS.map(
     (p) => `<article class="shop-card">${foto(p.foto, `${p.nombre} de MetricsField con NFC y QR`) ?? `<div class="device" aria-hidden="true">${p.dibujo}</div>`}<h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
-  ).join("")}</div></div></section>`;
+  ).join("")}</div>
+  <p class="tienda-sub">Software · sumalo al mismo pedido</p>
+  <div class="software-grid">${Object.keys(SOFTWARE)
+    .map((id) => {
+      const sw = SOFTWARE[id];
+      return `<article class="software-card"><h3>${sw.nombre}</h3><p>${sw.texto} <a href="${sw.href}">Ver más</a></p><span class="precio-sw">${sw.precio}</span>${sumarSoftware(id, "Sumar a mi pedido", "btn dark")}</article>`;
+    })
+    .join("")}</div></div></section>`;
 }
 
 // ---------------------------------------------------------------- home
@@ -395,7 +412,7 @@ const VERTICALES = [
     eyebrow: "Retail · Mercado Libre",
     h1: "Vendiste. Ahora sabé cuánto ganaste de verdad.",
     lead: "Mercado Libre te muestra cuánto facturaste. Retail te muestra cuánto te quedó: descuenta comisión, envío, publicidad, IVA, otros impuestos y el costo de cada producto, venta por venta.",
-    ctas: [ext(RETAIL_APP, "Pedir la prueba gratis", "btn dark"), ext(wa("Hola, quiero probar Retail"), "Consultar por WhatsApp")],
+    ctas: [ext(RETAIL_APP, "Pedir la prueba gratis", "btn dark"), sumarSoftware("retail", "Pedirla por WhatsApp")],
     featuresEyebrow: "Qué ves",
     featuresH2: "El número que importa, sin planilla.",
     features: [
@@ -442,7 +459,7 @@ const VERTICALES = [
     eyebrow: "Loyalty · piloto",
     h1: "Que tus clientes vuelvan, y saber quiénes son.",
     lead: "Un club de beneficios con la tarjeta en la billetera del celular. El cliente se suma con un toque, junta sellos o puntos y canjea en el mostrador. Vos sabés quién vuelve, cada cuánto y qué beneficio funciona.",
-    ctas: [ext(wa("Hola, quiero ser comercio piloto de Loyalty"), "Quiero ser piloto", "btn dark"), `<a class="btn" href="/guias/tarjeta-de-fidelidad-google-wallet">Cómo funciona Wallet</a>`],
+    ctas: [sumarSoftware("loyalty", "Quiero ser piloto", "btn dark"), `<a class="btn" href="/guias/tarjeta-de-fidelidad-google-wallet">Cómo funciona Wallet</a>`],
     featuresEyebrow: "Qué incluye el piloto",
     featuresH2: "Una tarjeta que no se pierde.",
     features: [
