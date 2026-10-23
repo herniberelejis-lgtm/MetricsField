@@ -27,7 +27,7 @@ Misma página que el paso 2, sección de datos de la app:
 | Campo | Valor |
 |---|---|
 | App name | `MetricsField` |
-| App logo | El isotipo del manual de marca (subí el archivo de logo que tengan en alta resolución) |
+| App logo | `public/brand/isotipo-120-fondo-blanco.png` (120×120, lo genera `scripts/marca/rasterizar.mjs`) |
 | Application home page | `https://metricsfield.com` |
 | Application privacy policy link | `https://app.metricsfield.com/privacidad` |
 | Application terms of service (opcional, pero sumá si tenés) | `https://app.metricsfield.com/terminos` |

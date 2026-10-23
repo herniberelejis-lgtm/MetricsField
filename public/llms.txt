@@ -1,16 +1,30 @@
 # MetricsField
 
-> MetricsField es un software de gestión de reputación para comercios locales de Córdoba, Argentina. A través de hardware NFC/QR (standee, tarjeta PVC, sticker), los clientes de un local dejan reseñas en Google sin fricción — sin apps, sin usuario ni contraseña. Un panel de control por cliente muestra taps, reseñas nuevas, rating, visitas al perfil y llamadas.
+> MetricsField es software para comercios y vendedores de Argentina, hecho en Córdoba. Tres productos cubren el ciclo completo del cliente: Reputación (más reseñas en Google con carteles NFC/QR y un panel de seguimiento), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en etapa piloto). Intel ofrece calculadoras y guías gratuitas.
 
-## Producto
+## Productos
 
-- Hardware: standee de acrílico ($25.000, pago único), tarjeta PVC ($7.000 por unidad), sticker resistente ($10.000 por unidad). Cada pieza lleva un código único NFC/QR.
-- Software: panel de control por cliente, $25.000/mes, sin permanencia mínima. Incluye reseñas nuevas con borrador de respuesta, taps por día/hora/pieza, rating histórico, visitas al perfil y llamadas desde Google Business Profile.
-- Servicio: instalación y soporte en Córdoba, Argentina — vinculación de la ficha de Google, generación de códigos y entrega de hardware.
+- [Reputación](https://metricsfield.com/reputacion): carteles NFC/QR (standee $25.000, tarjeta PVC $7.000, sticker $10.000, pago único) que llevan a todos los clientes al mismo link público de Google para dejar su reseña, sin filtros por calificación ni incentivos. Panel de $25.000/mes + IVA, sin permanencia: toques, reseñas nuevas con respuesta sugerida, temas que se repiten, vistas de la ficha, pedidos de cómo llegar, llamadas y búsquedas. Instalación en Córdoba; envío al resto del país.
+- [Retail](https://metricsfield.com/retail): se conecta a Mercado Libre por OAuth y calcula la ganancia neta de cada venta y producto descontando comisión, cargo fijo, envío, publicidad (Mercado Ads), IVA, otros impuestos y costo del producto. Prueba gratis de 14 días sin tarjeta en https://retail.metricsfield.com.
+- [Loyalty](https://metricsfield.com/loyalty): club de beneficios con la tarjeta en Google Wallet, alta con consentimiento, sellos o puntos, canje en el mostrador con QR de un solo uso y métricas de clientes recurrentes. En piloto con comercios de Córdoba.
+- [Intel · calculadoras](https://metricsfield.com/herramientas): cuántas reseñas de 5★ faltan para una calificación en Google, ganancia real por venta en Mercado Libre y valor de un cliente que vuelve. Gratis y sin registro.
 
-## Páginas
+## Guías
 
-- [Landing](https://metricsfield.com/): producto, precios y cómo funciona.
+- [Cómo conseguir más reseñas en Google, sin romper las reglas](https://metricsfield.com/guias/como-conseguir-resenas-en-google): Guía práctica para comercios: por qué las reseñas de Google influyen en tu visibilidad, cómo pedirlas en el momento justo, qué prohíbe Google y cómo medir si funciona.
+- [Posicionamiento en Google Maps: cómo aparecer cuando te buscan cerca](https://metricsfield.com/guias/posicionamiento-en-google-maps): Qué tiene en cuenta Google para ordenar los negocios en Maps (relevancia, distancia y prominencia) y una lista de tareas concretas para tu Perfil de Empresa.
+- [SEO local y posicionamiento web para comercios: por dónde empezar](https://metricsfield.com/guias/seo-local-posicionamiento-web): Qué es el SEO local, en qué se diferencia del posicionamiento web general y una ruta de 6 pasos para que tu negocio aparezca cuando lo buscan en tu ciudad.
+- [GEO: cómo aparecer cuando le preguntan a una IA por tu rubro](https://metricsfield.com/guias/geo-aparecer-en-respuestas-de-ia): Qué es la optimización para motores generativos (GEO), en qué se parece y en qué no al SEO, y qué podés hacer hoy para que los asistentes de IA te recomienden.
+- [Cómo calcular la ganancia real de una venta en Mercado Libre](https://metricsfield.com/guias/rentabilidad-real-mercado-libre): Todo lo que se descuenta de una venta en Mercado Libre (comisión, cargo fijo, envío, publicidad, impuestos) y cómo calcular tu margen real producto por producto, con calculadora.
+- [Fidelización de clientes: cómo lograr que vuelvan (y saber quiénes son)](https://metricsfield.com/guias/fidelizacion-de-clientes): Por qué fidelizar es más barato que conseguir clientes nuevos, qué programas de fidelización funcionan en comercios y cómo medir si un cliente vuelve.
+- [Tarjeta de fidelidad en Google Wallet: el club de tu negocio en la billetera del celular](https://metricsfield.com/guias/tarjeta-de-fidelidad-google-wallet): Qué es una tarjeta de fidelidad digital en Google Wallet o Apple Wallet, por qué funciona mejor que el cartón o una app propia y qué hace falta para tener una.
+- [Clientes recurrentes: cómo medirlos y cómo lograr que sean más](https://metricsfield.com/guias/clientes-recurrentes): Cómo calcular la tasa de clientes recurrentes y el valor de un cliente en el tiempo, y qué acciones concretas aumentan la recompra en comercios y tiendas online.
+- [Sistema de gestión de clientes para comercios: qué necesitás de verdad](https://metricsfield.com/guias/crm-gestion-de-clientes): Qué es un CRM, qué datos de clientes conviene guardar en un comercio o una pyme, cómo empezar simple y cómo cuidar los datos personales.
+- [El ciclo completo del cliente: te encuentra, te elige, compra, vuelve y te recomienda](https://metricsfield.com/guias/ciclo-de-vida-del-cliente): Las cinco etapas del ciclo de vida del cliente en un comercio, qué métrica mirar en cada una y qué herramienta la mueve: SEO, reseñas, rentabilidad y fidelización.
+
+## Otras páginas
+
+- [Inicio](https://metricsfield.com/)
 - [Política de privacidad](https://metricsfield.com/privacy)
 - [Términos de servicio](https://metricsfield.com/terms)
 
