@@ -17,6 +17,50 @@
     return parseFloat(String(el.value).replace(",", "."));
   };
 
+  document.documentElement.classList.add("js");
+  var quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- movimiento: secciones que entran y puertas animadas ----
+  // Cada puerta muestra una vista mínima de su producto que se arma al
+  // entrar en pantalla y se vuelve a armar al pasar el mouse.
+  function contar(el) {
+    var fin = Number(el.getAttribute("data-contar")) || 0;
+    if (quieto) { el.textContent = numero(fin); return; }
+    var t0 = null;
+    function paso(t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / 1100);
+      el.textContent = numero(Math.round(fin * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+  function animar(puerta) {
+    puerta.classList.remove("on");
+    void puerta.offsetWidth; // reinicia las animaciones CSS
+    puerta.classList.add("on");
+    Array.prototype.forEach.call(puerta.querySelectorAll("[data-contar]"), contar);
+  }
+  var animables = document.querySelectorAll("[data-animar]");
+  var revelables = document.querySelectorAll("[data-revelar]");
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        obs.unobserve(e.target);
+        if (e.target.hasAttribute("data-animar")) animar(e.target);
+        else e.target.classList.add("visto");
+      });
+    }, { threshold: 0.15 });
+    Array.prototype.forEach.call(animables, function (el) { obs.observe(el); });
+    Array.prototype.forEach.call(revelables, function (el) { obs.observe(el); });
+  } else {
+    Array.prototype.forEach.call(revelables, function (el) { el.classList.add("visto"); });
+  }
+  Array.prototype.forEach.call(animables, function (puerta) {
+    puerta.addEventListener("mouseenter", function () { if (!quieto) animar(puerta); });
+  });
+
   // ---- menú del celular ----
   var botonMenu = document.querySelector("[data-menu]");
   var menu = document.querySelector("[data-menu-movil]");
@@ -29,10 +73,10 @@
 
   // ---- demo por pestañas (datos de ejemplo, lo dice la propia demo) ----
   var demos = {
-    reputacion: { k: "Reputación en Google", t: "La opinión aparece mientras todavía importa.", x: "Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.", al: "Toques al cartel", a: "148", bl: "Terminan en reseña", b: "62%" },
-    retail: { k: "Rentabilidad en Mercado Libre", t: "Facturar más no siempre es ganar más.", x: "Comisión, envío, publicidad, impuestos y costo del producto, venta por venta.", al: "Ventas del mes", a: "324", bl: "Margen real", b: "18,4%" },
-    loyalty: { k: "Fidelización · piloto", t: "Una visita puede convertirse en una relación.", x: "Tarjeta en la billetera del celular, beneficios claros y quién vuelve y cada cuánto.", al: "Clientes en el club", a: "286", bl: "Vuelven en 60 días", b: "41%" },
-    intel: { k: "Intel · herramientas gratis", t: "Los números que conviene saber antes de decidir.", x: "Cuántas reseñas te faltan, cuánto ganás de verdad por venta y cuánto vale un cliente que vuelve.", al: "Calculadoras", a: "3", bl: "Guías", b: "10" }
+    reputacion: { barras: [32, 47, 39, 68, 82, 74, 94], k: "Reputación en Google", t: "La opinión aparece mientras todavía importa.", x: "Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.", al: "Toques al cartel", a: "148", bl: "Terminan en reseña", b: "62%" },
+    retail: { barras: [58, 44, 63, 51, 72, 66, 80], k: "Rentabilidad en Mercado Libre", t: "Facturar más no siempre es ganar más.", x: "Comisión, envío, publicidad, impuestos y costo del producto, venta por venta.", al: "Ventas del mes", a: "324", bl: "Margen real", b: "18,4%" },
+    loyalty: { barras: [20, 28, 35, 41, 50, 57, 66], k: "Fidelización · piloto", t: "Una visita puede convertirse en una relación.", x: "Tarjeta en la billetera del celular, beneficios claros y quién vuelve y cada cuánto.", al: "Clientes en el club", a: "286", bl: "Vuelven en 60 días", b: "41%" },
+    intel: { barras: [70, 55, 82, 64, 90, 76, 60], k: "Intel · herramientas gratis", t: "Los números que conviene saber antes de decidir.", x: "Cuántas reseñas te faltan, cuánto ganás de verdad por venta y cuánto vale un cliente que vuelve.", al: "Calculadoras", a: "3", bl: "Guías", b: "10" }
   };
   var tabs = document.querySelectorAll("[data-demo]");
   Array.prototype.forEach.call(tabs, function (b) {
@@ -53,6 +97,9 @@
       poner("[data-metric-a]", d.a);
       poner("[data-metric-b-label]", d.bl);
       poner("[data-metric-b]", d.b);
+      Array.prototype.forEach.call(document.querySelectorAll(".chart .bar"), function (barra, i) {
+        if (d.barras[i] !== undefined) barra.style.height = d.barras[i] + "%";
+      });
     });
   });
 

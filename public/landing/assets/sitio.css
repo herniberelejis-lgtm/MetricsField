@@ -63,14 +63,62 @@ img{max-width:100%;height:auto;display:block}
 /* ---- puertas ---- */
 .portal-title{margin:46px 0 18px;display:flex;justify-content:space-between;align-items:end;gap:20px}
 .portal-title p{max-width:460px;margin:0;font-size:.86rem;color:var(--muted)}
-.switchboard{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.door{aspect-ratio:1/1;min-height:220px;padding:30px 26px;text-decoration:none;display:flex;flex-direction:column;position:relative;clip-path:polygon(22% 0,78% 0,100% 22%,100% 78%,78% 100%,22% 100%,0 78%,0 22%);background:#fff;transition:transform .2s,background .2s,color .2s}
-.door:nth-child(2){background:var(--azul-2)}.door:nth-child(3){background:var(--bien-bg)}.door:nth-child(4){background:var(--amarillo)}
-.door:hover,.door:focus-visible{transform:translateY(-6px);background:var(--ink);color:#fff}
-.door .num{font-size:.74rem;opacity:.75}
-.door h3{font-size:clamp(1.2rem,2vw,1.7rem);letter-spacing:-.04em;margin:auto 0 6px}
-.door p{font-size:.82rem;margin:0;max-width:200px}
-.door .arrow{position:absolute;right:28px;top:28px}
+.switchboard{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.door{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;text-decoration:none;display:flex;flex-direction:column;gap:16px;transition:border-color .2s,transform .25s cubic-bezier(.2,.7,.2,1)}
+.door:hover,.door:focus-visible{border-color:var(--ink);transform:translateY(-4px)}
+.door-top{display:flex;justify-content:space-between;align-items:center}
+.door .num{font-size:.74rem;color:var(--muted);font-weight:600}
+.door .status{margin:0}
+.door-txt h3{font-size:1.45rem;letter-spacing:-.04em;margin:0 0 4px;line-height:1.1}
+.door-txt p{font-size:.84rem;margin:0;color:#3d3d3d}
+.door .ir{margin-top:auto;font-size:.82rem;font-weight:700;display:flex;gap:6px;align-items:center}
+.door .ir span{transition:transform .25s}
+.door:hover .ir span,.door:focus-visible .ir span{transform:translateX(5px)}
+
+/* vistas mínimas de cada producto (datos de ejemplo). Su estado normal es
+   el final: sin JavaScript o con movimiento reducido se ven quietas. */
+.vis{height:132px;background:var(--paper);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.vis-pie{font-size:.7rem;color:var(--muted);font-weight:600}
+.rep-top{display:flex;align-items:center;gap:10px}
+.rep-top b{font-size:1.5rem;letter-spacing:-.04em;line-height:1}
+.estrellas{display:flex;gap:3px}
+.estrellas i{width:14px;height:14px;background:var(--ink);clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.estrellas i:last-child{background:linear-gradient(90deg,var(--ink) 70%,#c9ced6 70%)}
+.mini-barras{flex:1;display:flex;align-items:flex-end;gap:5px}
+.mini-barras i{flex:1;height:var(--h);background:var(--dato);border-radius:3px 3px 0 0;transform-origin:bottom}
+.vis-ret{justify-content:center;gap:7px}
+.cascada{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:8px;font-size:.66rem;font-weight:600;color:#444}
+.cascada b{height:14px;position:relative}
+.cascada i{position:absolute;top:0;bottom:0;left:var(--x);width:var(--w);border-radius:4px;transform-origin:left}
+.cascada i.dato{background:var(--dato)}.cascada i.menos{background:var(--mejorar-fill)}.cascada i.mas{background:var(--bien-fill)}
+.vis-loy{justify-content:center;align-items:flex-start;gap:12px}
+.sellos{display:grid;grid-template-columns:repeat(5,22px);gap:8px}
+.sellos i{width:22px;height:22px;border-radius:50%;background:var(--ink)}
+.sellos i:last-child{background:var(--bien-fill)}
+.premio{font-size:.7rem;font-weight:700;background:var(--bien-fill);border-radius:99px;padding:4px 10px}
+.vis-int{justify-content:center;gap:2px}
+.contador{font-size:2.1rem;letter-spacing:-.05em;line-height:1.05}
+.progreso{height:6px;border-radius:99px;background:#dfe3e8;margin-top:8px;overflow:hidden}
+.progreso i{display:block;height:100%;width:100%;background:var(--link);border-radius:99px;transform-origin:left}
+
+@keyframes crecerY{from{transform:scaleY(0)}}
+@keyframes crecerX{from{transform:scaleX(0)}}
+@keyframes aparecer{from{opacity:0;transform:scale(.4)}}
+@keyframes subir{from{opacity:0;transform:translateY(18px)}}
+.door.on .estrellas i{animation:aparecer .35s cubic-bezier(.2,.8,.3,1.3) both;animation-delay:calc(var(--n,0) * 90ms)}
+.door.on .estrellas i:nth-child(2){--n:1}.door.on .estrellas i:nth-child(3){--n:2}.door.on .estrellas i:nth-child(4){--n:3}.door.on .estrellas i:nth-child(5){--n:4}
+.door.on .mini-barras i{animation:crecerY .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(200ms + var(--i) * 70ms)}
+.door.on .cascada i{animation:crecerX .55s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i) * 260ms)}
+.door.on .sellos i{animation:aparecer .3s cubic-bezier(.2,.8,.3,1.3) both;animation-delay:calc(var(--i) * 110ms)}
+.door.on .premio{animation:subir .4s ease both;animation-delay:1.2s}
+.door.on .progreso i{animation:crecerX 1.3s cubic-bezier(.2,.7,.2,1) both}
+
+/* entrada suave de las secciones al hacer scroll (solo con JavaScript) */
+.js [data-revelar]{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.js [data-revelar].visto{opacity:1;transform:none}
+.hero h1,.hero-side{animation:subir .8s cubic-bezier(.2,.7,.2,1) both}
+.hero-side{animation-delay:.15s}
+.bar{transition:height .6s cubic-bezier(.2,.7,.2,1)}
 .status{font-size:.66rem;font-weight:700;padding:5px 9px;border-radius:99px;width:max-content;margin-top:10px;color:var(--ink)}
 .ready{background:var(--bien-fill)}.pilot{background:var(--azul-3)}.free{background:#fff;border:1px solid var(--ink)}
 
@@ -283,11 +331,7 @@ ol.ciclo{padding:0;margin:0}
   .actions .ocultar-movil,.nav .actions [data-cart-open]{display:none}
   .hero h1{font-size:clamp(2.5rem,12vw,3.4rem)}
   .portal-title{display:block}.portal-title p{margin-top:10px}
-  .switchboard{gap:8px}
-  .door{aspect-ratio:auto;min-height:170px;padding:20px 16px;clip-path:polygon(14% 0,86% 0,100% 14%,100% 86%,86% 100%,14% 100%,0 86%,0 14%)}
-  .door h3{font-size:1.02rem}
-  .door p{font-size:.72rem}
-  .door .arrow{right:18px;top:18px}
+  .switchboard{grid-template-columns:1fr}
   .ticker-in{grid-template-columns:1fr}
   .proof{border-right:0}
   .shop-grid,.calcs,.guias-grid,.features,.metric-grid{grid-template-columns:1fr}
@@ -301,4 +345,4 @@ ol.ciclo{padding:0;margin:0}
   .footer{padding-bottom:130px}
   .calc .fila{grid-template-columns:1fr}
 }
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}.js [data-revelar]{opacity:1;transform:none}}

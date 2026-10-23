@@ -32,7 +32,7 @@ function tarjetaGuia(g) {
 }
 
 function encabezado(eyebrow, h2, texto = "") {
-  return `<div class="section-head"><div class="eyebrow">${eyebrow}</div><div><h2>${h2}</h2>${texto ? `<p class="muted">${texto}</p>` : ""}</div></div>`;
+  return `<div class="section-head" data-revelar><div class="eyebrow">${eyebrow}</div><div><h2>${h2}</h2>${texto ? `<p class="muted">${texto}</p>` : ""}</div></div>`;
 }
 
 // ---------------------------------------------------------------- piezas
@@ -64,18 +64,58 @@ function tienda() {
     "Piezas NFC + QR",
     "Elegí dónde empieza el contacto.",
     "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia.",
-  )}<div class="shop-grid">${PIEZAS.map(
+  )}<div class="shop-grid" data-revelar>${PIEZAS.map(
     (p) => `<article class="shop-card"><div class="device" aria-hidden="true">${p.dibujo}</div><h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
   ).join("")}</div></div></section>`;
 }
 
 // ---------------------------------------------------------------- home
 
+// Las cuatro puertas de la home: tarjetas con una vista mínima y animada de
+// cada producto (la animación la dispara sitio.js al entrar en pantalla y
+// se repite al pasar el mouse). Datos de ejemplo, sin cifras de clientes.
+const barras = (alturas) => `<div class="mini-barras">${alturas.map((h, i) => `<i style="--h:${h}%;--i:${i}"></i>`).join("")}</div>`;
+
 const PUERTAS = [
-  ["/reputacion", "01", "ready", "Disponible", "Reputación", "Más reseñas en Google con un toque."],
-  ["/retail", "02", "ready", "Prueba gratis", "Retail", "La ganancia real de cada venta en Mercado Libre."],
-  ["/loyalty", "03", "pilot", "Piloto", "Loyalty", "Clientes que vuelven, con la tarjeta en el celular."],
-  ["/herramientas", "04", "free", "Gratis, ya", "Intel", "Calculadoras y guías para decidir con números."],
+  {
+    href: "/reputacion",
+    num: "01",
+    estado: ["ready", "Disponible"],
+    nombre: "Reputación",
+    texto: "Más reseñas en Google con un toque.",
+    vis: `<div class="vis vis-rep"><div class="rep-top"><b>4,7</b><span class="estrellas">${"<i></i>".repeat(5)}</span></div>${barras([30, 42, 38, 55, 64, 72, 88])}<span class="vis-pie">Reseñas por semana</span></div>`,
+  },
+  {
+    href: "/retail",
+    num: "02",
+    estado: ["ready", "Prueba gratis"],
+    nombre: "Retail",
+    texto: "La ganancia real de cada venta en Mercado Libre.",
+    vis: `<div class="vis vis-ret">${[
+      ["Precio", 0, 100, "dato"],
+      ["Comisiones", 72, 28, "menos"],
+      ["Costo", 26, 46, "menos"],
+      ["Ganancia", 0, 26, "mas"],
+    ]
+      .map(([t, x, w, c], i) => `<div class="cascada"><span>${t}</span><b><i class="${c}" style="--x:${x}%;--w:${w}%;--i:${i}"></i></b></div>`)
+      .join("")}</div>`,
+  },
+  {
+    href: "/loyalty",
+    num: "03",
+    estado: ["pilot", "Piloto"],
+    nombre: "Loyalty",
+    texto: "Clientes que vuelven, con la tarjeta en el celular.",
+    vis: `<div class="vis vis-loy"><div class="sellos">${Array.from({ length: 10 }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div><span class="premio">Beneficio listo</span></div>`,
+  },
+  {
+    href: "/herramientas",
+    num: "04",
+    estado: ["free", "Gratis, ya"],
+    nombre: "Intel",
+    texto: "Calculadoras y guías para decidir con números.",
+    vis: `<div class="vis vis-int"><span class="vis-pie">Te faltan</span><b class="contador" data-contar="120">120</b><span class="vis-pie">reseñas de 5★ para ver 4,7</span><div class="progreso"><i></i></div></div>`,
+  },
 ];
 
 const PRODUCTOS = [
@@ -141,8 +181,8 @@ function home() {
   <ul class="trust"><li>Sin apps para tus clientes</li><li>Soporte por WhatsApp</li><li>Hecho en Córdoba</li></ul></div></div>
   <div class="portal-title"><b>Elegí una puerta</b><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
   <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
-    ([href, num, clase, estado, nombre, texto]) =>
-      `<a class="door" href="${href}"><span class="num">${num}</span><span class="status ${clase}">${estado}</span><h3>${nombre}</h3><p>${texto}</p><span class="arrow" aria-hidden="true">↗</span></a>`,
+    (p) =>
+      `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">${p.num}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><h3>${p.nombre}</h3><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
   ).join("")}</nav></div>
   <div class="ticker"><div class="wrap ticker-in">
     <div class="proof"><b>17%</b><span>de ganancia inflada encontramos en una cuenta real de Mercado Libre</span></div>
@@ -155,14 +195,14 @@ function home() {
     "Intel · gratis, desde hoy",
     "Tres preguntas que conviene contestar con números.",
     "Usalas sin registrarte. Las cuentas están explicadas al lado de cada resultado, y cada una tiene su guía para entender qué hacer después.",
-  )}<div class="calcs">${CALCS.resenas}${CALCS.ml}${CALCS.cliente}</div>
+  )}<div class="calcs" data-revelar>${CALCS.resenas}${CALCS.ml}${CALCS.cliente}</div>
   <p class="actualizado"><a href="/herramientas">Ver las calculadoras con la explicación completa</a> · <a href="/guias">Leer las guías</a></p></div></section>
 <section id="productos"><div class="wrap">${encabezado(
     "Tres productos y una puerta abierta",
     "Elegí el problema que querés resolver.",
     "No vendemos una plataforma enorme que tengas que aprender. Empezás por una necesidad concreta y sumás lo demás cuando haga falta.",
   )}${PRODUCTOS.map(
-    (p, i) => `<article class="product" id="producto-${p.id}"><div class="product-tag"><span class="product-index">0${i + 1}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></div><div class="product-body"><h3>${p.h3}</h3><p>${p.p}</p><div class="steps">${p.pasos
+    (p, i) => `<article class="product" id="producto-${p.id}" data-revelar><div class="product-tag"><span class="product-index">0${i + 1}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></div><div class="product-body"><h3>${p.h3}</h3><p>${p.p}</p><div class="steps">${p.pasos
       .map(([b, s]) => `<div class="step"><b>${b}</b><span>${s}</span></div>`)
       .join("")}</div><div class="actions">${p.ctas.join("")}</div><ul class="kw" aria-label="Temas">${p.kw.map((k) => `<li>${k}</li>`).join("")}</ul></div></article>`,
   ).join("")}</div></section>
@@ -170,14 +210,14 @@ function home() {
     "El ciclo completo del cliente",
     "Del primer “cerca de mí” a la recomendación.",
     "Cada etapa tiene un número que la mide. Nosotros nos ocupamos de que lo veas, en la herramienta que corresponde.",
-  )}<ol class="ciclo">${CICLO.map(
+  )}<ol class="ciclo" data-revelar>${CICLO.map(
     ([h, p, quien, guia], i) => `<li><span class="paso">Etapa ${i + 1}</span><h3>${h}</h3><p>${p}</p><a class="quien" href="${guia}">${quien} · leer la guía</a></li>`,
   ).join("")}</ol></div></section>
 <section id="demo" style="padding-top:0"><div class="wrap">${encabezado(
     "Producto, no promesa",
     "Mirá qué decisiones te ayuda a tomar.",
     "Esta demo usa información de ejemplo. Sirve para entender el producto; no representa resultados de un cliente.",
-  )}<div class="demo-shell"><div class="demo-top"><div class="tabs" role="tablist" aria-label="Productos de la demo">
+  )}<div class="demo-shell" data-revelar><div class="demo-top"><div class="tabs" role="tablist" aria-label="Productos de la demo">
     <button class="tab" type="button" role="tab" aria-selected="true" data-demo="reputacion">Reputación</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="retail">Retail</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="loyalty">Loyalty</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="intel">Intel</button></div><span class="demo-label">Demo · datos de ejemplo</span></div>
   <div class="demo-content" aria-live="polite"><div class="demo-copy"><div class="eyebrow" data-demo-kicker>Reputación en Google</div><h3 data-demo-title>La opinión aparece mientras todavía importa.</h3><p data-demo-text>Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.</p></div>
   <div class="metric-grid"><div class="metric"><small data-metric-a-label>Toques al cartel</small><strong data-metric-a>148</strong></div><div class="metric"><small data-metric-b-label>Terminan en reseña</small><strong data-metric-b>62%</strong></div>
@@ -187,9 +227,9 @@ ${tienda()}
     "Guías",
     "Lo que hay que saber, explicado sin vueltas.",
     "Reseñas, Google Maps, SEO local, GEO, Mercado Libre, fidelización y gestión de clientes. Escritas para servirte aunque nunca nos compres nada.",
-  )}<div class="guias-grid">${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div>
+  )}<div class="guias-grid" data-revelar>${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div>
   <p class="actualizado"><a class="btn dark" href="/guias">Ver las ${GUIAS.length} guías</a></p></div></section>
-<section class="start"><div class="wrap">${encabezado("De la idea al uso", "Empezar es simple.")}<div class="start-grid">
+<section class="start"><div class="wrap">${encabezado("De la idea al uso", "Empezar es simple.")}<div class="start-grid" data-revelar>
   <article class="start-item"><b>01</b><h3>Elegís una herramienta</h3><p>Te ayudamos a empezar por la que más impacto tiene hoy en tu negocio.</p></article>
   <article class="start-item"><b>02</b><h3>La dejamos funcionando</h3><p>En Córdoba instalamos. En el resto del país te llega lista para activar, con ayuda por WhatsApp.</p></article>
   <article class="start-item"><b>03</b><h3>Medís y decidís</h3><p>El panel ordena la información y marca el próximo paso.</p></article></div></div></section>
@@ -197,7 +237,7 @@ ${tienda()}
     "Clientes",
     "Resultados reales, contados por quienes los lograron.",
     "Este espacio crece con casos verificables. No usamos logos, frases ni números sin permiso.",
-  )}<div class="clients-stage"><div class="clients-copy"><span class="status pilot">En construcción</span><h3>La próxima historia puede ser la tuya.</h3><p class="muted">Estamos documentando implementaciones con nombre, contexto, punto de partida y resultado. Cuando un cliente autorice su publicación, su caso aparece acá.</p>${ext(
+  )}<div class="clients-stage" data-revelar><div class="clients-copy"><span class="status pilot">En construcción</span><h3>La próxima historia puede ser la tuya.</h3><p class="muted">Estamos documentando implementaciones con nombre, contexto, punto de partida y resultado. Cuando un cliente autorice su publicación, su caso aparece acá.</p>${ext(
     wa("Hola, quiero conocer los casos de MetricsField"),
     "Consultar casos",
     "btn dark",
@@ -237,7 +277,7 @@ function vertical(v) {
   const cuerpo = `${m.html}
 <header class="pagina-hero wrap"><div class="eyebrow">${v.eyebrow}</div><h1>${v.h1}</h1><p class="lead">${v.lead}</p><div class="actions" style="margin-top:24px">${v.ctas.join("")}</div></header>
 ${v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
-<section style="padding-top:64px"><div class="wrap">${encabezado(v.featuresEyebrow, v.featuresH2)}<div class="features">${v.features
+<section style="padding-top:64px"><div class="wrap">${encabezado(v.featuresEyebrow, v.featuresH2)}<div class="features" data-revelar>${v.features
     .map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
     .join("")}</div></div></section>
 <section style="padding-top:0"><div class="wrap">${encabezado("Cómo funciona", v.pasosH2)}<ol class="ciclo pasos-${v.pasos.length}">${v.pasos
@@ -427,7 +467,7 @@ ${bloques
   <div class="prosa"><h2 style="margin-top:0">${h}</h2>${texto}<p><a href="/guias/${guia}">Leer la guía: ${esc(porSlug[guia].h1)}</a></p></div></div></section>`,
   )
   .join("")}
-<section class="intel"><div class="wrap">${encabezado("Guías", "Para entender qué hacer con el resultado.")}<div class="guias-grid">${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div></div></section>`;
+<section class="intel"><div class="wrap">${encabezado("Guías", "Para entender qué hacer con el resultado.")}<div class="guias-grid" data-revelar>${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div></div></section>`;
   return pagina({
     ruta: "/herramientas",
     titulo: "Calculadoras gratis: reseñas de Google, ganancia en Mercado Libre y valor del cliente · MetricsField Intel",
