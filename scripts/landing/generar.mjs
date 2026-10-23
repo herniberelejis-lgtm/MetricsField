@@ -290,8 +290,12 @@ ${tienda()}
 function vertical(v) {
   const m = migas([["/", "Inicio"], [v.ruta, v.nombre]]);
   const cuerpo = `${m.html}
-<header class="pagina-hero wrap"><div class="eyebrow">${v.eyebrow}</div><h1>${v.h1}</h1><p class="lead">${v.lead}</p><div class="actions" style="margin-top:24px">${v.ctas.join("")}</div></header>
-${(v.fotoLocal && foto("local", v.fotoLocal, "foto-local")) ? `<div class="wrap">${foto("local", v.fotoLocal, "foto-local")}</div>` : v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
+${(() => {
+  const fotoHero = v.fotoLocal ? foto("local", v.fotoLocal, "foto-local") : null;
+  const textos = `<div class="eyebrow">${v.eyebrow}</div><h1>${v.h1}</h1><p class="lead">${v.lead}</p><div class="actions" style="margin-top:24px">${v.ctas.join("")}</div>`;
+  return fotoHero ? `<header class="pagina-hero wrap con-foto"><div>${textos}</div>${fotoHero}</header>` : `<header class="pagina-hero wrap">${textos}</header>`;
+})()}
+${v.fotoLocal && FOTOS.local ? "" : v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
 <section style="padding-top:64px"><div class="wrap">${encabezado(v.featuresEyebrow, v.featuresH2)}<div class="features" data-revelar>${v.features
     .map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
     .join("")}</div></div></section>
