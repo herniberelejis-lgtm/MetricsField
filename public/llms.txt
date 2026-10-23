@@ -5,7 +5,7 @@
 ## Productos
 
 - [Reputación](https://metricsfield.com/reputacion): carteles NFC/QR (standee $25.000, tarjeta PVC $7.000, sticker $10.000, pago único) que llevan a todos los clientes al mismo link público de Google para dejar su reseña, sin filtros por calificación ni incentivos. Panel de $25.000/mes + IVA, sin permanencia: toques, reseñas nuevas con respuesta sugerida, temas que se repiten, vistas de la ficha, pedidos de cómo llegar, llamadas y búsquedas. Instalación en Córdoba; envío al resto del país.
-- [Retail](https://metricsfield.com/retail): se conecta a Mercado Libre por OAuth y calcula la ganancia neta de cada venta y producto descontando comisión, cargo fijo, envío, publicidad (Mercado Ads), IVA, otros impuestos y costo del producto. Prueba gratis de 14 días sin tarjeta en https://retail.metricsfield.com.
+- [Retail](https://metricsfield.com/retail): se conecta a Mercado Libre por OAuth y calcula la ganancia neta de cada venta y producto descontando comisión, cargo fijo, envío, publicidad (Mercado Ads), IVA, otros impuestos y costo del producto. Prueba gratis de 30 días sin tarjeta en https://retail.metricsfield.com.
 - [Loyalty](https://metricsfield.com/loyalty): club de beneficios con la tarjeta en Google Wallet, alta con consentimiento, sellos o puntos, canje en el mostrador con QR de un solo uso y métricas de clientes recurrentes. En piloto con comercios de Córdoba.
 - [Intel · calculadoras](https://metricsfield.com/herramientas): cuántas reseñas de 5★ faltan para una calificación en Google, ganancia real por venta en Mercado Libre y valor de un cliente que vuelve. Gratis y sin registro.
 

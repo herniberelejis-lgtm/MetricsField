@@ -90,7 +90,7 @@ const PRODUCTOS = [
   },
   {
     id: "retail",
-    estado: ["ready", "Prueba gratis 14 días"],
+    estado: ["ready", "Prueba gratis 30 días"],
     h3: "Vendiste en Mercado Libre. Ahora sabé cuánto ganaste.",
     p: "Conectás tu cuenta de Mercado Libre y ves juntos comisión, envío, publicidad, impuestos y costo del producto, venta por venta y producto por producto. Cuando falta un costo, lo decimos en vez de inventarlo.",
     pasos: [["Conectás tu cuenta", "Sin compartir tu contraseña."], ["Cargás tus costos", "Una vez, con historial."], ["Ves tu margen real", "Por producto, venta y mes."]],
@@ -129,7 +129,7 @@ const FAQ_HOME = [
   ["¿Qué es MetricsField?", "Software para comercios y vendedores de Argentina, hecho en Córdoba. Tiene tres productos: Reputación (más reseñas en Google con carteles NFC/QR y un panel), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en piloto). Además, Intel: calculadoras y guías gratis."],
   ["¿Mis clientes tienen que instalar una app?", "No. El cartel abre desde el navegador del celular por NFC o QR, y la tarjeta de Loyalty vive en Google Wallet, que ya viene en Android."],
   ["¿Es seguro para mi ficha de Google?", "Sí. El cartel lleva a todos los clientes al mismo link público de Google para dejar su reseña, sin filtrar por calificación y sin premios a cambio, que es lo que piden las políticas de Google."],
-  ["¿Cómo calcula Retail la ganancia real?", "Reúne lo que Mercado Libre descuenta en cada operación (comisión, envío, publicidad) más impuestos y el costo del producto que cargás. La prueba gratis dura 14 días."],
+  ["¿Cómo calcula Retail la ganancia real?", "Reúne lo que Mercado Libre descuenta en cada operación (comisión, envío, publicidad) más impuestos y el costo del producto que cargás. La prueba gratis dura 30 días."],
   ["¿Loyalty ya se puede contratar?", "Está en etapa piloto: lo estamos probando con pocos comercios antes de abrirlo. Si te interesa, escribinos y te sumamos a la lista."],
   ["¿Funciona fuera de Córdoba?", "Sí. Retail y las herramientas de Intel funcionan online en todo el país. En Reputación, en Córdoba instalamos y al resto del país enviamos las piezas listas para activar con ayuda por WhatsApp."],
 ];
@@ -322,7 +322,7 @@ const VERTICALES = [
     tipoLd: "SoftwareApplication",
     titulo: "Rentabilidad real en Mercado Libre: la ganancia de cada venta · MetricsField Retail",
     descripcion:
-      "Conectá tu cuenta de Mercado Libre y mirá la ganancia real de cada venta y cada producto: comisión, envío, publicidad, IVA, impuestos y costo. Prueba gratis de 14 días, sin tarjeta.",
+      "Conectá tu cuenta de Mercado Libre y mirá la ganancia real de cada venta y cada producto: comisión, envío, publicidad, IVA, impuestos y costo. Prueba gratis de 30 días, sin tarjeta.",
     eyebrow: "Retail · Mercado Libre",
     h1: "Vendiste. Ahora sabé cuánto ganaste de verdad.",
     lead: "Mercado Libre te muestra cuánto facturaste. Retail te muestra cuánto te quedó: descuenta comisión, envío, publicidad, IVA, otros impuestos y el costo de cada producto, venta por venta.",
@@ -339,7 +339,7 @@ const VERTICALES = [
     ],
     pasosH2: "Del primer ingreso al número real.",
     pasos: [
-      ["Pedís la prueba", "14 días gratis, sin tarjeta."],
+      ["Pedís la prueba", "30 días gratis, sin tarjeta."],
       ["Conectás Mercado Libre", "Con el permiso oficial, sin compartir tu contraseña."],
       ["Cargás tus costos", "Una vez por producto; te ayudamos con los primeros."],
       ["Ves tu margen", "Por venta, producto y mes, con el detalle de cada descuento."],
@@ -353,14 +353,14 @@ const VERTICALES = [
     faq: [
       ["¿Cómo calcula la ganancia real?", "Toma de Mercado Libre la comisión, el envío y la publicidad de cada operación, suma IVA y los otros impuestos que configures, y resta el costo del producto que cargaste. Lo que queda es la ganancia neta."],
       ["¿Tengo que darles mi contraseña de Mercado Libre?", "No. Te conectás con el permiso oficial de Mercado Libre (OAuth) y podés revocarlo cuando quieras desde tu cuenta."],
-      ["¿Cuánto dura la prueba?", "14 días, sin tarjeta. Te ayudamos a conectar la cuenta y a cargar los primeros costos."],
+      ["¿Cuánto dura la prueba?", "30 días, sin tarjeta. Te ayudamos a conectar la cuenta y a cargar los primeros costos."],
       ["¿Sirve si vendo poco?", "Sí: con pocas ventas un producto a pérdida pesa más. Lo importante es tener cargado el costo de lo que vendés."],
       ["¿Mis datos los ve otro vendedor?", "No. Cada cuenta está aislada en la base de datos: aunque hubiera un error en el código, la base no deja ver datos de otra cuenta."],
     ],
     ctaH2: "Facturar más no siempre es ganar más.",
     ctaP: "Pedí la prueba y en unos días sabés qué productos te dejan plata y cuáles no.",
     ctasFinal: [ext(RETAIL_APP, "Pedir la prueba gratis", "btn light"), `<a class="btn" href="/guias/rentabilidad-real-mercado-libre">Leer la guía</a>`],
-    ldExtra: { applicationCategory: "BusinessApplication", operatingSystem: "Web", offers: { "@type": "Offer", price: "0", priceCurrency: "ARS", description: "Prueba gratis de 14 días" } },
+    ldExtra: { applicationCategory: "BusinessApplication", operatingSystem: "Web", offers: { "@type": "Offer", price: "0", priceCurrency: "ARS", description: "Prueba gratis de 30 días" } },
   },
   {
     ruta: "/loyalty",
