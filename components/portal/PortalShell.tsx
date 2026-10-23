@@ -291,7 +291,7 @@ export default function PortalShell({
         <div className="flex items-center gap-2.5 px-5 py-5">
           {logo ?? (
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
-              <BrandMark size={18} strokeWidth={7} />
+              <BrandMark size={18} />
             </span>
           )}
           <div className="min-w-0">
