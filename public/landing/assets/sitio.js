@@ -103,13 +103,26 @@
     });
   });
 
-  // ---- carrito de piezas (se coordina por WhatsApp; no cobra nada) ----
+  // ---- pedido: piezas NFC y software (se coordina por WhatsApp; acá no se
+  // cobra nada). Cada producto tiene cantidad; el software no suma al total
+  // de pago único porque es mensual o una prueba gratis. ----
   var drawer = document.querySelector("[data-drawer]");
   var back = document.querySelector("[data-backdrop]");
   var cart = [];
+  var datos = {};
   try {
-    cart = JSON.parse(localStorage.getItem("mf-carrito") || "[]");
-    if (!Array.isArray(cart)) cart = [];
+    var guardado = JSON.parse(localStorage.getItem("mf-carrito") || "[]");
+    if (Array.isArray(guardado)) {
+      guardado.forEach(function (x) {
+        // Compatible con el formato anterior ({ name, price }, una fila por unidad).
+        var nombre = x.nombre || x.name;
+        if (!nombre) return;
+        var ya = cart.filter(function (y) { return y.nombre === nombre; })[0];
+        if (ya) ya.cant += x.cant || 1;
+        else cart.push({ nombre: nombre, precio: Number(x.precio != null ? x.precio : x.price) || 0, tipo: x.tipo || "pieza", detalle: x.detalle || "", cant: x.cant || 1 });
+      });
+    }
+    datos = JSON.parse(localStorage.getItem("mf-pedido-datos") || "{}") || {};
   } catch (e) {
     cart = [];
   }
@@ -119,9 +132,85 @@
     } catch (e) {}
     dibujar();
   }
+  var piezas = function () { return cart.filter(function (x) { return x.tipo !== "servicio"; }); };
+  var servicios = function () { return cart.filter(function (x) { return x.tipo === "servicio"; }); };
+  var totalPiezas = function () { return piezas().reduce(function (s, x) { return s + x.precio * x.cant; }, 0); };
+
+  function boton(texto, etiqueta, accion) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = texto;
+    b.setAttribute("aria-label", etiqueta);
+    b.addEventListener("click", accion);
+    return b;
+  }
+  function fila(x) {
+    var f = document.createElement("div");
+    f.className = "cart-row";
+    var info = document.createElement("div");
+    var nombre = document.createElement("b");
+    nombre.textContent = x.nombre;
+    var precio = document.createElement("small");
+    precio.textContent = x.tipo === "servicio" ? x.detalle : dinero(x.precio) + " c/u";
+    info.appendChild(nombre);
+    info.appendChild(document.createElement("br"));
+    info.appendChild(precio);
+    f.appendChild(info);
+    var acciones = document.createElement("div");
+    acciones.className = "cart-acciones";
+    if (x.tipo !== "servicio") {
+      acciones.appendChild(boton("−", "Uno menos de " + x.nombre, function () {
+        x.cant -= 1;
+        if (x.cant < 1) cart.splice(cart.indexOf(x), 1);
+        guardar();
+      }));
+      var cant = document.createElement("span");
+      cant.className = "cart-cant";
+      cant.textContent = String(x.cant);
+      cant.setAttribute("aria-label", x.cant + " unidades");
+      acciones.appendChild(cant);
+      acciones.appendChild(boton("+", "Uno más de " + x.nombre, function () {
+        x.cant += 1;
+        guardar();
+      }));
+    }
+    acciones.appendChild(boton("Quitar", "Quitar " + x.nombre, function () {
+      cart.splice(cart.indexOf(x), 1);
+      guardar();
+    }));
+    f.appendChild(acciones);
+    return f;
+  }
+  function grupo(caja, titulo, items) {
+    if (!items.length) return;
+    var h = document.createElement("p");
+    h.className = "cart-grupo";
+    h.textContent = titulo;
+    caja.appendChild(h);
+    items.forEach(function (x) { caja.appendChild(fila(x)); });
+  }
+  function mensaje() {
+    var l = ["Hola MetricsField, quiero hacer este pedido:"];
+    if (piezas().length) {
+      l.push("", "Piezas NFC + QR");
+      piezas().forEach(function (x) { l.push("• " + x.cant + " × " + x.nombre + " — " + dinero(x.precio * x.cant)); });
+      l.push("Total piezas: " + dinero(totalPiezas()) + " (pago único; IVA y envío a confirmar)");
+    }
+    if (servicios().length) {
+      l.push("", "Software");
+      servicios().forEach(function (x) { l.push("• " + x.nombre + (x.detalle ? " — " + x.detalle : "")); });
+    }
+    var d = [["Nombre", datos.nombre], ["Comercio", datos.comercio], ["Ciudad", datos.ciudad]].filter(function (p) { return p[1]; });
+    if (d.length) {
+      l.push("", "Mis datos");
+      d.forEach(function (p) { l.push(p[0] + ": " + p[1]); });
+    }
+    return l.join("\n");
+  }
   function dibujar() {
+    var unidades = cart.reduce(function (s, x) { return s + x.cant; }, 0);
     Array.prototype.forEach.call(document.querySelectorAll("[data-cart-count]"), function (e) {
-      e.textContent = String(cart.length);
+      e.textContent = String(unidades);
     });
     var caja = document.querySelector("[data-cart-items]");
     if (!caja) return;
@@ -129,39 +218,36 @@
     if (!cart.length) {
       var vacio = document.createElement("p");
       vacio.className = "muted";
-      vacio.textContent = "Todavía no agregaste piezas.";
+      vacio.textContent = "Todavía no agregaste nada. Sumá piezas desde la tienda o el software que quieras probar.";
       caja.appendChild(vacio);
     }
-    cart.forEach(function (x, i) {
-      var fila = document.createElement("div");
-      fila.className = "cart-row";
-      var info = document.createElement("div");
-      var nombre = document.createElement("b");
-      nombre.textContent = x.name;
-      var precio = document.createElement("small");
-      precio.textContent = dinero(x.price);
-      info.appendChild(nombre);
-      info.appendChild(document.createElement("br"));
-      info.appendChild(precio);
-      var quitar = document.createElement("button");
-      quitar.type = "button";
-      quitar.textContent = "Quitar";
-      quitar.addEventListener("click", function () {
-        cart.splice(i, 1);
-        guardar();
-      });
-      fila.appendChild(info);
-      fila.appendChild(quitar);
-      caja.appendChild(fila);
-    });
+    grupo(caja, "Piezas NFC + QR · pago único", piezas());
+    grupo(caja, "Software", servicios());
     var total = document.querySelector("[data-cart-total]");
-    if (total) total.textContent = dinero(cart.reduce(function (s, x) { return s + x.price; }, 0));
+    if (total) total.textContent = dinero(totalPiezas());
     var wa = document.querySelector("[data-cart-wa]");
     if (wa) {
-      var detalle = cart.map(function (x) { return "- " + x.name; }).join("\n");
-      wa.href = "https://wa.me/5493515191716?text=" + encodeURIComponent("Hola, quiero pedir estas piezas de MetricsField:\n" + (detalle || "(todavía no elegí)"));
+      wa.href = "https://wa.me/5493515191716?text=" + encodeURIComponent(mensaje());
+      wa.classList.toggle("apagado", !cart.length);
+      wa.setAttribute("aria-disabled", cart.length ? "false" : "true");
     }
   }
+  // Datos opcionales de quien pide: viajan en el mensaje de WhatsApp.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pedido]"), function (input) {
+    var campo = input.getAttribute("data-pedido");
+    if (datos[campo]) input.value = datos[campo];
+    input.addEventListener("input", function () {
+      datos[campo] = input.value.trim().slice(0, 80);
+      try {
+        localStorage.setItem("mf-pedido-datos", JSON.stringify(datos));
+      } catch (e) {}
+      dibujar();
+    });
+  });
+  var waBtn = document.querySelector("[data-cart-wa]");
+  waBtn && waBtn.addEventListener("click", function (e) {
+    if (!cart.length) e.preventDefault();
+  });
   function abrir() {
     if (!drawer) return;
     drawer.classList.add("open");
@@ -187,10 +273,20 @@
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-add]"), function (b) {
     b.addEventListener("click", function () {
-      cart.push({ name: b.getAttribute("data-add"), price: Number(b.getAttribute("data-price")) || 0 });
+      var nombre = b.getAttribute("data-add");
+      var tipo = b.getAttribute("data-tipo") || "pieza";
+      // Las dos formas de pagar el panel (mensual o 3 meses) no van juntas.
+      var reemplaza = b.getAttribute("data-reemplaza");
+      if (reemplaza) cart = cart.filter(function (y) { return y.nombre !== reemplaza; });
+      var ya = cart.filter(function (y) { return y.nombre === nombre; })[0];
+      if (ya && tipo !== "servicio") ya.cant += 1;
+      else if (!ya) cart.push({ nombre: nombre, precio: Number(b.getAttribute("data-price")) || 0, tipo: tipo, detalle: b.getAttribute("data-detalle") || "", cant: 1 });
       guardar();
+      // El software se pide por WhatsApp: se abre el pedido para que se vea el botón.
+      if (tipo === "servicio") abrir();
       var t = document.querySelector("[data-toast]");
       if (t) {
+        t.textContent = tipo === "servicio" ? "Sumado a tu pedido" : "Agregado al carrito";
         t.classList.add("show");
         setTimeout(function () { t.classList.remove("show"); }, 1300);
       }
