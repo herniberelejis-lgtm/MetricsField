@@ -46,7 +46,7 @@ Restos históricos en la base (ya sin uso en el código): la columna
 ### Modelo comercial actual
 - **Suscripción del panel**: $25.000/mes + IVA, sin permanencia.
 - **Piezas, aparte y de pago único** (quedan del comercio, no es alquiler):
-  standee $25.000, tarjeta PVC $7.000, sticker NFC $10.000, + IVA.
+  standee $25.000, tarjeta PVC $10.000, sticker NFC $15.000, + IVA.
 - **Promo**: pagando 3 meses del panel por adelantado ($75.000 + IVA) se
   regala una pieza de cada (standee, tarjeta y sticker).
 - Los pedidos de la landing llegan por WhatsApp (carrito → mensaje armado);
