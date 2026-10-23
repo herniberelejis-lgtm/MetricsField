@@ -12,11 +12,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ACTUALIZADO, GUIAS } from "./guias.mjs";
+import { demoHtml } from "./demos.mjs";
 import { CALCS, ORGANIZACION, RETAIL_APP, SITIO, esc, faqHtml, faqLd, migas, pagina, wa } from "./plantilla.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "public", "landing");
 const ORG = { "@id": ORGANIZACION["@id"] };
 const porSlug = Object.fromEntries(GUIAS.map((g) => [g.slug, g]));
+// Las páginas con demostración cargan GSAP (copiado en assets/vendor: la CSP
+// de la landing no permite scripts de otros dominios) y las animaciones.
+const SCRIPTS_DEMO = ["/landing/assets/vendor/gsap.min.js", "/landing/assets/vendor/ScrollTrigger.min.js", "/landing/assets/demos.js"];
 
 function escribir(ruta, html) {
   const archivo = join(RAIZ, ruta === "/" ? "" : ruta.slice(1), "index.html");
@@ -296,6 +300,7 @@ ${(() => {
   return fotoHero ? `<header class="pagina-hero wrap con-foto"><div>${textos}</div>${fotoHero}</header>` : `<header class="pagina-hero wrap">${textos}</header>`;
 })()}
 ${v.fotoLocal && FOTOS.local ? "" : v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
+${v.demo ? demoHtml(v.demo, encabezado) : ""}
 <section style="padding-top:64px"><div class="wrap">${encabezado(v.featuresEyebrow, v.featuresH2)}<div class="features" data-revelar>${v.features
     .map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
     .join("")}</div></div></section>
@@ -314,6 +319,7 @@ ${v.extra ?? ""}
     titulo: v.titulo,
     descripcion: v.descripcion,
     cuerpo,
+    scripts: v.demo ? SCRIPTS_DEMO : [],
     ld: [
       m.ld,
       {
@@ -334,6 +340,7 @@ const VERTICALES = [
   {
     ruta: "/reputacion",
     nombre: "Reputación",
+    demo: "reputacion",
     nombreLd: "MetricsField Reputación",
     titulo: "Más reseñas en Google con carteles NFC y QR · MetricsField Reputación",
     descripcion:
@@ -379,6 +386,7 @@ const VERTICALES = [
   {
     ruta: "/retail",
     nombre: "Retail",
+    demo: "retail",
     nombreLd: "MetricsField Retail",
     tipoLd: "SoftwareApplication",
     titulo: "Rentabilidad real en Mercado Libre: la ganancia de cada venta · MetricsField Retail",
@@ -426,6 +434,7 @@ const VERTICALES = [
   {
     ruta: "/loyalty",
     nombre: "Loyalty",
+    demo: "loyalty",
     nombreLd: "MetricsField Loyalty",
     titulo: "Fidelización de clientes con Google Wallet: club de beneficios · MetricsField Loyalty",
     descripcion:
@@ -488,9 +497,11 @@ ${bloques
   <div class="prosa"><h2 style="margin-top:0">${h}</h2>${texto}<p><a href="/guias/${guia}">Leer la guía: ${esc(porSlug[guia].h1)}</a></p></div></div></section>`,
   )
   .join("")}
+${demoHtml("intel", encabezado)}
 <section class="intel"><div class="wrap">${encabezado("Guías", "Para entender qué hacer con el resultado.")}<div class="guias-grid" data-revelar>${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div></div></section>`;
   return pagina({
     ruta: "/herramientas",
+    scripts: SCRIPTS_DEMO,
     titulo: "Calculadoras gratis: reseñas de Google, ganancia en Mercado Libre y valor del cliente · MetricsField Intel",
     descripcion:
       "Calculá cuántas reseñas de 5★ te faltan para subir tu calificación en Google, cuánto ganás de verdad por venta en Mercado Libre y cuánto vale un cliente que vuelve. Gratis y sin registrarte.",
