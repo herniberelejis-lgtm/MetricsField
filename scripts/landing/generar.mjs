@@ -78,14 +78,47 @@ const PIEZAS = [
 ];
 const pesos = (n) => "$" + n.toLocaleString("es-AR");
 
+// Software que se puede sumar al pedido por WhatsApp (no suma al total de
+// piezas: es mensual o una prueba). Lo usan la tienda y las verticales.
+// `reemplaza`: las dos formas de pagar el panel se excluyen en el carrito.
+const SOFTWARE = {
+  reputacion: { nombre: "Panel de Reputación", detalle: "$25.000/mes + IVA, sin permanencia", precio: "$25.000/mes + IVA", texto: "Toques, reseñas con respuesta sugerida y tu visibilidad en Google.", href: "/reputacion", reemplaza: "reputacion3" },
+  retail: { nombre: "Prueba de Retail", detalle: "30 días gratis, sin tarjeta", precio: "30 días gratis", texto: "La ganancia real de cada venta en Mercado Libre.", href: "/retail" },
+  loyalty: { nombre: "Piloto de Loyalty", detalle: "Programa piloto, a coordinar", precio: "Piloto · a coordinar", texto: "Club de beneficios con la tarjeta en Google Wallet.", href: "/loyalty" },
+};
+// Promo: 3 meses del panel por adelantado y una pieza de cada de regalo. No
+// tiene tarjeta propia: aparece dentro de la del panel.
+SOFTWARE.reputacion3 = {
+  nombre: "Panel de Reputación · 3 meses por adelantado",
+  detalle: "$75.000 + IVA por 3 meses · de regalo 1 standee, 1 tarjeta PVC y 1 sticker",
+  reemplaza: "reputacion",
+};
+const PROMO_PANEL = "Pagando 3 meses del panel por adelantado, te regalamos una pieza de cada: standee, tarjeta PVC y sticker.";
+const sumarSoftware = (id, texto = "Sumar a mi pedido", clase = "btn") => {
+  const sw = SOFTWARE[id];
+  const reemplaza = sw.reemplaza ? ` data-reemplaza="${SOFTWARE[sw.reemplaza].nombre}"` : "";
+  return `<button class="${clase}" type="button" data-add="${sw.nombre}" data-tipo="servicio" data-detalle="${sw.detalle}" data-price="0"${reemplaza}>${texto}</button>`;
+};
+
 function tienda() {
   return `<section id="tienda"><div class="wrap">${encabezado(
     "Piezas NFC + QR",
     "Elegí dónde empieza el contacto.",
-    "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia.",
+    "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia. " + PROMO_PANEL,
   )}<div class="shop-grid" data-revelar>${PIEZAS.map(
     (p) => `<article class="shop-card">${foto(p.foto, `${p.nombre} de MetricsField con NFC y QR`) ?? `<div class="device" aria-hidden="true">${p.dibujo}</div>`}<h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
-  ).join("")}</div></div></section>`;
+  ).join("")}</div>
+  <p class="tienda-sub">Software · sumalo al mismo pedido</p>
+  <div class="software-grid">${["reputacion", "retail", "loyalty"]
+    .map((id) => {
+      const sw = SOFTWARE[id];
+      const promo =
+        id === "reputacion"
+          ? `<p class="promo-sw"><b>Promo:</b> 3 meses por adelantado ($75.000 + IVA) y te regalamos una pieza de cada.</p>${sumarSoftware("reputacion3", "Sumar 3 meses + piezas de regalo")}`
+          : "";
+      return `<article class="software-card"><h3>${sw.nombre}</h3><p>${sw.texto} <a href="${sw.href}">Ver más</a></p><span class="precio-sw">${sw.precio}</span>${sumarSoftware(id, "Sumar a mi pedido", "btn dark")}${promo}</article>`;
+    })
+    .join("")}</div></div></section>`;
 }
 
 // ---------------------------------------------------------------- home
@@ -375,7 +408,7 @@ const VERTICALES = [
       ["¿El NFC funciona con iPhone?", "Sí: los iPhone desde el 7 leen NFC sin apps (los más viejos que el XS necesitan abrir el lector desde el centro de control). En Android funciona en la mayoría de los equipos con NFC. Y cada pieza tiene además el QR impreso para cualquier celular."],
       ["¿Es seguro para mi ficha de Google?", "Sí. No compramos reseñas ni pedimos una calificación en particular: el cartel lleva a todos los clientes al mismo link público de Google. Eso es lo que permiten las políticas de Google."],
       ["¿Puedo cambiar a dónde lleva el cartel?", "Sí. El link pasa por nuestros servidores, así que si cambiás de ficha o de sucursal lo actualizamos sin reimprimir nada."],
-      ["¿Cuánto cuesta?", "Las piezas se pagan una vez: standee $25.000, tarjeta $7.000 y sticker $10.000. El panel cuesta $25.000 por mes + IVA, sin permanencia mínima."],
+      ["¿Cuánto cuesta?", "Las piezas se pagan una vez: standee $25.000, tarjeta $7.000 y sticker $10.000. El panel cuesta $25.000 por mes + IVA, sin permanencia mínima. Y si pagás 3 meses del panel por adelantado, te regalamos una pieza de cada: standee, tarjeta PVC y sticker."],
       ["¿Qué diferencia hay entre el standee y las tarjetas?", "El standee queda fijo en el mostrador y lo ven todos. Las tarjetas las lleva cada persona del equipo y permiten saber qué reseñas vinieron de quién."],
     ],
     ctaH2: "Que te elijan antes de conocerte.",
@@ -395,7 +428,7 @@ const VERTICALES = [
     eyebrow: "Retail · Mercado Libre",
     h1: "Vendiste. Ahora sabé cuánto ganaste de verdad.",
     lead: "Mercado Libre te muestra cuánto facturaste. Retail te muestra cuánto te quedó: descuenta comisión, envío, publicidad, IVA, otros impuestos y el costo de cada producto, venta por venta.",
-    ctas: [ext(RETAIL_APP, "Pedir la prueba gratis", "btn dark"), ext(wa("Hola, quiero probar Retail"), "Consultar por WhatsApp")],
+    ctas: [ext(RETAIL_APP, "Pedir la prueba gratis", "btn dark"), sumarSoftware("retail", "Pedirla por WhatsApp")],
     featuresEyebrow: "Qué ves",
     featuresH2: "El número que importa, sin planilla.",
     features: [
@@ -442,7 +475,7 @@ const VERTICALES = [
     eyebrow: "Loyalty · piloto",
     h1: "Que tus clientes vuelvan, y saber quiénes son.",
     lead: "Un club de beneficios con la tarjeta en la billetera del celular. El cliente se suma con un toque, junta sellos o puntos y canjea en el mostrador. Vos sabés quién vuelve, cada cuánto y qué beneficio funciona.",
-    ctas: [ext(wa("Hola, quiero ser comercio piloto de Loyalty"), "Quiero ser piloto", "btn dark"), `<a class="btn" href="/guias/tarjeta-de-fidelidad-google-wallet">Cómo funciona Wallet</a>`],
+    ctas: [sumarSoftware("loyalty", "Quiero ser piloto", "btn dark"), `<a class="btn" href="/guias/tarjeta-de-fidelidad-google-wallet">Cómo funciona Wallet</a>`],
     featuresEyebrow: "Qué incluye el piloto",
     featuresH2: "Una tarjeta que no se pierde.",
     features: [
