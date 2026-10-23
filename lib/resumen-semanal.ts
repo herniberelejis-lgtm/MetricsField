@@ -1,4 +1,5 @@
 import { fmt1, type Conclusiones } from "./conclusiones";
+import { lineasWhatsAppInforme, type InformeSemanal } from "./informe-semanal";
 
 // "Tu semana en Google": el resumen de cada lunes (mail automático y texto
 // listo para WhatsApp desde el admin). Sale de las mismas conclusiones que el
@@ -12,6 +13,8 @@ export interface ResumenSemanal {
   destacado: string | null;
   /** Una sola cosa para hacer esta semana. */
   tarea: string | null;
+  /** El detalle por partes (lib/informe-semanal.ts), si hay con qué armarlo. */
+  informe?: InformeSemanal | null;
 }
 
 export interface EntradaResumenSemanal {
@@ -65,8 +68,13 @@ export function armarResumenSemanal(e: EntradaResumenSemanal): ResumenSemanal | 
 
 /** Texto para WhatsApp (formato de WhatsApp: *negrita*). */
 export function textoWhatsAppResumen(r: ResumenSemanal, linkPortal: string | null): string {
-  const lineas = [`*Tu semana en Google — ${r.nombre}*`, ""];
-  for (const n of r.numeros) lineas.push(`• *${n.valor}* ${n.label}`);
+  const lineas = [`*Tu semana en Google — ${r.nombre}*`];
+  if (r.informe) {
+    lineas.push(`_${r.informe.periodo}_`, ...lineasWhatsAppInforme(r.informe));
+  } else {
+    lineas.push("");
+    for (const n of r.numeros) lineas.push(`• *${n.valor}* ${n.label}`);
+  }
   if (r.destacado) lineas.push("", r.destacado);
   if (r.tarea) lineas.push("", `*Para hacer:* ${r.tarea}`);
   if (linkPortal) lineas.push("", `Todo el detalle en tu portal: ${linkPortal}`);

@@ -62,9 +62,14 @@ export default function AutomatizacionResenas({
       <p className="text-[15px] font-bold text-slate-900">Respuestas automáticas a reseñas positivas</p>
 
       {apiHabilitada ? (
-        <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-700">
-          <IconCheck size={13} className="shrink-0" />
-          Activo: en cuanto llega una reseña de {umbralLocal}★ o más, se responde sola.
+        <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-slate-700">
+          <IconCheck size={13} className="mt-0.5 shrink-0" />
+          <span>
+            Una vez por día se responden solas las reseñas de {umbralLocal}★ o más que no traen
+            quejas (hasta 5 por día, sin repetir respuestas). Las que mencionan algo para mejorar,
+            tienen links o teléfonos, son muy largas o están en otro idioma quedan para que las
+            respondas vos.
+          </span>
         </p>
       ) : (
         <p className="mt-1.5 flex items-start gap-2 rounded-lg bg-[#F4F7FB] px-3 py-2 text-xs leading-relaxed text-slate-700">
