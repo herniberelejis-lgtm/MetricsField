@@ -2,7 +2,7 @@
 
 import ChartCard from "@/components/charts/ChartCard";
 import LineChart from "@/components/charts/LineChart";
-import { SERIES } from "@/lib/palette";
+import { PORTAL } from "@/lib/palette";
 import { fmtNum } from "@/lib/format";
 
 // Wrapper cliente: un Server Component no puede pasarle una función (como
@@ -23,7 +23,7 @@ export default function TapsChart({
       subtitle="Últimos 14 días · todos los links de este comercio"
       table={{ head: ["Día", "Taps"], rows: tabla }}
     >
-      <LineChart labels={labels} values={values} color={SERIES[0]} format={fmtNum} />
+      <LineChart labels={labels} values={values} color={PORTAL.dato} format={fmtNum} />
     </ChartCard>
   );
 }

@@ -26,7 +26,7 @@ const VEREDICTOS: Record<Veredicto, { texto: string; clase: string }> = {
   debil: { texto: "Señal débil", clase: "bg-[#EEF4FB] text-[#1F4E80]" },
   sin_senal: { texto: "Sin relación clara", clase: "bg-slate-100 text-slate-700" },
   en_contra: { texto: "Al revés", clase: "bg-[#FFF4E8] text-[#8A3F00]" },
-  pocos_datos: { texto: "Pocos datos", clase: "border border-slate-200 text-slate-600" },
+  pocos_datos: { texto: "Pocos datos", clase: "border border-[#E4E6EA] text-slate-600" },
 };
 
 const CORTOS: Record<Cruce["id"], string> = {

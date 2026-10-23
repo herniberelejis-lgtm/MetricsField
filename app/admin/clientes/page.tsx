@@ -32,7 +32,7 @@ export default async function ClientesPage() {
         actions={
           <Link
             href="/admin/clientes/nuevo"
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+            className="inline-flex min-h-[36px] items-center rounded-full bg-[#1F4E80] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#183F68]"
           >
             + Nuevo cliente
           </Link>
@@ -50,12 +50,12 @@ export default async function ClientesPage() {
                   <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                     <div className="max-w-full truncate font-semibold text-slate-900">{c.nombre}</div>
                     {nSucursales > 0 && (
-                      <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                      <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                         {nSucursales} sucursal{nSucursales === 1 ? "" : "es"}
                       </span>
                     )}
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500">
+                  <div className="mt-0.5 truncate text-xs text-slate-600">
                     {nSucursales > 0 ? c.rubro : `${c.rubro} · ${c.zona}`}
                   </div>
                 </Link>
@@ -67,32 +67,32 @@ export default async function ClientesPage() {
 
               <Link href={`/admin/clientes/${c.id}`}>
                 <div className="mt-4 flex items-center justify-between">
-                  {m ? <Stars rating={m.ratingPromedio} /> : <span className="text-xs text-slate-400">sin datos</span>}
+                  {m ? <Stars rating={m.ratingPromedio} /> : <span className="text-xs text-slate-600">sin datos</span>}
                   <EstadoBadge estado={c.estado} />
                 </div>
 
-                <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-center">
+                <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-[#EEF0F3] pt-3 text-center">
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">Reseñas</dt>
+                    <dt className="text-[11px] text-slate-600">Reseñas</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {m?.resenasTotal ?? "—"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">Visitas</dt>
+                    <dt className="text-[11px] text-slate-600">Visitas</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {m?.visitasPerfil ?? "—"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[11px] uppercase text-slate-400">IA</dt>
+                    <dt className="text-[11px] text-slate-600">IA</dt>
                     <dd className="text-sm font-semibold text-slate-800">
                       {c.plan === "Premium" ? citasIA(m) : "—"}
                     </dd>
                   </div>
                 </dl>
 
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
                   <span>Abono {fmtARS(c.fee)}</span>
                   <span>NFC {fmtARS(ingresoNFC(c))}</span>
                 </div>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { INK, niceTicks } from "@/lib/palette";
+import { PORTAL, niceTicks } from "@/lib/palette";
 import Tooltip from "./Tooltip";
+import { useAncho } from "./useAncho";
 
 // Línea de una sola serie: trazo 2px, lavado de área al 10%, marcador final
 // ≥8px con anillo de superficie de 2px, y crosshair que ajusta al mes más
@@ -19,8 +20,9 @@ export default function LineChart({
   format?: (v: number) => string;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  // Ancho real: el texto de los ejes mide lo que dice (DESIGN.md).
+  const [W, refAncho] = useAncho(640);
 
-  const W = 640;
   const H = 230;
   const M = { top: 14, right: 64, bottom: 24, left: 44 };
   const plotW = W - M.left - M.right;
@@ -40,7 +42,7 @@ export default function LineChart({
   const last = values.length - 1;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={refAncho}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
@@ -54,15 +56,15 @@ export default function LineChart({
               x2={W - M.right}
               y1={yAt(t)}
               y2={yAt(t)}
-              stroke={t === 0 ? INK.axis : INK.grid}
+              stroke={t === 0 ? PORTAL.eje : PORTAL.grilla}
               strokeWidth={1}
             />
             <text
               x={M.left - 6}
               y={yAt(t) + 3}
               textAnchor="end"
-              fontSize={10}
-              fill={INK.muted}
+              fontSize={11}
+              fill={PORTAL.textoSec}
               style={{ fontVariantNumeric: "tabular-nums" }}
             >
               {format(t)}
@@ -76,8 +78,8 @@ export default function LineChart({
             x={xAt(i)}
             y={H - 8}
             textAnchor="middle"
-            fontSize={10}
-            fill={INK.muted}
+            fontSize={11}
+            fill={PORTAL.textoSec}
           >
             {label}
           </text>
@@ -90,7 +92,7 @@ export default function LineChart({
             x2={xAt(hover)}
             y1={M.top}
             y2={M.top + plotH}
-            stroke={INK.axis}
+            stroke={PORTAL.eje}
             strokeWidth={1}
           />
         )}
@@ -112,7 +114,7 @@ export default function LineChart({
             cy={yAt(values[hover])}
             r={4}
             fill={color}
-            stroke={INK.surface}
+            stroke={"#FFFFFF"}
             strokeWidth={2}
           />
         )}
@@ -123,15 +125,15 @@ export default function LineChart({
           cy={yAt(values[last])}
           r={4}
           fill={color}
-          stroke={INK.surface}
+          stroke={"#FFFFFF"}
           strokeWidth={2}
         />
         <text
           x={xAt(last) + 8}
           y={yAt(values[last]) + 3.5}
-          fontSize={11}
+          fontSize={12}
           fontWeight={600}
-          fill={INK.primary}
+          fill={PORTAL.texto}
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
           {format(values[last])}

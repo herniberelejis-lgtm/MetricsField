@@ -53,16 +53,16 @@ export default async function HardwarePage({
       />
 
       {error && (
-        <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
           {ERRORES_ASIGNAR[error] ?? "No se pudo guardar — revisá los datos y probá de nuevo."}
         </div>
       )}
 
       <Card className="mb-6">
-        <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="text-xs font-medium text-slate-600">
           Generar lote nuevo
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-600">
           Genera códigos fijos (ej. <code className="rounded bg-slate-100 px-1">p-0001</code>)
           listos para convertir en QR y mandar a imprimir — todavía sin cliente asignado.
         </p>
@@ -103,7 +103,7 @@ export default async function HardwarePage({
               <h2 className="text-sm font-semibold text-slate-900">
                 Piezas libres ({libres.length})
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-600">
                 Al asignar, el destino arranca en &ldquo;Reseña de Google&rdquo; — para apuntarla a
                 otra URL (o cambiarla después), editala desde la ficha del cliente → Links.
               </p>
@@ -111,14 +111,14 @@ export default async function HardwarePage({
             <div className="flex flex-wrap gap-2">
               <a
                 href="/api/admin/hardware/qr-lote?estado=libre"
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+                className="inline-flex min-h-[36px] items-center rounded-full bg-[#1F4E80] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#183F68]"
               >
                 Descargar todos los QR libres (.zip)
               </a>
               <a
                 href="/api/admin/hardware/qr-lote?estado=libre&formato=links"
                 target="_blank"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
+                className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
               >
                 Ver lista de links (para mandar al proveedor)
               </a>
@@ -126,7 +126,7 @@ export default async function HardwarePage({
                 <a
                   key={l}
                   href={`/api/admin/hardware/qr-lote?estado=libre&lote=${encodeURIComponent(l)}`}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
+                  className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
                 >
                   Solo lote &ldquo;{l}&rdquo;
                 </a>
@@ -136,7 +136,7 @@ export default async function HardwarePage({
                   key={`links-${l}`}
                   href={`/api/admin/hardware/qr-lote?estado=libre&lote=${encodeURIComponent(l)}&formato=links`}
                   target="_blank"
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
+                  className="rounded-lg border border-[#D6D9DE] bg-white px-3 py-1.5 text-xs text-slate-700 hover:border-slate-400"
                 >
                   Links del lote &ldquo;{l}&rdquo;
                 </a>
@@ -152,7 +152,7 @@ export default async function HardwarePage({
                 contenedor (overflow-x-auto) scrollee horizontal. */}
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Código</th>
                   <th className="px-4 py-3 font-medium">Lote</th>
                   <th className="px-4 py-3 font-medium">Tipo</th>
@@ -161,21 +161,21 @@ export default async function HardwarePage({
               </thead>
               <tbody>
                 {libres.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0 align-top">
+                  <tr key={p.id} className="border-b border-[#EEF0F3] last:border-0 align-top">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                       <div className="mt-1">
                         <a
                           href={`/api/admin/qr?linkId=${p.id}`}
                           target="_blank"
-                          className="text-[11px] font-medium text-brand-fg hover:underline"
+                          className="text-[11px] font-medium text-[#1F4E80] hover:underline"
                         >
                           ver QR
                         </a>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{p.lote || "—"}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
+                    <td className="px-4 py-3 text-xs text-slate-600">{p.lote || "—"}</td>
+                    <td className="px-4 py-3 text-xs text-slate-600">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3">
                       <form action={accionAsignarPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
@@ -198,7 +198,7 @@ export default async function HardwarePage({
                         <input type="hidden" name="destino" value="resena" />
                         <button
                           type="submit"
-                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+                          className="inline-flex min-h-[36px] items-center rounded-full bg-[#1F4E80] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#183F68]"
                         >
                           Asignar
                         </button>
@@ -217,7 +217,7 @@ export default async function HardwarePage({
           <h2 className="mb-3 text-sm font-semibold text-slate-900">
             Autogestionadas ({autogestionadas.length})
           </h2>
-          <p className="mb-3 -mt-2 text-xs text-slate-500">
+          <p className="mb-3 -mt-2 text-xs text-slate-600">
             Canal Mercado Libre: el propio comprador las activó desde{" "}
             <code className="rounded bg-slate-100 px-1">/t/&lt;código&gt;</code>. Sin cliente en el
             CRM ni portal — el destino lo edita él mismo con su PIN. Si alguien completó este
@@ -231,7 +231,7 @@ export default async function HardwarePage({
                 apila en varias líneas por fila en vez de scrollear. */}
             <table className="w-full min-w-[900px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Código</th>
                   <th className="px-4 py-3 font-medium">Negocio</th>
                   <th className="px-4 py-3 font-medium">Destino actual</th>
@@ -241,12 +241,12 @@ export default async function HardwarePage({
               </thead>
               <tbody>
                 {autogestionadas.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0 align-top">
+                  <tr key={p.id} className="border-b border-[#EEF0F3] last:border-0 align-top">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{p.nombreNegocio || "—"}</td>
-                    <td className="max-w-xs truncate px-4 py-3 text-xs text-slate-500">
+                    <td className="max-w-xs truncate px-4 py-3 text-xs text-slate-600">
                       {p.urlDestino ?? "—"}
                     </td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
@@ -279,7 +279,7 @@ export default async function HardwarePage({
                         />
                         <button
                           type="submit"
-                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                          className="rounded-lg border border-[#F4D3B5] bg-[#FFF4E8] px-3 py-1.5 text-xs font-medium text-[#8A3F00] hover:bg-[#FFF4E8]"
                         >
                           Asignar
                         </button>
@@ -299,7 +299,7 @@ export default async function HardwarePage({
             <h2 className="text-sm font-semibold text-slate-900">
               Piezas asignadas ({asignadas.length})
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-600">
               &ldquo;Mover a otro cliente&rdquo; corrige una asignación mal hecha (ej. la imprenta
               mezcló los números de un lote) sin reimprimir nada — el código ya impreso no cambia,
               solo a quién pertenece. Los taps que ya tenga la pieza pasan a mostrarse del lado del
@@ -310,7 +310,7 @@ export default async function HardwarePage({
             {/* min-w fijo, mismo motivo que las otras dos tablas de esta página. */}
             <table className="w-full min-w-[960px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Código</th>
                   <th className="px-4 py-3 font-medium">Cliente</th>
                   <th className="px-4 py-3 font-medium">Etiqueta</th>
@@ -321,7 +321,7 @@ export default async function HardwarePage({
               </thead>
               <tbody>
                 {asignadas.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-100 last:border-0 align-top">
+                  <tr key={p.id} className="border-b border-[#EEF0F3] last:border-0 align-top">
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                     </td>
@@ -329,14 +329,14 @@ export default async function HardwarePage({
                       {p.comercioId && (
                         <Link
                           href={`/admin/clientes/${p.comercioId}/links`}
-                          className="text-brand-fg hover:underline"
+                          className="text-[#1F4E80] hover:underline"
                         >
                           {p.clienteNombre ?? p.comercioId}
                         </Link>
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{p.etiqueta}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{LABEL_TIPO[p.tipo]}</td>
+                    <td className="px-4 py-3 text-xs text-slate-600">{LABEL_TIPO[p.tipo]}</td>
                     <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
@@ -369,7 +369,7 @@ export default async function HardwarePage({
                         />
                         <button
                           type="submit"
-                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                          className="rounded-lg border border-[#F4D3B5] bg-[#FFF4E8] px-3 py-1.5 text-xs font-medium text-[#8A3F00] hover:bg-[#FFF4E8]"
                         >
                           Mover
                         </button>
@@ -385,7 +385,7 @@ export default async function HardwarePage({
 
       {inventario.length === 0 && (
         <Card>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             Todavía no generaste ningún lote — usá el formulario de arriba.
           </p>
         </Card>
