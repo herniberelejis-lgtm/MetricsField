@@ -275,6 +275,9 @@
     b.addEventListener("click", function () {
       var nombre = b.getAttribute("data-add");
       var tipo = b.getAttribute("data-tipo") || "pieza";
+      // Las dos formas de pagar el panel (mensual o 3 meses) no van juntas.
+      var reemplaza = b.getAttribute("data-reemplaza");
+      if (reemplaza) cart = cart.filter(function (y) { return y.nombre !== reemplaza; });
       var ya = cart.filter(function (y) { return y.nombre === nombre; })[0];
       if (ya && tipo !== "servicio") ya.cant += 1;
       else if (!ya) cart.push({ nombre: nombre, precio: Number(b.getAttribute("data-price")) || 0, tipo: tipo, detalle: b.getAttribute("data-detalle") || "", cant: 1 });

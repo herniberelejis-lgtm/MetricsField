@@ -44,11 +44,13 @@ Restos históricos en la base (ya sin uso en el código): la columna
 `db/migrations/009_limpieza_star_gate.sql`, que hay que correr a mano.
 
 ### Modelo comercial actual
-- **1 mes de software gratis** para que el comercio lo pruebe con datos
-  reales, sin compromiso previo.
-- **Suscripción del panel**: ≈ $35.000/mes (a partir del segundo mes).
-- **Standee NFC**: $25.000, pago único — el cartel queda del comercio para
-  siempre, no es alquiler.
+- **Suscripción del panel**: $25.000/mes + IVA, sin permanencia.
+- **Piezas, aparte y de pago único** (quedan del comercio, no es alquiler):
+  standee $25.000, tarjeta PVC $7.000, sticker NFC $10.000, + IVA.
+- **Promo**: pagando 3 meses del panel por adelantado ($75.000 + IVA) se
+  regala una pieza de cada (standee, tarjeta y sticker).
+- Los pedidos de la landing llegan por WhatsApp (carrito → mensaje armado);
+  todavía no hay pasarela de pago.
 - **En camino** (todavía no vendidos, están en desarrollo de hardware):
   chip QR+NFC para pegar en las mesas, tarjetas NFC para que los mozos pidan
   la reseña en el momento, y una versión del standee con QR además de NFC.
