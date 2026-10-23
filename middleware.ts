@@ -33,13 +33,15 @@ const PROTEGIDAS = /^\/admin(\/|$)/;
 // ignora 'self' y los bloquea — pasó desde la CSP con nonce (#108): se
 // apagaron el mundo animado, el panel demo y el simulador sin que nada
 // avisara. Para ella: scripts solo del propio dominio (sin inline, sin
-// nonce) y videos como blob: (scroll-world.js baja cada clip con fetch y
-// lo reproduce desde un object URL).
+// nonce: public/landing/assets/sitio.js) y fuentes propias.
 const HOSTS_LANDING = new Set(["metricsfield.com", "www.metricsfield.com"]);
+// Páginas del sitio público (verticales, Intel y guías): también son HTML
+// estático de public/landing/, servidas por rewrite en cualquier dominio.
+const RUTAS_LANDING = /^\/(reputacion|retail|loyalty|herramientas|guias)(\/[a-z0-9-]+)?\/?$/;
 
 function esLanding(req: NextRequest): boolean {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/landing/")) return true;
+  if (pathname.startsWith("/landing/") || RUTAS_LANDING.test(pathname)) return true;
   const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
   return pathname === "/" && HOSTS_LANDING.has(host);
 }

@@ -63,6 +63,13 @@ const nextConfig: NextConfig = {
           has: [{ type: "host", value: "www.metricsfield.com" }],
           destination: "/landing/index.html",
         },
+        // El resto del sitio público (scripts/landing/generar.mjs): una
+        // página por vertical, las calculadoras de Intel y las guías.
+        ...["reputacion", "retail", "loyalty", "herramientas", "guias"].map((p) => ({
+          source: `/${p}`,
+          destination: `/landing/${p}/index.html`,
+        })),
+        { source: "/guias/:slug([a-z0-9-]+)", destination: "/landing/guias/:slug/index.html" },
       ],
       afterFiles: [],
       fallback: [],
