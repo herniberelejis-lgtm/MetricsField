@@ -8,15 +8,19 @@
 // HTML estático a propósito: carga rápido, lo lee cualquier buscador o
 // asistente de IA sin ejecutar JavaScript y no depende de la app.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ACTUALIZADO, GUIAS } from "./guias.mjs";
+import { demoHtml } from "./demos.mjs";
 import { CALCS, ORGANIZACION, RETAIL_APP, SITIO, esc, faqHtml, faqLd, migas, pagina, wa } from "./plantilla.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "public", "landing");
 const ORG = { "@id": ORGANIZACION["@id"] };
 const porSlug = Object.fromEntries(GUIAS.map((g) => [g.slug, g]));
+// Las páginas con demostración cargan GSAP (copiado en assets/vendor: la CSP
+// de la landing no permite scripts de otros dominios) y las animaciones.
+const SCRIPTS_DEMO = ["/landing/assets/vendor/gsap.min.js", "/landing/assets/vendor/ScrollTrigger.min.js", "/landing/assets/demos.js"];
 
 function escribir(ruta, html) {
   const archivo = join(RAIZ, ruta === "/" ? "" : ruta.slice(1), "index.html");
@@ -37,20 +41,35 @@ function encabezado(eyebrow, h2, texto = "") {
 
 // ---------------------------------------------------------------- piezas
 
+// Fotos reales de los productos (scripts/landing/fotos.mjs). Mientras no
+// estén, cada pieza se muestra con su dibujo.
+const MANIFIESTO_FOTOS = join(RAIZ, "assets", "img", "productos", "fotos.json");
+const FOTOS = existsSync(MANIFIESTO_FOTOS) ? JSON.parse(readFileSync(MANIFIESTO_FOTOS, "utf8")) : {};
+
+function foto(nombre, alt, clase = "foto-producto") {
+  const f = FOTOS[nombre];
+  if (!f) return null;
+  const base = `/landing/assets/img/productos/${nombre}`;
+  return `<img class="${clase}" src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 600px) 100vw, 400px" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+}
+
 const PIEZAS = [
   {
+    foto: "standee",
     nombre: "Standee de mostrador",
     precio: 25000,
     texto: "En la caja, cuando el cliente espera el ticket con el celular en la mano.",
     dibujo: `<div class="standee"><b>CONTANOS<br>CÓMO TE FUE</b><div class="nfc"></div>ACERCÁ TU CELULAR</div>`,
   },
   {
+    foto: "tarjeta",
     nombre: "Tarjeta PVC",
     precio: 7000,
     texto: "En el bolsillo de cada persona del equipo, para acercarla al cerrar la cuenta.",
     dibujo: `<div class="card-shape"><b>METRICSFIELD</b><div class="nfc" style="width:30px;height:30px;margin:12px auto"></div></div>`,
   },
   {
+    foto: "sticker",
     nombre: "Sticker NFC",
     precio: 10000,
     texto: "Compacto para mesas, mostradores y puntos de retiro.",
@@ -65,7 +84,7 @@ function tienda() {
     "Elegí dónde empieza el contacto.",
     "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia.",
   )}<div class="shop-grid" data-revelar>${PIEZAS.map(
-    (p) => `<article class="shop-card"><div class="device" aria-hidden="true">${p.dibujo}</div><h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
+    (p) => `<article class="shop-card">${foto(p.foto, `${p.nombre} de MetricsField con NFC y QR`) ?? `<div class="device" aria-hidden="true">${p.dibujo}</div>`}<h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
   ).join("")}</div></div></section>`;
 }
 
@@ -275,8 +294,13 @@ ${tienda()}
 function vertical(v) {
   const m = migas([["/", "Inicio"], [v.ruta, v.nombre]]);
   const cuerpo = `${m.html}
-<header class="pagina-hero wrap"><div class="eyebrow">${v.eyebrow}</div><h1>${v.h1}</h1><p class="lead">${v.lead}</p><div class="actions" style="margin-top:24px">${v.ctas.join("")}</div></header>
-${v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
+${(() => {
+  const fotoHero = v.fotoLocal ? foto("local", v.fotoLocal, "foto-local") : null;
+  const textos = `<div class="eyebrow">${v.eyebrow}</div><h1>${v.h1}</h1><p class="lead">${v.lead}</p><div class="actions" style="margin-top:24px">${v.ctas.join("")}</div>`;
+  return fotoHero ? `<header class="pagina-hero wrap con-foto"><div>${textos}</div>${fotoHero}</header>` : `<header class="pagina-hero wrap">${textos}</header>`;
+})()}
+${v.fotoLocal && FOTOS.local ? "" : v.captura ? `<div class="wrap"><figure class="captura" style="margin:0"><img src="${v.captura.src}" alt="${esc(v.captura.alt)}" width="${v.captura.w}" height="${v.captura.h}" loading="lazy"></figure></div>` : ""}
+${v.demo ? demoHtml(v.demo, encabezado) : ""}
 <section style="padding-top:64px"><div class="wrap">${encabezado(v.featuresEyebrow, v.featuresH2)}<div class="features" data-revelar>${v.features
     .map(([h, p]) => `<div class="feature"><h3>${h}</h3><p>${p}</p></div>`)
     .join("")}</div></div></section>
@@ -295,6 +319,7 @@ ${v.extra ?? ""}
     titulo: v.titulo,
     descripcion: v.descripcion,
     cuerpo,
+    scripts: v.demo ? SCRIPTS_DEMO : [],
     ld: [
       m.ld,
       {
@@ -315,6 +340,7 @@ const VERTICALES = [
   {
     ruta: "/reputacion",
     nombre: "Reputación",
+    demo: "reputacion",
     nombreLd: "MetricsField Reputación",
     titulo: "Más reseñas en Google con carteles NFC y QR · MetricsField Reputación",
     descripcion:
@@ -323,6 +349,8 @@ const VERTICALES = [
     h1: "Más reseñas en Google, con un toque del celular.",
     lead: "Un cartel en el mostrador lleva a cada cliente directo a la ventana de reseña de tu ficha. Vos ves en un panel cuántos lo usaron, qué reseñas llegaron, qué valoran y qué hay que responder hoy.",
     ctas: [ext(wa("Hola, quiero una demo de Reputación"), "Pedir una demo", "btn dark"), `<a class="btn" href="#tienda">Ver piezas y precios</a>`],
+    // Si hay una foto del cartel en uso (fotos/productos/local.jpg), va esa.
+    fotoLocal: "El cartel de MetricsField en el mostrador de un local",
     captura: { src: "/landing/assets/img/panel-resumen.webp", alt: "Resumen del panel de Reputación con toques, reseñas y calificación", w: 1919, h: 874 },
     featuresEyebrow: "Qué incluye",
     featuresH2: "El cartel, el panel y alguien que te ayuda.",
@@ -358,6 +386,7 @@ const VERTICALES = [
   {
     ruta: "/retail",
     nombre: "Retail",
+    demo: "retail",
     nombreLd: "MetricsField Retail",
     tipoLd: "SoftwareApplication",
     titulo: "Rentabilidad real en Mercado Libre: la ganancia de cada venta · MetricsField Retail",
@@ -405,6 +434,7 @@ const VERTICALES = [
   {
     ruta: "/loyalty",
     nombre: "Loyalty",
+    demo: "loyalty",
     nombreLd: "MetricsField Loyalty",
     titulo: "Fidelización de clientes con Google Wallet: club de beneficios · MetricsField Loyalty",
     descripcion:
@@ -467,9 +497,11 @@ ${bloques
   <div class="prosa"><h2 style="margin-top:0">${h}</h2>${texto}<p><a href="/guias/${guia}">Leer la guía: ${esc(porSlug[guia].h1)}</a></p></div></div></section>`,
   )
   .join("")}
+${demoHtml("intel", encabezado)}
 <section class="intel"><div class="wrap">${encabezado("Guías", "Para entender qué hacer con el resultado.")}<div class="guias-grid" data-revelar>${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div></div></section>`;
   return pagina({
     ruta: "/herramientas",
+    scripts: SCRIPTS_DEMO,
     titulo: "Calculadoras gratis: reseñas de Google, ganancia en Mercado Libre y valor del cliente · MetricsField Intel",
     descripcion:
       "Calculá cuántas reseñas de 5★ te faltan para subir tu calificación en Google, cuánto ganás de verdad por venta en Mercado Libre y cuánto vale un cliente que vuelve. Gratis y sin registrarte.",

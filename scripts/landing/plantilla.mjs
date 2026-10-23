@@ -89,7 +89,7 @@ export function faqHtml(preguntas) {
     .join("")}</div>`;
 }
 
-export function pagina({ ruta, titulo, descripcion, cuerpo, ld = [], tipoOg = "website" }) {
+export function pagina({ ruta, titulo, descripcion, cuerpo, ld = [], tipoOg = "website", scripts = [] }) {
   const url = `${SITIO}${ruta}`;
   const activo = (href) => (ruta === href || (href !== "/" && ruta.startsWith(href + "/")) ? ' aria-current="page"' : "");
   return `<!doctype html>
@@ -153,7 +153,7 @@ ${pie()}
 </aside>
 <div class="toast" data-toast role="status">Agregado al carrito</div>
 <nav class="mobile-bar" aria-label="Accesos rápidos"><a href="${WA}" target="_blank" rel="noopener">WhatsApp</a><a href="/herramientas">Calculadoras</a><button type="button" data-cart-open>Carrito <span data-cart-count>0</span></button></nav>
-<script src="/landing/assets/sitio.js?v=${VERSION}" defer></script>
+${scripts.map((src) => `<script src="${src}?v=${VERSION}" defer></script>\n`).join("")}<script src="/landing/assets/sitio.js?v=${VERSION}" defer></script>
 </body>
 </html>
 `;

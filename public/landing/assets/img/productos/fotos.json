@@ -1,0 +1,18 @@
+{
+  "standee": {
+    "ancho": 960,
+    "alto": 720
+  },
+  "tarjeta": {
+    "ancho": 960,
+    "alto": 720
+  },
+  "sticker": {
+    "ancho": 960,
+    "alto": 720
+  },
+  "local": {
+    "ancho": 960,
+    "alto": 720
+  }
+}
