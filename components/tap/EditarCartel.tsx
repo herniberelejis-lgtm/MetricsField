@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { editarCartel } from "@/app/t/actions";
+import type { LugarParaResena } from "@/lib/places";
+import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
 
 const INK = "#1c2530";
@@ -23,6 +25,7 @@ export default function EditarCartel({
 }) {
   const [nombre, setNombre] = useState(nombreActual);
   const [url, setUrl] = useState(urlActual);
+  const [lugar, setLugar] = useState<LugarParaResena | null>(null);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardado, setGuardado] = useState(false);
@@ -32,7 +35,11 @@ export default function EditarCartel({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const res = await editarCartel(slug, pin, nombre, url);
+      const res = await editarCartel(slug, pin, {
+        nombre: lugar ? lugar.nombre : nombre,
+        placeId: lugar?.placeId ?? null,
+        url: lugar ? "" : url,
+      });
       if (res.ok) {
         setGuardado(true);
         setPin("");
@@ -62,33 +69,49 @@ export default function EditarCartel({
         </div>
 
         <div className="mt-6 space-y-4">
-          <label className="block">
+          <div>
             <span className="text-[12.5px] font-medium" style={{ color: INK }}>
-              Nombre de tu negocio
+              Buscá tu negocio en Google
             </span>
-            <input
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              required
-              className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
-              style={{ borderColor: LINE, color: INK }}
-            />
-          </label>
+            <div className="mt-1.5">
+              <BuscarNegocio slug={slug} elegido={lugar} onElegir={setLugar} />
+            </div>
+          </div>
 
-          <label className="block">
-            <span className="text-[12.5px] font-medium" style={{ color: INK }}>
-              Link de tu reseña de Google
-            </span>
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-              type="url"
-              className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
-              style={{ borderColor: LINE, color: INK }}
-            />
-          </label>
-          <ComoConseguirLink />
+          {!lugar && (
+            <>
+              <p className="text-[12px]" style={{ color: INK_SOFT }}>
+                O cambiá los datos a mano:
+              </p>
+              <label className="block">
+                <span className="text-[12.5px] font-medium" style={{ color: INK }}>
+                  Nombre de tu negocio
+                </span>
+                <input
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
+                  className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
+                  style={{ borderColor: LINE, color: INK }}
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-[12.5px] font-medium" style={{ color: INK }}>
+                  Link de tu reseña de Google
+                </span>
+                <input
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  required
+                  type="url"
+                  className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
+                  style={{ borderColor: LINE, color: INK }}
+                />
+              </label>
+              <ComoConseguirLink />
+            </>
+          )}
 
           <label className="block">
             <span className="text-[12.5px] font-medium" style={{ color: INK }}>

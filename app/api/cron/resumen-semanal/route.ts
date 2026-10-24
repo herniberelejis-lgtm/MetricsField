@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { enviarResumenesSemanales } from "@/lib/db";
+import { enviarAvisosPiezas, enviarResumenesSemanales } from "@/lib/db";
 
 // "Tu semana en Google": cada lunes a las 12:00 UTC = 09:00 en Córdoba (ver
 // vercel.json). Mismo control que el cron de sincronización: Vercel Cron
@@ -20,5 +20,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const ok = recibido.length === esperado.length && crypto.timingSafeEqual(recibido, esperado);
     if (!ok) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  return NextResponse.json(await enviarResumenesSemanales());
+  // Los comercios del panel y, aparte, quien compró piezas sueltas y pidió
+  // el aviso semanal gratis al activarlas.
+  const comercios = await enviarResumenesSemanales();
+  const piezas = await enviarAvisosPiezas();
+  return NextResponse.json({ ...comercios, piezas });
 }
