@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { editarCartel } from "@/app/t/actions";
+import ComoConseguirLink from "./ComoConseguirLink";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -87,6 +88,7 @@ export default function EditarCartel({
               style={{ borderColor: LINE, color: INK }}
             />
           </label>
+          <ComoConseguirLink />
 
           <label className="block">
             <span className="text-[12.5px] font-medium" style={{ color: INK }}>
