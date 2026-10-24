@@ -34,8 +34,24 @@ function variante<T>(seed: string, opciones: T[]): T {
 }
 
 const CIERRE_POSITIVO: Record<TonoMarca, string[]> = {
-  cercano: ["¡Te esperamos pronto de nuevo! 🙌", "¡Gracias por elegirnos!", "¡Nos vemos la próxima! 😊"],
-  formal: ["Esperamos poder atenderlo nuevamente.", "Gracias por su confianza.", "A su disposición siempre."],
+  cercano: [
+    "¡Te esperamos pronto de nuevo! 🙌",
+    "¡Gracias por elegirnos!",
+    "¡Nos vemos la próxima! 😊",
+    "¡Volvé cuando quieras!",
+    "¡Siempre es un gusto recibirte!",
+    "¡Hasta la próxima!",
+    "¡Gracias por la buena onda!",
+    "¡Te esperamos con las puertas abiertas!",
+  ],
+  formal: [
+    "Esperamos poder atenderlo nuevamente.",
+    "Gracias por su confianza.",
+    "A su disposición siempre.",
+    "Será un gusto recibirlo otra vez.",
+    "Lo esperamos en su próxima visita.",
+    "Muchas gracias por elegirnos.",
+  ],
 };
 
 const CIERRE_NEGATIVO: Record<TonoMarca, string[]> = {
@@ -51,27 +67,84 @@ const CIERRE_NEGATIVO: Record<TonoMarca, string[]> = {
   ],
 };
 
-const TEMA_POSITIVO: Record<Exclude<Tema, "general">, Record<TonoMarca, string>> = {
+const TEMA_POSITIVO: Record<Exclude<Tema, "general">, Record<TonoMarca, string[]>> = {
   atencion: {
-    cercano: "Nos alegra un montón que la atención te haya gustado.",
-    formal: "Nos complace saber que la atención fue de su agrado.",
+    cercano: [
+      "Nos alegra un montón que la atención te haya gustado.",
+      "Le vamos a pasar tus palabras al equipo, ¡se van a poner muy contentos!",
+      "Que te hayas sentido bien atendido es lo que más buscamos.",
+    ],
+    formal: [
+      "Nos complace saber que la atención fue de su agrado.",
+      "Transmitiremos sus palabras a todo el equipo.",
+      "Es una satisfacción saber que se sintió bien atendido.",
+    ],
   },
   precio: {
-    cercano: "Que sientas que vale la pena es lo que más nos importa.",
-    formal: "Valoramos que considere justa nuestra propuesta de precio.",
+    cercano: [
+      "Que sientas que vale la pena es lo que más nos importa.",
+      "Nos alegra que la relación precio-calidad te haya cerrado.",
+      "Buscamos siempre que valga cada peso, ¡qué bueno que se note!",
+    ],
+    formal: [
+      "Valoramos que considere justa nuestra propuesta de precio.",
+      "Nos alegra que la relación entre precio y calidad le haya resultado adecuada.",
+      "Trabajamos para ofrecer un buen valor y nos complace que lo perciba.",
+    ],
   },
   demora: {
-    cercano: "Qué bueno que los tiempos estuvieron a la altura.",
-    formal: "Celebramos que los tiempos de atención hayan sido adecuados.",
+    cercano: [
+      "Qué bueno que los tiempos estuvieron a la altura.",
+      "Nos alegra que no hayas tenido que esperar.",
+      "Ponemos mucho empeño en ser rápidos, ¡gracias por notarlo!",
+    ],
+    formal: [
+      "Celebramos que los tiempos de atención hayan sido adecuados.",
+      "Nos complace que la atención haya sido ágil.",
+      "Agradecemos que destaque la rapidez del servicio.",
+    ],
   },
   limpieza: {
-    cercano: "La verdad que nos esforzamos por mantener todo impecable.",
-    formal: "Ponemos especial cuidado en la limpieza del espacio.",
+    cercano: [
+      "La verdad que nos esforzamos por mantener todo impecable.",
+      "Qué bueno que se note el cuidado que le ponemos al lugar.",
+      "Mantener todo limpio y ordenado es una prioridad para nosotros.",
+    ],
+    formal: [
+      "Ponemos especial cuidado en la limpieza del espacio.",
+      "Nos complace que haya notado el cuidado del lugar.",
+      "La limpieza y el orden son una prioridad para nuestro equipo.",
+    ],
   },
   calidad: {
-    cercano: "Nos pone muy contentos que el resultado te haya encantado.",
-    formal: "Nos complace que la calidad haya cumplido sus expectativas.",
+    cercano: [
+      "Nos pone muy contentos que el resultado te haya encantado.",
+      "¡Qué bueno que te haya gustado tanto!",
+      "Le ponemos mucho cariño a cada detalle, nos alegra que se note.",
+    ],
+    formal: [
+      "Nos complace que la calidad haya cumplido sus expectativas.",
+      "Es una satisfacción saber que quedó conforme con el resultado.",
+      "Cuidamos cada detalle y nos alegra que lo haya apreciado.",
+    ],
   },
+};
+
+const GENERAL_POSITIVO: Record<TonoMarca, string[]> = {
+  cercano: [
+    "Nos alegra mucho que hayas tenido una buena experiencia.",
+    "¡Qué lindo leer esto!",
+    "Nos alegraste el día con tu comentario.",
+    "Comentarios así nos dan pilas para seguir.",
+    "Nos encanta saber que la pasaste bien.",
+    "Es un placer que te hayas ido contento.",
+  ],
+  formal: [
+    "Nos complace que su experiencia haya sido positiva.",
+    "Es una satisfacción recibir comentarios como el suyo.",
+    "Valoramos mucho que haya compartido su experiencia.",
+    "Nos alegra que su visita haya sido de su agrado.",
+  ],
 };
 
 const TEMA_NEGATIVO: Record<Exclude<Tema, "general">, Record<TonoMarca, string>> = {
@@ -103,8 +176,21 @@ const SALUDOS: Record<TonoMarca, string[]> = {
 };
 
 const SALUDOS_SIN_NOMBRE: Record<TonoMarca, string[]> = {
-  cercano: ["¡Hola! Gracias por tu reseña.", "¡Hola!", "Muchas gracias por tomarte el tiempo."],
-  formal: ["Muchas gracias por su reseña.", "Agradecemos su comentario."],
+  cercano: [
+    "¡Hola! Gracias por tu reseña.",
+    "¡Hola!",
+    "Muchas gracias por tomarte el tiempo.",
+    "¡Gracias por dejarnos tu opinión!",
+    "¡Mil gracias por tu comentario!",
+    "¡Hola! Qué bueno leerte.",
+    "¡Gracias por escribirnos!",
+  ],
+  formal: [
+    "Muchas gracias por su reseña.",
+    "Agradecemos su comentario.",
+    "Le agradecemos que se haya tomado el tiempo de escribirnos.",
+    "Muchas gracias por compartir su opinión.",
+  ],
 };
 
 /** El nombre público de Google lo elige el autor de la reseña: puede ser un
@@ -139,12 +225,18 @@ export function generarRespuestaSugerida(
   const saludo = nombre
     ? variante(autor + texto + sal, SALUDOS[tono]).replace("{autor}", () => nombre)
     : variante(autor + texto + sal, SALUDOS_SIN_NOMBRE[tono]);
+  // Cada parte se elige con su propia semilla: así cambiar `intento` mueve
+  // las tres por separado y salen cientos de combinaciones distintas (la
+  // respuesta automática no puede repetirse entre reseñas del mismo local).
+  const semillaCuerpo = `${texto}|cuerpo|${sal}`;
   const cuerpoTema =
     tema === "general"
       ? positiva
-        ? { cercano: "Nos alegra mucho que hayas tenido una buena experiencia.", formal: "Nos complace que su experiencia haya sido positiva." }[tono]
+        ? variante(semillaCuerpo, GENERAL_POSITIVO[tono])
         : { cercano: "Lamentamos que la experiencia no haya sido la esperada.", formal: "Lamentamos que su experiencia no haya cumplido sus expectativas." }[tono]
-      : (positiva ? TEMA_POSITIVO : TEMA_NEGATIVO)[tema][tono];
+      : positiva
+        ? variante(semillaCuerpo, TEMA_POSITIVO[tema][tono])
+        : TEMA_NEGATIVO[tema][tono];
   const cierre = variante(texto + tono + sal, positiva ? CIERRE_POSITIVO[tono] : CIERRE_NEGATIVO[tono]);
 
   return `${saludo} ${cuerpoTema} ${cierre}`;

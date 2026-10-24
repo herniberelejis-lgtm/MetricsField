@@ -5,8 +5,10 @@ import { guardarUbicacion } from "./ubicaciones";
 import { palabrasDeBusqueda, rendimientoDiario, type RendimientoDia } from "../gbp";
 import { listarResenasGoogle, responderResenaGoogle, resenasApiHabilitada } from "../google-reviews";
 import { generarRespuestaSugerida } from "../respuestas";
+import { elegirSinRepetir, evaluarAutoRespuesta, RECIENTES_SIN_REPETIR, TOPE_AUTO_POR_DIA } from "../auto-respuesta";
+import { redactarRespuestaIA } from "../respuestas-ia";
 import { cifrar, descifrar } from "../crypto";
-import { alertarResenaMala } from "../alertas";
+import { alertarResenaMala, alertarRespuestaRechazada } from "../alertas";
 import { notificar } from "../monitor";
 import { getAjuste, setAjuste } from "./ajustes";
 import {
@@ -636,10 +638,15 @@ export async function sincronizarRendimientoTodos(): Promise<{ total: number; ac
 // sola) si se escribió en los últimos días.
 const DIAS_RESENA_RECIENTE = 7;
 
+// Tiempo, desde que arranca la sincronización de un comercio, durante el
+// que se redactan respuestas con IA (lib/respuestas-ia.ts).
+const MARGEN_IA_MS = 20_000;
+
 export async function sincronizarResenasGoogle(
   id: string,
 ): Promise<{ nuevas: number; autoRespondidas: number }> {
   if (!resenasApiHabilitada()) return { nuevas: 0, autoRespondidas: 0 };
+  const inicio = Date.now();
 
   const errores: string[] = [];
   const prep = await prepararGoogle(id, errores);
@@ -668,13 +675,36 @@ export async function sincronizarResenasGoogle(
   // respondidas) se inserta en bloque. Una consulta por reseña no entraba
   // en el tiempo del cron con fichas grandes.
   const nombres = resenasGoogle.map((r) => r.name);
-  const existentes = new Map<string, { id: number; estado: string }>();
+  const existentes = new Map<string, { id: number; estado: string; auto: boolean }>();
   for (let i = 0; i < nombres.length; i += 1000) {
     const rows = await sql`
-      SELECT id, estado, origen_google_id FROM resenas
+      SELECT id, estado, origen_google_id, publicada_automaticamente FROM resenas
       WHERE origen_google_id IN ${sql(nombres.slice(i, i + 1000))}
     `;
-    for (const r of rows) existentes.set(r.origen_google_id as string, { id: r.id as number, estado: r.estado as string });
+    for (const r of rows)
+      existentes.set(r.origen_google_id as string, {
+        id: r.id as number,
+        estado: r.estado as string,
+        auto: Boolean(r.publicada_automaticamente),
+      });
+  }
+
+  // Google rechazó una respuesta que dimos por publicada: vuelve a la cola
+  // para responder a mano. Si la había mandado la automática, se apaga la
+  // automática de este comercio y se le avisa: mejor frenar que acumular
+  // rechazos en su ficha.
+  const rechazadas = resenasGoogle.filter((rg) => rg.respuestaRechazada && existentes.get(rg.name)?.estado === "respondida");
+  if (rechazadas.length > 0) {
+    await sql`
+      UPDATE resenas SET estado = 'nueva', respuesta_publicada = FALSE
+      WHERE id IN ${sql(rechazadas.map((rg) => existentes.get(rg.name)!.id))}
+    `;
+    for (const rg of rechazadas) existentes.get(rg.name)!.estado = "nueva";
+    if (cliente.autoResponderPositivas && rechazadas.some((rg) => existentes.get(rg.name)!.auto)) {
+      await actualizarAutomatizacionResenas(id, { autoResponderPositivas: false, autoResponderUmbral: cliente.autoResponderUmbral });
+      cliente.autoResponderPositivas = false;
+      await alertarRespuestaRechazada(cliente, rechazadas.length);
+    }
   }
 
   // Ya las teníamos: si el dueño las respondió directo en Google, salen de
@@ -718,8 +748,8 @@ export async function sincronizarResenasGoogle(
   }
   nuevas += enBloque.length;
 
-  // Lo recién llegado sin responder: de a una, porque puede avisar o
-  // responderse sola.
+  // Lo recién llegado sin responder: de a una, porque puede avisar.
+  const nuevasIds = new Map<string, number>();
   for (const rg of nuevasGoogle.filter((x) => !x.yaRespondida && esReciente(x.fecha))) {
     const creada = await crearResena(
       id,
@@ -734,28 +764,64 @@ export async function sincronizarResenasGoogle(
       rg.name,
     );
     nuevas += 1;
-
-    const esPositivaSegunUmbral = rg.estrellas >= cliente.autoResponderUmbral;
-    if (cliente.autoResponderPositivas && esPositivaSegunUmbral) {
-      // Sin nombre: esta respuesta se publica sola con la identidad del
-      // comercio, y el nombre de Google lo elige el autor (puede ser cualquier
-      // palabra). Las sugeridas que revisa una persona sí lo usan.
-      const respuesta = generarRespuestaSugerida("", rg.estrellas, rg.texto, cliente.tonoMarca, 0);
-      const publicada = await responderResenaGoogle(token, rg.name, respuesta);
-      if (publicada) {
-        await actualizarResena(creada.id, {
-          estado: "respondida",
-          respuestaSugerida: respuesta,
-          respuestaPublicada: true,
-          publicadaAutomaticamente: true,
-        });
-        autoRespondidas += 1;
-      }
-    } else if (rg.estrellas <= 3) {
-      // No se respondió sola (es mala, o la automatización está apagada) —
-      // avisarle al dueño ya, no esperar a que abra el portal por las
-      // suyas.
+    nuevasIds.set(rg.name, creada.id);
+    // Una mala nunca se responde sola: avisarle al dueño ya, no esperar a
+    // que abra el portal por las suyas.
+    if (rg.estrellas <= 3) {
       await alertarResenaMala(cliente, { autor: rg.autor, estrellas: rg.estrellas, texto: rg.texto });
+    }
+  }
+
+  // Respuesta automática (si el comercio la prendió en su portal): solo
+  // positivas de verdad (lib/auto-respuesta.ts), sin repetir texto, y como
+  // mucho TOPE_AUTO_POR_DIA por día. Las que no entran hoy se toman en la
+  // próxima sincronización mientras sigan siendo recientes y sin responder.
+  if (cliente.autoResponderPositivas) {
+    const candidatas = resenasGoogle
+      .filter((rg) => !rg.yaRespondida && !rg.respuestaRechazada && esReciente(rg.fecha))
+      .map((rg) => ({ rg, resenaId: nuevasIds.get(rg.name) ?? (existentes.get(rg.name)?.estado === "nueva" ? existentes.get(rg.name)!.id : null) }))
+      .filter((c): c is { rg: (typeof resenasGoogle)[number]; resenaId: number } => c.resenaId !== null)
+      .filter((c) => evaluarAutoRespuesta(c.rg, cliente.autoResponderUmbral).auto)
+      .sort((a, b) => Date.parse(a.rg.fecha) - Date.parse(b.rg.fecha));
+
+    if (candidatas.length > 0) {
+      const recientes = (
+        await sql`
+          SELECT respuesta_sugerida FROM resenas
+          WHERE comercio_id = ${id} AND respuesta_publicada AND respuesta_sugerida IS NOT NULL
+          ORDER BY id DESC LIMIT ${RECIENTES_SIN_REPETIR}
+        `
+      ).map((r) => r.respuesta_sugerida as string);
+
+      for (const { rg, resenaId } of candidatas.slice(0, TOPE_AUTO_POR_DIA)) {
+        // Sin nombre: esta respuesta se publica sola con la identidad del
+        // comercio, y el nombre de Google lo elige el autor (puede ser
+        // cualquier palabra). Las sugeridas que revisa una persona sí lo usan.
+        // La IA tarda unos segundos por respuesta y el cron tiene 60 en
+        // total: pasado el margen, el resto sale de la plantilla.
+        const conIA = Date.now() - inicio < MARGEN_IA_MS;
+        const respuesta =
+          (conIA &&
+            (await redactarRespuestaIA({
+              comercio: cliente.nombre,
+              estrellas: rg.estrellas,
+              texto: rg.texto,
+              tono: cliente.tonoMarca,
+              recientes,
+            }))) ||
+          elegirSinRepetir((intento) => generarRespuestaSugerida("", rg.estrellas, rg.texto, cliente.tonoMarca, intento), recientes);
+        if (!respuesta) continue; // no hay variante sin repetir: queda a mano
+        if (await responderResenaGoogle(token, rg.name, respuesta)) {
+          await actualizarResena(resenaId, {
+            estado: "respondida",
+            respuestaSugerida: respuesta,
+            respuestaPublicada: true,
+            publicadaAutomaticamente: true,
+          });
+          recientes.unshift(respuesta);
+          autoRespondidas += 1;
+        }
+      }
     }
   }
 

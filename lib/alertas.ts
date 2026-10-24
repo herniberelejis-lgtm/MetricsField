@@ -6,6 +6,7 @@ import { enviarEmail } from "./email";
 import { businessProfileHabilitado } from "./gbp";
 import { resolverCuenta } from "./db/clientes";
 import type { ResumenSemanal } from "./resumen-semanal";
+import type { Indicador, InformeSemanal } from "./informe-semanal";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
 // necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
@@ -78,6 +79,22 @@ export async function alertarResenaMala(
   });
 }
 
+/** Google rechazó una respuesta que la automática había publicado: la
+ * automática ya quedó apagada (lib/db/google-sync.ts) y se le avisa al
+ * dueño para que responda esas a mano y decida si la vuelve a prender. */
+export async function alertarRespuestaRechazada(cliente: Cliente, cantidad: number): Promise<void> {
+  if (!cliente.emailNotificaciones) return;
+  const cuerpo = `
+    <p style="font-size:14px;">Google no publicó ${cantidad === 1 ? "una respuesta" : `${cantidad} respuestas`} a reseñas de ${escapeHtml(cliente.nombre)}: las revisa antes de mostrarlas y ${cantidad === 1 ? "esa no pasó" : "esas no pasaron"} su control.</p>
+    <p style="font-size:14px;">Por las dudas, <strong>pausamos las respuestas automáticas</strong>. ${cantidad === 1 ? "La reseña volvió" : "Las reseñas volvieron"} a tu lista para que ${cantidad === 1 ? "la respondas" : "las respondas"} a mano. Cuando quieras, podés volver a prenderlas desde tu portal.</p>
+  `;
+  await enviarEmail({
+    to: cliente.emailNotificaciones,
+    asunto: `Pausamos las respuestas automáticas de ${cliente.nombre}`,
+    html: layout("Google no publicó una respuesta", cuerpo, await linkPortalDe(cliente)),
+  });
+}
+
 /** Resumen mensual empujado por mail — para que no dependa de que el dueño
  * se acuerde de entrar al portal. Usa la métrica del mes ya cargada
  * (mismos números que ve en "Métricas del mes"), no recalcula nada nuevo.
@@ -126,6 +143,124 @@ export async function enviarResumenSemanal(cliente: Cliente, r: ResumenSemanal):
   return enviarEmail({ to: cliente.emailNotificaciones, ...(await mailResumenSemanal(cliente, r)) });
 }
 
+const COLOR_TONO = { sube: "#0B5E40", baja: "#8A3F00", igual: "#5f6368" } as const;
+
+function seccion(titulo: string, contenido: string): string {
+  return `
+    <div style="margin-top:20px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5f6368;margin-bottom:6px;">${titulo}</div>
+      ${contenido}
+    </div>`;
+}
+
+function filaNumero(valor: string, label: string, detalle: string | null, tono: Indicador["tono"] = null): string {
+  const color = tono ? COLOR_TONO[tono] : "#5f6368";
+  return `<tr>
+    <td style="padding:5px 12px 5px 0;font-size:20px;font-weight:800;vertical-align:top;white-space:nowrap;">${escapeHtml(valor)}</td>
+    <td style="padding:6px 0;font-size:14px;color:#333;vertical-align:top;">${escapeHtml(label)}${
+      detalle ? `<br><span style="font-size:12px;color:${color};">${escapeHtml(detalle)}</span>` : ""
+    }</td>
+  </tr>`;
+}
+
+function tabla(filas: string): string {
+  return `<table style="border-collapse:collapse;">${filas}</table>`;
+}
+
+function aviso(texto: string, fondo: string, color: string): string {
+  return `<p style="font-size:14px;background:${fondo};color:${color};border-radius:10px;padding:10px 12px;margin:8px 0 0;">${texto}</p>`;
+}
+
+function htmlInforme(i: InformeSemanal): string {
+  const partes: string[] = [];
+
+  if (i.rendimiento.length) {
+    // Google publica con 2 o 3 días de demora: la aclaración va una sola vez.
+    const nota = i.rendimiento.find((r) => r.nota)?.nota;
+    partes.push(
+      seccion(
+        "Cómo te encontraron en Google",
+        tabla(i.rendimiento.map((r) => filaNumero(r.valor, r.label, r.cambio, r.tono)).join("")) +
+          (nota ? `<p style="font-size:12px;color:#5f6368;margin:4px 0 0;">${escapeHtml(nota)}.</p>` : ""),
+      ),
+    );
+  }
+
+  if (i.resenas) {
+    const r = i.resenas;
+    const filas = [
+      filaNumero(String(r.nuevas), r.nuevas === 1 ? "reseña nueva" : "reseñas nuevas", r.promedio ? `${r.promedio}★ de promedio` : null),
+    ];
+    if (r.nuevas > 0) {
+      filas.push(
+        filaNumero(
+          String(r.respondidas),
+          r.respondidas === 1 ? "respondida" : "respondidas",
+          [
+            r.automaticas ? `${r.automaticas} se respondieron solas` : null,
+            r.aMano ? `${r.aMano} a mano` : null,
+            r.pendientes ? `${r.pendientes} sin responder` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || null,
+        ),
+      );
+    }
+    let contenido = tabla(filas.join(""));
+    if (r.pendientesMalas) {
+      contenido += aviso(
+        `<strong>${r.pendientesMalas === 1 ? "Una reseña de 3★ o menos espera" : `${r.pendientesMalas} reseñas de 3★ o menos esperan`} tu respuesta.</strong> Responder rápido y sin discutir es lo que más cuida tu calificación.`,
+        "#FFF4E5",
+        "#8A3F00",
+      );
+    }
+    if (r.meta) contenido += `<p style="font-size:13px;color:#333;margin:8px 0 0;">${escapeHtml(r.meta)}</p>`;
+    partes.push(seccion("Tus reseñas", contenido));
+  }
+
+  if (i.competencia?.tipo === "tabla") {
+    const filas = i.competencia.filas
+      .map(
+        (f) => `<tr>
+          <td style="padding:5px 12px 5px 0;font-size:14px;${f.esPropio ? "font-weight:800;" : "color:#333;"}">${escapeHtml(f.nombre)}</td>
+          <td style="padding:5px 12px 5px 0;font-size:14px;text-align:right;${f.esPropio ? "font-weight:800;" : ""}">+${f.nuevas}</td>
+          <td style="padding:5px 0;font-size:13px;color:#5f6368;text-align:right;">${f.rating ? `${f.rating}★` : ""}</td>
+        </tr>`,
+      )
+      .join("");
+    partes.push(
+      seccion(
+        "Vs. tu competencia",
+        `<p style="font-size:14px;margin:0 0 6px;">${escapeHtml(i.competencia.lectura)}</p>
+         <table style="border-collapse:collapse;min-width:260px;">
+           <tr><td style="font-size:11px;color:#5f6368;padding-bottom:2px;"></td><td style="font-size:11px;color:#5f6368;text-align:right;padding:0 12px 2px 0;">reseñas</td><td style="font-size:11px;color:#5f6368;text-align:right;padding-bottom:2px;">calif.</td></tr>
+           ${filas}
+         </table>`,
+      ),
+    );
+  } else if (i.competencia?.tipo === "aviso") {
+    partes.push(seccion("Vs. tu competencia", `<p style="font-size:14px;color:#333;margin:0;">${escapeHtml(i.competencia.texto)}</p>`));
+  }
+
+  if (i.enTuLocal) {
+    const t = i.enTuLocal;
+    const filas = [filaNumero(t.toques.valor, "toques al cartel", t.toques.cambio, t.toques.tono)];
+    if (t.resenasDelCartel !== null) {
+      filas.push(filaNumero(String(t.resenasDelCartel), t.resenasDelCartel === 1 ? "reseña llegó después de un toque" : "reseñas llegaron después de un toque", null));
+    }
+    let contenido = tabla(filas.join(""));
+    if (t.lectura) contenido += `<p style="font-size:14px;color:#333;margin:6px 0 0;">${escapeHtml(t.lectura)}</p>`;
+    if (t.piezas.length > 1) {
+      contenido += `<p style="font-size:13px;color:#5f6368;margin:8px 0 0;">${t.piezas
+        .map((p) => `${escapeHtml(p.pieza)}: ${p.toques} ${p.toques === 1 ? "toque" : "toques"}${p.rinde !== "—" ? ` (${escapeHtml(p.rinde)})` : ""}`)
+        .join("<br>")}</p>`;
+    }
+    partes.push(seccion("MetricsField en tu local", contenido));
+  }
+
+  return partes.join("");
+}
+
 /** Asunto y HTML del resumen del lunes (lo usa también la prueba del admin). */
 export async function mailResumenSemanal(cliente: Cliente, r: ResumenSemanal): Promise<{ asunto: string; html: string }> {
   const numeros = r.numeros
@@ -134,10 +269,12 @@ export async function mailResumenSemanal(cliente: Cliente, r: ResumenSemanal): P
         `<tr><td style="padding:6px 12px 6px 0;font-size:22px;font-weight:800;vertical-align:baseline;">${escapeHtml(n.valor)}</td><td style="padding:6px 0;font-size:14px;color:#333;">${escapeHtml(n.label)}</td></tr>`,
     )
     .join("");
+  // Con informe, los números van por sección; sin él (sin datos suficientes
+  // para armarlo), los tres números de siempre.
   const cuerpo = `
-    ${numeros ? `<table style="border-collapse:collapse;margin:4px 0 8px;">${numeros}</table>` : ""}
-    ${r.destacado ? `<p style="font-size:14px;font-weight:600;background:#E8F5EF;color:#0B5E40;border-radius:10px;padding:10px 12px;">${escapeHtml(r.destacado)}</p>` : ""}
-    ${r.tarea ? `<p style="font-size:14px;background:#FFF4E5;color:#8A3F00;border-radius:10px;padding:10px 12px;"><strong>Para hacer:</strong> ${escapeHtml(r.tarea)}</p>` : ""}
+    ${r.informe ? `<p style="font-size:13px;color:#5f6368;margin:0;">${escapeHtml(r.informe.periodo)}</p>${htmlInforme(r.informe)}` : numeros ? `<table style="border-collapse:collapse;margin:4px 0 8px;">${numeros}</table>` : ""}
+    ${r.destacado ? `<p style="font-size:14px;font-weight:600;background:#E8F5EF;color:#0B5E40;border-radius:10px;padding:10px 12px;margin-top:20px;">${escapeHtml(r.destacado)}</p>` : ""}
+    ${r.tarea ? `<p style="font-size:14px;background:#FFF4E5;color:#8A3F00;border-radius:10px;padding:10px 12px;"><strong>Para hacer esta semana:</strong> ${escapeHtml(r.tarea)}</p>` : ""}
   `;
   return {
     asunto: `Tu semana en Google — ${cliente.nombre}`,
