@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { activarCartel } from "@/app/t/actions";
+import ComoConseguirLink from "./ComoConseguirLink";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -121,10 +122,8 @@ export default function ActivarCartel({ slug }: { slug: string }) {
               className="mt-1.5 w-full rounded-xl border px-3.5 py-2.5 text-[15px] outline-none"
               style={{ borderColor: LINE, color: INK }}
             />
-            <span className="mt-1.5 block text-[11.5px]" style={{ color: INK_SOFT }}>
-              En Google Maps: buscá tu negocio → "Escribir una reseña" → copiá el link de esa página.
-            </span>
           </label>
+          <ComoConseguirLink abierto />
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block">

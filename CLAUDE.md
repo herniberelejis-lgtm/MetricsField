@@ -134,8 +134,11 @@ inserta en la tabla `auditoria` con el email del admin (de `emailAdminActual`).
 `lib/gbp.ts` (Business Profile Performance) y `lib/google-oauth.ts` (OAuth genérico:
 sirve tanto para el login del equipo como para la conexión GBP por cliente).
 Sincronización diaria vía Vercel Cron (`vercel.json` → `/api/cron/sync-google`,
-autenticado con `Bearer CRON_SECRET`). El "enchufe" a la API de Anthropic existe en
-el código pero está sin usar (audits/respuestas hoy son manuales o por plantilla).
+autenticado con `Bearer CRON_SECRET`). Respuestas automáticas a reseñas: solo
+positivas sin quejas, sin repetir, con tope diario y se pausan si Google rechaza una
+(`lib/auto-respuesta.ts`); la redacción con Claude (`lib/respuestas-ia.ts`) es
+opcional (`RESPUESTAS_IA_HABILITADAS` + `ANTHROPIC_API_KEY`) y cae a la plantilla.
+Informe de cada lunes al dueño: `lib/informe-semanal.ts` (cron `/api/cron/resumen-semanal`).
 
 **Rutas públicas** (no pasan por auth de admin): `/` (landing), `/t/[slug]`
 (star-gate del tap NFC), `/portal/[codigo]`, `/login`, `/privacidad`,

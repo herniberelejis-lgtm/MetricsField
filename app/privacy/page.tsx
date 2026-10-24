@@ -86,6 +86,10 @@ export default function PrivacidadPage() {
                     las respuestas que el comercio aprueba desde su panel, o las que
                     él mismo configuró para responder automáticamente a reseñas
                     positivas. Puede desactivar esa opción cuando quiera.
+                    Para redactar esas respuestas podemos usar a Anthropic, nuestro
+                    proveedor de inteligencia artificial: le enviamos solo el texto
+                    y la calificación de la reseña (nunca el nombre de quien la
+                    escribió), únicamente para redactar la respuesta.
                   </li>
                   <li>
                     <strong>Métricas de rendimiento</strong> (visitas al perfil,
@@ -126,7 +130,8 @@ export default function PrivacidadPage() {
                   (HTTPS/TLS) y se almacenan en infraestructura de nube con acceso
                   restringido; el token de acceso a Google de cada comercio se
                   guarda cifrado. No vendemos estos datos, no los usamos para
-                  publicidad y no los compartimos con terceros.
+                  publicidad y no los compartimos con terceros, salvo con los
+                  proveedores que usamos para operar el servicio y solo para eso.
                 </p>
               </section>
 
@@ -311,6 +316,9 @@ export default function PrivacidadPage() {
                     replies the business approves in its dashboard, or those it has
                     itself set up to send automatically to positive reviews. It can
                     turn that option off at any time.
+                    To draft those replies we may use Anthropic, our AI provider: we
+                    send it only the review text and star rating (never the
+                    reviewer&rsquo;s name), solely to draft the reply.
                   </li>
                   <li>
                     <strong>Performance metrics</strong> (profile views, calls,
@@ -348,7 +356,8 @@ export default function PrivacidadPage() {
                   transit (HTTPS/TLS) and stored on restricted-access cloud
                   infrastructure; each business&rsquo;s Google access token is
                   stored encrypted. We do not sell this data, we do not use it for
-                  advertising, and we do not share it with third parties.
+                  advertising, and we do not share it with third parties except the
+                  providers we use to operate the service, and only for that.
                 </p>
               </section>
 

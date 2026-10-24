@@ -37,6 +37,26 @@ export interface ResenaGoogleAPI {
   yaRespondida: boolean;
   /** Texto de la respuesta que ya tiene publicada en Google, si tiene. */
   respuesta: string | null;
+  /** Google rechazó la respuesta por sus políticas: no está publicada. */
+  respuestaRechazada: boolean;
+}
+
+type ReplyGoogle = {
+  comment: string;
+  reviewReplyState?: string;
+  policyViolation?: unknown;
+  policyViolations?: unknown[];
+};
+
+/** Google modera cada respuesta antes de mostrarla y desde 2026 informa el
+ * resultado en la reseña (reviewReplyState y la política infringida). No
+ * hay garantía de cómo se llama cada estado, así que se lee a la defensiva:
+ * cualquier estado que diga "rechazada" o una política infringida cuenta
+ * como rechazo. Una respuesta en moderación todavía cuenta como respondida. */
+export function respuestaFueRechazada(reply: ReplyGoogle | undefined): boolean {
+  if (!reply) return false;
+  if (/REJECT/i.test(reply.reviewReplyState ?? "")) return true;
+  return Boolean(reply.policyViolation) || (reply.policyViolations?.length ?? 0) > 0;
 }
 
 /** Trae todas las reseñas de una ficha, paginando. `location` es el mismo
@@ -72,7 +92,7 @@ export async function listarResenasGoogle(
         comment?: string;
         reviewer?: { displayName?: string };
         createTime?: string;
-        reviewReply?: { comment: string };
+        reviewReply?: ReplyGoogle;
       }[];
       nextPageToken?: string;
     };
@@ -85,8 +105,9 @@ export async function listarResenasGoogle(
         autor: r.reviewer?.displayName ?? "Cliente de Google",
         texto: r.comment ?? "",
         fecha: r.createTime ?? new Date().toISOString(),
-        yaRespondida: Boolean(r.reviewReply),
+        yaRespondida: Boolean(r.reviewReply) && !respuestaFueRechazada(r.reviewReply),
         respuesta: r.reviewReply?.comment ?? null,
+        respuestaRechazada: respuestaFueRechazada(r.reviewReply),
       });
     }
     pageToken = data.nextPageToken ?? "";
