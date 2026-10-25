@@ -7,6 +7,14 @@ import "server-only";
 // del dueño). Necesita GOOGLE_PLACES_API_KEY configurada — si falta, la
 // sincronización se salta en silencio en vez de romper el resto del panel.
 
+/** Host de Places API. Solo para pruebas y demos locales se puede apuntar a
+ * un Google simulado con PLACES_API_BASE; en Vercel se ignora siempre, para
+ * que la clave nunca viaje a otro lado por una variable mal cargada. */
+function basePlaces(): string {
+  const local = process.env.PLACES_API_BASE;
+  return local && !process.env.VERCEL ? local.replace(/\/+$/, "") : "https://places.googleapis.com";
+}
+
 export interface GooglePlaceStats {
   rating: number;
   totalReseñas: number;
@@ -94,7 +102,7 @@ export async function searchGooglePlace(
   if (!query.trim()) return { ok: true, resultados: [] };
   if (!apiKey) return { ok: false, motivo: "sin-key" };
 
-  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+  const res = await fetch(`${basePlaces()}/v1/places:searchText`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -239,7 +247,7 @@ export function placeIdValido(id: string): boolean {
 export async function linkResenaDeLugar(placeId: string): Promise<{ nombre: string; link: string } | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey || !placeIdValido(placeId)) return null;
-  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
+  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
     headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "id,displayName,googleMapsLinks" },
     cache: "no-store",
   });

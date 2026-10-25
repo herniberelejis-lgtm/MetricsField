@@ -5,6 +5,7 @@ import { editarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
+import GrabarChip from "./GrabarChip";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -50,7 +51,7 @@ export default function EditarCartel({
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-5 py-10" style={{ background: "#f8f9fa" }}>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 px-5 py-10" style={{ background: "#f8f9fa" }}>
       <form
         onSubmit={enviar}
         className="w-full max-w-sm rounded-2xl bg-white px-7 py-8"
@@ -149,6 +150,9 @@ export default function EditarCartel({
           {pendiente ? "Guardando…" : "Guardar cambios"}
         </button>
       </form>
+
+      {/* Por si cerró la pantalla de activación sin grabar el chip. */}
+      <GrabarChip slug={slug} titulo="Grabar el chip NFC" />
     </div>
   );
 }

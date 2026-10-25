@@ -1,9 +1,33 @@
 // Contenido del onboarding de las piezas que se venden sueltas (Mercado
-// Libre): el video de cómo se activa y cómo se usa cada pieza. Lo usan la
+// Libre): los videos de cómo se activa y cómo se usa cada pieza. Lo usan la
 // pantalla de activación (/t/<id>) y el instructivo en PDF.
+//
+// La pieza tiene dos cosas que se configuran por separado:
+// - el QR impreso, que siempre lleva a /t/<id>: se activa en nuestra página;
+// - el chip NFC, que viene vacío: se graba con la app gratis NFC Tools.
 
-/** Video corto de la activación (archivo en public/ o null mientras no esté). */
-export const VIDEO_ACTIVACION: string | null = null;
+export interface VideoOnboarding {
+  src: string;
+  portada: string;
+  titulo: string;
+  duracion: string;
+}
+
+/** Cómo activar el QR en MetricsField (grabado de la app real). */
+export const VIDEO_QR: VideoOnboarding | null = {
+  src: "/tap/videos/activar-qr.mp4",
+  portada: "/tap/videos/activar-qr-portada.jpg",
+  titulo: "Cómo activar el QR",
+  duracion: "35 s",
+};
+
+/** Cómo grabar el chip NFC con NFC Tools (video del equipo). */
+export const VIDEO_NFC: VideoOnboarding | null = {
+  src: "/tap/videos/activar-nfc.mp4",
+  portada: "/tap/videos/activar-nfc-portada.jpg",
+  titulo: "Cómo grabar el chip NFC",
+  duracion: "50 s",
+};
 
 export const USOS_PIEZAS = [
   {

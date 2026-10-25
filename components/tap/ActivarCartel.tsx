@@ -3,9 +3,10 @@
 import { useEffect, useState, useTransition } from "react";
 import { activarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
-import { USOS_PIEZAS, VIDEO_ACTIVACION } from "@/lib/onboarding";
+import { USOS_PIEZAS, VIDEO_QR } from "@/lib/onboarding";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
+import GrabarChip from "./GrabarChip";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -124,7 +125,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
   if (listo) return <Listo slug={slug} {...listo} />;
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-4 py-8" style={{ background: "#f8f9fa" }}>
+    <div className="flex min-h-screen flex-col items-center gap-5 px-4 py-8" style={{ background: "#f8f9fa" }}>
       <form
         onSubmit={enviar}
         className="w-full max-w-md rounded-2xl bg-white px-5 py-7 sm:px-7"
@@ -138,19 +139,26 @@ export default function ActivarCartel({ slug }: { slug: string }) {
             Activá tu pieza en 3 pasos
           </h1>
           <p className="mt-1.5 text-[13.5px]" style={{ color: INK_SOFT }}>
-            Una sola vez y queda lista: cada cliente que la toque va directo a dejarte una reseña en Google.
+            Una sola vez y queda lista: cada cliente que la escanee va directo a dejarte una reseña en Google. El chip
+            NFC se graba aparte, con el video de más abajo.
           </p>
         </div>
 
-        {VIDEO_ACTIVACION && (
-          <video
-            src={VIDEO_ACTIVACION}
-            controls
-            playsInline
-            preload="metadata"
-            className="mt-5 w-full rounded-xl"
-            aria-label="Video: cómo activar tu pieza"
-          />
+        {VIDEO_QR && (
+          <details className="mt-5 rounded-xl px-4 py-3" style={{ background: "#f1f5fb" }}>
+            <summary className="cursor-pointer text-[13.5px] font-medium" style={{ color: INK }}>
+              Ver cómo se hace (video de {VIDEO_QR.duracion})
+            </summary>
+            <video
+              src={VIDEO_QR.src}
+              poster={VIDEO_QR.portada}
+              controls
+              playsInline
+              preload="none"
+              className="mx-auto mt-3 w-full max-w-[300px] rounded-xl bg-black"
+              aria-label={`Video: ${VIDEO_QR.titulo}`}
+            />
+          </details>
         )}
 
         {recuerdo && (
@@ -305,6 +313,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
           {pendiente ? "Activando…" : "Activar mi pieza"}
         </button>
       </form>
+      <GrabarChip slug={slug} titulo="Y el chip NFC" />
     </div>
   );
 }
@@ -327,7 +336,7 @@ function Listo({
   const [host, setHost] = useState("");
   useEffect(() => setHost(window.location.host), []);
   return (
-    <div className="flex min-h-screen flex-col items-center px-4 py-8" style={{ background: "#f8f9fa" }}>
+    <div className="flex min-h-screen flex-col items-center gap-5 px-4 py-8" style={{ background: "#f8f9fa" }}>
       <div
         className="w-full max-w-md rounded-2xl bg-white px-5 py-7 sm:px-7"
         style={{ boxShadow: "0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)" }}
@@ -349,7 +358,8 @@ function Listo({
         <div className="mt-5 rounded-xl px-4 py-3.5" style={{ background: "#eef4ff", color: INK }}>
           <p className="text-[14px] font-medium">Probala ahora</p>
           <p className="mt-1 text-[13px]" style={{ color: INK_SOFT }}>
-            Acercá el celular a la pieza (o escaneá su QR): se tiene que abrir la reseña de tu negocio.
+            Escaneá el QR de la pieza con la cámara: se tiene que abrir la reseña de tu negocio. El chip NFC se graba
+            aparte (abajo te mostramos cómo).
           </p>
         </div>
 
@@ -405,6 +415,7 @@ function Listo({
           </p>
         )}
       </div>
+      <GrabarChip slug={slug} titulo="Ahora grabá el chip NFC" />
     </div>
   );
 }

@@ -111,7 +111,10 @@ export async function activarCartel(
     whatsapp: contacto.whatsapp,
     aceptaNovedades: contacto.acepta,
   });
-  revalidatePath(`/t/${slug}`);
+  // Sin revalidatePath: refrescaría /t/<id> en el celular del dueño, que
+  // ahora es una pieza activa y lo mandaría a la reseña de su propio
+  // negocio (contándolo como un toque). La página es dinámica: no hay
+  // caché que limpiar.
   return { ok: true };
 }
 

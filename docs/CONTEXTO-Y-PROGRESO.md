@@ -67,11 +67,18 @@ Restos históricos en la base (ya sin uso en el código): la columna
   contacto y un botón de WhatsApp; para convertirlo en cliente se usa
   "Asignar a cliente". **Regla:** no usar datos que pase Mercado Libre de la
   compra para ofrecer el software (sus políticas y la ley de datos lo
-  prohíben); el contacto vale solo si lo dejó él en nuestra página. El
-  instructivo para mandar por la mensajería de la venta o meter en la caja
-  está en `public/instructivo/` (PDF y PNG, sin links ni teléfonos) y se
-  regenera con `node scripts/instructivo/generar.mjs`. Requiere la
-  migración 019.
+  prohíben); el contacto vale solo si lo dejó él en nuestra página. La
+  pieza tiene dos cosas que se configuran aparte: el **QR** (siempre lleva a
+  `/t/<código>`, se activa ahí) y el **chip NFC**, que viene vacío y lo graba
+  el comprador con la app gratis NFC Tools. La página de activación (y la de
+  editar) muestra los dos videos (`public/tap/videos/`, configurados en
+  `lib/onboarding.ts`) y un botón para copiar el link de la pieza: se
+  recomienda grabar ese en el chip y no el de Google, así se cuentan los
+  toques y el destino se puede cambiar sin regrabar. La guía de 2 páginas
+  (parte 1 QR, parte 2 NFC) para mandar por la mensajería de la venta o
+  meter en la caja está en `public/instructivo/` (PDF y PNG, sin links ni
+  teléfonos) y se regenera con `node scripts/instructivo/generar.mjs` (sus
+  imágenes, en `scripts/instructivo/capturas/`). Requiere la migración 019.
 
 ---
 
@@ -256,9 +263,9 @@ En orden de lo más cerca a lo más lejos:
    standee con QR+NFC — el software ya los soporta (tipo nfc/qr/ambos por
    pieza), falta la fabricación.
 5. **Canal Mercado Libre**: activación en segundos, aviso semanal gratis y
-   contacto con permiso ya hechos; falta el video de la activación
-   (`lib/onboarding.ts` → `VIDEO_ACTIVACION`) y decidir el cobro del panel a
-   esos compradores (manual por WhatsApp vs Mercado Pago).
+   contacto con permiso ya hechos, con videos de QR y NFC y guía en PDF;
+   falta decidir el cobro del panel a esos compradores (manual por WhatsApp
+   vs Mercado Pago).
 6. **Automatizar lo que hoy es manual**: Audit GEO (citas en IA) y monitoreo
    de competencia se relevan a mano — automatizarlos depende de tener
    presupuesto para una API de LLM (el enchufe para Anthropic ya existe en el
