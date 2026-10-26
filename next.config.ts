@@ -14,6 +14,11 @@ const cabecerasSeguridad = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+// Páginas del sitio público (las mismas que reescribe rewrites() más abajo)
+// y del producto, para mandar cada una a su dominio.
+const RUTAS_SITIO = ["/reputacion", "/retail", "/loyalty", "/herramientas", "/guias", "/guias/:slug([a-z0-9-]+)"];
+const RUTAS_PRODUCTO = ["/login", "/admin", "/admin/:path*", "/portal/:path*", "/t/:path*", "/baja"];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // no revelar "X-Powered-By: Next.js"
@@ -44,6 +49,34 @@ const nextConfig: NextConfig = {
         destination: "/login",
         permanent: false,
       },
+      // Un solo dominio por página, para que Google no las vea duplicadas
+      // (Search Console: "Duplicada: el usuario no ha indicado ninguna
+      // versión canónica"). www va siempre al dominio sin www.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.metricsfield.com" }],
+        destination: "https://metricsfield.com/:path*",
+        permanent: true,
+      },
+      // El sitio público vive en metricsfield.com: en el subdominio de
+      // producto, sus páginas mandan allá.
+      ...RUTAS_SITIO.map((source) => ({
+        source,
+        has: [{ type: "host" as const, value: "app.metricsfield.com" }],
+        destination: `https://metricsfield.com${source}`,
+        permanent: true,
+      })),
+      // Y al revés: el producto (login, panel, portal, carteles) vive en
+      // app.metricsfield.com. Temporal (307) a propósito: es por prolijidad,
+      // y así un cartel viejo que apunte a metricsfield.com/t/… sigue
+      // andando aunque algún día esto cambie. /api no entra: lo usan los
+      // crons y los callbacks de OAuth, que ya apuntan a su dominio.
+      ...RUTAS_PRODUCTO.map((source) => ({
+        source,
+        has: [{ type: "host" as const, value: "metricsfield.com" }],
+        destination: `https://app.metricsfield.com${source}`,
+        permanent: false,
+      })),
     ];
   },
   // metricsfield.com y www muestran la landing de venta (estática, vive en
