@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { buscarNegocio } from "@/app/t/actions";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { buscarNegocio, sugerirNegocio } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
 
 const INK = "#1c2530";
@@ -9,9 +9,20 @@ const INK_SOFT = "#5f6b7a";
 const LINE = "#dfe3e8";
 const BRAND = "#2563eb";
 
+function nuevoToken(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
 // El paso más difícil de activar una pieza era conseguir el link de reseña
-// de Google. Acá el comprador escribe el nombre de su negocio y lo elige de
-// una lista: el link lo trae el servidor desde Google (lib/places.ts).
+// de Google. Acá el comprador escribe el nombre (o la calle) de su negocio y
+// mientras escribe le aparecen sugerencias, como en Google Maps; lo elige de
+// la lista y el link lo trae el servidor desde Google (lib/places.ts). El
+// botón Buscar hace una búsqueda más amplia por si no aparece en las
+// sugerencias.
 export default function BuscarNegocio({
   slug,
   elegido,
@@ -19,25 +30,79 @@ export default function BuscarNegocio({
 }: {
   slug: string;
   elegido: LugarParaResena | null;
-  onElegir: (lugar: LugarParaResena | null) => void;
+  /** `sesionToken` viene solo si el lugar salió de las sugerencias. */
+  onElegir: (lugar: LugarParaResena | null, sesionToken?: string) => void;
 }) {
   const [consulta, setConsulta] = useState("");
   const [lugares, setLugares] = useState<LugarParaResena[] | null>(null);
+  const [deSugerencias, setDeSugerencias] = useState(false);
+  const [sugiriendo, setSugiriendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [buscando, startTransition] = useTransition();
+  const token = useRef<string>("");
+  const ultimaConsulta = useRef(0);
+
+  // Sugerencias con una pausa corta al tipear: no una consulta por letra.
+  useEffect(() => {
+    const q = consulta.trim();
+    if (q.length < 3) {
+      ultimaConsulta.current++;
+      setSugiriendo(false);
+      setLugares(null);
+      return;
+    }
+    if (!token.current) token.current = nuevoToken();
+    const n = ++ultimaConsulta.current;
+    const t = setTimeout(async () => {
+      setSugiriendo(true);
+      try {
+        const r = await sugerirNegocio(slug, q, token.current);
+        if (n !== ultimaConsulta.current) return;
+        if (r.ok) {
+          if (r.lugares.length > 0) {
+            setLugares(r.lugares);
+            setDeSugerencias(true);
+            setError(null);
+          }
+        } else {
+          setError(r.error);
+        }
+      } catch {
+        // Sin conexión o similar: queda el botón Buscar.
+      } finally {
+        if (n === ultimaConsulta.current) setSugiriendo(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [consulta, slug]);
 
   function buscar() {
     setError(null);
+    ultimaConsulta.current++;
+    setSugiriendo(false);
     startTransition(async () => {
-      const r = await buscarNegocio(slug, consulta);
-      if (r.ok) {
-        setLugares(r.lugares);
-        if (r.lugares.length === 0) setError("No encontramos nada con ese nombre. Probá agregando la ciudad o el barrio.");
-      } else {
-        setLugares(null);
-        setError(r.error);
+      try {
+        const r = await buscarNegocio(slug, consulta);
+        if (r.ok) {
+          setLugares(r.lugares);
+          setDeSugerencias(false);
+          if (r.lugares.length === 0) {
+            setError("No encontramos nada. Probá con el nombre y la calle, o el nombre y el barrio.");
+          }
+        } else {
+          setLugares(null);
+          setError(r.error);
+        }
+      } catch {
+        setError("No pudimos conectarnos. Revisá tu internet y probá de nuevo.");
       }
     });
+  }
+
+  function elegir(l: LugarParaResena) {
+    onElegir(l, deSugerencias ? token.current : undefined);
+    // La sesión de sugerencias termina al elegir: si toca "Cambiar", empieza otra.
+    token.current = "";
   }
 
   if (elegido) {
@@ -74,8 +139,10 @@ export default function BuscarNegocio({
               buscar();
             }
           }}
-          placeholder="Ej: Barbería Güemes Córdoba"
-          aria-label="Nombre de tu negocio"
+          placeholder="Nombre o calle de tu negocio"
+          aria-label="Nombre o calle de tu negocio"
+          autoComplete="off"
+          enterKeyHint="search"
           className="min-w-0 flex-1 rounded-xl border px-3.5 py-3 text-[16px] outline-none"
           style={{ borderColor: LINE, color: INK }}
         />
@@ -89,6 +156,11 @@ export default function BuscarNegocio({
           {buscando ? "…" : "Buscar"}
         </button>
       </div>
+      {!lugares && !error && (
+        <p className="mt-1.5 text-[11.5px]" style={{ color: INK_SOFT }}>
+          {sugiriendo ? "Buscando en Google…" : "Ej: Barbería Güemes, o Obispo Trejo 250. Te vamos mostrando opciones mientras escribís."}
+        </p>
+      )}
       {error && (
         <p className="mt-2 text-[12.5px]" style={{ color: "#c5221f" }}>
           {error}
@@ -98,7 +170,7 @@ export default function BuscarNegocio({
         <ul className="mt-2 overflow-hidden rounded-xl border" style={{ borderColor: LINE }}>
           {lugares.map((l) => (
             <li key={l.placeId} className="border-b last:border-0" style={{ borderColor: LINE }}>
-              <button type="button" onClick={() => onElegir(l)} className="w-full px-3.5 py-3 text-left active:bg-slate-50">
+              <button type="button" onClick={() => elegir(l)} className="w-full px-3.5 py-3 text-left active:bg-slate-50">
                 <span className="block text-[14.5px] font-medium" style={{ color: INK }}>
                   {l.nombre}
                 </span>
@@ -112,7 +184,7 @@ export default function BuscarNegocio({
       )}
       {lugares && lugares.length > 0 && (
         <p className="mt-1.5 text-[11.5px]" style={{ color: INK_SOFT }}>
-          Tocá tu negocio.
+          Tocá tu negocio. ¿No está? Agregá la calle o el barrio, o tocá <b>Buscar</b>.
         </p>
       )}
     </div>
