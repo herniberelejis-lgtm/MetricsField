@@ -9,7 +9,15 @@ import {
   guardarDatosActivacion,
   guardarLugarAutogestion,
 } from "@/lib/db";
-import { linkResenaDeLugar, placeIdValido, searchGooglePlace, type LugarParaResena } from "@/lib/places";
+import {
+  autocompletarLugar,
+  linkResenaDeLugar,
+  placeIdValido,
+  searchGooglePlace,
+  SESGO_CORDOBA,
+  tokenSesionValido,
+  type LugarParaResena,
+} from "@/lib/places";
 import { validarContacto } from "@/lib/activacion";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
@@ -20,10 +28,16 @@ import { urlResenaGoogle } from "@/lib/url";
 // reclamar piezas ajenas es que el id lleva un sufijo aleatorio (no se
 // puede enumerar, ver generarLotePiezas), que solo es reclamable inventario
 // nunca usado (ver activarAutogestion) y el rate limit por IP.
+/** La pieza se puede configurar desde /t/<id> (libre o autogestionada):
+ * los buscadores no son un Places abierto a costa nuestra. */
+async function piezaConfigurable(slug: string): Promise<string | null> {
+  const pieza = await getLink(String(slug ?? "").slice(0, 80));
+  return pieza && !pieza.comercioId && pieza.activo ? pieza.id : null;
+}
+
 /** Busca el negocio del comprador en Google para que lo elija de una lista
  * en vez de copiar y pegar el link de reseña. Solo para piezas que se
- * pueden activar o editar desde /t/<id> (no es un buscador abierto de
- * Places a costa nuestra), con límite por IP y por pieza. */
+ * pueden activar o editar desde /t/<id>, con límite por IP y por pieza. */
 export async function buscarNegocio(
   slug: string,
   consulta: string,
@@ -31,21 +45,55 @@ export async function buscarNegocio(
   const q = String(consulta ?? "").trim().slice(0, 80);
   if (q.length < 3) return { ok: false, error: "Escribí al menos 3 letras del nombre." };
 
-  const pieza = await getLink(String(slug ?? "").slice(0, 80));
-  if (!pieza || pieza.comercioId || !pieza.activo) return { ok: false, error: "Esta pieza no se puede configurar desde acá." };
+  const pieza = await piezaConfigurable(slug);
+  if (!pieza) return { ok: false, error: "Esta pieza no se puede configurar desde acá." };
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
   if (
     !(await permitir(`buscar-negocio:${ip}`, 20, 10 * 60_000)) ||
-    !(await permitir(`buscar-negocio-pieza:${pieza.id}`, 60, 24 * 60 * 60_000))
+    !(await permitir(`buscar-negocio-pieza:${pieza}`, 60, 24 * 60 * 60_000))
   ) {
     return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
   }
 
-  const r = await searchGooglePlace(q);
-  if (!r.ok) return { ok: false, error: "No pudimos buscar en Google ahora. Pegá el link a mano (abajo te explicamos cómo)." };
-  return { ok: true, lugares: r.resultados.slice(0, 5) };
+  // Con sesgo a Córdoba: el servidor corre fuera del país y, sin él, Google
+  // prioriza negocios de cualquier lado con un nombre parecido.
+  const r = await searchGooglePlace(q, SESGO_CORDOBA);
+  if (!r.ok) {
+    console.error("Activación: la búsqueda en Google falló", r);
+    return { ok: false, error: "No pudimos buscar en Google ahora. Pegá el link a mano (abajo te explicamos cómo)." };
+  }
+  return { ok: true, lugares: r.resultados.slice(0, 8) };
+}
+
+/** Sugerencias mientras el comprador escribe (como Google Maps). Es más
+ * barata que la búsqueda completa pero se llama por cada pausa al tipear,
+ * por eso tiene su propio límite, más alto. Si falla, devuelve vacío y el
+ * botón Buscar sigue andando. */
+export async function sugerirNegocio(
+  slug: string,
+  texto: string,
+  sesionToken: string,
+): Promise<{ ok: true; lugares: LugarParaResena[] } | { ok: false; error: string }> {
+  const q = String(texto ?? "").trim().slice(0, 80);
+  if (q.length < 3) return { ok: true, lugares: [] };
+
+  const pieza = await piezaConfigurable(slug);
+  if (!pieza) return { ok: false, error: "Esta pieza no se puede configurar desde acá." };
+
+  limpiarVencidos();
+  const ip = ipDelRequest(await headers());
+  if (
+    !(await permitir(`sugerir-negocio:${ip}`, 150, 10 * 60_000)) ||
+    !(await permitir(`sugerir-negocio-pieza:${pieza}`, 400, 24 * 60 * 60_000))
+  ) {
+    return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
+  }
+
+  const token = String(sesionToken ?? "");
+  const r = await autocompletarLugar(q, { sesionToken: tokenSesionValido(token) ? token : undefined });
+  return r.ok ? { ok: true, lugares: r.lugares.slice(0, 6) } : { ok: true, lugares: [] };
 }
 
 /** El link de reseña sale del lugar elegido (lo da Google) o, si el
@@ -53,10 +101,11 @@ export async function buscarNegocio(
 async function resolverDestino(
   placeId: string | null | undefined,
   url: string | null | undefined,
+  sesionToken?: string,
 ): Promise<{ ok: true; url: string; placeId: string | null; nombreLugar: string } | { ok: false; error: string }> {
   if (placeId) {
     if (!placeIdValido(placeId)) return { ok: false, error: "Elegí tu negocio de nuevo." };
-    const lugar = await linkResenaDeLugar(placeId);
+    const lugar = await linkResenaDeLugar(placeId, sesionToken);
     const link = lugar ? urlResenaGoogle(lugar.link) : null;
     if (!lugar || !link) return { ok: false, error: "No pudimos traer el link de Google. Probá de nuevo o pegalo a mano." };
     return { ok: true, url: link, placeId, nombreLugar: lugar.nombre };
@@ -102,6 +151,7 @@ export async function activarCartel(
     nombre?: string;
     placeId?: string | null;
     url?: string;
+    sesionToken?: string;
     pin: string;
     email?: string;
     whatsapp?: string;
@@ -121,7 +171,7 @@ export async function activarCartel(
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
-  const destino = await resolverDestino(datos.placeId, datos.url);
+  const destino = await resolverDestino(datos.placeId, datos.url, datos.sesionToken);
   if (!destino.ok) return { ok: false, error: destino.error };
   const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
@@ -154,7 +204,7 @@ export async function activarCartel(
 export async function editarCartel(
   slug: string,
   pin: string,
-  datos: { nombre: string; placeId?: string | null; url?: string },
+  datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string },
 ): Promise<{ ok: boolean; error?: string }> {
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
@@ -167,7 +217,7 @@ export async function editarCartel(
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
-  const destino = await resolverDestino(datos.placeId, datos.url);
+  const destino = await resolverDestino(datos.placeId, datos.url, datos.sesionToken);
   if (!destino.ok) return { ok: false, error: destino.error };
   const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };

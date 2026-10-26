@@ -123,7 +123,7 @@ export async function searchGooglePlace(
   });
 
   if (!res.ok) {
-    console.error(`Places API (searchText) respondió ${res.status}`);
+    console.error(`Places API (searchText) respondió ${res.status}: ${await motivoGoogle(res)}`);
     return { ok: false, motivo: "rechazada", status: res.status };
   }
 
@@ -238,21 +238,101 @@ export interface LugarParaResena {
   direccion: string;
 }
 
+/** El "por qué" que Google manda en el cuerpo de un error (API sin
+ * habilitar, facturación, restricción de la key…), acotado para el log. */
+async function motivoGoogle(res: Response): Promise<string> {
+  try {
+    const cuerpo = (await res.json()) as { error?: { status?: string; message?: string } };
+    return `${cuerpo.error?.status ?? ""} ${cuerpo.error?.message ?? ""}`.trim().slice(0, 300);
+  } catch {
+    return "(sin detalle)";
+  }
+}
+
+/** Token de sesión de Autocomplete: lo genera el navegador (un UUID) y
+ * agrupa las sugerencias de una búsqueda con el detalle del lugar elegido,
+ * que Google cobra como una sola sesión. */
+export function tokenSesionValido(token: string): boolean {
+  return /^[A-Za-z0-9-]{8,64}$/.test(token);
+}
+
+/** Sugerencias mientras se escribe, como el buscador de Google Maps:
+ * negocios de Argentina, priorizando la zona de `sesgo` (Córdoba por
+ * defecto, porque el servidor corre fuera del país y sin sesgo Google no
+ * sabe dónde está quien busca). Busca por nombre, por calle o por las dos. */
+export async function autocompletarLugar(
+  texto: string,
+  opciones: { sesionToken?: string; sesgo?: { lat: number; lng: number; radioMetros: number } } = {},
+): Promise<{ ok: true; lugares: LugarParaResena[] } | { ok: false }> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    console.error("Places API (autocomplete): falta GOOGLE_PLACES_API_KEY");
+    return { ok: false };
+  }
+  const sesgo = opciones.sesgo ?? SESGO_CORDOBA;
+  const res = await fetch(`${basePlaces()}/v1/places:autocomplete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat",
+    },
+    body: JSON.stringify({
+      input: texto,
+      includedRegionCodes: ["ar"],
+      regionCode: "ar",
+      languageCode: "es",
+      locationBias: {
+        circle: { center: { latitude: sesgo.lat, longitude: sesgo.lng }, radius: sesgo.radioMetros },
+      },
+      ...(opciones.sesionToken && { sessionToken: opciones.sesionToken }),
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    console.error(`Places API (autocomplete) respondió ${res.status}: ${await motivoGoogle(res)}`);
+    return { ok: false };
+  }
+  const data = (await res.json()) as {
+    suggestions?: {
+      placePrediction?: {
+        placeId?: string;
+        structuredFormat?: { mainText?: { text?: string }; secondaryText?: { text?: string } };
+      };
+    }[];
+  };
+  const lugares: LugarParaResena[] = [];
+  for (const s of data.suggestions ?? []) {
+    const p = s.placePrediction;
+    if (!p?.placeId || !placeIdValido(p.placeId)) continue;
+    lugares.push({
+      placeId: p.placeId,
+      nombre: p.structuredFormat?.mainText?.text ?? "(sin nombre)",
+      direccion: p.structuredFormat?.secondaryText?.text ?? "",
+    });
+  }
+  return { ok: true, lugares };
+}
+
 /** place_id de Google: letras, números, guiones y guiones bajos. */
 export function placeIdValido(id: string): boolean {
   return /^[A-Za-z0-9_-]{10,300}$/.test(id);
 }
 
 /** Link "escribir una reseña" y nombre de un lugar; null si Places no lo da. */
-export async function linkResenaDeLugar(placeId: string): Promise<{ nombre: string; link: string } | null> {
+export async function linkResenaDeLugar(
+  placeId: string,
+  sesionToken?: string,
+): Promise<{ nombre: string; link: string } | null> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey || !placeIdValido(placeId)) return null;
-  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
+  const sesion = sesionToken && tokenSesionValido(sesionToken) ? `&sessionToken=${encodeURIComponent(sesionToken)}` : "";
+  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es${sesion}`, {
     headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "id,displayName,googleMapsLinks" },
     cache: "no-store",
   });
   if (!res.ok) {
-    console.error(`Places API (detalle para reseña) respondió ${res.status}`);
+    console.error(`Places API (detalle para reseña) respondió ${res.status}: ${await motivoGoogle(res)}`);
     return null;
   }
   const data = (await res.json()) as { displayName?: { text?: string }; googleMapsLinks?: { writeAReviewUri?: string } };
