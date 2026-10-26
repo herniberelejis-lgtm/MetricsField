@@ -159,6 +159,16 @@ CREATE TABLE IF NOT EXISTS links_nfc (
 );
 CREATE INDEX IF NOT EXISTS idx_links_nfc_comercio ON links_nfc(comercio_id);
 
+-- Activación de piezas autogestionadas (migración 019): el lugar de Google
+-- elegido y, solo si el comprador lo pide en la activación, un contacto para
+-- el aviso semanal gratis. Ver db/migrations/019_onboarding_autogestion.sql.
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS google_place_id        TEXT;
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS contacto_email         TEXT NOT NULL DEFAULT '';
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS contacto_whatsapp      TEXT NOT NULL DEFAULT '';
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS novedades_aceptadas_en TIMESTAMPTZ;
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS novedades_baja_en      TIMESTAMPTZ;
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS activado_en            TIMESTAMPTZ;
+
 -- Cada tap registrado (solo inserción, nunca se edita).
 CREATE TABLE IF NOT EXISTS taps (
   id          BIGSERIAL PRIMARY KEY,

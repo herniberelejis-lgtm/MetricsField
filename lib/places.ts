@@ -7,6 +7,14 @@ import "server-only";
 // del dueño). Necesita GOOGLE_PLACES_API_KEY configurada — si falta, la
 // sincronización se salta en silencio en vez de romper el resto del panel.
 
+/** Host de Places API. Solo para pruebas y demos locales se puede apuntar a
+ * un Google simulado con PLACES_API_BASE; en Vercel se ignora siempre, para
+ * que la clave nunca viaje a otro lado por una variable mal cargada. */
+function basePlaces(): string {
+  const local = process.env.PLACES_API_BASE;
+  return local && !process.env.VERCEL ? local.replace(/\/+$/, "") : "https://places.googleapis.com";
+}
+
 export interface GooglePlaceStats {
   rating: number;
   totalReseñas: number;
@@ -94,7 +102,7 @@ export async function searchGooglePlace(
   if (!query.trim()) return { ok: true, resultados: [] };
   if (!apiKey) return { ok: false, motivo: "sin-key" };
 
-  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+  const res = await fetch(`${basePlaces()}/v1/places:searchText`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -216,4 +224,43 @@ export async function fetchResenasGooglePublicas(
   }
   resenas.sort((a, b) => (b.fecha ?? "").localeCompare(a.fecha ?? ""));
   return { resenas, urlFicha: soloHttps(data.googleMapsUri) };
+}
+
+// ---------- Link de reseña para la activación de piezas (canal Mercado Libre) ----------
+// En vez de pedirle al comprador que encuentre y copie el link de reseña de
+// su ficha (lo más difícil de la activación), elige su negocio de una lista
+// y el link lo da Google: `googleMapsLinks.writeAReviewUri` de Places API
+// (New), el link oficial que abre "escribir una reseña" de ese lugar.
+
+export interface LugarParaResena {
+  placeId: string;
+  nombre: string;
+  direccion: string;
+}
+
+/** place_id de Google: letras, números, guiones y guiones bajos. */
+export function placeIdValido(id: string): boolean {
+  return /^[A-Za-z0-9_-]{10,300}$/.test(id);
+}
+
+/** Link "escribir una reseña" y nombre de un lugar; null si Places no lo da. */
+export async function linkResenaDeLugar(placeId: string): Promise<{ nombre: string; link: string } | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey || !placeIdValido(placeId)) return null;
+  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
+    headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "id,displayName,googleMapsLinks" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    console.error(`Places API (detalle para reseña) respondió ${res.status}`);
+    return null;
+  }
+  const data = (await res.json()) as { displayName?: { text?: string }; googleMapsLinks?: { writeAReviewUri?: string } };
+  // Sin writeAReviewUri (la función todavía está en "preview" en Google),
+  // el formato clásico por place_id, que es el que usan las herramientas
+  // de Google para pedir reseñas.
+  const link =
+    data.googleMapsLinks?.writeAReviewUri ||
+    `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
+  return { nombre: data.displayName?.text ?? "", link };
 }

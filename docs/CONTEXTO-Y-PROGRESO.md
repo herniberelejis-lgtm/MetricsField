@@ -54,12 +54,31 @@ Restos históricos en la base (ya sin uso en el código): la columna
 - **En camino** (todavía no vendidos, están en desarrollo de hardware):
   chip QR+NFC para pegar en las mesas, tarjetas NFC para que los mozos pidan
   la reseña en el momento, y una versión del standee con QR además de NFC.
-- **Canal Mercado Libre (autogestión)**: el software ya soporta vender una
-  pieza de hardware suelta, sin abono ni panel — el comprador la escanea por
-  primera vez, carga su link de reseña de Google y un PIN propio desde
-  `/t/<código>`, y la edita después en `/t/<código>/editar`. No crea cliente
-  en el CRM. El filtro de estrellas por link también es opcional (checkbox
-  "sin filtro"), para clientes de agencia que no quieren el desvío.
+- **Canal Mercado Libre (autogestión)**: se vende la pieza suelta, sin abono.
+  La primera vez que el comprador la toca abre `/t/<código>` y la activa en
+  3 pasos: busca su negocio y lo elige de una lista (el link de reseña lo
+  trae Google Places, `googleMapsLinks.writeAReviewUri`; pegarlo a mano queda
+  como plan B), elige un PIN y, **si quiere**, deja mail/WhatsApp con una
+  casilla de aceptación. Con eso recibe gratis cada lunes cuántas personas
+  usaron su pieza (con link de baja firmado) y el mail le ofrece el panel.
+  La segunda pieza desde el mismo celular ofrece "usar los mismos datos".
+  Después la edita en `/t/<código>/editar` con su PIN. No crea cliente en el
+  CRM: en Admin → Hardware se ven los compradores ordenados por uso, con su
+  contacto y un botón de WhatsApp; para convertirlo en cliente se usa
+  "Asignar a cliente". **Regla:** no usar datos que pase Mercado Libre de la
+  compra para ofrecer el software (sus políticas y la ley de datos lo
+  prohíben); el contacto vale solo si lo dejó él en nuestra página. La
+  pieza tiene dos cosas que se configuran aparte: el **QR** (siempre lleva a
+  `/t/<código>`, se activa ahí) y el **chip NFC**, que viene vacío y lo graba
+  el comprador con la app gratis NFC Tools. La página de activación (y la de
+  editar) muestra los dos videos (`public/tap/videos/`, configurados en
+  `lib/onboarding.ts`) y un botón para copiar el link de la pieza: se
+  recomienda grabar ese en el chip y no el de Google, así se cuentan los
+  toques y el destino se puede cambiar sin regrabar. La guía de 2 páginas
+  (parte 1 QR, parte 2 NFC) para mandar por la mensajería de la venta o
+  meter en la caja está en `public/instructivo/` (PDF y PNG, sin links ni
+  teléfonos) y se regenera con `node scripts/instructivo/generar.mjs` (sus
+  imágenes, en `scripts/instructivo/capturas/`). Requiere la migración 019.
 
 ---
 
@@ -243,9 +262,10 @@ En orden de lo más cerca a lo más lejos:
 4. **Hardware nuevo**: chip QR+NFC para mesas, tarjetas NFC para mozos,
    standee con QR+NFC — el software ya los soporta (tipo nfc/qr/ambos por
    pieza), falta la fabricación.
-5. **Canal Mercado Libre**: el flujo de autogestión ya está hecho; falta
-   decidir el modelo de cobro para ofrecer también el software a esos
-   compradores (cobro manual por WhatsApp vs integrar Mercado Pago).
+5. **Canal Mercado Libre**: activación en segundos, aviso semanal gratis y
+   contacto con permiso ya hechos, con videos de QR y NFC y guía en PDF;
+   falta decidir el cobro del panel a esos compradores (manual por WhatsApp
+   vs Mercado Pago).
 6. **Automatizar lo que hoy es manual**: Audit GEO (citas en IA) y monitoreo
    de competencia se relevan a mano — automatizarlos depende de tener
    presupuesto para una API de LLM (el enchufe para Anthropic ya existe en el

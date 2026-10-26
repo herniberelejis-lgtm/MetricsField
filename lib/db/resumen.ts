@@ -1,6 +1,10 @@
 import "server-only";
 import { sql } from "../sql";
-import { enviarResumenMensual, enviarResumenSemanal } from "../alertas";
+import { enviarResumenMensual, enviarResumenSemanal, mailAvisoPiezas } from "../alertas";
+import { agruparAvisos } from "../aviso-piezas";
+import { firmarBaja } from "../baja";
+import { enviarEmail } from "../email";
+import { getPiezasSuscriptas } from "./autogestion";
 import { armarResumenSemanal, type ResumenSemanal } from "../resumen-semanal";
 import { armarInformeSemanal } from "../informe-semanal";
 import { armarTablero } from "../tablero";
@@ -141,4 +145,29 @@ export async function enviarResumenesSemanales(): Promise<{ total: number; envia
     }
   }
   return { total: rows.length, enviados, sinNovedades };
+}
+
+/** Aviso semanal gratis a quien compró piezas sueltas y lo pidió al
+ * activarlas: uno por mail, con todas sus piezas. Mismo resguardo que el
+ * resumen de los comercios contra el reintento del cron el mismo día. */
+export async function enviarAvisosPiezas(hoy = new Date()): Promise<{ total: number; enviados: number }> {
+  const avisos = agruparAvisos(await getPiezasSuscriptas());
+  const base = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
+  let enviados = 0;
+  for (const a of avisos) {
+    try {
+      const clave = `aviso_piezas:${a.email}`;
+      const ultimo = await getAjuste(clave);
+      if (ultimo && hoy.getTime() - new Date(ultimo).getTime() < 6 * 86_400_000) continue;
+      const firma = firmarBaja(a.email);
+      const linkBaja = base && firma ? `${base}/baja?e=${encodeURIComponent(a.email)}&f=${firma}` : null;
+      if (await enviarEmail({ to: a.email, ...mailAvisoPiezas(a, linkBaja) })) {
+        await setAjuste(clave, hoy.toISOString());
+        enviados += 1;
+      }
+    } catch (e) {
+      console.error("Aviso semanal de piezas:", e instanceof Error ? e.message : e);
+    }
+  }
+  return { total: avisos.length, enviados };
 }
