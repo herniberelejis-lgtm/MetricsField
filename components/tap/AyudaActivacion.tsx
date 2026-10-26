@@ -70,7 +70,7 @@ function Pasos({ items }: { items: React.ReactNode[] }) {
   );
 }
 
-function BotonWhatsapp({ mensaje, children }: { mensaje: string; children: React.ReactNode }) {
+export function BotonWhatsapp({ mensaje, children }: { mensaje: string; children: React.ReactNode }) {
   return (
     <a
       href={waUrl(WHATSAPP_SOPORTE, mensaje)}

@@ -8,6 +8,7 @@ import AyudaActivacion from "./AyudaActivacion";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
 import GrabarChip from "./GrabarChip";
+import OfertaPrueba from "./OfertaPrueba";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -400,6 +401,7 @@ function Listo({
         )}
       </div>
       <GrabarChip slug={slug} titulo="Ahora grabá el chip NFC" />
+      <OfertaPrueba />
     </div>
   );
 }
