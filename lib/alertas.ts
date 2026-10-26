@@ -7,6 +7,8 @@ import { businessProfileHabilitado } from "./gbp";
 import { resolverCuenta } from "./db/clientes";
 import type { ResumenSemanal } from "./resumen-semanal";
 import type { Indicador, InformeSemanal } from "./informe-semanal";
+import { consejoAviso, type AvisoPiezas } from "./aviso-piezas";
+import { waUrl } from "./whatsapp";
 
 // Alertas al dueño del comercio (no al equipo interno) cuando pasa algo que
 // necesita su atención ya — hoy: una reseña de 3★ o menos. Sin email
@@ -279,5 +281,44 @@ export async function mailResumenSemanal(cliente: Cliente, r: ResumenSemanal): P
   return {
     asunto: `Tu semana en Google — ${cliente.nombre}`,
     html: layout(`Tu semana en Google, ${escapeHtml(cliente.nombre)}`, cuerpo, await linkPortalDe(cliente, "")),
+  };
+}
+
+/** Aviso semanal gratis para quien compró piezas sueltas y lo pidió al
+ * activarlas (lib/aviso-piezas.ts). Lleva el link de baja firmado. */
+export function mailAvisoPiezas(a: AvisoPiezas, linkBaja: string | null): { asunto: string; html: string } {
+  const negocio = a.negocios.length === 1 ? a.negocios[0] : "tus negocios";
+  const consejo = consejoAviso(a);
+  const numeroWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+  const linkPanel = numeroWa
+    ? waUrl(numeroWa, `Hola, tengo las piezas de MetricsField en ${negocio} y quiero conocer el panel.`)
+    : "https://metricsfield.com/reputacion";
+  const filas =
+    a.piezas.length > 1
+      ? `<p style="font-size:13px;color:#5f6368;margin:8px 0 0;">${a.piezas
+          .map((p) => `${escapeHtml(p.negocio)} · pieza ${escapeHtml(p.id)}: ${p.semana} esta semana (${p.total} en total)`)
+          .join("<br>")}</p>`
+      : "";
+  const cuerpo = `
+    <table style="border-collapse:collapse;"><tr>
+      <td style="padding:4px 12px 4px 0;font-size:30px;font-weight:800;vertical-align:middle;">${a.toquesSemana}</td>
+      <td style="font-size:14px;color:#333;vertical-align:middle;">${a.toquesSemana === 1 ? "persona tocó o escaneó tu pieza" : "personas tocaron o escanearon tus piezas"} esta semana${
+        a.cambio ? `<br><span style="font-size:12px;color:#5f6368;">${escapeHtml(a.cambio)}</span>` : ""
+      }</td>
+    </tr></table>
+    ${filas}
+    ${consejo ? `<p style="font-size:14px;background:#FFF4E5;color:#8A3F00;border-radius:10px;padding:10px 12px;">${escapeHtml(consejo)}</p>` : ""}
+    <div style="margin-top:20px;border:1px solid #e4e6ea;border-radius:12px;padding:14px 16px;">
+      <p style="font-size:14px;font-weight:700;margin:0 0 6px;">¿Cuántas de esas personas te dejaron reseña?</p>
+      <p style="font-size:14px;color:#333;margin:0;">Con el panel de MetricsField lo ves, respondés tus reseñas en un toque, recibís un aviso cuando llega una mala y te comparás cada semana con tu competencia. $25.000 por mes + IVA, sin permanencia.</p>
+      <a href="${linkPanel}" style="display:inline-block;margin-top:12px;padding:10px 18px;border-radius:999px;background:#2563eb;color:#fff;text-decoration:none;font-size:14px;font-weight:600;">Quiero conocer el panel</a>
+    </div>
+    <p style="font-size:11px;color:#80868b;margin-top:22px;">Recibís este aviso porque lo pediste al activar tu pieza de MetricsField. ${
+      linkBaja ? `<a href="${linkBaja}" style="color:#80868b;">Darme de baja</a>.` : "Para darte de baja respondé este mail con la palabra BAJA."
+    }</p>
+  `;
+  return {
+    asunto: `Tu semana: ${a.toquesSemana} ${a.toquesSemana === 1 ? "persona usó" : "personas usaron"} ${a.piezas.length > 1 ? "tus piezas" : "tu pieza"} — ${negocio}`,
+    html: layout(`Cómo ${a.piezas.length > 1 ? "anduvieron tus piezas" : "anduvo tu pieza"} en ${escapeHtml(negocio)}`, cuerpo, null),
   };
 }

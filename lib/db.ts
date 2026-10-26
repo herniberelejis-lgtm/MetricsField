@@ -24,3 +24,4 @@ export * from "./db/resumen";
 export * from "./db/conclusiones";
 export * from "./db/ubicaciones";
 export * from "./db/laboratorio";
+export * from "./db/autogestion";

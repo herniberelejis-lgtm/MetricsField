@@ -10,6 +10,7 @@ import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import { asegurarAdminPagina } from "@/lib/auth";
+import { waUrl } from "@/lib/whatsapp";
 
 export const metadata: Metadata = { title: "Hardware" };
 export const dynamic = "force-dynamic";
@@ -41,7 +42,10 @@ export default async function HardwarePage({
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 
   const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
-  const autogestionadas = inventario.filter((p) => !p.comercioId && p.autogestionado);
+  // Los que más la usan primero: son los mejores candidatos al panel.
+  const autogestionadas = inventario
+    .filter((p) => !p.comercioId && p.autogestionado)
+    .sort((a, b) => b.taps30d - a.taps30d || b.taps - a.taps);
   const asignadas = inventario.filter((p) => p.comercioId);
   const lotes = [...new Set(inventario.map((p) => p.lote).filter(Boolean))];
 
@@ -218,7 +222,9 @@ export default async function HardwarePage({
             Autogestionadas ({autogestionadas.length})
           </h2>
           <p className="mb-3 -mt-2 text-xs text-slate-600">
-            Canal Mercado Libre: el propio comprador las activó desde{" "}
+            Los que más la usan van primero: son los mejores candidatos al panel. El contacto solo
+            aparece si el comprador lo dejó y aceptó que le escribamos al activarla (cada lunes le
+            llega gratis cuántos usaron su pieza). Canal Mercado Libre: el propio comprador las activó desde{" "}
             <code className="rounded bg-slate-100 px-1">/t/&lt;código&gt;</code>. Sin cliente en el
             CRM ni portal — el destino lo edita él mismo con su PIN. Si alguien completó este
             formulario por error en una pieza que en realidad es de un cliente de agencia (mismo
@@ -234,8 +240,8 @@ export default async function HardwarePage({
                 <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Código</th>
                   <th className="px-4 py-3 font-medium">Negocio</th>
-                  <th className="px-4 py-3 font-medium">Destino actual</th>
-                  <th className="px-4 py-3 font-medium">Taps</th>
+                  <th className="px-4 py-3 font-medium">Contacto</th>
+                  <th className="px-4 py-3 font-medium">Toques 7 / 30 días · total</th>
                   <th className="px-4 py-3 font-medium">Asignar a cliente</th>
                 </tr>
               </thead>
@@ -245,11 +251,49 @@ export default async function HardwarePage({
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-medium text-slate-800">
                       {p.id}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{p.nombreNegocio || "—"}</td>
-                    <td className="max-w-xs truncate px-4 py-3 text-xs text-slate-600">
-                      {p.urlDestino ?? "—"}
+                    <td className="px-4 py-3 text-slate-600">
+                      <div className="font-medium text-slate-800">{p.nombreNegocio || "—"}</div>
+                      {p.urlDestino && (
+                        <a href={p.urlDestino} target="_blank" rel="noreferrer" className="text-xs text-[#1F4E80] underline">
+                          Link de reseña
+                        </a>
+                      )}
+                      {p.activadoEn && (
+                        <div className="text-xs text-slate-500">Activada el {new Date(p.activadoEn).toLocaleDateString("es-AR")}</div>
+                      )}
                     </td>
-                    <td className="px-4 py-3 tabular-nums">{fmtNum(p.taps)}</td>
+                    <td className="px-4 py-3 text-xs text-slate-600">
+                      {p.contactoEmail || p.contactoWhatsapp ? (
+                        <>
+                          {p.contactoEmail && <div className="break-all">{p.contactoEmail}</div>}
+                          {p.contactoWhatsapp && (
+                            <a
+                              href={waUrl(
+                                p.contactoWhatsapp,
+                                `Hola, te escribo de MetricsField. Vi que activaste tu pieza en ${p.nombreNegocio || "tu negocio"}: ¿cómo te está funcionando?`,
+                              )}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-[#0B5E40] underline"
+                            >
+                              WhatsApp {p.contactoWhatsapp}
+                            </a>
+                          )}
+                          <div className="text-slate-500">
+                            {p.novedadesBajaEn
+                              ? "Se dio de baja"
+                              : p.novedadesAceptadasEn
+                                ? `Aceptó el ${new Date(p.novedadesAceptadasEn).toLocaleDateString("es-AR")}`
+                                : ""}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">No dejó contacto</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                      <b>{fmtNum(p.taps7d)}</b> / {fmtNum(p.taps30d)} · {fmtNum(p.taps)}
+                    </td>
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />

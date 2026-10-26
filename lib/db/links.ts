@@ -8,6 +8,7 @@ import { limpiarUrl, slugify } from "./_compartido";
 // ---------- Links NFC + taps ----------
 
 function mapLink(r: Record<string, unknown>): LinkNFC {
+  const esDelComprador = Boolean(r.autogestionado) && !r.comercio_id;
   return {
     id: r.id as string,
     comercioId: (r.comercio_id as string | null) ?? null,
@@ -20,6 +21,17 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     autogestionado: Boolean(r.autogestionado),
     nombreNegocio: (r.nombre_negocio as string) ?? "",
     nombreEmpleado: (r.nombre_empleado as string) ?? "",
+    // Columnas de la migración 019: si todavía no se corrió, no vienen.
+    googlePlaceId: (r.google_place_id as string | null | undefined) ?? null,
+    // El contacto del comprador solo existe mientras la pieza es suya
+    // (autogestionada y sin cliente). Una pieza que después pasó a un
+    // cliente del panel viaja al navegador en su portal: el mail o el
+    // WhatsApp de quien la activó antes no puede ir con ella.
+    contactoEmail: esDelComprador ? ((r.contacto_email as string | undefined) ?? "") : "",
+    contactoWhatsapp: esDelComprador ? ((r.contacto_whatsapp as string | undefined) ?? "") : "",
+    novedadesAceptadasEn: esDelComprador && r.novedades_aceptadas_en ? String(r.novedades_aceptadas_en) : null,
+    novedadesBajaEn: esDelComprador && r.novedades_baja_en ? String(r.novedades_baja_en) : null,
+    activadoEn: r.activado_en ? String(r.activado_en) : null,
     creadoEn: String(r.creado_en),
     taps: Number(r.taps ?? 0),
   };
@@ -192,10 +204,19 @@ export async function editarAutogestion(
 
 export interface PiezaHardware extends LinkNFC {
   clienteNombre: string | null;
+  /** Toques de los últimos 7 y 30 días: para ver qué compradores de Mercado
+   * Libre usan de verdad su pieza (los mejores candidatos al panel). */
+  taps7d: number;
+  taps30d: number;
 }
 
 function mapPiezaHardware(r: Record<string, unknown>): PiezaHardware {
-  return { ...mapLink(r), clienteNombre: (r.cliente_nombre as string | null) ?? null };
+  return {
+    ...mapLink(r),
+    clienteNombre: (r.cliente_nombre as string | null) ?? null,
+    taps7d: Number(r.taps_7d ?? 0),
+    taps30d: Number(r.taps_30d ?? 0),
+  };
 }
 
 /** Genera `cantidad` piezas nuevas, libres (sin cliente), con código fijo
@@ -256,7 +277,9 @@ export async function generarLotePiezas(
  * libres y a quién le toca cada una de las asignadas. */
 export async function getInventarioHardware(): Promise<PiezaHardware[]> {
   const rows = await sql`
-    SELECT l.*, co.nombre AS cliente_nombre, COUNT(t.id)::int AS taps
+    SELECT l.*, co.nombre AS cliente_nombre, COUNT(t.id)::int AS taps,
+      COUNT(t.id) FILTER (WHERE t.creado_en > now() - interval '7 days')::int AS taps_7d,
+      COUNT(t.id) FILTER (WHERE t.creado_en > now() - interval '30 days')::int AS taps_30d
     FROM links_nfc l
     LEFT JOIN comercios co ON co.id = l.comercio_id
     LEFT JOIN taps t ON t.link_id = l.id
