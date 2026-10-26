@@ -88,7 +88,7 @@ function Encabezado({ titulo, sub, extra }: { titulo: string; sub?: string; extr
   return (
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div className="flex flex-col gap-0.5">
-        <h3 className="text-[15px] font-bold text-slate-900">{titulo}</h3>
+        <h2 className="text-[15px] font-bold text-slate-900">{titulo}</h2>
         {sub && <p className="text-xs text-slate-600">{sub}</p>}
       </div>
       {extra}
@@ -157,7 +157,7 @@ function PanelConclusiones({ datos }: { datos: Conclusiones | null }) {
     <section aria-label="Conclusiones" className={`${TARJETA} flex flex-col gap-4 p-5`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-[15px] font-extrabold text-slate-900">Conclusiones</h3>
+          <h2 className="text-[15px] font-extrabold text-slate-900">Conclusiones</h2>
           <p className="text-xs leading-snug text-slate-600">
             Lo que Google no te muestra: cruces de tu cartel, tus reseñas, tus horarios y tu competencia
           </p>
