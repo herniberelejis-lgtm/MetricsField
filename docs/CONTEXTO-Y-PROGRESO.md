@@ -70,11 +70,17 @@ Restos históricos en la base (ya sin uso en el código): la columna
   prohíben); el contacto vale solo si lo dejó él en nuestra página. La
   pieza tiene dos cosas que se configuran aparte: el **QR** (siempre lleva a
   `/t/<código>`, se activa ahí) y el **chip NFC**, que viene vacío y lo graba
-  el comprador con la app gratis NFC Tools. La página de activación (y la de
-  editar) muestra los dos videos (`public/tap/videos/`, configurados en
-  `lib/onboarding.ts`) y un botón para copiar el link de la pieza: se
-  recomienda grabar ese en el chip y no el de Google, así se cuentan los
-  toques y el destino se puede cambiar sin regrabar. La guía de 2 páginas
+  el comprador con la app gratis NFC Tools. Debajo del formulario de
+  activación hay tres desplegables (`components/tap/AyudaActivacion.tsx`):
+  "¿Cómo activo mi cartel?" (videos de QR y NFC, pasos, plan B de pegar el
+  link a mano y botón para copiar el link de la pieza), "¿Necesitás ayuda?"
+  y "Probá MetricsField gratis 15 días" (los dos abren WhatsApp con el
+  mensaje escrito; el número de soporte está en `WHATSAPP_SOPORTE`, en
+  `lib/onboarding.ts`, y es otro que el de la agencia). Los videos están en
+  `public/tap/videos/`. Para el chip se recomienda grabar el link de la pieza
+  y no el de Google: así se cuentan los toques y el destino se puede cambiar
+  sin regrabar. La pantalla de "¡Listo!" y la de editar muestran el bloque
+  para grabar el chip. La guía de 2 páginas
   (parte 1 QR, parte 2 NFC) para mandar por la mensajería de la venta o
   meter en la caja está en `public/instructivo/` (PDF y PNG, sin links ni
   teléfonos) y se regenera con `node scripts/instructivo/generar.mjs` (sus
