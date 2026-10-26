@@ -84,7 +84,7 @@ export default function ResumenResenas({
     ? "min-w-0 rounded-2xl border border-[#E4E6EA] bg-white p-5"
     : "rounded-xl border border-slate-200 bg-white p-4";
   const gris = portal ? "text-slate-600" : "text-slate-500";
-  const grisClaro = portal ? "text-slate-600" : "text-slate-400";
+  const grisClaro = portal ? "text-slate-600" : "text-slate-500";
 
   return (
     <div className={wrapClass}>
@@ -130,7 +130,7 @@ export default function ResumenResenas({
           <div className={`mt-3 border-t pt-3 ${portal ? "border-[#EEF0F3]" : "border-slate-100"}`}>
             <p
               className={
-                portal ? "text-xs font-medium text-slate-600" : "text-xs font-medium uppercase tracking-wide text-slate-400"
+                portal ? "text-xs font-medium text-slate-600" : "text-xs font-medium uppercase tracking-wide text-slate-500"
               }
             >
               Lo que más se repite en las quejas
@@ -145,7 +145,7 @@ export default function ResumenResenas({
                     }`}
                   >
                     {t.termino}
-                    <span className={`tabular-nums ${portal ? "opacity-80" : "text-slate-400"}`}>{t.conteo}</span>
+                    <span className={`tabular-nums ${portal ? "opacity-80" : "text-slate-500"}`}>{t.conteo}</span>
                   </span>
                 ))}
               </div>

@@ -231,7 +231,7 @@ function home() {
   <div class="hero-grid"><div><div class="eyebrow">Software para comercios y vendedores · Córdoba, Argentina</div><h1>Cada contacto deja un dato.<span>Cada dato, una decisión.</span></h1></div>
   <div class="hero-side"><p class="lead">MetricsField convierte lo que pasa en tu negocio en información simple para conseguir más reseñas, ganar más por venta y lograr que tus clientes vuelvan.</p><div class="actions"><a class="btn dark" href="#productos">Encontrá tu herramienta</a><a class="btn" href="/herramientas">Probar las calculadoras</a></div>
   <ul class="trust"><li>Sin apps para tus clientes</li><li>Soporte por WhatsApp</li><li>Hecho en Córdoba</li></ul></div></div>
-  <div class="portal-title"><b>Elegí una puerta</b><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
+  <div class="portal-title"><h2>Elegí una puerta</h2><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
   <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
     (p) =>
       `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">${p.num}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><h3>${p.nombre}</h3><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
@@ -304,9 +304,9 @@ ${tienda()}
 
   return pagina({
     ruta: "/",
-    titulo: "MetricsField · Reseñas en Google, rentabilidad en Mercado Libre y fidelización de clientes",
+    titulo: "MetricsField: reseñas en Google, Mercado Libre y fidelización",
     descripcion:
-      "Software para comercios de Argentina: más reseñas en Google con carteles NFC, la ganancia real de cada venta en Mercado Libre y clientes que vuelven con Google Wallet. Calculadoras y guías gratis.",
+      "Software para comercios de Argentina: más reseñas en Google, la ganancia real de cada venta en Mercado Libre y clientes que vuelven. Calculadoras y guías gratis.",
     cuerpo,
     ld: [
       {
@@ -375,9 +375,9 @@ const VERTICALES = [
     nombre: "Reputación",
     demo: "reputacion",
     nombreLd: "MetricsField Reputación",
-    titulo: "Más reseñas en Google con carteles NFC y QR · MetricsField Reputación",
+    titulo: "Más reseñas en Google con carteles NFC y QR | MetricsField",
     descripcion:
-      "Carteles NFC y QR que llevan a tus clientes directo a dejar su reseña en Google, y un panel con toques, reseñas, respuestas sugeridas y lo que dicen de tu negocio. Córdoba y todo el país.",
+      "Carteles NFC y QR que llevan a tus clientes directo a tu reseña en Google, y un panel con toques, reseñas y respuestas sugeridas. Córdoba y todo el país.",
     eyebrow: "Reputación · disponible",
     h1: "Más reseñas en Google, con un toque del celular.",
     lead: "Un cartel en el mostrador lleva a cada cliente directo a la ventana de reseña de tu ficha. Vos ves en un panel cuántos lo usaron, qué reseñas llegaron, qué valoran y qué hay que responder hoy.",
@@ -422,9 +422,9 @@ const VERTICALES = [
     demo: "retail",
     nombreLd: "MetricsField Retail",
     tipoLd: "SoftwareApplication",
-    titulo: "Rentabilidad real en Mercado Libre: la ganancia de cada venta · MetricsField Retail",
+    titulo: "Ganancia real de cada venta en Mercado Libre | MetricsField",
     descripcion:
-      "Conectá tu cuenta de Mercado Libre y mirá la ganancia real de cada venta y cada producto: comisión, envío, publicidad, IVA, impuestos y costo. Prueba gratis de 30 días, sin tarjeta.",
+      "Conectá Mercado Libre y mirá la ganancia real de cada venta: comisión, envío, publicidad, IVA, impuestos y costo. Prueba gratis de 30 días, sin tarjeta.",
     eyebrow: "Retail · Mercado Libre",
     h1: "Vendiste. Ahora sabé cuánto ganaste de verdad.",
     lead: "Mercado Libre te muestra cuánto facturaste. Retail te muestra cuánto te quedó: descuenta comisión, envío, publicidad, IVA, otros impuestos y el costo de cada producto, venta por venta.",
@@ -469,9 +469,9 @@ const VERTICALES = [
     nombre: "Loyalty",
     demo: "loyalty",
     nombreLd: "MetricsField Loyalty",
-    titulo: "Fidelización de clientes con Google Wallet: club de beneficios · MetricsField Loyalty",
+    titulo: "Club de clientes con Google Wallet | MetricsField Loyalty",
     descripcion:
-      "Club de beneficios para comercios con la tarjeta en Google Wallet: alta con un toque, sellos o puntos, canje en el mostrador y quién vuelve y cada cuánto. En etapa piloto en Córdoba.",
+      "Club de beneficios con tarjeta en Google Wallet: alta con un toque, sellos o puntos, canje en el mostrador y quién vuelve. En etapa piloto en Córdoba.",
     eyebrow: "Loyalty · piloto",
     h1: "Que tus clientes vuelvan, y saber quiénes son.",
     lead: "Un club de beneficios con la tarjeta en la billetera del celular. El cliente se suma con un toque, junta sellos o puntos y canjea en el mostrador. Vos sabés quién vuelve, cada cuánto y qué beneficio funciona.",
@@ -523,6 +523,7 @@ function herramientas() {
   ];
   const cuerpo = `${m.html}
 <header class="pagina-hero wrap"><div class="eyebrow">Intel · gratis, sin registrarte</div><h1>Calculadoras para decidir con números.</h1><p class="lead">Tres preguntas que todo comercio y vendedor se hace, con la cuenta a la vista. Cambiá los valores y el resultado se actualiza solo.</p></header>
+<h2 class="sr-only">Las tres calculadoras</h2>
 ${bloques
   .map(
     ([calc, h, texto, guia]) => `<section style="padding:40px 0"><div class="wrap articulo" style="padding:0">
@@ -535,9 +536,9 @@ ${demoHtml("intel", encabezado)}
   return pagina({
     ruta: "/herramientas",
     scripts: SCRIPTS_DEMO,
-    titulo: "Calculadoras gratis: reseñas de Google, ganancia en Mercado Libre y valor del cliente · MetricsField Intel",
+    titulo: "Calculadoras gratis de reseñas, ventas y clientes | MetricsField",
     descripcion:
-      "Calculá cuántas reseñas de 5★ te faltan para subir tu calificación en Google, cuánto ganás de verdad por venta en Mercado Libre y cuánto vale un cliente que vuelve. Gratis y sin registrarte.",
+      "Calculá cuántas reseñas de 5★ te faltan, cuánto ganás de verdad por venta en Mercado Libre y cuánto vale un cliente que vuelve. Gratis y sin registrarte.",
     cuerpo,
     ld: [
       m.ld,
@@ -570,9 +571,9 @@ function indiceGuias() {
 <section style="padding-top:20px"><div class="wrap"><div class="guias-grid">${GUIAS.map(tarjetaGuia).join("")}</div></div></section>`;
   return pagina({
     ruta: "/guias",
-    titulo: "Guías de reseñas en Google, Google Maps, SEO local, Mercado Libre y fidelización · MetricsField",
+    titulo: "Guías de reseñas, Google Maps y SEO local | MetricsField",
     descripcion:
-      "Guías prácticas para comercios y vendedores de Argentina: reseñas de Google, posicionamiento en Google Maps, SEO local y GEO, rentabilidad en Mercado Libre, fidelización, Google Wallet y CRM.",
+      "Guías para comercios de Argentina: reseñas de Google, Google Maps, SEO local, GEO, rentabilidad en Mercado Libre, fidelización, Google Wallet y CRM.",
     cuerpo,
     ld: [
       m.ld,

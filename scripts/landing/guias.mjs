@@ -13,10 +13,10 @@ export const GUIAS = [
   {
     slug: "como-conseguir-resenas-en-google",
     tema: "Reseñas en Google",
-    titulo: "Cómo conseguir más reseñas en Google (sin romper las reglas) · Guía 2026",
+    titulo: "Cómo conseguir más reseñas en Google (sin romper las reglas)",
     h1: "Cómo conseguir más reseñas en Google, sin romper las reglas",
     descripcion:
-      "Guía práctica para comercios: por qué las reseñas de Google influyen en tu visibilidad, cómo pedirlas en el momento justo, qué prohíbe Google y cómo medir si funciona.",
+      "Por qué las reseñas de Google influyen en tu visibilidad, cómo pedirlas en el momento justo, qué prohíbe Google y cómo medir si funciona.",
     lead: "Las reseñas son lo primero que mira alguien que todavía no te conoce, y Google las usa para decidir a quién mostrar. Pedirlas bien es un hábito, no una campaña.",
     resumen: [
       "Google dice que la cantidad de reseñas y la calificación influyen en el ranking local.",
@@ -69,7 +69,7 @@ export const GUIAS = [
   {
     slug: "posicionamiento-en-google-maps",
     tema: "Google Maps",
-    titulo: "Posicionamiento en Google Maps: cómo aparecer primero en tu zona · Guía",
+    titulo: "Posicionamiento en Google Maps: cómo aparecer primero",
     h1: "Posicionamiento en Google Maps: cómo aparecer cuando te buscan cerca",
     descripcion:
       "Qué tiene en cuenta Google para ordenar los negocios en Maps (relevancia, distancia y prominencia) y una lista de tareas concretas para tu Perfil de Empresa.",
@@ -170,7 +170,7 @@ export const GUIAS = [
   {
     slug: "geo-aparecer-en-respuestas-de-ia",
     tema: "GEO e IA",
-    titulo: "GEO: cómo aparecer en las respuestas de ChatGPT, Gemini y Perplexity",
+    titulo: "GEO: cómo aparecer en ChatGPT, Gemini y Perplexity",
     h1: "GEO: cómo aparecer cuando le preguntan a una IA por tu rubro",
     descripcion:
       "Qué es la optimización para motores generativos (GEO), en qué se parece y en qué no al SEO, y qué podés hacer hoy para que los asistentes de IA te recomienden.",
@@ -214,10 +214,10 @@ export const GUIAS = [
   {
     slug: "rentabilidad-real-mercado-libre",
     tema: "Mercado Libre",
-    titulo: "Cómo calcular la ganancia real de una venta en Mercado Libre · Guía y calculadora",
+    titulo: "Ganancia real de una venta en Mercado Libre: cómo calcularla",
     h1: "Cómo calcular la ganancia real de una venta en Mercado Libre",
     descripcion:
-      "Todo lo que se descuenta de una venta en Mercado Libre (comisión, cargo fijo, envío, publicidad, impuestos) y cómo calcular tu margen real producto por producto, con calculadora.",
+      "Todo lo que se descuenta de una venta en Mercado Libre (comisión, envío, publicidad, impuestos) y cómo calcular tu margen real, con calculadora.",
     lead: "Facturar no es ganar. Entre comisión, envío, publicidad e impuestos, una venta que parece buena puede dejar muy poco, o hacerte perder plata sin que lo notes.",
     resumen: [
       "Ganancia real = precio − comisión − cargo fijo − envío − publicidad − impuestos − costo.",
@@ -272,7 +272,7 @@ export const GUIAS = [
   {
     slug: "fidelizacion-de-clientes",
     tema: "Fidelización",
-    titulo: "Fidelización de clientes para comercios: qué funciona y cómo medirla",
+    titulo: "Fidelización de clientes para comercios: qué funciona",
     h1: "Fidelización de clientes: cómo lograr que vuelvan (y saber quiénes son)",
     descripcion:
       "Por qué fidelizar es más barato que conseguir clientes nuevos, qué programas de fidelización funcionan en comercios y cómo medir si un cliente vuelve.",
@@ -324,7 +324,7 @@ export const GUIAS = [
   {
     slug: "tarjeta-de-fidelidad-google-wallet",
     tema: "Wallet",
-    titulo: "Tarjeta de fidelidad en Google Wallet y Apple Wallet: cómo funciona",
+    titulo: "Tarjeta de fidelidad en Google Wallet y Apple Wallet",
     h1: "Tarjeta de fidelidad en Google Wallet: el club de tu negocio en la billetera del celular",
     descripcion:
       "Qué es una tarjeta de fidelidad digital en Google Wallet o Apple Wallet, por qué funciona mejor que el cartón o una app propia y qué hace falta para tener una.",
@@ -369,7 +369,7 @@ export const GUIAS = [
   {
     slug: "clientes-recurrentes",
     tema: "Clientes recurrentes",
-    titulo: "Clientes recurrentes: cómo medirlos y aumentarlos · Guía con calculadora",
+    titulo: "Clientes recurrentes: cómo medirlos y aumentarlos",
     h1: "Clientes recurrentes: cómo medirlos y cómo lograr que sean más",
     descripcion:
       "Cómo calcular la tasa de clientes recurrentes y el valor de un cliente en el tiempo, y qué acciones concretas aumentan la recompra en comercios y tiendas online.",
@@ -410,7 +410,7 @@ export const GUIAS = [
   {
     slug: "crm-gestion-de-clientes",
     tema: "Gestión de clientes",
-    titulo: "Sistema de gestión de clientes (CRM) para comercios y pymes: qué necesitás de verdad",
+    titulo: "CRM para comercios y pymes: qué necesitás de verdad",
     h1: "Sistema de gestión de clientes para comercios: qué necesitás de verdad",
     descripcion:
       "Qué es un CRM, qué datos de clientes conviene guardar en un comercio o una pyme, cómo empezar simple y cómo cuidar los datos personales.",
@@ -454,7 +454,7 @@ export const GUIAS = [
   {
     slug: "ciclo-de-vida-del-cliente",
     tema: "Ciclo del cliente",
-    titulo: "El ciclo de vida del cliente: de la búsqueda en Google a la recompra",
+    titulo: "Ciclo de vida del cliente: de Google a la recompra",
     h1: "El ciclo completo del cliente: te encuentra, te elige, compra, vuelve y te recomienda",
     descripcion:
       "Las cinco etapas del ciclo de vida del cliente en un comercio, qué métrica mirar en cada una y qué herramienta la mueve: SEO, reseñas, rentabilidad y fidelización.",

@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Términos de servicio — MetricsField",
-  description: "Condiciones de uso de la plataforma y el hardware de MetricsField.",
+  description: "Condiciones de uso de la plataforma, el panel, el portal de clientes y el hardware NFC y QR de MetricsField: servicio, pagos, datos y responsabilidades.",
   alternates: { canonical: "https://metricsfield.com/terms" },
+  openGraph: { images: ["https://metricsfield.com/landing/assets/img/og-image.jpg"], url: "https://metricsfield.com/terms", type: "website", siteName: "MetricsField", locale: "es_AR" },
 };
 
 // Página requerida por la verificación OAuth de Google (junto con

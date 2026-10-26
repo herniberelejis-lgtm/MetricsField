@@ -183,14 +183,17 @@ export async function editarAutogestion(
     throw new Error("PIN incorrecto.");
   }
 
+  // Las mismas condiciones que el chequeo de arriba, y el mismo PIN: si en
+  // el medio el equipo asignó la pieza a un cliente (o se cambió el PIN),
+  // esta edición no pisa nada.
   const actualizado = await sql`
     UPDATE links_nfc SET
       nombre_negocio = ${datos.nombreNegocio},
       url_destino = ${datos.urlDestino}
-    WHERE id = ${slug}
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND pin_hash = ${pinHash}
     RETURNING id
   `;
-  if (actualizado.length === 0) throw new Error(`Pieza no encontrada: ${slug}`);
+  if (actualizado.length === 0) throw new Error("Pieza no encontrada o todavía no fue activada.");
   const l = await getLink(slug);
   if (!l) throw new Error(`Pieza no encontrada: ${slug}`);
   return l;
