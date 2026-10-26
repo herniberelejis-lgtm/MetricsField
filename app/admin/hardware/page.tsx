@@ -289,7 +289,7 @@ export default async function HardwarePage({
                           </div>
                         </>
                       ) : (
-                        <span className="text-slate-400">No dejó contacto</span>
+                        <span className="text-slate-500">No dejó contacto</span>
                       )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 tabular-nums">

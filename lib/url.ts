@@ -34,3 +34,22 @@ export function urlSegura(url: string): string | null {
     return null;
   }
 }
+
+// Link de reseña para una pieza autogestionada (comprada en Mercado Libre,
+// sin cuenta ni contrato): solo puede llevar a Google. Sin este filtro,
+// cualquiera que compre una pieza puede convertir
+// app.metricsfield.com/t/<id> en un redireccionador hacia el sitio que
+// quiera (phishing con nuestro dominio adelante) y, si Google Safe Browsing
+// lo detecta, marca el dominio entero: dejan de andar TODOS los carteles.
+// Los clientes de la agencia (portal, admin) siguen pudiendo poner
+// cualquier destino con urlSegura — son cuentas conocidas.
+const HOSTS_RESENA_GOOGLE = ["g.page", "goo.gl", "google.com", "google.com.ar"];
+
+export function urlResenaGoogle(url: string): string | null {
+  const limpia = urlSegura(url);
+  if (!limpia) return null;
+  const { protocol, hostname, username, password } = new URL(limpia);
+  if (protocol !== "https:" || username || password) return null;
+  const host = hostname.toLowerCase().replace(/\.$/, "");
+  return HOSTS_RESENA_GOOGLE.some((h) => host === h || host.endsWith(`.${h}`)) ? limpia : null;
+}

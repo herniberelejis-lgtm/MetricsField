@@ -201,7 +201,7 @@ function Tarjeta({ c, tono }: { c: Conclusion; tono: "funciona" | "cuesta" }) {
       <span className="self-start rounded-full bg-[#F1F4F8] px-2.5 py-1 text-[11px] font-semibold text-slate-700">
         {c.cruce}
       </span>
-      <h4 className="text-[19px] font-semibold leading-snug tracking-tight text-slate-900">{c.titulo}</h4>
+      <h3 className="text-[19px] font-semibold leading-snug tracking-tight text-slate-900">{c.titulo}</h3>
       <Grafico c={c} />
       {c.nota && <p className="text-sm leading-relaxed text-slate-600">{c.nota}</p>}
       {c.accion && (
@@ -226,7 +226,7 @@ function Pregunta({ numero, titulo, color }: { numero: number; titulo: string; c
   return (
     <div className="mb-4 mt-10 flex flex-col gap-0.5 first:mt-0">
       <span className={`text-xs font-semibold ${color}`}>Pregunta {numero}</span>
-      <h3 className="text-xl font-bold tracking-tight text-slate-900">{titulo}</h3>
+      <h2 className="text-xl font-bold tracking-tight text-slate-900">{titulo}</h2>
     </div>
   );
 }
@@ -319,10 +319,10 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
                 <span className="self-start rounded-full bg-[#F1F4F8] px-2.5 py-1 text-[11px] font-semibold text-slate-700">
                   Tu próxima meta
                 </span>
-                <h4 className="text-[19px] font-semibold leading-snug tracking-tight text-slate-900">
+                <h3 className="text-[19px] font-semibold leading-snug tracking-tight text-slate-900">
                   Te faltan {meta.faltan} reseña{meta.faltan === 1 ? "" : "s"} de 5★ para que Google muestre{" "}
                   {meta.siguiente}.
-                </h4>
+                </h3>
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between text-xs tabular-nums text-slate-600">
                     <span>{meta.actual} hoy</span>
@@ -362,9 +362,9 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
             )}
             {tareas.length > 0 && (
               <article className={`${TARJETA} flex flex-col gap-3`}>
-                <h4 className="text-[19px] font-semibold tracking-tight text-slate-900">
+                <h3 className="text-[19px] font-semibold tracking-tight text-slate-900">
                   {tareas.length === 1 ? "Una cosa" : `${tareas.length === 2 ? "Dos" : "Tres"} cosas`}, de las conclusiones de arriba
-                </h4>
+                </h3>
                 <ol className="flex flex-col">
                   {tareas.map((t, i) => (
                     <li key={t} className="flex items-start gap-3 border-t border-[#E4E6EA]/70 py-3 first:border-0">
@@ -387,7 +387,7 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
             <>
               <div className="mb-4 flex flex-col gap-1">
                 <span className="text-xs font-semibold text-slate-600">En camino</span>
-                <h3 className="text-xl font-bold tracking-tight text-slate-900">Se activan solas cuando haya datos</h3>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">Se activan solas cuando haya datos</h2>
               </div>
               <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {enCamino.map((p) => (
@@ -425,7 +425,7 @@ export default function Conclusiones({ datos }: { datos: DatosConclusiones }) {
 function EnCaminoTarjeta({ p }: { p: Pendiente }) {
   return (
     <article className="flex flex-col gap-2 rounded-2xl border border-dashed border-[#D6D9DE] p-4">
-      <h4 className="text-[15px] font-bold leading-snug text-slate-900">{p.titulo}</h4>
+      <h3 className="text-[15px] font-bold leading-snug text-slate-900">{p.titulo}</h3>
       <p className="text-xs leading-relaxed text-slate-600">{p.detalle}</p>
       {p.progreso !== null && (
         <div

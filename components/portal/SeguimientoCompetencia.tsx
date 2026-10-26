@@ -21,7 +21,7 @@ export default function SeguimientoCompetencia({ seguimiento }: { seguimiento: S
 
   return (
     <div className={`${card} mb-4`}>
-      <h3 className="text-[15px] font-bold text-slate-900">Desde que seguimos a tu competencia</h3>
+      <h2 className="text-[15px] font-bold text-slate-900">Desde que seguimos a tu competencia</h2>
       <p className="mt-0.5 text-xs text-slate-600">
         Reseñas captadas desde el {fmtDia(desde)}
         {dias > 0 ? ` (${dias} día${dias === 1 ? "" : "s"})` : ""}, mientras se completa el primer mes

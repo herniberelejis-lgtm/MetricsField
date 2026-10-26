@@ -32,7 +32,7 @@ export default function ComparativaCompetencia({
     if (!primerMes) return null;
     return (
       <div className={card}>
-        <h3 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h3>
+        <h2 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h2>
         <p className="mt-1 text-sm text-slate-600">
           La comparación arranca en <strong>{fmtMes(primerMes)}</strong>: cada noche guardamos cómo está tu
           competencia y, cuando cerremos el primer mes, vas a ver cuántas reseñas captó cada uno contra vos y
@@ -50,7 +50,7 @@ export default function ComparativaCompetencia({
     <div className={card}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h3>
+          <h2 className="text-[15px] font-bold text-slate-900">Mes a mes vs tu competencia</h2>
           <p className="mt-0.5 text-xs text-slate-600">Reseñas captadas en el mes y calificación al cierre</p>
         </div>
         {meses.length > 1 && (

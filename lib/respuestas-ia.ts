@@ -10,6 +10,9 @@ import { huellaRespuesta } from "./auto-respuesta";
 // ANTHROPIC_API_KEY. Apagado, o si algo sale mal, quien la llama usa la
 // plantilla de siempre — nunca se queda una reseña sin responder por esto.
 //
+// Las comillas triples de la reseña se reducen a una: son el delimitador,
+// y una reseña que las traiga no puede "cerrar" el bloque de datos.
+//
 // A Claude se le manda solo el texto y las estrellas de la reseña, el
 // nombre del comercio y el tono: nunca el nombre del autor.
 
@@ -66,7 +69,7 @@ export async function redactarRespuestaIA(opts: {
       messages: [
         {
           role: "user",
-          content: `Comercio: ${opts.comercio}\nTono: ${opts.tono}\nEstrellas: ${opts.estrellas} de 5\nReseña (entre comillas triples):\n"""${opts.texto.slice(0, 2000) || "(sin texto)"}"""`,
+          content: `Comercio: ${opts.comercio}\nTono: ${opts.tono}\nEstrellas: ${opts.estrellas} de 5\nReseña (entre comillas triples):\n"""${opts.texto.slice(0, 2000).replace(/"{3,}/g, '"') || "(sin texto)"}"""`,
         },
       ],
     });

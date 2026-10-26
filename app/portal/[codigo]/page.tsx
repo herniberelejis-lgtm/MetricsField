@@ -611,7 +611,7 @@ export default async function PortalPage({
     <Conclusiones datos={conclusiones} />
   ) : (
     <section className="rounded-[24px] bg-[#111111] px-6 py-8 text-white sm:px-10 sm:py-10">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">Tus conclusiones · por local</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Tus conclusiones · por local</p>
       <p className="mt-5 text-xl font-bold leading-snug sm:text-2xl">
         Lo que Google no te muestra se calcula local por local. Elegí un local para verlas.
       </p>
