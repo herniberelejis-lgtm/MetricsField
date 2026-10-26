@@ -85,7 +85,10 @@ export default async function TapPage({
   limpiarVencidos();
   const ip = ipDelRequest(h);
   const dentroDelLimite = await permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
-  if (!esPrefetch && !esCrawler && dentroDelLimite) {
+  // Solo cuenta si la pieza ya lleva a algún lado: abrir el formulario de
+  // activación de una pieza libre es su dueño configurándola, no un cliente.
+  const configurada = Boolean(link.urlDestino || comercio);
+  if (configurada && !esPrefetch && !esCrawler && dentroDelLimite) {
     await registrarTap(slug, userAgent || null);
   }
 

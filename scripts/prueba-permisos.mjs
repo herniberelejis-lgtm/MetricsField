@@ -376,20 +376,38 @@ await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e001', 'huerfano-mostrado
 await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES
           ('p-9999-e2e001', NULL, '', 'nfc', 'e2e', 'resena'),
           ('huerfano-mostrador', NULL, 'Mostrador', 'nfc', '', 'resena')`;
-await accionArgs("activarCartel", ["huerfano-mostrador", "Intruso", "https://malo.example/huerfano", "1234"]);
+await accionArgs("activarCartel", ["huerfano-mostrador", { nombre: "Intruso", url: "https://malo.example/huerfano", pin: "1234" }]);
 registrar("anónimo", "reclamar un link huérfano (de un cliente borrado)", "denegado",
   `url = '${await urlLink("huerfano-mostrador")}'`, (await urlLink("huerfano-mostrador")) === "");
 r = await fetch(`${BASE}/t/huerfano-mostrador`, { headers: { "x-real-ip": ipNueva() } });
 registrar("anónimo", "abrir el cartel de un cliente borrado", "404 (no ofrece activarlo)", `HTTP ${r.status}`, r.status === 404);
-await accionArgs("activarCartel", ["p-9999-e2e001", "Mi negocio", "https://bueno.example/", "4321"]);
+await accionArgs("activarCartel", ["p-9999-e2e001", { nombre: "Mi negocio", url: "https://bueno.example/", pin: "4321" }]);
 registrar("comprador", "activar una pieza de inventario (control positivo)", "permitido",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://bueno.example/");
 
+// El contacto del comprador solo se guarda si marcó la casilla de aceptación.
+await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e002', 'p-9999-e2e003')`;
+await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES
+          ('p-9999-e2e002', NULL, '', 'nfc', 'e2e', 'resena'),
+          ('p-9999-e2e003', NULL, '', 'nfc', 'e2e', 'resena')`;
+await accionArgs("activarCartel", ["p-9999-e2e002", {
+  nombre: "Sin permiso", url: "https://bueno.example/2", pin: "4321", email: "sinpermiso@ejemplo.test", aceptaNovedades: false,
+}]);
+let contacto = (await uno(sql`SELECT contacto_email AS e FROM links_nfc WHERE id = 'p-9999-e2e002'`)).e;
+registrar("comprador", "dejar su mail SIN marcar la casilla", "no se guarda",
+  `mail = '${contacto}', url = '${await urlLink("p-9999-e2e002")}'`, contacto === "" && (await urlLink("p-9999-e2e002")) === "https://bueno.example/2");
+await accionArgs("activarCartel", ["p-9999-e2e003", {
+  nombre: "Con permiso", url: "https://bueno.example/3", pin: "4321", email: "conpermiso@ejemplo.test", aceptaNovedades: true,
+}]);
+contacto = (await uno(sql`SELECT contacto_email AS e FROM links_nfc WHERE id = 'p-9999-e2e003'`)).e;
+registrar("comprador", "dejar su mail marcando la casilla (control positivo)", "se guarda", `mail = '${contacto}'`, contacto === "conpermiso@ejemplo.test");
+
+
 // PIN: tope por pieza que no depende de la IP.
 for (let i = 0; i < 11; i++) {
-  await accionArgs("editarCartel", ["p-9999-e2e001", String(1000 + i), "X", "https://malo.example/pin"]);
+  await accionArgs("editarCartel", ["p-9999-e2e001", String(1000 + i), { nombre: "X", url: "https://malo.example/pin" }]);
 }
-await accionArgs("editarCartel", ["p-9999-e2e001", "4321", "X", "https://malo.example/pin"]);
+await accionArgs("editarCartel", ["p-9999-e2e001", "4321", { nombre: "X", url: "https://malo.example/pin" }]);
 registrar("anónimo rotando IPs", "11 PIN incorrectos y después el correcto", "bloqueado por pieza",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://bueno.example/");
 
@@ -460,7 +478,7 @@ if (MODO !== "produccion") {
   await accionForm("accionEliminarCliente", { id: "e2e-borrable", confirmarNombre: "Borrable E2E" }, {
     pagina: "/admin/clientes", cookie: await cookiePasswordValida(),
   });
-  await accionArgs("activarCartel", ["e2e-borrable-mesa", "Intruso", "https://malo.example/borrado", "1234"]);
+  await accionArgs("activarCartel", ["e2e-borrable-mesa", { nombre: "Intruso", url: "https://malo.example/borrado", pin: "1234" }]);
   const [{ n: linkBorrado }] = await sql`SELECT count(*)::int AS n FROM links_nfc WHERE id = 'e2e-borrable-mesa'`;
   const [{ n: comercioBorrado }] = await sql`SELECT count(*)::int AS n FROM comercios WHERE id = 'e2e-borrable'`;
   registrar("anónimo", "reclamar el cartel de un cliente recién borrado", "no existe",

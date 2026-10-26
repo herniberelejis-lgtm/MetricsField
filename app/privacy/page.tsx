@@ -207,6 +207,22 @@ export default function PrivacidadPage() {
               </section>
 
               <section>
+                <h2 className={h2}>Quien compra una pieza suelta</h2>
+                <p className="mt-2">
+                  Si compraste una pieza (por ejemplo, en Mercado Libre) y la
+                  activás vos mismo, guardamos el nombre de tu negocio, el lugar de
+                  Google que elegiste, el link de reseña y tu PIN (protegido con un
+                  hash: ni nosotros lo podemos ver). Para encontrar tu negocio consultamos Google Places.
+                  Solo si marcás la casilla de la activación guardamos también tu
+                  mail o WhatsApp, para mandarte gratis cada lunes cuántas personas
+                  usaron tu pieza y escribirte sobre nuestros servicios. Podés darte
+                  de baja con el link al pie de cada mail o escribiéndonos. No
+                  usamos datos que Mercado Libre nos comparta de tu compra para
+                  nada más que completar esa venta.
+                </p>
+              </section>
+
+              <section>
                 <h2 className={h2}>Uso limitado (Limited Use) — datos de las APIs de Google</h2>
                 <p className="mt-2">
                   El uso que MetricsField hace de la información recibida de las APIs
@@ -417,6 +433,22 @@ export default function PrivacidadPage() {
                   </a>
                   . Argentina&rsquo;s data protection authority (Agencia de Acceso a la
                   Información Pública) handles complaints under Law 25,326.
+                </p>
+              </section>
+
+              <section>
+                <h2 className={h2}>People Who Buy a Standalone Piece</h2>
+                <p className="mt-2">
+                  If you bought a piece (for example, on Mercado Libre) and activate
+                  it yourself, we store your business name, the Google place you
+                  chose, the review link and your PIN (hashed, never in plain text).
+                  To find your business we query Google Places. Only if you tick the
+                  box during activation do we also store your email or WhatsApp, to
+                  send you a free weekly count of how many people used your piece and
+                  to contact you about our services. You can unsubscribe with the
+                  link at the bottom of every email or by writing to us. We do not
+                  use any data Mercado Libre shares about your purchase for anything
+                  other than completing that sale.
                 </p>
               </section>
 

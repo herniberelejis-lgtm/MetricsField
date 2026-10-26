@@ -167,6 +167,20 @@ export interface LinkNFC {
    * Google no permite atribuir una reseña puntual a un tap puntual, así
    * que esto es una señal de menciones, no una atribución exacta. */
   nombreEmpleado: string;
+  /** Solo autogestionadas (migración 019): el lugar de Google que eligió el
+   * comprador al activarla; null si pegó el link a mano. */
+  googlePlaceId: string | null;
+  /** Contacto que el comprador dejó al activar, solo si quiso (ver
+   * novedadesAceptadasEn). Datos personales: no van nunca a un componente
+   * de cliente ni a una página pública. */
+  contactoEmail: string;
+  contactoWhatsapp: string;
+  /** Cuándo aceptó recibir el aviso semanal; null = no aceptó. */
+  novedadesAceptadasEn: string | null;
+  /** Cuándo se dio de baja del aviso semanal. */
+  novedadesBajaEn: string | null;
+  /** Cuándo el comprador activó la pieza (autogestionadas). */
+  activadoEn: string | null;
   creadoEn: string;
   taps: number; // total histórico, calculado
 }
