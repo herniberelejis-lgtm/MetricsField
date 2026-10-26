@@ -30,6 +30,7 @@ const LABEL_TIPO: Record<string, string> = {
 const ERRORES_ASIGNAR: Record<string, string> = {
   "sin-cliente": "Elegí a qué cliente asignarla antes de guardar.",
   "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
+  "no-libre": "Esa pieza ya no está libre: alguien la asignó o la activó recién. Mirá la lista actualizada.",
 };
 
 export default async function HardwarePage({
