@@ -402,12 +402,20 @@ export async function accionAsignarPieza(fd: FormData): Promise<void> {
   if (destino !== "resena" && destino !== "loyalty" && !urlDestino) {
     redirect("/admin/hardware?error=sin-url");
   }
-  await db.asignarPiezaACliente(id, comercioId, {
-    etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
-    tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
-    destino,
-    urlDestino: urlDestino || null,
-  });
+  // Si otro la asignó en el medio (o se apretó dos veces), se avisa en la
+  // misma página en vez de mostrar una pantalla de error.
+  let asignada = true;
+  try {
+    await db.asignarPiezaACliente(id, comercioId, {
+      etiqueta: str(fd, "etiqueta") || "Sin etiquetar",
+      tipo: str(fd, "tipo") ? (str(fd, "tipo") as TipoSoporte) : undefined,
+      destino,
+      urlDestino: urlDestino || null,
+    });
+  } catch {
+    asignada = false;
+  }
+  if (!asignada) redirect("/admin/hardware?error=no-libre");
   await auditar("asignar_pieza_hardware", `${id} → ${comercioId}`);
   revalidatePath("/", "layout");
   redirect("/admin/hardware");

@@ -3,10 +3,12 @@
 import { useEffect, useState, useTransition } from "react";
 import { activarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
-import { USOS_PIEZAS, VIDEO_QR } from "@/lib/onboarding";
+import { USOS_PIEZAS } from "@/lib/onboarding";
+import AyudaActivacion from "./AyudaActivacion";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
 import GrabarChip from "./GrabarChip";
+import OfertaPrueba from "./OfertaPrueba";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -139,27 +141,10 @@ export default function ActivarCartel({ slug }: { slug: string }) {
             Activá tu pieza en 3 pasos
           </h1>
           <p className="mt-1.5 text-[13.5px]" style={{ color: INK_SOFT }}>
-            Una sola vez y queda lista: cada cliente que la escanee va directo a dejarte una reseña en Google. El chip
-            NFC se graba aparte, con el video de más abajo.
+            Una sola vez y queda lista: cada cliente que la escanee va directo a dejarte una reseña en Google. ¿Dudas?
+            Abajo tenés videos y ayuda.
           </p>
         </div>
-
-        {VIDEO_QR && (
-          <details className="mt-5 rounded-xl px-4 py-3" style={{ background: "#f1f5fb" }}>
-            <summary className="cursor-pointer text-[13.5px] font-medium" style={{ color: INK }}>
-              Ver cómo se hace (video de {VIDEO_QR.duracion})
-            </summary>
-            <video
-              src={VIDEO_QR.src}
-              poster={VIDEO_QR.portada}
-              controls
-              playsInline
-              preload="none"
-              className="mx-auto mt-3 w-full max-w-[300px] rounded-xl bg-black"
-              aria-label={`Video: ${VIDEO_QR.titulo}`}
-            />
-          </details>
-        )}
 
         {recuerdo && (
           <div className="mt-5 rounded-xl px-4 py-3.5" style={{ background: "#eef4ff" }}>
@@ -313,7 +298,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
           {pendiente ? "Activando…" : "Activar mi pieza"}
         </button>
       </form>
-      <GrabarChip slug={slug} titulo="Y el chip NFC" />
+      <AyudaActivacion slug={slug} />
     </div>
   );
 }
@@ -416,6 +401,7 @@ function Listo({
         )}
       </div>
       <GrabarChip slug={slug} titulo="Ahora grabá el chip NFC" />
+      <OfertaPrueba />
     </div>
   );
 }

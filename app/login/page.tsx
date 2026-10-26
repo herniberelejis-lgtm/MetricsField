@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { accionLogin } from "./actions";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import { loginConPasswordPermitido } from "@/lib/sesion";
 
 export const dynamic = "force-dynamic";
+
+// La puerta del panel no es contenido para un buscador.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 const ERRORES: Record<string, string> = {
   "1": "Contraseña incorrecta. Probá de nuevo.",

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 // Tipografía de marca (ver Manual de Marca): Montserrat en toda la app,
-// títulos en semibold, cuerpo en regular.
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// títulos en semibold, cuerpo en regular. Va servida desde el repo (la
+// variable latina, pesos 100–900) y no con next/font/google: esa descarga
+// la fuente de Google en cada build y, cuando Google Fonts responde mal, el
+// build entero se cae ("Cannot read properties of null (reading '1')" en
+// next/font) — pasó dos veces el 26/10, en Vercel y en el CI.
+const montserrat = localFont({
+  src: "./fonts/montserrat-variable-latin.woff2",
+  weight: "100 900",
   variable: "--font-montserrat",
   display: "swap",
 });
