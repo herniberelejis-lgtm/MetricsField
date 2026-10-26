@@ -27,6 +27,7 @@ export default function EditarCartel({
   const [nombre, setNombre] = useState(nombreActual);
   const [url, setUrl] = useState(urlActual);
   const [lugar, setLugar] = useState<LugarParaResena | null>(null);
+  const [sesionToken, setSesionToken] = useState<string | undefined>();
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardado, setGuardado] = useState(false);
@@ -39,6 +40,7 @@ export default function EditarCartel({
       const res = await editarCartel(slug, pin, {
         nombre: lugar ? lugar.nombre : nombre,
         placeId: lugar?.placeId ?? null,
+        sesionToken: lugar ? sesionToken : undefined,
         url: lugar ? "" : url,
       });
       if (res.ok) {
@@ -75,7 +77,14 @@ export default function EditarCartel({
               Buscá tu negocio en Google
             </span>
             <div className="mt-1.5">
-              <BuscarNegocio slug={slug} elegido={lugar} onElegir={setLugar} />
+              <BuscarNegocio
+                  slug={slug}
+                  elegido={lugar}
+                  onElegir={(l, token) => {
+                    setLugar(l);
+                    setSesionToken(token);
+                  }}
+                />
             </div>
           </div>
 

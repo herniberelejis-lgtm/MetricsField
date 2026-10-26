@@ -67,6 +67,7 @@ function Paso({ n, titulo, children }: { n: number; titulo: string; children: Re
 
 export default function ActivarCartel({ slug }: { slug: string }) {
   const [lugar, setLugar] = useState<LugarParaResena | null>(null);
+  const [sesionToken, setSesionToken] = useState<string | undefined>();
   const [aMano, setAMano] = useState(false);
   const [nombre, setNombre] = useState("");
   const [url, setUrl] = useState("");
@@ -83,6 +84,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
 
   function usarRecuerdo(r: Recuerdo) {
     setLugar(r.lugar);
+    setSesionToken(undefined);
     setAMano(!r.lugar);
     setNombre(r.nombre);
     setUrl(r.url);
@@ -103,6 +105,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
       const res = await activarCartel(slug, {
         nombre: lugar ? lugar.nombre : nombre,
         placeId: lugar?.placeId ?? null,
+        sesionToken: lugar ? sesionToken : undefined,
         url: lugar ? "" : url,
         pin,
         email,
@@ -176,7 +179,14 @@ export default function ActivarCartel({ slug }: { slug: string }) {
           <Paso n={1} titulo="Buscá tu negocio">
             {!aMano ? (
               <>
-                <BuscarNegocio slug={slug} elegido={lugar} onElegir={setLugar} />
+                <BuscarNegocio
+                  slug={slug}
+                  elegido={lugar}
+                  onElegir={(l, token) => {
+                    setLugar(l);
+                    setSesionToken(token);
+                  }}
+                />
                 {!lugar && (
                   <button
                     type="button"
