@@ -58,7 +58,11 @@ Restos históricos en la base (ya sin uso en el código): la columna
   La primera vez que el comprador la toca abre `/t/<código>` y la activa en
   3 pasos: busca su negocio y lo elige de una lista (el link de reseña lo
   trae Google Places, `googleMapsLinks.writeAReviewUri`; pegarlo a mano queda
-  como plan B), elige un PIN y, **si quiere**, deja mail/WhatsApp con una
+  como plan B). Mientras escribe (nombre o calle) aparecen sugerencias como
+  en Google Maps (Places Autocomplete con token de sesión, `sugerirNegocio`);
+  el botón Buscar hace la búsqueda completa. Las dos priorizan Córdoba
+  (`SESGO_CORDOBA`): el servidor corre fuera del país y sin sesgo Google
+  devolvía negocios de cualquier lado. Después elige un PIN y, **si quiere**, deja mail/WhatsApp con una
   casilla de aceptación. Con eso recibe gratis cada lunes cuántas personas
   usaron su pieza (con link de baja firmado) y el mail le ofrece el panel.
   La segunda pieza desde el mismo celular ofrece "usar los mismos datos".
