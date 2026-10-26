@@ -416,11 +416,11 @@ registrar("comprador", "dejar su mail marcando la casilla (control positivo)", "
 
 // PIN: tope por pieza que no depende de la IP.
 for (let i = 0; i < 11; i++) {
-  await accionArgs("editarCartel", ["p-9999-e2e001", String(1000 + i), { nombre: "X", url: "https://malo.example/pin" }]);
+  await accionArgs("editarCartel", ["p-9999-e2e001", String(1000 + i), { nombre: "X", url: "https://g.page/r/intruso-pin/review" }]);
 }
-await accionArgs("editarCartel", ["p-9999-e2e001", "4321", { nombre: "X", url: "https://malo.example/pin" }]);
+await accionArgs("editarCartel", ["p-9999-e2e001", "4321", { nombre: "X", url: "https://g.page/r/intruso-pin/review" }]);
 registrar("anónimo rotando IPs", "11 PIN incorrectos y después el correcto", "bloqueado por pieza",
-  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://bueno.example/");
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
 
 // Canje: dos códigos de la misma persona validados a la vez no gastan dos veces.
 const saldoAntesConc = await saldoDe("mem-x-a");
