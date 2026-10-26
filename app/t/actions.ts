@@ -13,7 +13,7 @@ import { linkResenaDeLugar, placeIdValido, searchGooglePlace, type LugarParaRese
 import { validarContacto } from "@/lib/activacion";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
-import { urlSegura } from "@/lib/url";
+import { urlResenaGoogle } from "@/lib/url";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
 // que su comprador escaneó por primera vez. Sin login — la defensa contra
@@ -57,15 +57,43 @@ async function resolverDestino(
   if (placeId) {
     if (!placeIdValido(placeId)) return { ok: false, error: "Elegí tu negocio de nuevo." };
     const lugar = await linkResenaDeLugar(placeId);
-    const link = lugar ? urlSegura(lugar.link) : null;
+    const link = lugar ? urlResenaGoogle(lugar.link) : null;
     if (!lugar || !link) return { ok: false, error: "No pudimos traer el link de Google. Probá de nuevo o pegalo a mano." };
     return { ok: true, url: link, placeId, nombreLugar: lugar.nombre };
   }
-  // urlSegura (no un new URL() suelto): además de exigir http(s), guarda
-  // la versión sin caracteres de control — misma validación que el portal.
-  const link = urlSegura(String(url ?? ""));
-  if (!link) return { ok: false, error: "Elegí tu negocio de la lista, o pegá el link completo de tu reseña de Google (empieza con https://)." };
+  // Solo links de Google (ver urlResenaGoogle): quien activa es anónimo y
+  // otro destino convertiría /t/<id> en un redireccionador con nuestro
+  // dominio adelante.
+  const link = urlResenaGoogle(String(url ?? ""));
+  if (!link) {
+    return {
+      ok: false,
+      error: "Ese link no es de Google. Elegí tu negocio de la lista, o pegá el link de reseña que copiaste de tu perfil (empieza con https://g.page/r/).",
+    };
+  }
   return { ok: true, url: link, placeId: null, nombreLugar: "" };
+}
+
+// Mensajes que las funciones de la base tiran a propósito para el
+// comprador. Cualquier otro error (conexión, columna, etc.) puede traer
+// detalles internos: se registra y se muestra uno genérico.
+const ERRORES_VISIBLES = new Set([
+  "Esta pieza ya fue activada, o no está disponible para autogestión.",
+  "Pieza no encontrada o todavía no fue activada.",
+  "PIN incorrecto.",
+]);
+
+function errorParaMostrar(e: unknown, generico: string): string {
+  const mensaje = e instanceof Error ? e.message : "";
+  if (ERRORES_VISIBLES.has(mensaje)) return mensaje;
+  console.error("Autogestión de pieza:", mensaje || e);
+  return generico;
+}
+
+/** El nombre del negocio va a la base, al panel y al asunto de los mails:
+ * sin caracteres de control (saltos de línea incluidos) y acotado. */
+function nombreLimpio(nombre: string | undefined, delLugar: string): string {
+  return (String(nombre ?? "").replace(/[\x00-\x1f\x7f]/g, " ").replace(/\s+/g, " ").trim() || delLugar).slice(0, 80);
 }
 
 export async function activarCartel(
@@ -95,13 +123,13 @@ export async function activarCartel(
 
   const destino = await resolverDestino(datos.placeId, datos.url);
   if (!destino.ok) return { ok: false, error: destino.error };
-  const nombre = (String(datos.nombre ?? "").trim() || destino.nombreLugar).slice(0, 80);
+  const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
   try {
     await activarAutogestion(slug, { nombreNegocio: nombre, urlDestino: destino.url, pin: String(datos.pin) });
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "No se pudo activar." };
+    return { ok: false, error: errorParaMostrar(e, "No se pudo activar. Probá de nuevo en un rato.") };
   }
   // Lo extra (lugar y contacto) no frena la activación si falla: la pieza
   // ya anda, que es lo que importa para el comprador.
@@ -141,13 +169,13 @@ export async function editarCartel(
 
   const destino = await resolverDestino(datos.placeId, datos.url);
   if (!destino.ok) return { ok: false, error: destino.error };
-  const nombre = (String(datos.nombre ?? "").trim() || destino.nombreLugar).slice(0, 80);
+  const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
   try {
     await editarAutogestion(slug, String(pin ?? ""), { nombreNegocio: nombre, urlDestino: destino.url });
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "No se pudo guardar." };
+    return { ok: false, error: errorParaMostrar(e, "No se pudo guardar. Probá de nuevo en un rato.") };
   }
   if (destino.placeId) await guardarLugarAutogestion(slug, destino.placeId);
   revalidatePath(`/t/${slug}`);

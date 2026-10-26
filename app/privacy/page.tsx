@@ -8,8 +8,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Política de privacidad — MetricsField",
-  description: "Cómo MetricsField usa los datos de Google Business Profile de sus clientes.",
+  description: "Cómo MetricsField usa los datos de Google Business Profile de sus clientes, qué guarda, con quién no los comparte y cómo pedir que se borren.",
   alternates: { canonical: "https://metricsfield.com/privacy" },
+  openGraph: { images: ["https://metricsfield.com/landing/assets/img/og-image.jpg"], url: "https://metricsfield.com/privacy", type: "website", siteName: "MetricsField", locale: "es_AR" },
 };
 
 // Página requerida por la verificación OAuth de Google y por el pedido de

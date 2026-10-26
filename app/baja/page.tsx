@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { confirmarBaja } from "./actions";
+import { bajaValida } from "@/lib/baja";
 
 export const metadata: Metadata = { title: "Darme de baja · MetricsField", robots: { index: false } };
 
@@ -12,7 +13,11 @@ export default async function BajaPage({
 }: {
   searchParams: Promise<{ e?: string; f?: string; estado?: string }>;
 }) {
-  const { e = "", f = "", estado } = await searchParams;
+  const { e = "", f = "", estado: pedido } = await searchParams;
+  // Sin una firma válida no se muestra el formulario (ni el mail que vino en
+  // la URL): si no, cualquiera arma un link a esta página con el texto que
+  // quiera adelante de nuestro dominio.
+  const estado = pedido === "listo" || pedido === "invalido" ? pedido : bajaValida(e, f) ? undefined : "invalido";
   return (
     <div className="flex min-h-screen items-center justify-center px-5 py-10" style={{ background: "#f8f9fa" }}>
       <div className="w-full max-w-sm rounded-2xl bg-white px-7 py-8 text-center" style={{ boxShadow: "0 8px 24px rgba(0,0,0,.06)" }}>

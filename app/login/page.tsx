@@ -6,7 +6,11 @@ import { loginConPasswordPermitido } from "@/lib/sesion";
 export const dynamic = "force-dynamic";
 
 // La puerta del panel no es contenido para un buscador.
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: "Ingresar · MetricsField",
+  description: "Acceso al panel del equipo de MetricsField.",
+  robots: { index: false, follow: false },
+};
 
 const ERRORES: Record<string, string> = {
   "1": "Contraseña incorrecta. Probá de nuevo.",
@@ -40,7 +44,7 @@ export default async function LoginPage({
           <div className="text-sm font-semibold tracking-tight text-slate-900">
             MetricsField
           </div>
-          <div className="mt-0.5 text-xs text-slate-500">
+          <div className="mt-0.5 text-xs text-slate-600">
             Panel de la agencia · acceso restringido
           </div>
         </div>
@@ -66,7 +70,7 @@ export default async function LoginPage({
               Entrar con Google
             </a>
             {conPassword && (
-              <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-400">
+              <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wide text-slate-500">
                 <div className="h-px flex-1 bg-slate-200" />
                 o
                 <div className="h-px flex-1 bg-slate-200" />
@@ -92,7 +96,7 @@ export default async function LoginPage({
         ) : (
           <form action={accionLogin} className="space-y-4">
             <label className="block">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-600">
                 Contraseña del equipo
               </span>
               <input
@@ -112,10 +116,10 @@ export default async function LoginPage({
           </form>
         )}
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-slate-500">
           ¿Sos cliente? Entrá con el link privado que te mandamos por WhatsApp.
         </p>
-        <p className="mt-3 text-center text-xs text-slate-400">
+        <p className="mt-3 text-center text-xs text-slate-500">
           <a href="/privacy" className="underline underline-offset-2 hover:text-slate-600">
             Privacidad
           </a>

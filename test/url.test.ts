@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { urlSegura } from "@/lib/url";
+import { urlResenaGoogle, urlSegura } from "@/lib/url";
 
 // urlSegura es la única barrera entre lo que escribe un humano y lo que
 // termina en location.replace()/<a href> de RedireccionSuave, en el mismo
@@ -65,6 +65,39 @@ describe("entradas vacías o rotas", () => {
   it("devuelve null sin explotar", () => {
     for (const malo of ["", "   ", "\n", "no-es-una-url", "http://", "://x", "https:/"]) {
       expect(urlSegura(malo), JSON.stringify(malo)).toBeNull();
+    }
+  });
+});
+
+// Piezas autogestionadas (Mercado Libre): el comprador es anónimo, así que
+// el destino solo puede ser Google — si no, /t/<id> sirve de redireccionador
+// a cualquier sitio con nuestro dominio adelante.
+describe("urlResenaGoogle", () => {
+  it("acepta los links de reseña de Google", () => {
+    for (const buena of [
+      "https://g.page/r/CXyZ/review",
+      "https://search.google.com/local/writereview?placeid=ChIJabc123",
+      "https://www.google.com/maps/place/?q=place_id:ChIJabc123",
+      "https://www.google.com.ar/search?q=mi+negocio",
+      "https://maps.app.goo.gl/AbC123",
+    ]) {
+      expect(urlResenaGoogle(buena), buena).toBe(buena);
+    }
+  });
+
+  it("rechaza cualquier otro sitio, aunque se parezca a Google", () => {
+    for (const malo of [
+      "https://phishing.example/login",
+      "https://google.com.phishing.example/",
+      "https://notgoogle.com/",
+      "https://g.page.example/r/x",
+      "https://google.com@phishing.example/",
+      "https://usuario:clave@g.page/r/x",
+      "http://g.page/r/x",
+      "javascript:alert(1)",
+      "",
+    ]) {
+      expect(urlResenaGoogle(malo), malo).toBeNull();
     }
   });
 });
