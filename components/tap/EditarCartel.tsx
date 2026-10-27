@@ -67,7 +67,7 @@ export default function EditarCartel({
             Editar tu cartel
           </p>
           <p className="mt-1.5 text-[13px]" style={{ color: INK_SOFT }}>
-            Cambiá lo que necesites y confirmá con tu PIN.
+            Ingresá tu PIN para buscar tu negocio y confirmar los cambios.
           </p>
         </div>
 
@@ -79,6 +79,7 @@ export default function EditarCartel({
             <div className="mt-1.5">
               <BuscarNegocio
                   slug={slug}
+                  pin={pin}
                   elegido={lugar}
                   onElegir={(l, token) => {
                     setLugar(l);

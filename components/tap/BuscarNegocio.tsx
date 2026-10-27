@@ -27,9 +27,11 @@ export default function BuscarNegocio({
   slug,
   elegido,
   onElegir,
+  pin,
 }: {
   slug: string;
   elegido: LugarParaResena | null;
+  pin?: string;
   /** `sesionToken` viene solo si el lugar salió de las sugerencias. */
   onElegir: (lugar: LugarParaResena | null, sesionToken?: string) => void;
 }) {
@@ -45,7 +47,7 @@ export default function BuscarNegocio({
   // Sugerencias con una pausa corta al tipear: no una consulta por letra.
   useEffect(() => {
     const q = consulta.trim();
-    if (q.length < 3) {
+    if (q.length < 3 || (pin !== undefined && !/^\d{4,8}$/.test(pin))) {
       ultimaConsulta.current++;
       setSugiriendo(false);
       setLugares(null);
@@ -56,7 +58,7 @@ export default function BuscarNegocio({
     const t = setTimeout(async () => {
       setSugiriendo(true);
       try {
-        const r = await sugerirNegocio(slug, q, token.current);
+        const r = await sugerirNegocio(slug, q, token.current, pin);
         if (n !== ultimaConsulta.current) return;
         if (r.ok) {
           if (r.lugares.length > 0) {
@@ -72,9 +74,9 @@ export default function BuscarNegocio({
       } finally {
         if (n === ultimaConsulta.current) setSugiriendo(false);
       }
-    }, 350);
+    }, 700);
     return () => clearTimeout(t);
-  }, [consulta, slug]);
+  }, [consulta, slug, pin]);
 
   function buscar() {
     setError(null);
@@ -82,7 +84,7 @@ export default function BuscarNegocio({
     setSugiriendo(false);
     startTransition(async () => {
       try {
-        const r = await buscarNegocio(slug, consulta);
+        const r = await buscarNegocio(slug, consulta, pin);
         if (r.ok) {
           setLugares(r.lugares);
           setDeSugerencias(false);

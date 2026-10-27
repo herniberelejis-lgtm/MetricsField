@@ -167,6 +167,17 @@ export async function activarAutogestion(
   return l;
 }
 
+/** Autoriza antes de realizar consultas pagas. El PIN nunca sale del servidor. */
+export async function verificarPinAutogestion(slug: string, pin: string): Promise<boolean> {
+  const rows = await sql`
+    SELECT pin_hash, pin_salt FROM links_nfc
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND activo = TRUE
+  `;
+  const hash = rows[0]?.pin_hash as string | null;
+  const salt = rows[0]?.pin_salt as string | null;
+  return !!hash && !!salt && pinCoincide(pin, hash, salt);
+}
+
 export async function editarAutogestion(
   slug: string,
   pin: string,

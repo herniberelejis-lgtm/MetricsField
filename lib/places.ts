@@ -1,4 +1,6 @@
 import "server-only";
+import { fetchPlacesSeguro } from "./places-seguridad";
+import { unstable_cache } from "next/cache";
 
 // Cliente mínimo de Google Places API (New) — solo pide rating y cantidad
 // de reseñas, el único dato que se puede automatizar sin que el dueño del
@@ -27,22 +29,22 @@ export async function fetchGooglePlaceStats(
   placeId: string,
   opciones: { cacheSegundos?: number } = {},
 ): Promise<GooglePlaceStats | null> {
+  if (opciones.cacheSegundos) {
+    return unstable_cache(() => fetchGooglePlaceStats(placeId), ["places-stats-v1", placeId], { revalidate: opciones.cacheSegundos })();
+  }
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey || !placeId) return null;
+  if (!apiKey || !placeIdValido(placeId)) return null;
 
-  const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
+  const res = await fetchPlacesSeguro(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
     headers: {
       "X-Goog-Api-Key": apiKey,
       // `location` es un campo Essentials: no cambia el precio del pedido,
       // que lo define rating/userRatingCount.
       "X-Goog-FieldMask": "rating,userRatingCount,location",
     },
-    // El cron pide siempre el dato fresco. El portal (reseñas de hoy) acepta
-    // uno de hasta `cacheSegundos`: Places es una API paga y sin caché cada
-    // visita al portal sería un pedido.
-    ...(opciones.cacheSegundos
-      ? { next: { revalidate: opciones.cacheSegundos } }
-      : { cache: "no-store" as const }),
+    // El caché de resultados está por encima del control de cupo: un hit
+    // no reserva una consulta que nunca llega a Google.
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -99,10 +101,10 @@ export async function searchGooglePlace(
   sesgo?: { lat: number; lng: number; radioMetros: number },
 ): Promise<SearchGooglePlaceResultado> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!query.trim()) return { ok: true, resultados: [] };
+  if (typeof query !== "string" || query.trim().length < 3 || query.length > 120) return { ok: true, resultados: [] };
   if (!apiKey) return { ok: false, motivo: "sin-key" };
 
-  const res = await fetch(`${basePlaces()}/v1/places:searchText`, {
+  const res = await fetchPlacesSeguro(`${basePlaces()}/v1/places:searchText`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -111,6 +113,7 @@ export async function searchGooglePlace(
     },
     body: JSON.stringify({
       textQuery: query,
+      pageSize: 8,
       regionCode: "AR",
       languageCode: "es",
       ...(sesgo && {
@@ -178,15 +181,19 @@ function soloHttps(url: string | undefined): string | null {
 export async function fetchResenasGooglePublicas(
   placeId: string,
 ): Promise<ResenasGooglePublicas | null> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey || !placeId) return null;
+  return unstable_cache(() => traerResenasGooglePublicas(placeId), ["places-resenas-v1", placeId], { revalidate: 3600 })();
+}
 
-  const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=es`, {
+async function traerResenasGooglePublicas(placeId: string): Promise<ResenasGooglePublicas | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey || !placeIdValido(placeId)) return null;
+
+  const res = await fetchPlacesSeguro(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
     headers: {
       "X-Goog-Api-Key": apiKey,
       "X-Goog-FieldMask": "reviews,googleMapsUri",
     },
-    next: { revalidate: 3600 },
+    cache: "no-store",
   });
   if (!res.ok) {
     console.error(`Places API (reseñas) respondió ${res.status} para place_id ${placeId}`);
@@ -238,12 +245,12 @@ export interface LugarParaResena {
   direccion: string;
 }
 
-/** El "por qué" que Google manda en el cuerpo de un error (API sin
- * habilitar, facturación, restricción de la key…), acotado para el log. */
+/** Solo el código de error: el texto libre del proveedor puede contener
+ * identificadores o información de credenciales y no se registra. */
 async function motivoGoogle(res: Response): Promise<string> {
   try {
-    const cuerpo = (await res.json()) as { error?: { status?: string; message?: string } };
-    return `${cuerpo.error?.status ?? ""} ${cuerpo.error?.message ?? ""}`.trim().slice(0, 300);
+    const cuerpo = (await res.json()) as { error?: { status?: string } };
+    return (cuerpo.error?.status ?? "").replace(/[^A-Z_]/g, "").slice(0, 60);
   } catch {
     return "(sin detalle)";
   }
@@ -264,13 +271,14 @@ export async function autocompletarLugar(
   texto: string,
   opciones: { sesionToken?: string; sesgo?: { lat: number; lng: number; radioMetros: number } } = {},
 ): Promise<{ ok: true; lugares: LugarParaResena[] } | { ok: false }> {
+  if (typeof texto !== "string" || texto.trim().length < 3 || texto.length > 120) return { ok: false };
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     console.error("Places API (autocomplete): falta GOOGLE_PLACES_API_KEY");
     return { ok: false };
   }
   const sesgo = opciones.sesgo ?? SESGO_CORDOBA;
-  const res = await fetch(`${basePlaces()}/v1/places:autocomplete`, {
+  const res = await fetchPlacesSeguro(`${basePlaces()}/v1/places:autocomplete`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -327,7 +335,7 @@ export async function linkResenaDeLugar(
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey || !placeIdValido(placeId)) return null;
   const sesion = sesionToken && tokenSesionValido(sesionToken) ? `&sessionToken=${encodeURIComponent(sesionToken)}` : "";
-  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es${sesion}`, {
+  const res = await fetchPlacesSeguro(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}?languageCode=es${sesion}`, {
     headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "id,displayName,googleMapsLinks" },
     cache: "no-store",
   });

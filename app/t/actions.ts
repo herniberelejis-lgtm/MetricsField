@@ -8,6 +8,7 @@ import {
   getLink,
   guardarDatosActivacion,
   guardarLugarAutogestion,
+  verificarPinAutogestion,
 } from "@/lib/db";
 import {
   autocompletarLugar,
@@ -22,6 +23,7 @@ import { validarContacto } from "@/lib/activacion";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
 import { urlResenaGoogle } from "@/lib/url";
+import { permitirConsultaPaga } from "@/lib/places-seguridad";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
 // que su comprador escaneó por primera vez. Sin login — la defensa contra
@@ -30,9 +32,19 @@ import { urlResenaGoogle } from "@/lib/url";
 // nunca usado (ver activarAutogestion) y el rate limit por IP.
 /** La pieza se puede configurar desde /t/<id> (libre o autogestionada):
  * los buscadores no son un Places abierto a costa nuestra. */
-async function piezaConfigurable(slug: string): Promise<string | null> {
-  const pieza = await getLink(String(slug ?? "").slice(0, 80));
-  return pieza && !pieza.comercioId && pieza.activo ? pieza.id : null;
+async function piezaConfigurable(slug: string, pin?: string): Promise<string | null> {
+  if (typeof slug !== "string" || !/^[A-Za-z0-9_-]{1,80}$/.test(slug)) return null;
+  const ip = ipDelRequest(await headers());
+  if (!(await permitirConsultaPaga(`pieza-ip:${ip}`, 60, 600_000)) ||
+      !(await permitirConsultaPaga(`pieza:${slug}`, 60, 86400_000))) return null;
+  const pieza = await getLink(slug);
+  if (!pieza || pieza.comercioId || !pieza.activo) return null;
+  if (pieza.autogestionado) {
+    if (!pinValido(pin ?? "") || !(await verificarPinAutogestion(slug, pin!))) return null;
+    return pieza.id;
+  }
+  // Solo inventario nunca usado. Las piezas devueltas no se pueden reclamar.
+  return pieza.etiqueta === "" && pieza.urlDestino === null ? pieza.id : null;
 }
 
 /** Busca el negocio del comprador en Google para que lo elija de una lista
@@ -41,12 +53,13 @@ async function piezaConfigurable(slug: string): Promise<string | null> {
 export async function buscarNegocio(
   slug: string,
   consulta: string,
+  pin?: string,
 ): Promise<{ ok: true; lugares: LugarParaResena[] } | { ok: false; error: string }> {
   const q = String(consulta ?? "").trim().slice(0, 80);
   if (q.length < 3) return { ok: false, error: "Escribí al menos 3 letras del nombre." };
 
-  const pieza = await piezaConfigurable(slug);
-  if (!pieza) return { ok: false, error: "Esta pieza no se puede configurar desde acá." };
+  const pieza = await piezaConfigurable(slug, pin);
+  if (!pieza) return { ok: false, error: "Búsqueda no disponible. Revisá la pieza, tu PIN o intentá más tarde. También podés pegar el enlace manualmente." };
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
@@ -75,12 +88,13 @@ export async function sugerirNegocio(
   slug: string,
   texto: string,
   sesionToken: string,
+  pin?: string,
 ): Promise<{ ok: true; lugares: LugarParaResena[] } | { ok: false; error: string }> {
   const q = String(texto ?? "").trim().slice(0, 80);
   if (q.length < 3) return { ok: true, lugares: [] };
 
-  const pieza = await piezaConfigurable(slug);
-  if (!pieza) return { ok: false, error: "Esta pieza no se puede configurar desde acá." };
+  const pieza = await piezaConfigurable(slug, pin);
+  if (!pieza) return { ok: false, error: "Búsqueda no disponible. Revisá tu PIN o pegá el enlace manualmente." };
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
@@ -171,6 +185,13 @@ export async function activarCartel(
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
+  // Incluso una activación repetida debe rechazarse ANTES de facturar Google.
+  // El modo manual sigue disponible cuando las consultas pagas están apagadas.
+  const piezaActivar = await getLink(String(slug ?? "").slice(0, 80));
+  if (!piezaActivar || piezaActivar.comercioId || piezaActivar.autogestionado || !piezaActivar.activo || piezaActivar.etiqueta !== "" || piezaActivar.urlDestino !== null) {
+    return { ok: false, error: "Esta pieza ya fue activada, o no está disponible para autogestión." };
+  }
+  if (datos.placeId && !(await piezaConfigurable(slug))) return { ok: false, error: "No podemos consultar Google ahora. Pegá el enlace manualmente o intentá más tarde." };
   const destino = await resolverDestino(datos.placeId, datos.url, datos.sesionToken);
   if (!destino.ok) return { ok: false, error: destino.error };
   const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
@@ -206,6 +227,7 @@ export async function editarCartel(
   pin: string,
   datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string },
 ): Promise<{ ok: boolean; error?: string }> {
+  if (!pinValido(pin)) return { ok: false, error: "PIN incorrecto." };
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
   const pieza = String(slug ?? "").slice(0, 80);
@@ -217,6 +239,9 @@ export async function editarCartel(
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
+  // Verificar titularidad antes de cualquier llamada facturable, no al guardar.
+  if (!(await verificarPinAutogestion(pieza, pin))) return { ok: false, error: "PIN incorrecto." };
+  if (datos.placeId && !(await piezaConfigurable(slug, pin))) return { ok: false, error: "No podemos consultar Google ahora. Pegá el enlace manualmente o intentá más tarde." };
   const destino = await resolverDestino(datos.placeId, datos.url, datos.sesionToken);
   if (!destino.ok) return { ok: false, error: destino.error };
   const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);

@@ -11,6 +11,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import { asegurarAdminPagina } from "@/lib/auth";
 import { waUrl } from "@/lib/whatsapp";
+import BuscadorResenasAdmin from "@/components/BuscadorResenasAdmin";
 
 export const metadata: Metadata = { title: "Hardware" };
 export const dynamic = "force-dynamic";
@@ -56,6 +57,8 @@ export default async function HardwarePage({
         title="Hardware"
         subtitle={`${inventario.length} piezas generadas · ${libres.length} libres · ${autogestionadas.length} autogestionadas · ${asignadas.length} asignadas`}
       />
+
+      <BuscadorResenasAdmin piezas={libres.filter(p => p.activo).map(p => ({ id: p.id }))} clientes={clientes.map(c => ({ id: c.id, nombre: c.nombre }))} />
 
       {error && (
         <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">

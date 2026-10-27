@@ -209,8 +209,11 @@ docs/               → este archivo (el manual operativo y los prompts
   evolución mensual con drill-down de temas, benchmarking vs competencia con
   comparación de crecimiento automática.
 - **Rating y reseñas de Google, automático**: sincroniza solo todos los días
-  vía Google Places API (necesita `GOOGLE_PLACES_API_KEY` + Place ID cargado
-  por cliente).
+  vía Google Places API (necesita `GOOGLE_PLACES_API_KEY`, Place ID cargado
+  por cliente, `GOOGLE_PLACES_HABILITADO=true`, cupos positivos y Redis
+  operativo). Por el requisito actual de US$0, las consultas quedan apagadas
+  y los cupos predeterminados en cero hasta verificar franquicia y consumo
+  de toda la cuenta. Ver `docs/BUSCADOR-RESENAS-SEGURIDAD.md`.
 - **Alertas por email al dueño** (reseña de ≤3★ o queja privada nueva) y
   **resumen mensual por email** (día 1 de cada mes, desde el cron diario).
   Necesitan `SMTP_*` cargadas en Vercel y `email_notificaciones` cargado por
