@@ -8,6 +8,7 @@ import { searchGooglePlace, linkResenaDeLugar, fetchGooglePlaceStats, fetchResen
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubEnv("APIS_MODO_SIN_GASTO", "false");
   vi.stubEnv("GOOGLE_PLACES_HABILITADO", "true");
   vi.stubEnv("GOOGLE_PLACES_API_KEY", "clave-simulada");
   vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://ejemplo.upstash.io");

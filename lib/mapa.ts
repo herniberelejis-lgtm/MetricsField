@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { modoSinGasto } from "./politica-gasto";
 
 // Mapa de la zona del portal: una imagen de Google Maps Static API con el
 // comercio y sus competidores. La imagen la pide el navegador del cliente
@@ -43,6 +44,7 @@ export function urlMapaEstatico(
   puntos: PuntoMapa[],
   opciones: { key: string; secreto?: string; ancho?: number; alto?: number },
 ): string {
+  if (modoSinGasto()) return "";
   const p = new URLSearchParams();
   p.set("size", `${opciones.ancho ?? 640}x${opciones.alto ?? 320}`);
   p.set("scale", "2");

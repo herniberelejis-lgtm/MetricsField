@@ -1,4 +1,5 @@
 import "server-only";
+import { servicioExternoPermitido } from "./politica-gasto";
 
 // Reporte de fallas a un canal que alguien mira de verdad.
 //
@@ -39,7 +40,7 @@ function textoDelError(e: unknown): string {
  */
 export async function notificar(titulo: string, texto: string): Promise<void> {
   console.info(`[aviso] ${titulo}: ${texto}`);
-  if (!WEBHOOK) return;
+  if (!WEBHOOK || !servicioExternoPermitido("webhook")) return;
   try {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
@@ -73,7 +74,7 @@ export async function reportarFalla(
   // que ya existía y lo que se ve en los logs de Vercel.
   console.error(`[${origen}]`, detalle, datos ?? "");
 
-  if (!WEBHOOK) return;
+  if (!WEBHOOK || !servicioExternoPermitido("webhook")) return;
 
   const contexto = datos
     ? Object.entries(datos)

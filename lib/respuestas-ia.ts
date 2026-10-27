@@ -2,6 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { TonoMarca } from "./types";
 import { huellaRespuesta } from "./auto-respuesta";
+import { modoSinGasto } from "./politica-gasto";
 
 // Respuestas a reseñas redactadas con Claude: específicas (mencionan lo que
 // dijo el cliente), que es lo que Google premia en una respuesta, en vez de
@@ -17,7 +18,7 @@ import { huellaRespuesta } from "./auto-respuesta";
 // nombre del comercio y el tono: nunca el nombre del autor.
 
 export function respuestasIAHabilitadas(): boolean {
-  return process.env.RESPUESTAS_IA_HABILITADAS === "true" && Boolean(process.env.ANTHROPIC_API_KEY);
+  return !modoSinGasto() && process.env.RESPUESTAS_IA_HABILITADAS === "true" && Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
 const MODELO = () => process.env.RESPUESTAS_IA_MODELO || "claude-opus-5-5";

@@ -1,6 +1,7 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { reportarFalla } from "./monitor";
+import { servicioExternoPermitido } from "./politica-gasto";
 
 // Envío de email por SMTP genérico — funciona con Gmail/Google Workspace
 // (smtp.gmail.com + contraseña de aplicación), o con cualquier otro
@@ -9,7 +10,7 @@ import { reportarFalla } from "./monitor";
 // se salta el envío en silencio — mismo patrón que GOOGLE_PLACES_API_KEY.
 
 export function emailHabilitado(): boolean {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return servicioExternoPermitido("smtp") && Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
 let transporter: Transporter | null = null;
@@ -89,6 +90,7 @@ export async function probarEnvioEmail(opts: {
   asunto: string;
   html: string;
 }): Promise<{ ok: true; remitente: string } | { ok: false; error: string }> {
+  if (!servicioExternoPermitido("smtp")) return { ok: false, error: "Correo pausado por el modo sin gasto. Primero verificá que el proveedor SMTP sea gratuito." };
   const faltan = variablesEmailFaltantes();
   if (faltan.length) return { ok: false, error: `Faltan cargar en Vercel (Production): ${faltan.join(", ")}.` };
   const remitente = process.env.EMAIL_FROM || process.env.SMTP_USER || "";

@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { firmarUrl, urlMapaEstatico } from "@/lib/mapa";
+
+beforeEach(() => vi.stubEnv("APIS_MODO_SIN_GASTO", "false"));
+afterEach(() => vi.unstubAllEnvs());
 
 describe("mapa de la zona (Maps Static API)", () => {
   it("firma la URL como lo documenta Google", () => {

@@ -26,6 +26,7 @@ import {
   type TopPiezaSemana,
 } from "@/lib/db";
 import { urlMapaEstatico } from "@/lib/mapa";
+import { modoSinGasto } from "@/lib/politica-gasto";
 import { armarConclusiones } from "@/lib/conclusiones";
 import { armarTablero, combinarEntradas, marcadoresZona, rangoDe, RANGOS, type Rango } from "@/lib/tablero";
 import type { ResumenLocal } from "@/components/portal/Tablero";
@@ -263,7 +264,7 @@ export default async function PortalPage({
     : null;
   // Mapa de la zona (Google Maps Static API): solo con la clave cargada y
   // con la ubicación del local y de algún competidor (lib/db/ubicaciones.ts).
-  const claveMapa = process.env.GOOGLE_MAPS_STATIC_KEY;
+  const claveMapa = modoSinGasto() ? undefined : process.env.GOOGLE_MAPS_STATIC_KEY;
   const mapaZona =
     tableroLocal && claveMapa
       ? await (async () => {

@@ -1,5 +1,6 @@
 import "server-only";
 import { Redis } from "@upstash/redis";
+import { modoSinGasto } from "./politica-gasto";
 
 // Una única operación atómica reserva TODOS los contadores antes de llamar
 // a Google. No hay fallback en memoria ni devolución de cupo ante errores:
@@ -44,6 +45,7 @@ async function reservar(contadores: { clave: string; maximo: number; ventana: nu
 
 /** Para rutas/actions pagas: falla cerrado incluso en local y previews. */
 export async function permitirConsultaPaga(clave: string, maximo: number, ventana: number): Promise<boolean> {
+  if (modoSinGasto()) return false;
   if (process.env.GOOGLE_PLACES_HABILITADO !== "true") return false;
   return reservar([{ clave: `actor:${clave}`, maximo, ventana }]);
 }
@@ -52,6 +54,7 @@ export async function permitirConsultaPaga(clave: string, maximo: number, ventan
  * Redis debe ser compartido por todos los despliegues que usen la clave.
  * Cuenta intentos, no pesos/dólares: las SKUs tienen precios diferentes. */
 export async function reservarConsultaPlaces(): Promise<boolean> {
+  if (modoSinGasto()) return false;
   if (process.env.GOOGLE_PLACES_HABILITADO !== "true") return false;
   const diario = limite("GOOGLE_PLACES_MAX_DIA", 0);
   const mensual = limite("GOOGLE_PLACES_MAX_MES", 0);

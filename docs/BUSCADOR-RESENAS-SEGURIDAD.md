@@ -1,5 +1,9 @@
 # Buscador de reseñas y protección de gasto
 
+El perfil global y el requisito actualizado de techo total US$2/mes se
+documentan en `docs/APIS-PRESUPUESTO.md`. `APIS_MODO_SIN_GASTO` bloquea Places
+antes de Redis y de los límites específicos; no alcanza con activar su flag.
+
 ## Uso
 
 En **Administración → Hardware**: buscar negocio por nombre y ciudad, confirmar dirección y elegir el resultado. Se puede probar/copiar el enlace o elegir cliente y pieza libre y pulsar **Asignar y configurar NFC / QR**. Se actualiza el destino; el chip y el QR conservan su enlace MetricsField `/t/código`. Grabar físicamente un chip requiere dispositivo compatible y no ocurre al guardar el formulario.
