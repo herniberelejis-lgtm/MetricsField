@@ -203,6 +203,96 @@ export async function editarAutogestion(
   return l;
 }
 
+/** Sal actual del PIN de una pieza autogestionada (sin cliente), o null si
+ * no lo es o no tiene PIN. Es lo que el llavero de piezas firma
+ * (lib/llavero.ts): cambia cada vez que cambia el PIN. Nunca sale del
+ * servidor. */
+export async function salPinAutogestion(slug: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT pin_salt FROM links_nfc
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND pin_hash IS NOT NULL
+  `;
+  return (rows[0]?.pin_salt as string | null | undefined) ?? null;
+}
+
+/** Verifica el PIN de una pieza autogestionada. Devuelve la sal actual si
+ * coincide, null si no. El rate limit lo pone quien llama. */
+export async function verificarPinAutogestion(slug: string, pin: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT pin_hash, pin_salt FROM links_nfc
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE
+  `;
+  const hash = rows[0]?.pin_hash as string | null | undefined;
+  const salt = rows[0]?.pin_salt as string | null | undefined;
+  if (!hash || !salt || !pinCoincide(pin, hash, salt)) return null;
+  return salt;
+}
+
+/** Cambio pedido desde un navegador ya autorizado por el llavero: en vez
+ * del PIN se exige que la sal no haya cambiado desde que se verificó (si
+ * en el medio alguien cambió el PIN o la pieza pasó a un cliente, no pisa
+ * nada). Devuelve la sal vigente después del cambio. */
+export async function editarAutogestionAutorizada(
+  slug: string,
+  salPin: string,
+  datos: { nombreNegocio: string; urlDestino: string; pinNuevo?: string },
+): Promise<string> {
+  const nuevo = datos.pinNuevo ? hashearPin(datos.pinNuevo) : null;
+  const rows = await sql`
+    UPDATE links_nfc SET
+      nombre_negocio = ${datos.nombreNegocio},
+      url_destino = ${datos.urlDestino}
+      ${nuevo ? sql`, pin_hash = ${nuevo.hash}, pin_salt = ${nuevo.salt}` : sql``}
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND pin_salt = ${salPin}
+    RETURNING pin_salt
+  `;
+  if (rows.length === 0) throw new Error("Esta pieza ya no se puede cambiar desde este celular.");
+  return rows[0].pin_salt as string;
+}
+
+/** Entregar la pieza a otro dueño: PIN nuevo (así ningún celular que la
+ * manejaba la sigue controlando). Mismo control de sal que arriba. */
+export async function rotarPinAutogestion(slug: string, salPin: string, pinNuevo: string): Promise<boolean> {
+  const { hash, salt } = hashearPin(pinNuevo);
+  const rows = await sql`
+    UPDATE links_nfc SET pin_hash = ${hash}, pin_salt = ${salt}
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND pin_salt = ${salPin}
+    RETURNING id
+  `;
+  return rows.length > 0;
+}
+
+export interface PiezaDelLlavero {
+  id: string;
+  nombreNegocio: string;
+  urlDestino: string | null;
+  salPin: string | null;
+  activo: boolean;
+  toques7d: number;
+}
+
+/** Las piezas de "Mis piezas", en una sola consulta. Solo devuelve las
+ * autogestionadas sin cliente: cualquier otra no es manejable desde acá. */
+export async function getPiezasDelLlavero(codigos: string[]): Promise<PiezaDelLlavero[]> {
+  if (codigos.length === 0) return [];
+  const rows = await sql`
+    SELECT l.id, l.nombre_negocio, l.url_destino, l.pin_salt, l.activo,
+      COUNT(t.id) FILTER (WHERE t.creado_en > now() - interval '7 days')::int AS toques_7d
+    FROM links_nfc l
+    LEFT JOIN taps t ON t.link_id = l.id
+    WHERE l.id = ANY(${codigos}) AND l.comercio_id IS NULL AND l.autogestionado = TRUE AND l.pin_hash IS NOT NULL
+    GROUP BY l.id
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    nombreNegocio: (r.nombre_negocio as string) ?? "",
+    urlDestino: (r.url_destino as string | null) ?? null,
+    salPin: (r.pin_salt as string | null) ?? null,
+    activo: Boolean(r.activo),
+    toques7d: Number(r.toques_7d ?? 0),
+  }));
+}
+
 /** PIN nuevo puesto por el equipo, para quien se olvidó el suyo (lo pide
  * por WhatsApp). Solo piezas autogestionadas: una de agencia no tiene PIN. */
 export async function cambiarPinAutogestion(slug: string, pin: string): Promise<boolean> {

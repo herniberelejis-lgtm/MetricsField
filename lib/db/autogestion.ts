@@ -44,6 +44,19 @@ export async function guardarLugarAutogestion(slug: string, googlePlaceId: strin
   }
 }
 
+/** Al entregar la pieza a otro dueño: el contacto del anterior (mail y
+ * WhatsApp del aviso semanal) no viaja con ella. */
+export async function borrarContactoPieza(slug: string): Promise<void> {
+  try {
+    await sql`
+      UPDATE links_nfc SET contacto_email = '', contacto_whatsapp = '', novedades_aceptadas_en = NULL
+      WHERE id = ${slug} AND autogestionado = TRUE AND comercio_id IS NULL
+    `;
+  } catch (e) {
+    console.error("Entrega: no se borró el contacto (¿falta la migración 019?)", e instanceof Error ? e.message : e);
+  }
+}
+
 /** Baja del aviso semanal para todas las piezas con ese mail. */
 export async function darDeBajaNovedades(email: string): Promise<number> {
   try {

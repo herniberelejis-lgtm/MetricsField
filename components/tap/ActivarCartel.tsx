@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { activarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
@@ -118,6 +119,14 @@ export default function ActivarCartel({ slug }: { slug: string }) {
         return;
       }
       recordarPiezaMia(slug);
+      // Suma la pieza a "Mis piezas" de este celular (ver app/t/llavero).
+      if (res.ticket) {
+        await fetch("/t/llavero", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ op: "sumar-ticket", ticket: res.ticket }),
+        }).catch(() => {});
+      }
       const nombreFinal = lugar ? lugar.nombre : nombre;
       try {
         const guardar: Recuerdo = { nombre: nombreFinal, lugar, url: lugar ? "" : url, email, whatsapp, acepta };
@@ -328,10 +337,6 @@ function Listo({
   acepta: boolean;
   conMail: boolean;
 }) {
-  // El dominio real donde está parado (preview, producción) — después de
-  // montar, para que el HTML del servidor y el del navegador coincidan.
-  const [host, setHost] = useState("");
-  useEffect(() => setHost(window.location.host), []);
   return (
     <div className="flex min-h-screen flex-col items-center gap-5 px-4 py-8" style={{ background: "#f8f9fa" }}>
       <div
@@ -386,7 +391,8 @@ function Listo({
             ¿Tenés más piezas?
           </p>
           <p className="mt-1 text-[13px]" style={{ color: INK_SOFT }}>
-            Escaneá la siguiente con este mismo celular: te va a ofrecer los mismos datos y la activás en un toque.
+            Escaneá la siguiente con este mismo celular: te ofrece los mismos datos (o elegís otro negocio) y queda en tus
+            piezas.
           </p>
         </div>
 
@@ -395,13 +401,22 @@ function Listo({
             ¿La querés cambiar más adelante?
           </p>
           <p className="mt-1 text-[13px]" style={{ color: INK_SOFT }}>
-            Las veces que quieras, por ejemplo si se la das a otro negocio. Escaneala con este mismo celular y te
-            ofrece cambiarla, o entrá a este link. Te pide tu PIN:{" "}
+            Las veces que quieras, sin PIN desde este celular: escaneala y te ofrece cambiarla, o entrá a{" "}
+            <b>Mis piezas</b> (guardala en favoritos). Si la das a otro negocio, ahí mismo la entregás.
+          </p>
+          <Link
+            href="/t/mis-piezas"
+            className="mt-3 block w-full rounded-full px-5 py-3 text-center text-[14.5px] font-semibold text-white"
+            style={{ backgroundColor: BRAND }}
+          >
+            Ver mis piezas
+          </Link>
+          <p className="mt-3 text-[12.5px]" style={{ color: INK_SOFT }}>
+            Anotá el PIN, lo vas a necesitar solo desde otro celular:{" "}
             <b className="font-mono text-[14px]" style={{ color: INK }}>
               {pin}
             </b>
           </p>
-          <CopiarTexto texto={host ? `${host}/t/${slug}/editar` : ""} />
         </div>
 
         {acepta ? (
@@ -421,35 +436,6 @@ function Listo({
       </div>
       <GrabarChip slug={slug} titulo="Ahora grabá el chip NFC" />
       <OfertaPrueba />
-    </div>
-  );
-}
-
-/** Texto a la vista con botón para copiarlo (el link para cambiar la pieza). */
-function CopiarTexto({ texto }: { texto: string }) {
-  const [copiado, setCopiado] = useState(false);
-  async function copiar() {
-    try {
-      await navigator.clipboard.writeText(`https://${texto}`);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch {
-      // Sin permiso de portapapeles: el link queda a la vista para copiarlo a mano.
-    }
-  }
-  return (
-    <div className="mt-2.5 flex items-center gap-2">
-      <code className="min-w-0 flex-1 break-all rounded-lg bg-white px-3 py-2 text-[12px]" style={{ color: INK }}>
-        {texto}
-      </code>
-      <button
-        type="button"
-        onClick={copiar}
-        className="shrink-0 rounded-lg px-3.5 py-2.5 text-[13.5px] font-medium text-white"
-        style={{ backgroundColor: BRAND }}
-      >
-        {copiado ? "¡Copiado!" : "Copiar"}
-      </button>
     </div>
   );
 }
