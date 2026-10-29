@@ -5,6 +5,7 @@ import {
   accionGenerarLotePiezas,
   accionAsignarPieza,
   accionReasignarPieza,
+  accionNuevoPinPieza,
 } from "@/app/actions";
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
@@ -31,15 +32,18 @@ const ERRORES_ASIGNAR: Record<string, string> = {
   "sin-cliente": "Elegí a qué cliente asignarla antes de guardar.",
   "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
   "no-libre": "Esa pieza ya no está libre: alguien la asignó o la activó recién. Mirá la lista actualizada.",
+  "pin-invalido": "El PIN tiene que ser de 4 a 8 números.",
+  "no-autogestionada": "Esa pieza ya no es autogestionada (alguien la asignó a un cliente): no tiene PIN.",
 };
 
 export default async function HardwarePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
   await asegurarAdminPagina();
-  const { error } = await searchParams;
+  const { error, ok } = await searchParams;
+  const pinCambiado = ok?.startsWith("pin-") ? ok.slice(4) : null;
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 
   const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
@@ -56,6 +60,13 @@ export default async function HardwarePage({
         title="Hardware"
         subtitle={`${inventario.length} piezas generadas · ${libres.length} libres · ${autogestionadas.length} autogestionadas · ${asignadas.length} asignadas`}
       />
+
+      {pinCambiado && (
+        <div className="mb-4 rounded-lg bg-[#E6F4EA] px-3 py-2 text-sm text-[#0B5E40]">
+          Listo: la pieza <code className="font-mono">{pinCambiado}</code> tiene el PIN nuevo. Pasáselo al dueño
+          junto con el link para cambiarla: <code className="font-mono">app.metricsfield.com/t/{pinCambiado}/editar</code>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-[#FFF4E8] px-3 py-2 text-sm text-[#8A3F00]">
@@ -236,13 +247,14 @@ export default async function HardwarePage({
             {/* min-w fijo, mismo motivo que la tabla de libres: el formulario
                 con urlDestino (w-56) es todavía más ancho — sin esto se
                 apila en varias líneas por fila en vez de scrollear. */}
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[1100px] text-sm">
               <thead>
                 <tr className="border-b border-[#E4E6EA] text-left text-xs text-slate-600">
                   <th className="px-4 py-3 font-medium">Código</th>
                   <th className="px-4 py-3 font-medium">Negocio</th>
                   <th className="px-4 py-3 font-medium">Contacto</th>
                   <th className="px-4 py-3 font-medium">Toques 7 / 30 días · total</th>
+                  <th className="px-4 py-3 font-medium">¿Se olvidó el PIN?</th>
                   <th className="px-4 py-3 font-medium">Asignar a cliente</th>
                 </tr>
               </thead>
@@ -294,6 +306,30 @@ export default async function HardwarePage({
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 tabular-nums">
                       <b>{fmtNum(p.taps7d)}</b> / {fmtNum(p.taps30d)} · {fmtNum(p.taps)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <form action={accionNuevoPinPieza} className="flex flex-nowrap items-center gap-2">
+                        <input type="hidden" name="id" value={p.id} />
+                        <input
+                          name="pin"
+                          inputMode="numeric"
+                          pattern="[0-9]{4,8}"
+                          autoComplete="off"
+                          aria-label={`PIN nuevo para ${p.id}`}
+                          placeholder="PIN nuevo"
+                          required
+                          className={`${inputCls} w-24`}
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg border border-[#E4E6EA] px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Cambiar
+                        </button>
+                      </form>
+                      <a href={`/t/${p.id}/editar`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#1F4E80] underline">
+                        Link para cambiarla
+                      </a>
                     </td>
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
