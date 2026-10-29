@@ -9,6 +9,7 @@ import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
 import GrabarChip from "./GrabarChip";
 import OfertaPrueba from "./OfertaPrueba";
+import { recordarPiezaMia } from "@/lib/piezas-mias";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -46,7 +47,7 @@ function leerRecuerdo(): Recuerdo | null {
   }
 }
 
-function Paso({ n, titulo, children }: { n: number; titulo: string; children: React.ReactNode }) {
+export function Paso({ n, titulo, children }: { n: number; titulo: string; children: React.ReactNode }) {
   return (
     <section>
       <div className="mb-2 flex items-center gap-2">
@@ -116,6 +117,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
         setError(res.error ?? "No se pudo activar.");
         return;
       }
+      recordarPiezaMia(slug);
       const nombreFinal = lugar ? lugar.nombre : nombre;
       try {
         const guardar: Recuerdo = { nombre: nombreFinal, lugar, url: lugar ? "" : url, email, whatsapp, acepta };
@@ -388,11 +390,18 @@ function Listo({
           </p>
         </div>
 
-        <div className="mt-3 rounded-xl px-4 py-3.5 text-[12.5px]" style={{ background: "#f8f9fa", color: INK_SOFT }}>
-          Tu PIN: <b className="font-mono text-[14px]" style={{ color: INK }}>{pin}</b>. Para cambiar el link o el nombre, entrá a
-          <div className="mt-1 break-all font-mono text-[11.5px]" style={{ color: INK }}>
-            {host}/t/{slug}/editar
-          </div>
+        <div className="mt-3 rounded-xl px-4 py-3.5" style={{ background: "#f8f9fa" }}>
+          <p className="text-[14px] font-medium" style={{ color: INK }}>
+            ¿La querés cambiar más adelante?
+          </p>
+          <p className="mt-1 text-[13px]" style={{ color: INK_SOFT }}>
+            Las veces que quieras, por ejemplo si se la das a otro negocio. Escaneala con este mismo celular y te
+            ofrece cambiarla, o entrá a este link. Te pide tu PIN:{" "}
+            <b className="font-mono text-[14px]" style={{ color: INK }}>
+              {pin}
+            </b>
+          </p>
+          <CopiarTexto texto={host ? `${host}/t/${slug}/editar` : ""} />
         </div>
 
         {acepta ? (
@@ -412,6 +421,35 @@ function Listo({
       </div>
       <GrabarChip slug={slug} titulo="Ahora grabá el chip NFC" />
       <OfertaPrueba />
+    </div>
+  );
+}
+
+/** Texto a la vista con botón para copiarlo (el link para cambiar la pieza). */
+function CopiarTexto({ texto }: { texto: string }) {
+  const [copiado, setCopiado] = useState(false);
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(`https://${texto}`);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Sin permiso de portapapeles: el link queda a la vista para copiarlo a mano.
+    }
+  }
+  return (
+    <div className="mt-2.5 flex items-center gap-2">
+      <code className="min-w-0 flex-1 break-all rounded-lg bg-white px-3 py-2 text-[12px]" style={{ color: INK }}>
+        {texto}
+      </code>
+      <button
+        type="button"
+        onClick={copiar}
+        className="shrink-0 rounded-lg px-3.5 py-2.5 text-[13.5px] font-medium text-white"
+        style={{ backgroundColor: BRAND }}
+      >
+        {copiado ? "¡Copiado!" : "Copiar"}
+      </button>
     </div>
   );
 }

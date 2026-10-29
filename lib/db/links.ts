@@ -170,7 +170,7 @@ export async function activarAutogestion(
 export async function editarAutogestion(
   slug: string,
   pin: string,
-  datos: { nombreNegocio: string; urlDestino: string },
+  datos: { nombreNegocio: string; urlDestino: string; pinNuevo?: string },
 ): Promise<LinkNFC> {
   const rows = await sql`
     SELECT pin_hash, pin_salt FROM links_nfc
@@ -186,10 +186,14 @@ export async function editarAutogestion(
   // Las mismas condiciones que el chequeo de arriba, y el mismo PIN: si en
   // el medio el equipo asignó la pieza a un cliente (o se cambió el PIN),
   // esta edición no pisa nada.
+  // PIN nuevo opcional: un revendedor que le pasa la pieza a otro negocio
+  // le deja su propio PIN.
+  const nuevo = datos.pinNuevo ? hashearPin(datos.pinNuevo) : null;
   const actualizado = await sql`
     UPDATE links_nfc SET
       nombre_negocio = ${datos.nombreNegocio},
       url_destino = ${datos.urlDestino}
+      ${nuevo ? sql`, pin_hash = ${nuevo.hash}, pin_salt = ${nuevo.salt}` : sql``}
     WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE AND pin_hash = ${pinHash}
     RETURNING id
   `;
@@ -197,6 +201,18 @@ export async function editarAutogestion(
   const l = await getLink(slug);
   if (!l) throw new Error(`Pieza no encontrada: ${slug}`);
   return l;
+}
+
+/** PIN nuevo puesto por el equipo, para quien se olvidó el suyo (lo pide
+ * por WhatsApp). Solo piezas autogestionadas: una de agencia no tiene PIN. */
+export async function cambiarPinAutogestion(slug: string, pin: string): Promise<boolean> {
+  const { hash, salt } = hashearPin(pin);
+  const rows = await sql`
+    UPDATE links_nfc SET pin_hash = ${hash}, pin_salt = ${salt}
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE
+    RETURNING id
+  `;
+  return rows.length > 0;
 }
 
 // ---------- Inventario de hardware (piezas pre-generadas en lote) ----------
