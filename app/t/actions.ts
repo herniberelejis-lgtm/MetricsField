@@ -7,6 +7,7 @@ import {
   borrarContactoPieza,
   desvincularPieza,
   getPiezasDelLlavero,
+  piezaEsDeCuenta,
   vincularPiezasACuenta,
   editarAutogestion,
   editarAutogestionAutorizada,
@@ -55,10 +56,14 @@ async function piezaConfigurable(slug: string): Promise<string | null> {
   return pieza && !pieza.comercioId && pieza.activo ? pieza.id : null;
 }
 
-/** ¿Este navegador maneja la pieza? (llavero del celular o cuenta de
- * Google, ver lib/cuenta-piezas.ts). Devuelve la sal actual del PIN. */
-async function autorizadaAhora(slug: string): Promise<string | null> {
-  return accesoAPieza(slug);
+/** Cupo diario por pieza de los buscadores (cada búsqueda la paga Google).
+ * Quien ya maneja la pieza la cambia muchas veces para mostrarla en cada
+ * local: pasado el cupo común, tiene uno extra. El acceso solo se mira
+ * cuando hace falta, no en cada pausa al tipear. */
+async function cupoPorPieza(clave: string, pieza: string, comun: number, extraDuenio: number): Promise<boolean> {
+  const dia = 24 * 60 * 60_000;
+  if (await permitir(`${clave}:${pieza}`, comun, dia)) return true;
+  return Boolean(await accesoAPieza(pieza)) && (await permitir(`${clave}-duenio:${pieza}`, extraDuenio, dia));
 }
 
 /** Si entró con Google, la pieza queda guardada también en su cuenta. */
@@ -94,13 +99,9 @@ export async function buscarNegocio(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  // Quien ya maneja la pieza (llavero) la cambia muchas veces para mostrarla
-  // en cada local: límite por pieza más alto, pero finito (cada búsqueda la
-  // paga Google).
-  const tope = (await autorizadaAhora(pieza)) ? 300 : 60;
   if (
     !(await permitir(`buscar-negocio:${ip}`, 20, 10 * 60_000)) ||
-    !(await permitir(`buscar-negocio-pieza:${pieza}`, tope, 24 * 60 * 60_000))
+    !(await cupoPorPieza("buscar-negocio-pieza", pieza, 60, 240))
   ) {
     return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
   }
@@ -132,10 +133,9 @@ export async function sugerirNegocio(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
-  const tope = (await autorizadaAhora(pieza)) ? 1500 : 400;
   if (
     !(await permitir(`sugerir-negocio:${ip}`, 150, 10 * 60_000)) ||
-    !(await permitir(`sugerir-negocio-pieza:${pieza}`, tope, 24 * 60 * 60_000))
+    !(await cupoPorPieza("sugerir-negocio-pieza", pieza, 400, 1100))
   ) {
     return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
   }
@@ -261,11 +261,16 @@ export async function editarCartel(
   slug: string,
   pin: string,
   datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string; pinNuevo?: string },
-): Promise<{ ok: boolean; error?: string; nombre?: string }> {
+): Promise<{ ok: boolean; error?: string; nombre?: string; sinAcceso?: boolean }> {
   const pinNuevo = String(datos.pinNuevo ?? "");
   if (pinNuevo && !pinValido(pinNuevo)) return { ok: false, error: "El PIN nuevo tiene que ser de 4 a 8 números." };
   const pieza = String(slug ?? "").slice(0, 80);
-  const sal = await autorizadaAhora(pieza);
+  const sal = await accesoAPieza(pieza);
+  // Sin acceso y sin PIN (cambió el PIN en otro lado, venció la sesión de
+  // Google): no gasta intentos de PIN; la pantalla vuelve a pedirlo.
+  if (!sal && !String(pin ?? "")) {
+    return { ok: false, sinAcceso: true, error: "Este celular ya no maneja esta pieza. Poné su PIN de nuevo." };
+  }
 
   limpiarVencidos();
   if (sal) {
@@ -302,6 +307,10 @@ export async function editarCartel(
   // Con el PIN puesto (o recién cambiado) este navegador queda autorizado;
   // si cambió el PIN, con la sal nueva — si no, se perdería a sí mismo.
   await guardarEnLlavero(pieza, await salPinAutogestion(pieza));
+  // PIN nuevo = nadie más la maneja: tampoco una cuenta de Google que la
+  // tenía guardada (si no, el cambio de PIN no protegería nada). La cuenta
+  // de quien la cambió, si entró con Google, la vuelve a guardar abajo.
+  if (pinNuevo) await desvincularPieza(pieza);
   await guardarEnCuenta(pieza);
   revalidatePath(`/t/${pieza}`);
   return { ok: true, nombre };
@@ -334,7 +343,7 @@ export async function entregarPieza(
   const pieza = String(slug ?? "").slice(0, 80);
   const elegido = String(pinElegido ?? "");
   if (elegido && !pinValido(elegido)) return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
-  const sal = await autorizadaAhora(pieza);
+  const sal = await accesoAPieza(pieza);
   if (!sal) return { ok: false, error: "Este celular ya no maneja esta pieza. Sumala de nuevo con su PIN." };
   limpiarVencidos();
   if (!(await permitir(`entregar-pieza:${pieza}`, 20, 24 * 60 * 60_000))) {
@@ -352,9 +361,14 @@ export async function entregarPieza(
   return { ok: true, pin, nombre: link?.nombreNegocio ?? "" };
 }
 
-/** Sacar una pieza de este navegador (no cambia nada en la pieza). */
+/** Sacar una pieza de "Mis piezas": de este navegador y, si estaba
+ * guardada en la cuenta de Google con la que entró, también de la cuenta.
+ * La pieza sigue funcionando igual. */
 export async function olvidarPieza(slug: string): Promise<{ ok: true }> {
-  await quitarDelLlavero(String(slug ?? "").slice(0, 80));
+  const pieza = String(slug ?? "").slice(0, 80);
+  const email = await cuentaActual();
+  if (email && (await piezaEsDeCuenta(pieza, email))) await desvincularPieza(pieza);
+  await quitarDelLlavero(pieza);
   return { ok: true };
 }
 
