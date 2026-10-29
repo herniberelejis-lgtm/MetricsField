@@ -75,7 +75,13 @@ Restos históricos en la base (ya sin uso en el código): la columna
   las recupera desde cualquier celular. Si alguien pierde el PIN y no tiene
   Google, el equipo le pone uno nuevo en Admin → Hardware (eso también la saca
   de cualquier cuenta de Google). Ahí mismo, **Devolver al inventario** deja
-  limpia una pieza devuelta o de prueba. Diseño, riesgos y
+  limpia una pieza devuelta o de prueba. **Regla de soporte**: un PIN nuevo
+  solo después de verificar al dueño (foto de la pieza en el negocio; consultar
+  a la cuenta/contacto que figura) — el admin exige tildar "Verifiqué".
+  **Revisión semanal** (con el cron de los lunes, `lib/revision-piezas.ts`):
+  revisa en Google el estado de la ficha de cada pieza (cerrada, borrada) y
+  avisa una vez al equipo y a quien la maneja; se ve en el admin y en Mis
+  piezas. Estado guardado en `ajustes` (`estado_pieza:<id>`), sin migración. Diseño, riesgos y
   refutaciones: `docs/PIEZAS-AUTOGESTION-PLAN.md`.
   Después la edita en `/t/<código>/editar` con su PIN. No crea cliente en el
   CRM: en Admin → Hardware se ven los compradores ordenados por uso, con su

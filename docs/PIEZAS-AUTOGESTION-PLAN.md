@@ -231,3 +231,20 @@ y la sesión de piezas contra el panel.
 - Toques de Mis piezas: solo la última semana y desde la activación.
 - Admin → Hardware: **Devolver al inventario** (devoluciones, piezas de prueba),
   con confirmación y auditoría.
+
+## 9. Protecciones agregadas después
+
+- **Revisión semanal de fichas** (`lib/revision-piezas.ts`, dentro del cron de
+  los lunes por el límite de crons del plan): `businessStatus` de cada lugar;
+  cerrada / cerrada temporalmente / borrada → aviso una sola vez al equipo
+  (admins) y a quien maneja la pieza (cuenta de Google o contacto con
+  permiso). Solo piezas elegidas de la lista (un link pegado a mano no se
+  puede revisar).
+- **Ver en Google Maps** al elegir el negocio, para confirmar antes de activar.
+- **Regla de soporte del PIN** escrita en Admin → Hardware; el servidor
+  rechaza un PIN nuevo sin tildar "Verifiqué".
+- **Términos**: condiciones para piezas sueltas y revendedores (Entregar al
+  vender; prohibido configurar fichas ajenas sin autorización o incentivar
+  reseñas; podemos pedir pruebas y desactivar piezas). Revisar con legal.
+- Textos de ayuda: negocio sin ficha de Google, celular compartido; la guía
+  impresa explica cómo cambiarla y entregarla.

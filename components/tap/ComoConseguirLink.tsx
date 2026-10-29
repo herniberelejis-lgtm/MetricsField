@@ -10,6 +10,14 @@ const PASOS: { texto: React.ReactNode; img?: { src: string; alt: string; w: numb
   {
     texto: (
       <>
+        ¿Tu negocio no tiene ficha en Google? Primero creala gratis en <b>business.google.com</b> y verificala: sin
+        ficha verificada, Google no deja dejar reseñas.
+      </>
+    ),
+  },
+  {
+    texto: (
+      <>
         Abrí Google con la cuenta que administra tu negocio y buscá <b>my business</b>.
       </>
     ),
