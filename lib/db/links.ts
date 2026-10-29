@@ -279,9 +279,12 @@ export async function getPiezasDelLlavero(codigos: string[]): Promise<PiezaDelLl
   if (codigos.length === 0) return [];
   const rows = await sql`
     SELECT l.id, l.nombre_negocio, l.url_destino, l.pin_salt, l.activo,
-      COUNT(t.id) FILTER (WHERE t.creado_en > now() - interval '7 days')::int AS toques_7d
+      COUNT(t.id)::int AS toques_7d
     FROM links_nfc l
-    LEFT JOIN taps t ON t.link_id = l.id
+    -- Solo los toques de la última semana (y desde que se activó: una pieza
+    -- devuelta y vuelta a vender no arrastra los del dueño anterior).
+    LEFT JOIN taps t ON t.link_id = l.id AND t.creado_en > now() - interval '7 days'
+      AND (l.activado_en IS NULL OR t.creado_en >= l.activado_en)
     WHERE l.id = ANY(${codigos}) AND l.comercio_id IS NULL AND l.autogestionado = TRUE AND l.pin_hash IS NOT NULL
     GROUP BY l.id
   `;
@@ -305,6 +308,39 @@ export async function cambiarPinAutogestion(slug: string, pin: string): Promise<
     RETURNING id
   `;
   return rows.length > 0;
+}
+
+/** Devolver una pieza autogestionada al inventario libre (la devolvieron
+ * por Mercado Libre, era de prueba, vino fallada): borra lo que cargó su
+ * comprador y queda lista para que la active quien la compre después. El
+ * código y lo impreso no cambian. Los toques viejos quedan en la historia
+ * pero no se le cuentan al dueño nuevo (se cuentan desde activado_en). */
+export async function liberarPiezaAutogestionada(slug: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE links_nfc SET
+      autogestionado = FALSE,
+      nombre_negocio = '',
+      url_destino = NULL,
+      pin_hash = NULL,
+      pin_salt = NULL,
+      destino = 'resena',
+      etiqueta = ''
+    WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE
+    RETURNING id
+  `;
+  if (rows.length === 0) return false;
+  try {
+    // Columnas de las migraciones 019 y 020 (si están corridas).
+    await sql`
+      UPDATE links_nfc SET google_place_id = NULL, contacto_email = '', contacto_whatsapp = '',
+        novedades_aceptadas_en = NULL, novedades_baja_en = NULL, activado_en = NULL
+      WHERE id = ${slug}
+    `;
+    await sql`UPDATE links_nfc SET duenio_email = '' WHERE id = ${slug}`;
+  } catch (e) {
+    console.error("Liberar pieza: columnas opcionales", e instanceof Error ? e.message : e);
+  }
+  return true;
 }
 
 // ---------- Inventario de hardware (piezas pre-generadas en lote) ----------

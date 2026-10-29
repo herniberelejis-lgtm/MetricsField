@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { entregarPieza, sumarPieza } from "@/app/t/actions";
-import { olvidarPiezaMia } from "@/lib/piezas-mias";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, BRAND, FONDO, INK, INK_SOFT, LINE, SOMBRA, TARJETA } from "./estilo";
 
 // Darle la pieza a otro negocio (el revendedor que la vende, o un dueño que
@@ -36,7 +35,6 @@ export default function EntregarPieza({ slug, nombre }: { slug: string; nombre: 
           setError(r.error);
           return;
         }
-        olvidarPiezaMia(slug);
         await fetch("/t/llavero", {
           method: "POST",
           headers: { "content-type": "application/json" },

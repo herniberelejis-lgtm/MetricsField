@@ -34,8 +34,13 @@ export default async function MisPiezasPage({
   const codigos = [...new Set([...[...llavero.keys()].reverse(), ...deCuenta])];
   const piezas = new Map((await getPiezasDelLlavero(codigos)).map((p) => [p.id, p]));
   const sumando = await modoSumarActivo();
-  const interno = esNavegadorInterno((await headers()).get("user-agent") ?? "");
-  const conGoogle = oauthConfigurado() && (await cuentasDePiezasDisponibles());
+  const h = await headers();
+  const interno = esNavegadorInterno(h.get("user-agent") ?? "");
+  // Google siempre vuelve al dominio canónico (el redirect_uri registrado):
+  // ofrecerlo en otro host (una preview) dejaría la sesión en un dominio y
+  // las piezas en otro.
+  const canonico = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL).host : h.get("host");
+  const conGoogle = oauthConfigurado() && h.get("host") === canonico && (await cuentasDePiezasDisponibles());
 
   const validas = [];
   const vencidas = [];

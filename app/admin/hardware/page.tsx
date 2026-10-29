@@ -6,6 +6,7 @@ import {
   accionAsignarPieza,
   accionReasignarPieza,
   accionNuevoPinPieza,
+  accionLiberarPieza,
 } from "@/app/actions";
 import { Field, inputCls, SubmitButton } from "@/components/forms";
 import { Card, PageHeader } from "@/components/ui";
@@ -33,7 +34,8 @@ const ERRORES_ASIGNAR: Record<string, string> = {
   "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
   "no-libre": "Esa pieza ya no está libre: alguien la asignó o la activó recién. Mirá la lista actualizada.",
   "pin-invalido": "El PIN tiene que ser de 4 a 8 números.",
-  "no-autogestionada": "Esa pieza ya no es autogestionada (alguien la asignó a un cliente): no tiene PIN.",
+  "no-autogestionada": "Esa pieza ya no es autogestionada (alguien la asignó a un cliente o ya se devolvió).",
+  "sin-confirmar": "Para devolver una pieza al inventario tildá la casilla de confirmación.",
 };
 
 export default async function HardwarePage({
@@ -44,6 +46,7 @@ export default async function HardwarePage({
   await asegurarAdminPagina();
   const { error, ok } = await searchParams;
   const pinCambiado = ok?.startsWith("pin-") ? ok.slice(4) : null;
+  const liberada = ok?.startsWith("liberada-") ? ok.slice(9) : null;
   const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
 
   const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
@@ -65,6 +68,13 @@ export default async function HardwarePage({
         <div className="mb-4 rounded-lg bg-[#E6F4EA] px-3 py-2 text-sm text-[#0B5E40]">
           Listo: la pieza <code className="font-mono">{pinCambiado}</code> tiene el PIN nuevo. Pasáselo al dueño
           junto con el link para cambiarla: <code className="font-mono">app.metricsfield.com/t/{pinCambiado}/editar</code>
+        </div>
+      )}
+
+      {liberada && (
+        <div className="mb-4 rounded-lg bg-[#E6F4EA] px-3 py-2 text-sm text-[#0B5E40]">
+          Listo: la pieza <code className="font-mono">{liberada}</code> volvió al inventario libre. El próximo que la
+          escanee la activa de cero.
         </div>
       )}
 
@@ -257,7 +267,7 @@ export default async function HardwarePage({
                   <th className="px-4 py-3 font-medium">Negocio</th>
                   <th className="px-4 py-3 font-medium">Contacto</th>
                   <th className="px-4 py-3 font-medium">Toques 7 / 30 días · total</th>
-                  <th className="px-4 py-3 font-medium">¿Se olvidó el PIN?</th>
+                  <th className="px-4 py-3 font-medium">PIN y devolución</th>
                   <th className="px-4 py-3 font-medium">Asignar a cliente</th>
                 </tr>
               </thead>
@@ -338,6 +348,22 @@ export default async function HardwarePage({
                       <a href={`/t/${p.id}/editar`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#1F4E80] underline">
                         Link para cambiarla
                       </a>
+                      <details className="mt-2 text-xs text-slate-600">
+                        <summary className="cursor-pointer underline">Devolver al inventario</summary>
+                        <form action={accionLiberarPieza} className="mt-1.5 space-y-1.5">
+                          <input type="hidden" name="id" value={p.id} />
+                          <label className="flex items-start gap-1.5">
+                            <input type="checkbox" name="confirmo" value="si" required className="mt-0.5" />
+                            <span>Borra negocio, link, PIN y cuenta. Para devoluciones o piezas de prueba.</span>
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-lg border border-[#F4D3B5] bg-[#FFF4E8] px-3 py-1 text-xs font-medium text-[#8A3F00]"
+                          >
+                            Devolver
+                          </button>
+                        </form>
+                      </details>
                     </td>
                     <td className="px-4 py-3">
                       <form action={accionReasignarPieza} className="flex flex-nowrap items-center gap-2">
