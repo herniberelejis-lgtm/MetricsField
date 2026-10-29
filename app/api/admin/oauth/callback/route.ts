@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { canjearCodigo, decodificarIdToken, origenCanonico, dominioCookieOauth } from "@/lib/google-oauth";
 import { crearCookieSesionGoogle, COOKIE_GOOGLE, SESION_MAX_MS } from "@/lib/auth";
 import { esAdminPermitido, registrarAuditoria } from "@/lib/db";
+import { completarLoginGoogle, PREFIJO_STATE } from "@/lib/cuenta-piezas";
 
 // Callback del login del equipo: valida el state, canjea el code por el
 // id_token, chequea el email contra la allowlist de `admins` y recién ahí
@@ -9,6 +10,10 @@ import { esAdminPermitido, registrarAuditoria } from "@/lib/db";
 // filtra es esAdminPermitido, no el consentimiento de OAuth en sí.
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const state = req.nextUrl.searchParams.get("state");
+  // Mismo redirect_uri (ya registrado en Cloud Console) para el login de los
+  // dueños de piezas de Mercado Libre: no tiene nada que ver con el panel,
+  // va por su propio camino y su propia cookie (lib/cuenta-piezas.ts).
+  if (state?.startsWith(PREFIJO_STATE)) return completarLoginGoogle(req);
   const cookieState = req.cookies.get("admin_oauth_state")?.value;
 
   const limpiar = (res: NextResponse) => {

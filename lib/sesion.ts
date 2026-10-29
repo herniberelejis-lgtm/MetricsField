@@ -81,7 +81,7 @@ export async function cookiePasswordValida(valor: string, password: string): Pro
 // del portal de un empleado de un cliente nunca vale como sesión del panel,
 // aunque alguien copie su valor con el nombre de la otra.
 
-export type AudienciaSesion = "admin" | "portal";
+export type AudienciaSesion = "admin" | "portal" | "piezas";
 
 export interface SesionGoogle {
   email: string;

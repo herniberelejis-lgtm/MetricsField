@@ -111,3 +111,69 @@ export async function getPiezasSuscriptas(): Promise<PiezaSuscripta[]> {
     return [];
   }
 }
+
+// ---------- Cuenta de Google que maneja la pieza (migración 020) ----------
+// Mientras la migración no se corra, todo esto devuelve vacío/false y la
+// app sigue con el llavero del celular solamente.
+
+/** Guarda en la cuenta las piezas que ya maneja este navegador (el que
+ * llama verificó el llavero antes). Solo autogestionadas sin cliente. */
+export async function vincularPiezasACuenta(codigos: string[], email: string): Promise<boolean> {
+  if (codigos.length === 0 || !email) return true;
+  try {
+    await sql`
+      UPDATE links_nfc SET duenio_email = ${email.toLowerCase()}
+      WHERE id = ANY(${codigos}) AND autogestionado = TRUE AND comercio_id IS NULL
+    `;
+    return true;
+  } catch (e) {
+    console.error("Cuenta de piezas: no se vincularon (¿falta la migración 020?)", e instanceof Error ? e.message : e);
+    return false;
+  }
+}
+
+/** Códigos de las piezas guardadas en esa cuenta. */
+export async function codigosDeCuenta(email: string): Promise<string[] | null> {
+  try {
+    const rows = await sql`
+      SELECT id FROM links_nfc
+      WHERE lower(duenio_email) = ${email.toLowerCase()} AND autogestionado = TRUE AND comercio_id IS NULL
+      ORDER BY activado_en DESC NULLS LAST, id
+      LIMIT 500
+    `;
+    return rows.map((r) => r.id as string);
+  } catch {
+    return null; // sin la migración 020
+  }
+}
+
+export async function piezaEsDeCuenta(slug: string, email: string): Promise<boolean> {
+  try {
+    const rows = await sql`
+      SELECT 1 FROM links_nfc
+      WHERE id = ${slug} AND lower(duenio_email) = ${email.toLowerCase()} AND autogestionado = TRUE AND comercio_id IS NULL
+    `;
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Al entregar la pieza: deja de estar en la cuenta de quien la entregó. */
+export async function desvincularPieza(slug: string): Promise<void> {
+  try {
+    await sql`UPDATE links_nfc SET duenio_email = '' WHERE id = ${slug} AND autogestionado = TRUE AND comercio_id IS NULL`;
+  } catch {
+    // sin la migración 020 no hay nada que desvincular
+  }
+}
+
+/** ¿Está corrida la migración 020? (para mostrar o no el botón de Google) */
+export async function cuentasDePiezasDisponibles(): Promise<boolean> {
+  try {
+    await sql`SELECT duenio_email FROM links_nfc LIMIT 0`;
+    return true;
+  } catch {
+    return false;
+  }
+}

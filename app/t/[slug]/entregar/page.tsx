@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { getLink, salPinAutogestion } from "@/lib/db";
-import { piezaAutorizada } from "@/lib/llavero";
+import { getLink } from "@/lib/db";
+import { accesoAPieza } from "@/lib/cuenta-piezas";
 import { esNavegadorInterno } from "@/lib/llavero-core";
 import EntregarPieza from "@/components/tap/EntregarPieza";
 import PuertaPin from "@/components/tap/PuertaPin";
@@ -16,7 +16,7 @@ export default async function EntregarPage({ params }: { params: Promise<{ slug:
   const link = await getLink(slug);
   if (!link || !link.autogestionado || link.comercioId) notFound();
 
-  const autorizado = await piezaAutorizada(slug, await salPinAutogestion(slug));
+  const autorizado = Boolean(await accesoAPieza(slug));
   const interno = esNavegadorInterno((await headers()).get("user-agent") ?? "");
 
   return (

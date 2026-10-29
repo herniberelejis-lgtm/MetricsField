@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { salPinAutogestion } from "@/lib/db";
+import { salPinAutogestion, vincularPiezasACuenta } from "@/lib/db";
+import { cuentaActual } from "@/lib/cuenta-piezas";
 import {
   codigoDelTicket,
   empezarModoSumar,
@@ -43,6 +44,8 @@ export async function POST(req: NextRequest) {
     const sal = codigo ? await salPinAutogestion(codigo) : null;
     if (!codigo || !ticketVigente(ticket, sal)) return NextResponse.json({ ok: false }, { status: 400 });
     await guardarEnLlavero(codigo, sal);
+    const email = await cuentaActual();
+    if (email) await vincularPiezasACuenta([codigo], email);
     // Si estaba sumando piezas, la espera sigue abierta para la próxima.
     if (await modoSumarActivo()) await empezarModoSumar();
     return NextResponse.json({ ok: true });

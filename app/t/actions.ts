@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import {
   activarAutogestion,
   borrarContactoPieza,
+  desvincularPieza,
+  getPiezasDelLlavero,
+  vincularPiezasACuenta,
   editarAutogestion,
   editarAutogestionAutorizada,
   getLink,
@@ -30,13 +33,15 @@ import { urlResenaGoogle } from "@/lib/url";
 import {
   empezarModoSumar,
   guardarEnLlavero,
+  firmaVerificable,
+  leerPiezasDelLlavero,
   modoSumarActivo,
-  piezaAutorizada,
   quitarDelLlavero,
   terminarModoSumar,
   ticketParaSumar,
 } from "@/lib/llavero";
 import crypto from "node:crypto";
+import { accesoAPieza, cerrarCuenta, cuentaActual } from "@/lib/cuenta-piezas";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
 // que su comprador escaneó por primera vez. Sin login — la defensa contra
@@ -50,10 +55,16 @@ async function piezaConfigurable(slug: string): Promise<string | null> {
   return pieza && !pieza.comercioId && pieza.activo ? pieza.id : null;
 }
 
-/** ¿Este navegador maneja la pieza (llavero válido con el PIN actual)? */
+/** ¿Este navegador maneja la pieza? (llavero del celular o cuenta de
+ * Google, ver lib/cuenta-piezas.ts). Devuelve la sal actual del PIN. */
 async function autorizadaAhora(slug: string): Promise<string | null> {
-  const sal = await salPinAutogestion(slug);
-  return sal && (await piezaAutorizada(slug, sal)) ? sal : null;
+  return accesoAPieza(slug);
+}
+
+/** Si entró con Google, la pieza queda guardada también en su cuenta. */
+async function guardarEnCuenta(slug: string): Promise<void> {
+  const email = await cuentaActual();
+  if (email) await vincularPiezasACuenta([slug], email);
 }
 
 /** Los mismos tres límites que el cambio con PIN: cualquier camino que
@@ -291,6 +302,7 @@ export async function editarCartel(
   // Con el PIN puesto (o recién cambiado) este navegador queda autorizado;
   // si cambió el PIN, con la sal nueva — si no, se perdería a sí mismo.
   await guardarEnLlavero(pieza, await salPinAutogestion(pieza));
+  await guardarEnCuenta(pieza);
   revalidatePath(`/t/${pieza}`);
   return { ok: true, nombre };
 }
@@ -305,6 +317,7 @@ export async function sumarPieza(slug: string, pin: string): Promise<{ ok: boole
   const sal = await verificarPinAutogestion(pieza, String(pin));
   if (!sal) return { ok: false, error: "PIN incorrecto." };
   await guardarEnLlavero(pieza, sal);
+  await guardarEnCuenta(pieza);
   if (await modoSumarActivo()) await empezarModoSumar();
   return { ok: true };
 }
@@ -332,6 +345,7 @@ export async function entregarPieza(
     return { ok: false, error: "Esta pieza ya no se puede entregar desde este celular." };
   }
   await borrarContactoPieza(pieza);
+  await desvincularPieza(pieza);
   // Sacarla del llavero lo hace el navegador en /t/llavero: una cookie
   // puesta desde acá redibujaría la página y taparía el PIN nuevo.
   const link = await getLink(pieza);
@@ -352,5 +366,23 @@ export async function empezarASumar(): Promise<{ ok: boolean }> {
 
 export async function dejarDeSumar(): Promise<{ ok: true }> {
   await terminarModoSumar();
+  return { ok: true };
+}
+
+/** Después de entrar con Google en Mis piezas: guarda en la cuenta todas
+ * las piezas que maneja este celular (solo las que el llavero autoriza de
+ * verdad con el PIN actual). */
+export async function guardarMisPiezasEnCuenta(): Promise<{ ok: boolean; cantidad: number }> {
+  const email = await cuentaActual();
+  if (!email) return { ok: false, cantidad: 0 };
+  const llavero = await leerPiezasDelLlavero();
+  const piezas = await getPiezasDelLlavero([...llavero.keys()]);
+  const validas = piezas.filter((p) => firmaVerificable(p.id, p.salPin, llavero.get(p.id) ?? "")).map((p) => p.id);
+  const ok = await vincularPiezasACuenta(validas, email);
+  return { ok, cantidad: ok ? validas.length : 0 };
+}
+
+export async function salirDeCuenta(): Promise<{ ok: true }> {
+  await cerrarCuenta();
   return { ok: true };
 }

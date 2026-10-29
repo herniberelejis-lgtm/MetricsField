@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { getDatosTap, getLogoActualizadoEn, registrarTap, salPinAutogestion } from "@/lib/db";
+import { getDatosTap, getLogoActualizadoEn, registrarTap } from "@/lib/db";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { urlSegura } from "@/lib/url";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
 import PantallaDuenio from "@/components/tap/PantallaDuenio";
 import PuertaPin from "@/components/tap/PuertaPin";
-import { leerPiezasDelLlavero, modoSumarActivo, piezaAutorizada } from "@/lib/llavero";
+import { leerPiezasDelLlavero, modoSumarActivo } from "@/lib/llavero";
+import { accesoAPieza, cuentaActual } from "@/lib/cuenta-piezas";
 
 export const dynamic = "force-dynamic";
 
@@ -95,8 +96,8 @@ export default async function TapPage({
   let esDuenio = false;
   let sumando = false;
   if (link.autogestionado && !comercio && link.urlDestino) {
-    if ((await leerPiezasDelLlavero()).has(slug)) {
-      esDuenio = await piezaAutorizada(slug, await salPinAutogestion(slug));
+    if ((await leerPiezasDelLlavero()).has(slug) || (await cuentaActual())) {
+      esDuenio = Boolean(await accesoAPieza(slug));
     }
     if (!esDuenio) sumando = await modoSumarActivo();
   }

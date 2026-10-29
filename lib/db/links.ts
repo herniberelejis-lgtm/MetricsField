@@ -32,6 +32,8 @@ function mapLink(r: Record<string, unknown>): LinkNFC {
     novedadesAceptadasEn: esDelComprador && r.novedades_aceptadas_en ? String(r.novedades_aceptadas_en) : null,
     novedadesBajaEn: esDelComprador && r.novedades_baja_en ? String(r.novedades_baja_en) : null,
     activadoEn: r.activado_en ? String(r.activado_en) : null,
+    // Migración 020: la cuenta de Google que maneja la pieza (si la guardó).
+    duenioEmail: esDelComprador ? ((r.duenio_email as string | undefined) ?? "") : "",
     creadoEn: String(r.creado_en),
     taps: Number(r.taps ?? 0),
   };

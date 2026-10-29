@@ -180,6 +180,16 @@ export default function PrivacidadPage() {
                   usamos datos que Mercado Libre nos comparta de tu compra para
                   nada más que completar esa venta.
                 </p>
+                <p className="mt-2">
+                  Para que puedas cambiar tus piezas sin PIN, el celular con el que
+                  las activás guarda una cookie con la lista de tus piezas (no
+                  guarda el PIN). Si elegís guardarlas en tu cuenta de Google,
+                  usamos el inicio de sesión de Google solo para conocer tu mail y
+                  guardamos ese mail junto a tus piezas, para que las recuperes
+                  desde cualquier celular. No pedimos ningún otro permiso de tu
+                  cuenta. Al entregar una pieza a otro negocio, deja de estar
+                  asociada a tu mail.
+                </p>
               </section>
 
               <section>
@@ -379,6 +389,15 @@ export default function PrivacidadPage() {
                   link at the bottom of every email or by writing to us. We do not
                   use any data Mercado Libre shares about your purchase for anything
                   other than completing that sale.
+                </p>
+                <p className="mt-2">
+                  So you can change your pieces without the PIN, the phone you
+                  activate them with keeps a cookie listing your pieces (never the
+                  PIN). If you choose to save them to your Google account, we use
+                  Google sign-in only to learn your email address and store that
+                  email with your pieces, so you can recover them from any phone. We
+                  request no other access to your account. When you hand a piece
+                  over to another business, it is no longer linked to your email.
                 </p>
               </section>
 

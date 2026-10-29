@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { getPiezasDelLlavero } from "@/lib/db";
+import { codigosDeCuenta, cuentasDePiezasDisponibles, getPiezasDelLlavero } from "@/lib/db";
+import { cuentaActual } from "@/lib/cuenta-piezas";
+import { oauthConfigurado } from "@/lib/google-oauth";
 import { firmaVerificable, leerPiezasDelLlavero, modoSumarActivo, MINUTOS_SUMAR } from "@/lib/llavero";
 import { esNavegadorInterno } from "@/lib/llavero-core";
-import { BotonQuitar, BotonSumar } from "@/components/tap/AccionesMisPiezas";
+import { BotonQuitar, BotonSalirCuenta, BotonSumar, GuardarEnCuenta } from "@/components/tap/AccionesMisPiezas";
 import AvisoNavegadorInterno from "@/components/tap/AvisoNavegadorInterno";
 import { BRAND, FONDO, INK, INK_SOFT, LINE, SOMBRA, TARJETA } from "@/components/tap/estilo";
 
@@ -18,20 +20,33 @@ export const metadata: Metadata = {
 // login: lo que dice la cookie se verifica contra el PIN actual de cada
 // pieza, y las que ya no valen (cambió el PIN, se entregó, pasó a un
 // cliente) se muestran aparte en vez de desaparecer en silencio.
-export default async function MisPiezasPage() {
+export default async function MisPiezasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ vincular?: string; cuenta?: string }>;
+}) {
+  const { vincular, cuenta: avisoCuenta } = await searchParams;
   const llavero = await leerPiezasDelLlavero();
-  const codigos = [...llavero.keys()];
+  const email = await cuentaActual();
+  const deCuenta = email ? ((await codigosDeCuenta(email)) ?? []) : [];
+  const enCuenta = new Set(deCuenta);
+  // Las del celular (las más recientes primero) y después las de la cuenta.
+  const codigos = [...new Set([...[...llavero.keys()].reverse(), ...deCuenta])];
   const piezas = new Map((await getPiezasDelLlavero(codigos)).map((p) => [p.id, p]));
   const sumando = await modoSumarActivo();
   const interno = esNavegadorInterno((await headers()).get("user-agent") ?? "");
+  const conGoogle = oauthConfigurado() && (await cuentasDePiezasDisponibles());
 
   const validas = [];
   const vencidas = [];
-  // Las más recientes primero.
-  for (const codigo of codigos.reverse()) {
+  let sinGuardar = 0;
+  for (const codigo of codigos) {
     const p = piezas.get(codigo);
-    if (p && firmaVerificable(codigo, p.salPin, llavero.get(codigo) ?? "")) validas.push(p);
-    else vencidas.push(codigo);
+    const porCelular = Boolean(p && llavero.has(codigo) && firmaVerificable(codigo, p.salPin, llavero.get(codigo) ?? ""));
+    if (p && (porCelular || enCuenta.has(codigo))) {
+      validas.push(p);
+      if (email && !enCuenta.has(codigo)) sinGuardar++;
+    } else if (llavero.has(codigo)) vencidas.push(codigo);
   }
 
   return (
@@ -46,12 +61,57 @@ export default async function MisPiezasPage() {
             Mis piezas
           </h1>
           <p className="mt-1 text-[13.5px]" style={{ color: INK_SOFT }}>
-            {validas.length === 1
-              ? "1 pieza en este celular."
-              : `${validas.length} piezas en este celular.`}{" "}
+            {validas.length === 1 ? "1 pieza." : `${validas.length} piezas.`}{" "}
             Cambialas sin PIN, las veces que quieras.
           </p>
         </div>
+
+        {conGoogle && (
+          <div className="mt-5 rounded-xl px-4 py-3.5" style={{ background: email ? "#e6f4ea" : "#f1f5fb" }}>
+            {email ? (
+              <>
+                <p className="text-[13px]" style={{ color: INK }}>
+                  Guardadas en tu cuenta de Google <b className="break-all">{email}</b>
+                </p>
+                <p className="mt-0.5 text-[12px]" style={{ color: INK_SOFT }}>
+                  Desde cualquier celular, entrás con Google y las tenés todas.
+                </p>
+                {(sinGuardar > 0 || vincular) && <GuardarEnCuenta automatico={Boolean(vincular)} cantidad={sinGuardar} />}
+                <div className="mt-1.5">
+                  <BotonSalirCuenta />
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[14px] font-medium" style={{ color: INK }}>
+                  Guardalas en tu cuenta de Google
+                </p>
+                <p className="mt-0.5 text-[12.5px] leading-snug" style={{ color: INK_SOFT }}>
+                  Si perdés o cambiás el celular, entrás con Google y las recuperás todas, sin PIN.
+                </p>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- va a Google: navegación completa, no del router */}
+                <a
+                  href="/t/cuenta/google"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border bg-white px-5 py-3 text-[14.5px] font-medium"
+                  style={{ borderColor: LINE, color: INK }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
+                    <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.2 5.6c4.2-3.9 7.1-9.6 7.1-16.9z" />
+                    <path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.8-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6.1z" />
+                    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.7 2.3-8.7 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6.1C6.6 42.6 14.6 48 24 48z" />
+                  </svg>
+                  Guardar con Google
+                </a>
+              </>
+            )}
+            {avisoCuenta === "error" && (
+              <p className="mt-2 text-[12.5px]" style={{ color: "#c5221f" }}>
+                No pudimos entrar con Google. Probá de nuevo.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="mt-5">
           <BotonSumar sumando={sumando} minutos={MINUTOS_SUMAR} />

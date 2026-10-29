@@ -66,7 +66,7 @@ lleve al lugar correcto.
 Funciona, pero con 30 piezas son 30 links y 30 PINs. **Descartada como
 solución principal** (queda como respaldo: el link del mensaje de entrega).
 
-### B. Cuenta con mail y código de acceso
+### B. Cuenta con mail y código de acceso (reemplazada por Google, ver §7)
 El estándar de la competencia (Zappycards, HotLabel, Popl, QR dinámicos): una
 cuenta con todas las tarjetas.
 - A favor: sirve desde cualquier dispositivo, sobrevive a perder el celular.
@@ -169,3 +169,45 @@ el PIN. Activación, edición con PIN, admin y piezas de agencia no cambian.
   PIN; llavero de otra pieza no sirve; llavero viejo después de cambiar el PIN
   no sirve; entregar sin autorización falla.
 - `tsc`, lint, tests, build.
+
+## 7. Revisión adversarial y segunda capa: cuenta de Google
+
+Un agente de planificación independiente intentó refutar el diseño. Se
+sostuvo, con correcciones que se aplicaron:
+
+- La firma del llavero NO usa el hash del PIN como clave (una base filtrada
+  alcanzaría para firmar): usa un secreto del servidor + la sal del PIN.
+  Sin sal (pieza sin PIN, reasignada) nunca autoriza.
+- Una sola cookie, solo bajo `/t` (no viaja al admin ni a los estáticos),
+  tope de 100 piezas por navegador; "Mis piezas" vive en `/t/mis-piezas`.
+- Next 15 solo deja escribir cookies en server actions, y hacerlo redibuja
+  la página: al activar eso tapaba el "¡Listo!" con el PIN, y al entregar el
+  PIN nuevo. Por eso activar devuelve un ticket firmado (5 min) que el
+  navegador canjea en `/t/llavero`, que es una ruta (no redibuja).
+- Navegadores internos (Instagram, Facebook, WebView): aviso de abrir en
+  Chrome/Safari en `/editar`, `/entregar` y Mis piezas.
+- Cualquier camino que recibe un PIN comparte el mismo cupo de intentos.
+
+**Cuenta de Google (pedido del dueño):** el llavero es por navegador; si se
+pierde o cambia el celular, hacía falta el PIN o el admin. Ahora, en Mis
+piezas, "Guardar con Google" guarda las piezas del celular en la cuenta
+(`links_nfc.duenio_email`, migración 020). Desde cualquier celular, entrar
+con Google las trae todas sin PIN.
+
+- Reusa el OAuth existente: mismo client y mismo `redirect_uri`
+  (`/api/admin/oauth/callback`, ya registrado); el callback desvía cuando el
+  `state` empieza con `pz_` (`lib/cuenta-piezas.ts`). El login del panel no
+  cambia. Solo pide identidad (`openid email profile`).
+- Sesión propia con audiencia `piezas`: no sirve para el panel ni el portal
+  (test en `test/sesion.test.ts`).
+- Solo se guardan en la cuenta las piezas que el llavero autoriza de verdad.
+  Entregar la saca de la cuenta.
+- Sin la migración 020 corrida, el botón no aparece y todo sigue andando con
+  el llavero.
+- **Requisito:** la pantalla de consentimiento de Google tiene que estar en
+  "En producción". En "Prueba" solo pueden entrar los usuarios de prueba.
+
+Pruebas: 17 unitarias del llavero, 51/51 en `prueba-permisos` (8 casos
+nuevos de llavero y ticket), y E2E en navegador de revendedor, dueño nuevo,
+cliente, celular nuevo, cuenta de Google, otra cuenta, cookies falsificadas
+y la sesión de piezas contra el panel.
