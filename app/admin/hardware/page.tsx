@@ -238,7 +238,10 @@ export default async function HardwarePage({
             aparece si el comprador lo dejó y aceptó que le escribamos al activarla (cada lunes le
             llega gratis cuántos usaron su pieza). Canal Mercado Libre: el propio comprador las activó desde{" "}
             <code className="rounded bg-slate-100 px-1">/t/&lt;código&gt;</code>. Sin cliente en el
-            CRM ni portal — el destino lo edita él mismo con su PIN. Si alguien completó este
+            CRM ni portal — el destino lo cambia él mismo desde su celular (Mis piezas) o con su PIN;
+            &ldquo;Cuenta Google&rdquo; es la cuenta donde guardó sus piezas (muchas piezas en una misma
+            cuenta = probable revendedor). No uses &ldquo;Asignar&rdquo; para un comprador o un revendedor: le
+            saca la posibilidad de cambiarla. Si alguien completó este
             formulario por error en una pieza que en realidad es de un cliente de agencia (mismo
             error que la imprenta con los números), usá &ldquo;Asignar a cliente&rdquo; para
             corregirlo — limpia el PIN cargado y deja la pieza como cualquier otra asignada.
@@ -276,6 +279,11 @@ export default async function HardwarePage({
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">
+                      {p.duenioEmail && (
+                        <div className="mb-1 break-all">
+                          <span className="text-slate-500">Cuenta Google:</span> {p.duenioEmail}
+                        </div>
+                      )}
                       {p.contactoEmail || p.contactoWhatsapp ? (
                         <>
                           {p.contactoEmail && <div className="break-all">{p.contactoEmail}</div>}

@@ -68,12 +68,16 @@ async function accionForm(nombre, campos, { pagina = "/portal/x", ip = ipNueva()
 }
 
 /** Server action con argumentos sueltos (como la llama un componente cliente). */
-async function accionArgs(nombre, args, { ip = ipNueva() } = {}) {
-  return fetch(`${BASE}/portal/x`, {
-    method: "POST",
-    headers: { "Next-Action": ACCION[nombre], Accept: "text/x-component", "x-real-ip": ip },
-    body: JSON.stringify(args),
-  });
+async function accionArgs(nombre, args, { ip = ipNueva(), pagina = "/portal/x", cookie } = {}) {
+  const headers = { "Next-Action": ACCION[nombre], Accept: "text/x-component", "x-real-ip": ip };
+  if (cookie) headers.cookie = cookie;
+  return fetch(`${BASE}${pagina}`, { method: "POST", headers, body: JSON.stringify(args) });
+}
+
+/** La cookie del llavero de piezas que devolvió una action (Set-Cookie). */
+function llaveroDe(respuesta) {
+  const c = (respuesta.headers.getSetCookie?.() ?? []).find((x) => x.startsWith("mf_llavero="));
+  return c ? c.split(";")[0] : "";
 }
 
 async function uno(query) {
@@ -395,6 +399,57 @@ registrar("comprador", "activar su pieza con un destino que no es de Google", "d
 await accionArgs("editarCartel", ["p-9999-e2e001", "4321", { nombre: "Phishing", url: "https://phishing.example/login" }]);
 registrar("comprador", "cambiar el destino de su pieza a otro sitio (con PIN correcto)", "denegado",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
+
+// ---------- Llavero de piezas: cambiar sin PIN solo desde el celular que la maneja ----------
+await accionArgs("editarCartel", ["p-9999-e2e001", "", { nombre: "Sin PIN", url: "https://g.page/r/intruso-sin-pin/review" }]);
+registrar("anónimo", "cambiar una pieza sin PIN ni llavero", "denegado",
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
+await accionArgs("editarCartel", ["p-9999-e2e001", "", { nombre: "Falsa", url: "https://g.page/r/intruso-falso/review" }], {
+  pagina: "/t/p-9999-e2e001", cookie: "mf_llavero=p-9999-e2e001.AAAAAAAAAAAAAAAA",
+});
+registrar("llavero falsificado", "cambiar una pieza ajena sin PIN", "denegado",
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
+
+await sql`DELETE FROM links_nfc WHERE id = 'p-9999-e2e005'`;
+await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES ('p-9999-e2e005', NULL, '', 'nfc', 'e2e', 'resena')`;
+r = await accionArgs("activarCartel", ["p-9999-e2e005", { nombre: "Revendedor", url: "https://g.page/r/revendedor-1/review", pin: "2468" }], {
+  pagina: "/t/p-9999-e2e005",
+});
+// La activación devuelve un ticket que el navegador canjea en /t/llavero.
+const ticket = ((await r.text()).match(/"ticket":"([^"]+)"/) ?? [])[1] ?? "";
+const canjear = (t) =>
+  fetch(`${BASE}/t/llavero`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-real-ip": ipNueva() },
+    body: JSON.stringify({ op: "sumar-ticket", ticket: t }),
+  });
+const [, hastaT, firmaT] = ticket.split(".");
+r = await canjear(`p-9999-e2e001.${hastaT}.${firmaT}`);
+registrar("comprador", "pasar el ticket de SU pieza recién activada a otra pieza", "denegado", `HTTP ${r.status}, cookie ${llaveroDe(r) ? "sí" : "no"}`, r.status === 400 && !llaveroDe(r));
+r = await canjear(ticket);
+const llaveroPropio = llaveroDe(r);
+registrar("comprador", "activar una pieza le da el llavero de esa pieza", "cookie mf_llavero", llaveroPropio ? "sí" : "no", llaveroPropio.includes("p-9999-e2e005."));
+await accionArgs("editarCartel", ["p-9999-e2e005", "", { nombre: "Local 2", url: "https://g.page/r/revendedor-2/review" }], {
+  pagina: "/t/p-9999-e2e005", cookie: llaveroPropio,
+});
+registrar("comprador", "cambiar su pieza sin PIN desde su celular (control positivo)", "permitido",
+  `url = '${await urlLink("p-9999-e2e005")}'`, (await urlLink("p-9999-e2e005")) === "https://g.page/r/revendedor-2/review");
+const conOtraPieza = llaveroPropio.replace("p-9999-e2e005.", "p-9999-e2e001.");
+await accionArgs("editarCartel", ["p-9999-e2e001", "", { nombre: "Ajena", url: "https://g.page/r/intruso-ajena/review" }], {
+  pagina: "/t/p-9999-e2e001", cookie: `${llaveroPropio}; ${conOtraPieza}`,
+});
+registrar("comprador", "usar el llavero de SU pieza contra otra pieza", "denegado",
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
+const pinAntes = (await uno(sql`SELECT pin_salt AS s FROM links_nfc WHERE id = 'p-9999-e2e001'`)).s;
+await accionArgs("entregarPieza", ["p-9999-e2e001", "1111"], { pagina: "/t/p-9999-e2e001", cookie: conOtraPieza });
+const pinDespues = (await uno(sql`SELECT pin_salt AS s FROM links_nfc WHERE id = 'p-9999-e2e001'`)).s;
+registrar("comprador", "entregar (cambiar el PIN de) una pieza ajena", "denegado", pinAntes === pinDespues ? "PIN igual" : "PIN cambiado", pinAntes === pinDespues);
+await accionArgs("entregarPieza", ["p-9999-e2e005"], { pagina: "/t/p-9999-e2e005", cookie: llaveroPropio });
+await accionArgs("editarCartel", ["p-9999-e2e005", "", { nombre: "Ya no es mía", url: "https://g.page/r/revendedor-3/review" }], {
+  pagina: "/t/p-9999-e2e005", cookie: llaveroPropio,
+});
+registrar("revendedor", "cambiar una pieza que ya entregó (llavero viejo)", "denegado",
+  `url = '${await urlLink("p-9999-e2e005")}'`, (await urlLink("p-9999-e2e005")) === "https://g.page/r/revendedor-2/review");
 
 // El contacto del comprador solo se guarda si marcó la casilla de aceptación.
 await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e002', 'p-9999-e2e003')`;

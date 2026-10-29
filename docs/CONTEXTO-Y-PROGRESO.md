@@ -66,15 +66,15 @@ Restos históricos en la base (ya sin uso en el código): la columna
   casilla de aceptación. Con eso recibe gratis cada lunes cuántas personas
   usaron su pieza (con link de baja firmado) y el mail le ofrece el panel.
   La segunda pieza desde el mismo celular ofrece "usar los mismos datos".
-  **Reconfigurar las veces que haga falta** (pedido del primer revendedor):
-  el celular que activó o editó una pieza la recuerda (`lib/piezas-mias.ts`,
-  localStorage) y, al escanearla de nuevo, en vez de saltar a Google muestra
-  "Esta pieza la configuraste vos" con **Cambiar a dónde lleva**. Los demás
-  celulares van directo a Google como siempre. `/t/<código>/editar` tiene el
-  mismo formulario que la activación (buscar negocio + PIN) y deja **cambiar
-  el PIN** para pasarle la pieza a otro negocio. Si alguien se olvida el PIN,
-  lo pide por WhatsApp y el equipo le pone uno nuevo en Admin → Hardware
-  (columna "¿Se olvidó el PIN?", queda en la auditoría).
+  **Manejar muchas piezas (revendedores):** el celular que activa una pieza
+  (o pone su PIN una vez) la maneja sin PIN — llavero firmado en una cookie
+  (`lib/llavero.ts`). `/t/mis-piezas` lista todas con **Cambiar** y
+  **Entregar** (PIN nuevo para el dueño nuevo + mensaje de WhatsApp). Escanear
+  una pieza propia muestra opciones y no cuenta el toque. "Sumar una pieza"
+  suma una ya activada escaneándola. **Guardar con Google** (migración 020)
+  las recupera desde cualquier celular. Si alguien pierde el PIN y no tiene
+  Google, el equipo le pone uno nuevo en Admin → Hardware. Diseño, riesgos y
+  refutaciones: `docs/PIEZAS-AUTOGESTION-PLAN.md`.
   Después la edita en `/t/<código>/editar` con su PIN. No crea cliente en el
   CRM: en Admin → Hardware se ven los compradores ordenados por uso, con su
   contacto y un botón de WhatsApp; para convertirlo en cliente se usa
