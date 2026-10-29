@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { codigosDeCuenta, cuentasDePiezasDisponibles, getPiezasDelLlavero } from "@/lib/db";
 import { cuentaActual } from "@/lib/cuenta-piezas";
+import { estadosDePiezas } from "@/lib/revision-piezas";
+import { TEXTO_ESTADO } from "@/lib/revision-piezas-core";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import { firmaVerificable, leerPiezasDelLlavero, modoSumarActivo, MINUTOS_SUMAR } from "@/lib/llavero";
 import { esNavegadorInterno } from "@/lib/llavero-core";
@@ -34,6 +36,7 @@ export default async function MisPiezasPage({
   const codigos = [...new Set([...[...llavero.keys()].reverse(), ...deCuenta])];
   const piezas = new Map((await getPiezasDelLlavero(codigos)).map((p) => [p.id, p]));
   const sumando = await modoSumarActivo();
+  const estados = codigos.length ? await estadosDePiezas() : new Map();
   const h = await headers();
   const interno = esNavegadorInterno(h.get("user-agent") ?? "");
   // Google siempre vuelve al dominio canónico (el redirect_uri registrado):
@@ -149,6 +152,12 @@ export default async function MisPiezasPage({
                     </a>
                   )}
                 </div>
+                {estados.get(p.id) && estados.get(p.id).estado !== "ok" && (
+                  <p className="mt-2 rounded-lg px-3 py-2 text-[12.5px] leading-snug" style={{ background: "#fff8e6", color: "#7a5200" }}>
+                    <b>Revisala:</b> {TEXTO_ESTADO[estados.get(p.id).estado as keyof typeof TEXTO_ESTADO]}. Si el negocio cambió de
+                    ficha, tocá Cambiar y elegilo de nuevo.
+                  </p>
+                )}
                 <div className="mt-3 flex gap-2">
                   <a
                     href={`/t/${p.id}/editar`}

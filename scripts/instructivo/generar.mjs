@@ -121,7 +121,7 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
     ${pasoQr(4, "Tocá Activar", "Tocá <b>Activar mi pieza</b>. ¡Listo! Escaneá el QR de nuevo: se abre la reseña de tu negocio.", "qr-4-listo.jpg")}
   </div>
 
-  <div class="mas"><b>¿Compraste más de una?</b> Escaneá la siguiente con el mismo celular y tocá <b>“Sí, usar los mismos datos”</b>: queda activada en un toque. <b>No cierres todavía la página</b>: más abajo está el link para grabar el chip (parte 2).</div>
+  <div class="mas"><b>¿Más de una?</b> Escaneá la siguiente con el mismo celular y tocá <b>“Sí, usar los mismos datos”</b>. <b>¿La querés cambiar o se la das a otro negocio?</b> Escaneala con ese mismo celular. <b>No cierres todavía la página</b>: más abajo está el link del chip (parte 2).</div>
 
   <h4>Cómo usar cada pieza</h4>
   <div class="piezas">
