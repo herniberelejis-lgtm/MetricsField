@@ -204,8 +204,10 @@ export async function activarCartel(
 export async function editarCartel(
   slug: string,
   pin: string,
-  datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string },
-): Promise<{ ok: boolean; error?: string }> {
+  datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string; pinNuevo?: string },
+): Promise<{ ok: boolean; error?: string; nombre?: string }> {
+  const pinNuevo = String(datos.pinNuevo ?? "");
+  if (pinNuevo && !pinValido(pinNuevo)) return { ok: false, error: "El PIN nuevo tiene que ser de 4 a 8 números." };
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
   const pieza = String(slug ?? "").slice(0, 80);
@@ -223,11 +225,15 @@ export async function editarCartel(
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
   try {
-    await editarAutogestion(slug, String(pin ?? ""), { nombreNegocio: nombre, urlDestino: destino.url });
+    await editarAutogestion(slug, String(pin ?? ""), {
+      nombreNegocio: nombre,
+      urlDestino: destino.url,
+      pinNuevo: pinNuevo || undefined,
+    });
   } catch (e) {
     return { ok: false, error: errorParaMostrar(e, "No se pudo guardar. Probá de nuevo en un rato.") };
   }
   if (destino.placeId) await guardarLugarAutogestion(slug, destino.placeId);
   revalidatePath(`/t/${slug}`);
-  return { ok: true };
+  return { ok: true, nombre };
 }
