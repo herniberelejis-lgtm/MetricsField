@@ -344,3 +344,27 @@ export async function linkResenaDeLugar(
     `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
   return { nombre: data.displayName?.text ?? "", link };
 }
+
+/** Estado de un lugar en Google, para la revisión semanal de las piezas
+ * autogestionadas: si la ficha cerró o desapareció, la pieza manda a los
+ * clientes a un lugar que no sirve y nadie se entera. null = no se pudo
+ * saber (sin key, error de Google): no se cambia nada. */
+export type EstadoLugar = "ok" | "cerrada_temporal" | "cerrada" | "no_encontrada";
+
+export async function estadoDeLugar(placeId: string): Promise<EstadoLugar | null> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey || !placeIdValido(placeId)) return null;
+  const res = await fetch(`${basePlaces()}/v1/places/${encodeURIComponent(placeId)}`, {
+    headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "id,businessStatus" },
+    cache: "no-store",
+  });
+  if (res.status === 404) return "no_encontrada";
+  if (!res.ok) {
+    console.error(`Places API (estado del lugar) respondió ${res.status}: ${await motivoGoogle(res)}`);
+    return null;
+  }
+  const data = (await res.json()) as { businessStatus?: string };
+  if (data.businessStatus === "CLOSED_PERMANENTLY") return "cerrada";
+  if (data.businessStatus === "CLOSED_TEMPORARILY") return "cerrada_temporal";
+  return "ok";
+}

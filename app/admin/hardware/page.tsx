@@ -13,6 +13,8 @@ import { Card, PageHeader } from "@/components/ui";
 import { fmtNum } from "@/lib/format";
 import { asegurarAdminPagina } from "@/lib/auth";
 import { waUrl } from "@/lib/whatsapp";
+import { estadosDePiezas } from "@/lib/revision-piezas";
+import { TEXTO_ESTADO } from "@/lib/revision-piezas-core";
 
 export const metadata: Metadata = { title: "Hardware" };
 export const dynamic = "force-dynamic";
@@ -36,6 +38,7 @@ const ERRORES_ASIGNAR: Record<string, string> = {
   "pin-invalido": "El PIN tiene que ser de 4 a 8 números.",
   "no-autogestionada": "Esa pieza ya no es autogestionada (alguien la asignó a un cliente o ya se devolvió).",
   "sin-confirmar": "Para devolver una pieza al inventario tildá la casilla de confirmación.",
+  "sin-verificar": "Antes de poner un PIN nuevo, verificá que quien lo pide es el dueño (ver la regla arriba de la tabla) y tildá la casilla.",
 };
 
 export default async function HardwarePage({
@@ -47,7 +50,7 @@ export default async function HardwarePage({
   const { error, ok } = await searchParams;
   const pinCambiado = ok?.startsWith("pin-") ? ok.slice(4) : null;
   const liberada = ok?.startsWith("liberada-") ? ok.slice(9) : null;
-  const [inventario, clientes] = await Promise.all([getInventarioHardware(), getClientes()]);
+  const [inventario, clientes, estados] = await Promise.all([getInventarioHardware(), getClientes(), estadosDePiezas()]);
 
   const libres = inventario.filter((p) => !p.comercioId && !p.autogestionado);
   // Los que más la usan primero: son los mejores candidatos al panel.
@@ -256,6 +259,24 @@ export default async function HardwarePage({
             error que la imprenta con los números), usá &ldquo;Asignar a cliente&rdquo; para
             corregirlo — limpia el PIN cargado y deja la pieza como cualquier otra asignada.
           </p>
+          <details className="mb-3 rounded-lg border border-[#E4E6EA] bg-white px-4 py-3 text-xs text-slate-700">
+            <summary className="cursor-pointer font-semibold text-slate-900">
+              Regla de soporte: antes de poner un PIN nuevo
+            </summary>
+            <p className="mt-2">
+              Un PIN nuevo le da la pieza a quien lo pidió y le saca el control a todos los demás (celulares y cuenta de
+              Google). Antes de cambiarlo:
+            </p>
+            <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+              <li>Pedí una foto de la pieza instalada en el negocio.</li>
+              <li>Confirmá que el negocio coincide con el de la columna &ldquo;Negocio&rdquo;.</li>
+              <li>
+                Si la pieza tiene &ldquo;Cuenta Google&rdquo; o contacto de otra persona (por ejemplo, el revendedor),
+                consultale primero a esa persona.
+              </li>
+              <li>Ante la duda, no lo cambies: es más fácil esperar que recuperar una pieza tomada.</li>
+            </ol>
+          </details>
           <Card className="mb-8 overflow-x-auto p-0">
             {/* min-w fijo, mismo motivo que la tabla de libres: el formulario
                 con urlDestino (w-56) es todavía más ancho — sin esto se
@@ -286,6 +307,12 @@ export default async function HardwarePage({
                       )}
                       {p.activadoEn && (
                         <div className="text-xs text-slate-500">Activada el {new Date(p.activadoEn).toLocaleDateString("es-AR")}</div>
+                      )}
+                      {estados.get(p.id) && estados.get(p.id)!.estado !== "ok" && (
+                        <div className="mt-1 rounded bg-[#FFF4E8] px-1.5 py-0.5 text-xs font-medium text-[#8A3F00]">
+                          {TEXTO_ESTADO[estados.get(p.id)!.estado]} (desde el{" "}
+                          {new Date(estados.get(p.id)!.desde).toLocaleDateString("es-AR")})
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-600">
@@ -328,6 +355,10 @@ export default async function HardwarePage({
                     <td className="px-4 py-3">
                       <form action={accionNuevoPinPieza} className="flex flex-nowrap items-center gap-2">
                         <input type="hidden" name="id" value={p.id} />
+                        <label className="flex items-center gap-1 text-[11px] text-slate-600" title="Ver la regla de soporte arriba de la tabla">
+                          <input type="checkbox" name="verificado" value="si" required />
+                          Verifiqué
+                        </label>
                         <input
                           name="pin"
                           inputMode="numeric"
