@@ -124,7 +124,12 @@ export default async function TapPage({
     // autogestionada (sin cuenta ni portal) — es la única forma de que su
     // dueño vuelva a editarla.
     return (
-      <RedireccionSuave url={url} editarHref={link.autogestionado ? `/t/${slug}/editar` : undefined} />
+      <RedireccionSuave
+        url={url}
+        editarHref={link.autogestionado ? `/t/${slug}/editar` : undefined}
+        slug={link.autogestionado ? slug : undefined}
+        nombre={link.autogestionado ? link.nombreNegocio : undefined}
+      />
     );
   }
 

@@ -9,6 +9,7 @@ import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { probarEnvioEmail } from "@/lib/email";
+import { pinValido } from "@/lib/pin";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -437,6 +438,20 @@ export async function accionReasignarPieza(fd: FormData): Promise<void> {
   await auditar("reasignar_pieza_hardware", `${id} → ${nuevoComercioId}`);
   revalidatePath("/", "layout");
   redirect("/admin/hardware");
+}
+
+/** PIN nuevo para una pieza autogestionada cuyo dueño se olvidó el suyo
+ * (lo pide por WhatsApp). Lo elige el equipo y se lo pasa; no viaja en la
+ * URL ni queda en la auditoría. */
+export async function accionNuevoPinPieza(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  const pin = str(fd, "pin");
+  if (!pinValido(pin)) redirect("/admin/hardware?error=pin-invalido");
+  const cambiado = await db.cambiarPinAutogestion(id, pin);
+  if (!cambiado) redirect("/admin/hardware?error=no-autogestionada");
+  await auditar("nuevo_pin_pieza", id);
+  redirect(`/admin/hardware?ok=pin-${encodeURIComponent(id)}`);
 }
 
 // ---------- CRM: reseñas ----------
