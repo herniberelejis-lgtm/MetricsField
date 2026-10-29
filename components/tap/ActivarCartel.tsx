@@ -410,6 +410,10 @@ function Listo({
             Ver mis piezas
           </Link>
           <p className="mt-3 text-[12.5px]" style={{ color: INK_SOFT }}>
+            Ojo: cualquiera que use este celular la puede cambiar. Si es un celular compartido del local, activá tus
+            piezas desde tu propio celular.
+          </p>
+          <p className="mt-2 text-[12.5px]" style={{ color: INK_SOFT }}>
             Anotá el PIN, lo vas a necesitar solo desde otro celular:{" "}
             <b className="font-mono text-[14px]" style={{ color: INK }}>
               {pin}

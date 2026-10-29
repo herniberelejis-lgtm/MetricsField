@@ -227,7 +227,8 @@ export default function PrivacidadPage() {
                   guarda el PIN). Si elegís guardarlas en tu cuenta de Google,
                   usamos el inicio de sesión de Google solo para conocer tu mail y
                   guardamos ese mail junto a tus piezas, para que las recuperes
-                  desde cualquier celular. No pedimos ningún otro permiso de tu
+                  desde cualquier celular y para avisarte si una de tus piezas deja de
+                  funcionar (por ejemplo, si la ficha de Google a la que lleva cerró). No pedimos ningún otro permiso de tu
                   cuenta. Al entregar una pieza a otro negocio, deja de estar
                   asociada a tu mail.
                 </p>
@@ -466,7 +467,9 @@ export default function PrivacidadPage() {
                   activate them with keeps a cookie listing your pieces (never the
                   PIN). If you choose to save them to your Google account, we use
                   Google sign-in only to learn your email address and store that
-                  email with your pieces, so you can recover them from any phone. We
+                  email with your pieces, so you can recover them from any phone and so
+                  we can let you know if one of your pieces stops working (for example,
+                  if the Google profile it points to closed). We
                   request no other access to your account. When you hand a piece
                   over to another business, it is no longer linked to your email.
                 </p>

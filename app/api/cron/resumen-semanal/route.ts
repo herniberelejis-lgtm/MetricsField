@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { enviarAvisosPiezas, enviarResumenesSemanales } from "@/lib/db";
+import { revisarPiezasAutogestionadas } from "@/lib/revision-piezas";
 
 // "Tu semana en Google": cada lunes a las 12:00 UTC = 09:00 en Córdoba (ver
 // vercel.json). Mismo control que el cron de sincronización: Vercel Cron
@@ -24,5 +25,15 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   // el aviso semanal gratis al activarlas.
   const comercios = await enviarResumenesSemanales();
   const piezas = await enviarAvisosPiezas();
-  return NextResponse.json({ ...comercios, piezas });
+  // Revisión de fichas de Google de las piezas de Mercado Libre: va acá
+  // porque el plan de Vercel limita la cantidad de crons. Si falla, el
+  // resumen y los avisos ya salieron.
+  let revision: Awaited<ReturnType<typeof revisarPiezasAutogestionadas>> | { error: string };
+  try {
+    revision = await revisarPiezasAutogestionadas();
+  } catch (e) {
+    console.error("Revisión de piezas:", e instanceof Error ? e.message : e);
+    revision = { error: "falló" };
+  }
+  return NextResponse.json({ ...comercios, piezas, revision });
 }

@@ -87,7 +87,9 @@ export default function BuscarNegocio({
           setLugares(r.lugares);
           setDeSugerencias(false);
           if (r.lugares.length === 0) {
-            setError("No encontramos nada. Probá con el nombre y la calle, o el nombre y el barrio.");
+            setError(
+              "No encontramos nada. Probá con el nombre y la calle, o el nombre y el barrio. Si tu negocio todavía no tiene ficha en Google, primero creala en business.google.com y después pegá el link a mano.",
+            );
           }
         } else {
           setLugares(null);
@@ -119,6 +121,17 @@ export default function BuscarNegocio({
           <p className="text-[12px]" style={{ color: INK_SOFT }}>
             {elegido.direccion}
           </p>
+          {/* Para confirmar que es el negocio correcto (homónimos, sucursales)
+              antes de activar: abre la ficha en Google Maps. */}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(elegido.nombre)}&query_place_id=${encodeURIComponent(elegido.placeId)}`}
+            target="_blank"
+            rel="noopener"
+            className="mt-1 inline-block text-[12.5px] font-medium underline"
+            style={{ color: BRAND }}
+          >
+            ¿Es este? Ver en Google Maps
+          </a>
         </div>
         <button type="button" onClick={() => onElegir(null)} className="shrink-0 text-[12.5px] font-medium" style={{ color: BRAND }}>
           Cambiar

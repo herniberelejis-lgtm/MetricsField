@@ -72,6 +72,19 @@ export default function TerminosPage() {
                   reimprimirla. La garantía cubre defectos de fabricación; no cubre
                   daño físico, pérdida o robo.
                 </p>
+                <p className="mt-2">
+                  <strong>Piezas compradas sueltas (por ejemplo, en Mercado Libre) y
+                  revendedores.</strong> Quien activa una pieza la controla con su PIN,
+                  desde el celular con el que la configuró o desde la cuenta de Google
+                  donde la guardó. Quien revende o instala piezas para otros negocios
+                  debe entregarlas con la opción &ldquo;Entregar&rdquo;, que le asigna un
+                  PIN propio al negocio que la recibe. No está permitido configurar una
+                  pieza para la ficha de un negocio sin su autorización, ni usarla para
+                  ofrecer beneficios a cambio de reseñas. Ante un pedido de cambio de PIN
+                  podemos pedir pruebas de que la pieza está instalada en el negocio, y
+                  podemos desactivar una pieza usada en contra de estos términos o de las
+                  políticas de Google.
+                </p>
               </section>
 
               <section>
@@ -185,6 +198,19 @@ export default function TerminosPage() {
                   directs to is configurable via software without needing to
                   reprint. The warranty covers manufacturing defects; it does not
                   cover physical damage, loss, or theft.
+                </p>
+                <p className="mt-2">
+                  <strong>Standalone pieces (for example, bought on Mercado Libre) and
+                  resellers.</strong> Whoever activates a piece controls it with its PIN,
+                  from the phone used to set it up, or from the Google account it was
+                  saved to. Anyone reselling or installing pieces for other businesses
+                  must hand them over with the &ldquo;Hand over&rdquo; option, which gives
+                  the receiving business its own PIN. Setting up a piece for a
+                  business&rsquo;s Google profile without its authorization, or using it to
+                  offer benefits in exchange for reviews, is not allowed. When asked to
+                  reset a PIN we may request proof that the piece is installed at the
+                  business, and we may deactivate a piece used against these terms or
+                  Google&rsquo;s policies.
                 </p>
               </section>
 

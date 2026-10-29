@@ -454,6 +454,9 @@ export async function accionNuevoPinPieza(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   const pin = str(fd, "pin");
   if (!pinValido(pin)) redirect("/admin/hardware?error=pin-invalido");
+  // Regla de soporte: un PIN nuevo le da la pieza a quien lo pidió. Sin
+  // verificar que es el dueño, es la puerta para quedarse con piezas ajenas.
+  if (str(fd, "verificado") !== "si") redirect("/admin/hardware?error=sin-verificar");
   const cambiado = await db.cambiarPinAutogestion(id, pin);
   if (!cambiado) redirect("/admin/hardware?error=no-autogestionada");
   // PIN nuevo = nadie más la maneja: tampoco una cuenta de Google donde
