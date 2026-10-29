@@ -211,3 +211,23 @@ Pruebas: 17 unitarias del llavero, 51/51 en `prueba-permisos` (8 casos
 nuevos de llavero y ticket), y E2E en navegador de revendedor, dueño nuevo,
 cliente, celular nuevo, cuenta de Google, otra cuenta, cookies falsificadas
 y la sesión de piezas contra el panel.
+
+## 8. Auditoría posterior (revisión de código) y correcciones
+
+- Un PIN nuevo (del admin, o "Cambiar también el PIN") ahora también saca la
+  pieza de cualquier cuenta de Google: antes una cuenta vinculada seguía
+  controlándola sin PIN después del cambio.
+- Se eliminó el "recordar en este celular" por localStorage de #228: era un
+  segundo mecanismo que contaba como toques los escaneos del dueño y seguía
+  mostrando opciones a quien ya no manejaba la pieza. Ahora todo lo decide el
+  servidor (llavero o cuenta).
+- "Quitar de mis piezas" también la saca de la cuenta de Google.
+- Si se pierde el acceso con la pantalla de cambiar abierta, al guardar se
+  vuelve a pedir el PIN (sin gastar intentos).
+- Buscador: sin sugerencias para lo nuevo, la lista anterior desaparece (no se
+  puede tocar un negocio de una búsqueda vieja).
+- "Guardar con Google" solo se ofrece en el dominio canónico.
+- `/t/llavero` responde 403 a un `Origin: null` (antes 500).
+- Toques de Mis piezas: solo la última semana y desde la activación.
+- Admin → Hardware: **Devolver al inventario** (devoluciones, piezas de prueba),
+  con confirmación y auditoría.

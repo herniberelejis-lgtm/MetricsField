@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { sumarPieza } from "@/app/t/actions";
-import { recordarPiezaMia } from "@/lib/piezas-mias";
 import { BotonWhatsapp } from "./AyudaActivacion";
 import { BOTON_PRINCIPAL, BRAND, FONDO, INK, INK_SOFT, LINE, SOMBRA, TARJETA } from "./estilo";
 
@@ -40,7 +39,6 @@ export default function PuertaPin({
           setError(r.error ?? "No se pudo.");
           return;
         }
-        recordarPiezaMia(slug);
         if (luego) router.push(luego);
         else router.refresh();
       } catch {

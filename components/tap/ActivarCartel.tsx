@@ -10,7 +10,6 @@ import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
 import GrabarChip from "./GrabarChip";
 import OfertaPrueba from "./OfertaPrueba";
-import { recordarPiezaMia } from "@/lib/piezas-mias";
 
 const INK = "#1c2530";
 const INK_SOFT = "#5f6b7a";
@@ -118,7 +117,6 @@ export default function ActivarCartel({ slug }: { slug: string }) {
         setError(res.error ?? "No se pudo activar.");
         return;
       }
-      recordarPiezaMia(slug);
       // Suma la pieza a "Mis piezas" de este celular (ver app/t/llavero).
       if (res.ticket) {
         await fetch("/t/llavero", {

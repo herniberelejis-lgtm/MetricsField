@@ -23,8 +23,14 @@ export async function POST(req: NextRequest) {
   // Solo desde nuestras propias páginas (un formulario de otro sitio no
   // puede tocar el llavero de nadie: la cookie igual no viajaría, SameSite).
   const origen = req.headers.get("origin");
-  if (origen && new URL(origen).host !== req.headers.get("host")) {
-    return NextResponse.json({ ok: false }, { status: 403 });
+  if (origen) {
+    let host = "";
+    try {
+      host = new URL(origen).host; // "null" (iframe aislado, etc.) no es una URL
+    } catch {
+      // queda vacío: no coincide
+    }
+    if (host !== req.headers.get("host")) return NextResponse.json({ ok: false }, { status: 403 });
   }
   limpiarVencidos();
   if (!(await permitir(`llavero:${ipDelRequest(req.headers)}`, 120, 10 * 60_000))) {

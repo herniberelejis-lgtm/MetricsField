@@ -73,7 +73,9 @@ Restos históricos en la base (ya sin uso en el código): la columna
   una pieza propia muestra opciones y no cuenta el toque. "Sumar una pieza"
   suma una ya activada escaneándola. **Guardar con Google** (migración 020)
   las recupera desde cualquier celular. Si alguien pierde el PIN y no tiene
-  Google, el equipo le pone uno nuevo en Admin → Hardware. Diseño, riesgos y
+  Google, el equipo le pone uno nuevo en Admin → Hardware (eso también la saca
+  de cualquier cuenta de Google). Ahí mismo, **Devolver al inventario** deja
+  limpia una pieza devuelta o de prueba. Diseño, riesgos y
   refutaciones: `docs/PIEZAS-AUTOGESTION-PLAN.md`.
   Después la edita en `/t/<código>/editar` con su PIN. No crea cliente en el
   CRM: en Admin → Hardware se ven los compradores ordenados por uso, con su

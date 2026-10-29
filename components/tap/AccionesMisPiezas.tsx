@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { dejarDeSumar, empezarASumar, guardarMisPiezasEnCuenta, olvidarPieza, salirDeCuenta } from "@/app/t/actions";
-import { olvidarPiezaMia } from "@/lib/piezas-mias";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, BRAND, INK, INK_SOFT, LINE } from "./estilo";
 
 /** "Sumar una pieza": este navegador queda esperando un escaneo unos minutos. */
@@ -58,7 +57,7 @@ export function BotonSumar({ sumando, minutos }: { sumando: boolean; minutos: nu
 }
 
 /** Sacar una pieza de este celular (la pieza no cambia). */
-export function BotonQuitar({ slug, texto = "Quitar de este celular" }: { slug: string; texto?: string }) {
+export function BotonQuitar({ slug, texto = "Quitar de mis piezas" }: { slug: string; texto?: string }) {
   const router = useRouter();
   const [pendiente, startTransition] = useTransition();
   return (
@@ -66,10 +65,9 @@ export function BotonQuitar({ slug, texto = "Quitar de este celular" }: { slug: 
       type="button"
       disabled={pendiente}
       onClick={() => {
-        if (!window.confirm("¿Sacarla de este celular? La pieza sigue funcionando igual; para volver a manejarla vas a necesitar su PIN.")) return;
+        if (!window.confirm("¿Sacarla de Mis piezas? Sale de este celular y de tu cuenta de Google. La pieza sigue funcionando igual; para volver a manejarla vas a necesitar su PIN.")) return;
         startTransition(async () => {
           await olvidarPieza(slug);
-          olvidarPiezaMia(slug);
           router.refresh();
         });
       }}

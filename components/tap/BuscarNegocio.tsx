@@ -59,11 +59,11 @@ export default function BuscarNegocio({
         const r = await sugerirNegocio(slug, q, token.current);
         if (n !== ultimaConsulta.current) return;
         if (r.ok) {
-          if (r.lugares.length > 0) {
-            setLugares(r.lugares);
-            setDeSugerencias(true);
-            setError(null);
-          }
+          // Sin sugerencias para lo que escribió: no dejar a la vista la
+          // lista de una búsqueda anterior (llevaría a tocar otro negocio).
+          setLugares(r.lugares.length > 0 ? r.lugares : null);
+          setDeSugerencias(r.lugares.length > 0);
+          setError(null);
         } else {
           setError(r.error);
         }
