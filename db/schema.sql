@@ -165,6 +165,9 @@ ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS contacto_whatsapp      TEXT NOT N
 ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS novedades_aceptadas_en TIMESTAMPTZ;
 ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS novedades_baja_en      TIMESTAMPTZ;
 ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS activado_en            TIMESTAMPTZ;
+-- 020: cuenta de Google que maneja la pieza (Mis piezas, ver lib/cuenta-piezas.ts).
+ALTER TABLE links_nfc ADD COLUMN IF NOT EXISTS duenio_email TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS links_nfc_duenio_email_idx ON links_nfc (lower(duenio_email)) WHERE duenio_email <> '';
 
 -- Cada tap registrado (solo inserción, nunca se edita).
 CREATE TABLE IF NOT EXISTS taps (

@@ -6,6 +6,10 @@ import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { urlSegura } from "@/lib/url";
 import ActivarCartel from "@/components/tap/ActivarCartel";
 import RedireccionSuave from "@/components/tap/RedireccionSuave";
+import PantallaDuenio from "@/components/tap/PantallaDuenio";
+import PuertaPin from "@/components/tap/PuertaPin";
+import { leerPiezasDelLlavero, modoSumarActivo } from "@/lib/llavero";
+import { accesoAPieza, cuentaActual } from "@/lib/cuenta-piezas";
 
 export const dynamic = "force-dynamic";
 
@@ -83,10 +87,25 @@ export default async function TapPage({
   limpiarVencidos();
   const ip = ipDelRequest(h);
   const dentroDelLimite = await permitir(`tap:${ip}:${slug}`, 30, 10 * 60_000);
+  // Pieza autogestionada escaneada por quien la maneja (llavero válido con
+  // el PIN actual, lib/llavero.ts) o por un navegador que está "sumando
+  // piezas": no es un cliente. Se decide acá, antes de contar el toque, y en
+  // el servidor (un bot de previews nunca trae estas cookies, así que sigue
+  // viendo la redirección de siempre). Solo se consulta la base si el
+  // navegador trae algo: el escaneo de un cliente cuesta lo mismo que antes.
+  let esDuenio = false;
+  let sumando = false;
+  if (link.autogestionado && !comercio && link.urlDestino) {
+    if ((await leerPiezasDelLlavero()).has(slug) || (await cuentaActual())) {
+      esDuenio = Boolean(await accesoAPieza(slug));
+    }
+    if (!esDuenio) sumando = await modoSumarActivo();
+  }
+
   // Solo cuenta si la pieza ya lleva a algún lado: abrir el formulario de
   // activación de una pieza libre es su dueño configurándola, no un cliente.
   const configurada = Boolean(link.urlDestino || comercio);
-  if (configurada && !esPrefetch && !esCrawler && dentroDelLimite) {
+  if (configurada && !esPrefetch && !esCrawler && dentroDelLimite && !esDuenio && !sumando) {
     await registrarTap(slug, userAgent || null);
   }
 
@@ -120,6 +139,18 @@ export default async function TapPage({
   if (link.urlDestino) {
     const url = urlSegura(link.urlDestino);
     if (!url) notFound();
+    if (esDuenio) return <PantallaDuenio slug={slug} nombre={link.nombreNegocio} url={url} />;
+    if (sumando) {
+      return (
+        <PuertaPin
+          slug={slug}
+          nombre={link.nombreNegocio}
+          titulo="Sumar esta pieza"
+          bajada="Poné su PIN y queda en tus piezas: desde este celular la cambiás sin PIN."
+          luego="/t/mis-piezas"
+        />
+      );
+    }
     // El link de vuelta a /t/<slug>/editar solo tiene sentido en una pieza
     // autogestionada (sin cuenta ni portal) — es la única forma de que su
     // dueño vuelva a editarla.

@@ -4,10 +4,18 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import {
   activarAutogestion,
+  borrarContactoPieza,
+  desvincularPieza,
+  getPiezasDelLlavero,
+  vincularPiezasACuenta,
   editarAutogestion,
+  editarAutogestionAutorizada,
   getLink,
   guardarDatosActivacion,
   guardarLugarAutogestion,
+  rotarPinAutogestion,
+  salPinAutogestion,
+  verificarPinAutogestion,
 } from "@/lib/db";
 import {
   autocompletarLugar,
@@ -22,6 +30,18 @@ import { validarContacto } from "@/lib/activacion";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
 import { pinValido } from "@/lib/pin";
 import { urlResenaGoogle } from "@/lib/url";
+import {
+  empezarModoSumar,
+  guardarEnLlavero,
+  firmaVerificable,
+  leerPiezasDelLlavero,
+  modoSumarActivo,
+  quitarDelLlavero,
+  terminarModoSumar,
+  ticketParaSumar,
+} from "@/lib/llavero";
+import crypto from "node:crypto";
+import { accesoAPieza, cerrarCuenta, cuentaActual } from "@/lib/cuenta-piezas";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
 // que su comprador escaneó por primera vez. Sin login — la defensa contra
@@ -33,6 +53,30 @@ import { urlResenaGoogle } from "@/lib/url";
 async function piezaConfigurable(slug: string): Promise<string | null> {
   const pieza = await getLink(String(slug ?? "").slice(0, 80));
   return pieza && !pieza.comercioId && pieza.activo ? pieza.id : null;
+}
+
+/** ¿Este navegador maneja la pieza? (llavero del celular o cuenta de
+ * Google, ver lib/cuenta-piezas.ts). Devuelve la sal actual del PIN. */
+async function autorizadaAhora(slug: string): Promise<string | null> {
+  return accesoAPieza(slug);
+}
+
+/** Si entró con Google, la pieza queda guardada también en su cuenta. */
+async function guardarEnCuenta(slug: string): Promise<void> {
+  const email = await cuentaActual();
+  if (email) await vincularPiezasACuenta([slug], email);
+}
+
+/** Los mismos tres límites que el cambio con PIN: cualquier camino que
+ * reciba un PIN comparte el cupo, así no se suman intentos de adivinarlo. */
+async function cupoPin(slug: string): Promise<boolean> {
+  limpiarVencidos();
+  const ip = ipDelRequest(await headers());
+  return (
+    (await permitir(`editar-cartel:${ip}:${slug}`, 5, 15 * 60_000)) &&
+    (await permitir(`editar-cartel-pieza:${slug}`, 10, 60 * 60_000)) &&
+    (await permitir(`editar-cartel-pieza-dia:${slug}`, 30, 24 * 60 * 60_000))
+  );
 }
 
 /** Busca el negocio del comprador en Google para que lo elija de una lista
@@ -50,9 +94,13 @@ export async function buscarNegocio(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
+  // Quien ya maneja la pieza (llavero) la cambia muchas veces para mostrarla
+  // en cada local: límite por pieza más alto, pero finito (cada búsqueda la
+  // paga Google).
+  const tope = (await autorizadaAhora(pieza)) ? 300 : 60;
   if (
     !(await permitir(`buscar-negocio:${ip}`, 20, 10 * 60_000)) ||
-    !(await permitir(`buscar-negocio-pieza:${pieza}`, 60, 24 * 60 * 60_000))
+    !(await permitir(`buscar-negocio-pieza:${pieza}`, tope, 24 * 60 * 60_000))
   ) {
     return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
   }
@@ -84,9 +132,10 @@ export async function sugerirNegocio(
 
   limpiarVencidos();
   const ip = ipDelRequest(await headers());
+  const tope = (await autorizadaAhora(pieza)) ? 1500 : 400;
   if (
     !(await permitir(`sugerir-negocio:${ip}`, 150, 10 * 60_000)) ||
-    !(await permitir(`sugerir-negocio-pieza:${pieza}`, 400, 24 * 60 * 60_000))
+    !(await permitir(`sugerir-negocio-pieza:${pieza}`, tope, 24 * 60 * 60_000))
   ) {
     return { ok: false, error: "Demasiadas búsquedas. Probá de nuevo en un rato." };
   }
@@ -157,7 +206,7 @@ export async function activarCartel(
     whatsapp?: string;
     aceptaNovedades?: boolean;
   },
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; ticket?: string }> {
   if (!pinValido(String(datos.pin ?? ""))) {
     return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
   }
@@ -189,18 +238,25 @@ export async function activarCartel(
     whatsapp: contacto.whatsapp,
     aceptaNovedades: contacto.acepta,
   });
+  // Quien la activó la puede cambiar desde este celular sin PIN (Mis piezas).
+  // No se pone la cookie acá: redibujaría la página y taparía el "¡Listo!"
+  // con el PIN. El navegador canjea este ticket en /t/llavero.
+  const ticket = ticketParaSumar(slug, await salPinAutogestion(slug));
   // Sin revalidatePath: refrescaría /t/<id> en el celular del dueño, que
   // ahora es una pieza activa y lo mandaría a la reseña de su propio
   // negocio (contándolo como un toque). La página es dinámica: no hay
   // caché que limpiar.
-  return { ok: true };
+  return { ok: true, ticket: ticket ?? undefined };
 }
 
-// Editar una pieza ya autogestionada — pide el PIN elegido en la
-// activación. Un PIN de pocos dígitos solo es seguro si además está
-// protegido contra fuerza bruta: límite por IP+pieza Y un tope por pieza
-// que no depende de la IP (rotar IPs no da más intentos contra el mismo
-// cartel). Con 30 intentos por día, 10⁴ PIN llevan casi un año.
+// Cambiar una pieza autogestionada. Dos caminos:
+// - Desde un navegador que ya la maneja (llavero, ver lib/llavero.ts): sin
+//   PIN. El límite es alto porque no hay nada que adivinar: el revendedor la
+//   cambia en cada local donde la muestra.
+// - Con el PIN: un PIN de pocos dígitos solo es seguro si además está
+//   protegido contra fuerza bruta: límite por IP+pieza Y un tope por pieza
+//   que no depende de la IP (rotar IPs no da más intentos contra el mismo
+//   cartel). Con 30 intentos por día, 10⁴ PIN llevan casi un año.
 export async function editarCartel(
   slug: string,
   pin: string,
@@ -208,14 +264,15 @@ export async function editarCartel(
 ): Promise<{ ok: boolean; error?: string; nombre?: string }> {
   const pinNuevo = String(datos.pinNuevo ?? "");
   if (pinNuevo && !pinValido(pinNuevo)) return { ok: false, error: "El PIN nuevo tiene que ser de 4 a 8 números." };
-  limpiarVencidos();
-  const ip = ipDelRequest(await headers());
   const pieza = String(slug ?? "").slice(0, 80);
-  if (
-    !(await permitir(`editar-cartel:${ip}:${pieza}`, 5, 15 * 60_000)) ||
-    !(await permitir(`editar-cartel-pieza:${pieza}`, 10, 60 * 60_000)) ||
-    !(await permitir(`editar-cartel-pieza-dia:${pieza}`, 30, 24 * 60 * 60_000))
-  ) {
+  const sal = await autorizadaAhora(pieza);
+
+  limpiarVencidos();
+  if (sal) {
+    if (!(await permitir(`editar-llavero-pieza:${pieza}`, 200, 24 * 60 * 60_000))) {
+      return { ok: false, error: "Demasiados cambios por hoy en esta pieza. Probá mañana." };
+    }
+  } else if (!(await cupoPin(pieza))) {
     return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
   }
 
@@ -225,15 +282,107 @@ export async function editarCartel(
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
 
   try {
-    await editarAutogestion(slug, String(pin ?? ""), {
-      nombreNegocio: nombre,
-      urlDestino: destino.url,
-      pinNuevo: pinNuevo || undefined,
-    });
+    if (sal) {
+      await editarAutogestionAutorizada(pieza, sal, {
+        nombreNegocio: nombre,
+        urlDestino: destino.url,
+        pinNuevo: pinNuevo || undefined,
+      });
+    } else {
+      await editarAutogestion(pieza, String(pin ?? ""), {
+        nombreNegocio: nombre,
+        urlDestino: destino.url,
+        pinNuevo: pinNuevo || undefined,
+      });
+    }
   } catch (e) {
     return { ok: false, error: errorParaMostrar(e, "No se pudo guardar. Probá de nuevo en un rato.") };
   }
-  if (destino.placeId) await guardarLugarAutogestion(slug, destino.placeId);
-  revalidatePath(`/t/${slug}`);
+  if (destino.placeId) await guardarLugarAutogestion(pieza, destino.placeId);
+  // Con el PIN puesto (o recién cambiado) este navegador queda autorizado;
+  // si cambió el PIN, con la sal nueva — si no, se perdería a sí mismo.
+  await guardarEnLlavero(pieza, await salPinAutogestion(pieza));
+  await guardarEnCuenta(pieza);
+  revalidatePath(`/t/${pieza}`);
   return { ok: true, nombre };
+}
+
+/** Sumar una pieza a este navegador con su PIN, sin cambiar nada más: el
+ * celular nuevo, el navegador equivocado o una pieza activada antes del
+ * llavero. Comparte el cupo de intentos con el cambio con PIN. */
+export async function sumarPieza(slug: string, pin: string): Promise<{ ok: boolean; error?: string }> {
+  const pieza = String(slug ?? "").slice(0, 80);
+  if (!pinValido(String(pin ?? ""))) return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
+  if (!(await cupoPin(pieza))) return { ok: false, error: "Demasiados intentos. Probá de nuevo en un rato." };
+  const sal = await verificarPinAutogestion(pieza, String(pin));
+  if (!sal) return { ok: false, error: "PIN incorrecto." };
+  await guardarEnLlavero(pieza, sal);
+  await guardarEnCuenta(pieza);
+  if (await modoSumarActivo()) await empezarModoSumar();
+  return { ok: true };
+}
+
+/** Entregar la pieza a otro negocio: PIN nuevo (lo elige quien entrega o
+ * sale uno al azar), se borra el contacto del aviso semanal del dueño
+ * anterior y sale de este navegador. Como cambia el PIN, ningún otro
+ * celular que la manejaba la sigue controlando. Solo desde un navegador que
+ * ya la maneja. */
+export async function entregarPieza(
+  slug: string,
+  pinElegido?: string,
+): Promise<{ ok: true; pin: string; nombre: string } | { ok: false; error: string }> {
+  const pieza = String(slug ?? "").slice(0, 80);
+  const elegido = String(pinElegido ?? "");
+  if (elegido && !pinValido(elegido)) return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
+  const sal = await autorizadaAhora(pieza);
+  if (!sal) return { ok: false, error: "Este celular ya no maneja esta pieza. Sumala de nuevo con su PIN." };
+  limpiarVencidos();
+  if (!(await permitir(`entregar-pieza:${pieza}`, 20, 24 * 60 * 60_000))) {
+    return { ok: false, error: "Demasiados intentos por hoy. Probá mañana." };
+  }
+  const pin = elegido || String(crypto.randomInt(1000, 10000));
+  if (!(await rotarPinAutogestion(pieza, sal, pin))) {
+    return { ok: false, error: "Esta pieza ya no se puede entregar desde este celular." };
+  }
+  await borrarContactoPieza(pieza);
+  await desvincularPieza(pieza);
+  // Sacarla del llavero lo hace el navegador en /t/llavero: una cookie
+  // puesta desde acá redibujaría la página y taparía el PIN nuevo.
+  const link = await getLink(pieza);
+  return { ok: true, pin, nombre: link?.nombreNegocio ?? "" };
+}
+
+/** Sacar una pieza de este navegador (no cambia nada en la pieza). */
+export async function olvidarPieza(slug: string): Promise<{ ok: true }> {
+  await quitarDelLlavero(String(slug ?? "").slice(0, 80));
+  return { ok: true };
+}
+
+/** "Sumar una pieza": durante unos minutos, escanear una pieza con este
+ * navegador la suma (con su PIN) en vez de mandar a Google. */
+export async function empezarASumar(): Promise<{ ok: boolean }> {
+  return { ok: await empezarModoSumar() };
+}
+
+export async function dejarDeSumar(): Promise<{ ok: true }> {
+  await terminarModoSumar();
+  return { ok: true };
+}
+
+/** Después de entrar con Google en Mis piezas: guarda en la cuenta todas
+ * las piezas que maneja este celular (solo las que el llavero autoriza de
+ * verdad con el PIN actual). */
+export async function guardarMisPiezasEnCuenta(): Promise<{ ok: boolean; cantidad: number }> {
+  const email = await cuentaActual();
+  if (!email) return { ok: false, cantidad: 0 };
+  const llavero = await leerPiezasDelLlavero();
+  const piezas = await getPiezasDelLlavero([...llavero.keys()]);
+  const validas = piezas.filter((p) => firmaVerificable(p.id, p.salPin, llavero.get(p.id) ?? "")).map((p) => p.id);
+  const ok = await vincularPiezasACuenta(validas, email);
+  return { ok, cantidad: ok ? validas.length : 0 };
+}
+
+export async function salirDeCuenta(): Promise<{ ok: true }> {
+  await cerrarCuenta();
+  return { ok: true };
 }
