@@ -181,6 +181,8 @@ export interface LinkNFC {
   novedadesBajaEn: string | null;
   /** Cuándo el comprador activó la pieza (autogestionadas). */
   activadoEn: string | null;
+  /** Cuenta de Google que maneja la pieza autogestionada (migración 020), o "". */
+  duenioEmail: string;
   creadoEn: string;
   taps: number; // total histórico, calculado
 }

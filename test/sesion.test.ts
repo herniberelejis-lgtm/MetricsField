@@ -119,6 +119,18 @@ describe("cookie de sesión con Google", () => {
     expect(await leerCookieSesionGoogle(admin, "secreto", "portal")).toBeNull();
   });
 
+  // La cuenta de Google de los dueños de piezas de Mercado Libre usa el
+  // mismo secreto: cualquiera puede crearse una (no hay allowlist), así que
+  // NUNCA puede abrir el panel ni un portal.
+  it("una cookie de dueño de piezas no vale como panel ni como portal (y al revés)", async () => {
+    const piezas = await crearCookieSesionGoogle("revendedor@gmail.com", "R", "secreto", "piezas");
+    expect(await leerCookieSesionGoogle(piezas, "secreto", "admin")).toBeNull();
+    expect(await leerCookieSesionGoogle(piezas, "secreto", "portal")).toBeNull();
+    expect(await leerCookieSesionGoogle(piezas, "secreto", "piezas")).toEqual({ email: "revendedor@gmail.com", nombre: "R" });
+    const admin = await crearCookieSesionGoogle("jefe@metricsfield.com", "J", "secreto", "admin");
+    expect(await leerCookieSesionGoogle(admin, "secreto", "piezas")).toBeNull();
+  });
+
   it("no alcanza con cambiar la audiencia del payload: la firma la cubre", async () => {
     const portal = await crearCookieSesionGoogle("empleado@cliente.com", "E", "secreto", "portal");
     const [payload, firma] = portal.split(".");

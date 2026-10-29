@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { editarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
 import { recordarPiezaMia } from "@/lib/piezas-mias";
-import { BotonWhatsapp } from "./AyudaActivacion";
 import { Paso } from "./ActivarCartel";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
@@ -15,11 +15,10 @@ const INK_SOFT = "#5f6b7a";
 const LINE = "#dfe3e8";
 const BRAND = "#2563eb";
 
-// Cambiar a dónde lleva una pieza autogestionada, las veces que haga falta:
-// mismo formulario que la activación (buscar el negocio y confirmar con el
-// PIN), en una sola pantalla. Pensado también para el revendedor que
-// configura la pieza para un local y después la pasa a otro: puede dejarle
-// un PIN nuevo al dueño nuevo.
+// Cambiar a dónde lleva una pieza autogestionada, las veces que haga falta,
+// desde un celular que ya la maneja (el PIN se pidió una sola vez, ver
+// PuertaPin): buscar el negocio, tocarlo, guardar. Pensado también para el
+// revendedor que la muestra en cada local.
 export default function EditarCartel({
   slug,
   nombreActual,
@@ -34,7 +33,6 @@ export default function EditarCartel({
   const [aMano, setAMano] = useState(false);
   const [nombre, setNombre] = useState(nombreActual);
   const [url, setUrl] = useState(urlActual);
-  const [pin, setPin] = useState("");
   const [cambiarPin, setCambiarPin] = useState(false);
   const [pinNuevo, setPinNuevo] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +53,7 @@ export default function EditarCartel({
     }
     startTransition(async () => {
       try {
-        const res = await editarCartel(slug, pin, {
+        const res = await editarCartel(slug, "", {
           nombre: lugar ? lugar.nombre : nombre,
           placeId: lugar?.placeId ?? null,
           sesionToken: lugar ? sesionToken : undefined,
@@ -81,7 +79,6 @@ export default function EditarCartel({
     setLugar(null);
     setSesionToken(undefined);
     setAMano(false);
-    setPin("");
     setCambiarPin(false);
     setPinNuevo("");
   }
@@ -116,8 +113,8 @@ export default function EditarCartel({
               Probala
             </p>
             <p className="mt-1 text-[13px]" style={{ color: INK_SOFT }}>
-              Escaneá el QR: desde este celular te pregunta si querés cambiarla o ir a la reseña. Tocá{" "}
-              <b>Ir a la reseña</b> y fijate que arriba diga el nombre del negocio.
+              Escaneala con otro celular (por ejemplo el del dueño del local): se abre la reseña del negocio. Desde
+              este celular te pregunta qué querés hacer.
             </p>
           </div>
           <button
@@ -128,6 +125,9 @@ export default function EditarCartel({
           >
             Cambiarla otra vez
           </button>
+          <Link href="/t/mis-piezas" className="mt-4 inline-block text-[14px] font-medium underline" style={{ color: BRAND }}>
+            Ver todas mis piezas
+          </Link>
         </div>
       </div>
     );
@@ -144,7 +144,7 @@ export default function EditarCartel({
             Cambiá a dónde lleva tu pieza
           </h1>
           <p className="mt-1.5 text-[13.5px]" style={{ color: INK_SOFT }}>
-            Las veces que quieras. El QR y el chip siguen siendo los mismos.
+            Las veces que quieras, sin PIN desde este celular. El QR y el chip siguen siendo los mismos.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function EditarCartel({
         )}
 
         <div className="mt-6 space-y-6">
-          <Paso n={1} titulo="Buscá el negocio nuevo">
+          <Paso n={1} titulo="Buscá el negocio nuevo y tocalo">
             {!aMano ? (
               <>
                 <BuscarNegocio
@@ -216,45 +216,32 @@ export default function EditarCartel({
             )}
           </Paso>
 
-          <Paso n={2} titulo="Confirmá con tu PIN">
+          <label className="flex items-start gap-2.5">
             <input
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
-              required
+              type="checkbox"
+              checked={cambiarPin}
+              onChange={(e) => setCambiarPin(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-[#2563eb]"
+            />
+            <span className="text-[13px] leading-snug" style={{ color: INK }}>
+              Cambiar también el PIN
+              <span className="block text-[12px]" style={{ color: INK_SOFT }}>
+                Solo hace falta si alguien más lo sabe. Para dársela a otro negocio usá &ldquo;Entregar&rdquo;.
+              </span>
+            </span>
+          </label>
+          {cambiarPin && (
+            <input
+              value={pinNuevo}
+              onChange={(e) => setPinNuevo(e.target.value.replace(/\D/g, "").slice(0, 8))}
               inputMode="numeric"
               autoComplete="off"
-              placeholder="El que elegiste al activarla"
-              aria-label="Tu PIN"
-              className="w-full rounded-xl border px-3.5 py-3 text-center text-[18px] tracking-[0.2em] outline-none"
+              placeholder="PIN nuevo, ej: 2580"
+              aria-label="PIN nuevo"
+              className="-mt-3 w-full rounded-xl border px-3.5 py-3 text-center text-[18px] tracking-[0.2em] outline-none"
               style={{ borderColor: LINE, color: INK }}
             />
-            <label className="mt-3 flex items-start gap-2.5">
-              <input
-                type="checkbox"
-                checked={cambiarPin}
-                onChange={(e) => setCambiarPin(e.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 accent-[#2563eb]"
-              />
-              <span className="text-[13px] leading-snug" style={{ color: INK }}>
-                Cambiar también el PIN
-                <span className="block text-[12px]" style={{ color: INK_SOFT }}>
-                  Por ejemplo, si se la das a otro negocio y querés que tenga el suyo.
-                </span>
-              </span>
-            </label>
-            {cambiarPin && (
-              <input
-                value={pinNuevo}
-                onChange={(e) => setPinNuevo(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="PIN nuevo, ej: 2580"
-                aria-label="PIN nuevo"
-                className="mt-2.5 w-full rounded-xl border px-3.5 py-3 text-center text-[18px] tracking-[0.2em] outline-none"
-                style={{ borderColor: LINE, color: INK }}
-              />
-            )}
-          </Paso>
+          )}
         </div>
 
         {error && (
@@ -272,16 +259,14 @@ export default function EditarCartel({
           {pendiente ? "Guardando…" : "Guardar cambios"}
         </button>
 
-        <details className="mt-4 text-[13px]" style={{ color: INK_SOFT }}>
-          <summary className="cursor-pointer text-center underline">¿Te olvidaste el PIN?</summary>
-          <p className="mt-2 leading-snug">
-            Escribinos por WhatsApp con el código de la pieza (<span className="font-mono">{slug}</span>) y te damos uno
-            nuevo.
-          </p>
-          <BotonWhatsapp mensaje={`Hola, me olvidé el PIN de mi pieza de MetricsField ${slug}. ¿Me ayudan?`}>
-            Pedir un PIN nuevo
-          </BotonWhatsapp>
-        </details>
+        <div className="mt-4 flex justify-center gap-5 text-[13.5px]">
+          <a href={`/t/${slug}/entregar`} className="underline" style={{ color: INK_SOFT }}>
+            Entregársela a otro negocio
+          </a>
+          <Link href="/t/mis-piezas" className="underline" style={{ color: INK_SOFT }}>
+            Mis piezas
+          </Link>
+        </div>
       </form>
 
       {/* Por si nunca grabó el chip: el link de la pieza no cambia al editarla. */}
