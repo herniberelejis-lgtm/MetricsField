@@ -456,8 +456,24 @@ export async function accionNuevoPinPieza(fd: FormData): Promise<void> {
   if (!pinValido(pin)) redirect("/admin/hardware?error=pin-invalido");
   const cambiado = await db.cambiarPinAutogestion(id, pin);
   if (!cambiado) redirect("/admin/hardware?error=no-autogestionada");
+  // PIN nuevo = nadie más la maneja: tampoco una cuenta de Google donde
+  // estaba guardada (puede ser justamente la de quien no debería tenerla).
+  await db.desvincularPieza(id);
   await auditar("nuevo_pin_pieza", id);
   redirect(`/admin/hardware?ok=pin-${encodeURIComponent(id)}`);
+}
+
+/** Devolver una pieza autogestionada al inventario libre (ver
+ * liberarPiezaAutogestionada). Pide confirmación en el formulario. */
+export async function accionLiberarPieza(fd: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(fd, "id");
+  if (str(fd, "confirmo") !== "si") redirect("/admin/hardware?error=sin-confirmar");
+  const liberada = await db.liberarPiezaAutogestionada(id);
+  if (!liberada) redirect("/admin/hardware?error=no-autogestionada");
+  await auditar("liberar_pieza_hardware", id);
+  revalidatePath("/", "layout");
+  redirect(`/admin/hardware?ok=liberada-${encodeURIComponent(id)}`);
 }
 
 // ---------- CRM: reseñas ----------

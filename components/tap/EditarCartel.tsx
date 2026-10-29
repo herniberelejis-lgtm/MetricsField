@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { editarCartel } from "@/app/t/actions";
 import type { LugarParaResena } from "@/lib/places";
-import { recordarPiezaMia } from "@/lib/piezas-mias";
 import { Paso } from "./ActivarCartel";
 import BuscarNegocio from "./BuscarNegocio";
 import ComoConseguirLink from "./ComoConseguirLink";
@@ -39,6 +39,7 @@ export default function EditarCartel({
   const [actual, setActual] = useState(nombreActual);
   const [guardado, setGuardado] = useState<{ nombre: string; pinNuevo: string } | null>(null);
   const [pendiente, startTransition] = useTransition();
+  const router = useRouter();
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -62,9 +63,11 @@ export default function EditarCartel({
         });
         if (!res.ok) {
           setError(res.error ?? "No se pudo guardar.");
+          // Ya no la maneja (cambiaron el PIN, venció la sesión de Google):
+          // la página vuelve a pedir el PIN.
+          if (res.sinAcceso) router.refresh();
           return;
         }
-        recordarPiezaMia(slug);
         const nombreFinal = res.nombre || (lugar ? lugar.nombre : nombre);
         setActual(nombreFinal);
         setGuardado({ nombre: nombreFinal, pinNuevo: cambiarPin ? pinNuevo : "" });
