@@ -46,11 +46,13 @@ function encabezado(eyebrow, h2, texto = "") {
 const MANIFIESTO_FOTOS = join(RAIZ, "assets", "img", "productos", "fotos.json");
 const FOTOS = existsSync(MANIFIESTO_FOTOS) ? JSON.parse(readFileSync(MANIFIESTO_FOTOS, "utf8")) : {};
 
+const srcset = (base) => [400, 560, 720, 960].map((a) => `${base}-${a}.webp ${a}w`).join(", ");
+
 function foto(nombre, alt, clase = "foto-producto") {
   const f = FOTOS[nombre];
   if (!f) return null;
   const base = `/landing/assets/img/productos/${nombre}`;
-  return `<img class="${clase}" src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 600px) 100vw, 400px" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+  return `<img class="${clase}" src="${base}-960.webp" srcset="${srcset(base)}" sizes="(max-width: 600px) calc(100vw - 32px), 400px" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 }
 
 const PIEZAS = [
@@ -149,7 +151,7 @@ const PUERTAS = [
       ["Costo", 26, 46, "menos"],
       ["Ganancia", 0, 26, "mas"],
     ]
-      .map(([t, x, w, c], i) => `<div class="cascada"><span>${t}</span><b><i class="${c}" style="--x:${x}%;--w:${w}%;--i:${i}"></i></b></div>`)
+      .map(([t, x, w, c], i) => `<div class="cascada"><span>${t}</span><span class="cascada-barra"><i class="${c}" style="--x:${x}%;--w:${w}%;--i:${i}"></i></span></div>`)
       .join("")}</div>`,
   },
   {
@@ -240,13 +242,13 @@ function fotoHome() {
   const f = FOTOS.local;
   if (!f) return "";
   const base = "/landing/assets/img/productos/local";
-  return `<figure class="hero-foto"><img src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 980px) 100vw, 520px" width="${f.ancho}" height="${f.alto}" alt="Un mozo le acerca al cliente la tarjeta de MetricsField para dejar su reseña en Google" fetchpriority="high" decoding="async"><figcaption>Un toque y tu cliente ya está dejando la reseña.</figcaption></figure>`;
+  return `<figure class="hero-foto"><img src="${base}-960.webp" srcset="${srcset(base)}" sizes="(max-width: 980px) calc(100vw - 32px), 480px" width="${f.ancho}" height="${f.alto}" alt="Un mozo le acerca al cliente la tarjeta de MetricsField para dejar su reseña en Google" fetchpriority="high" decoding="async"><figcaption>Un toque y tu cliente ya está dejando la reseña.</figcaption></figure>`;
 }
 
 function home() {
   const cuerpo = `<section class="hero"><div class="wrap">
   <div class="hero-grid"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
-  <div class="hero-side">${fotoHome()}<p class="lead">Tres soluciones, una para cada problema:</p><ul class="soluciones">${SOLUCIONES.map(
+  <div class="hero-side">${fotoHome()}<p class="lead">Convertimos reseñas, ventas y clientes en métricas claras para tomar mejores decisiones. Tres soluciones:</p><ul class="soluciones">${SOLUCIONES.map(
     ([href, icono, nombre, texto]) =>
       `<li><a href="${href}"><span class="sol-icono" aria-hidden="true">${icono}</span><span><b>${nombre}</b><small>${texto}</small></span><span class="sol-ir" aria-hidden="true">→</span></a></li>`,
   ).join("")}</ul><div class="actions">${ext(
@@ -258,7 +260,7 @@ function home() {
   <div class="portal-title"><h2>Elegí una puerta</h2><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
   <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
     (p) =>
-      `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">${p.num}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><h3>${p.nombre}</h3><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
+      `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">${p.num}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><p class="door-titulo">${p.nombre}</p><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
   ).join("")}</nav></div>
   <div class="ticker"><div class="wrap ticker-in">
     <div class="proof"><b>17%</b><span>de ganancia inflada encontramos en una cuenta real de Mercado Libre</span></div>
@@ -287,7 +289,7 @@ function home() {
     "Del primer “cerca de mí” a la recomendación.",
     "Cada etapa tiene un número que la mide. Nosotros nos ocupamos de que lo veas, en la herramienta que corresponde.",
   )}<ol class="ciclo" data-revelar>${CICLO.map(
-    ([h, p, quien, guia], i) => `<li><span class="paso">Etapa ${i + 1}</span><h3>${h}</h3><p>${p}</p><a class="quien" href="${guia}">${quien} · leer la guía</a></li>`,
+    ([h, p, quien, guia], i) => `<li><span class="paso">Etapa ${i + 1}</span><p class="ciclo-titulo">${h}</p><p>${p}</p><a class="quien" href="${guia}">${quien} · leer la guía</a></li>`,
   ).join("")}</ol></div></section>
 <section id="demo" style="padding-top:0"><div class="wrap">${encabezado(
     "Producto, no promesa",
@@ -306,9 +308,9 @@ ${tienda()}
   )}<div class="guias-grid" data-revelar>${GUIAS.slice(0, 6).map(tarjetaGuia).join("")}</div>
   <p class="actualizado"><a class="btn dark" href="/guias">Ver las ${GUIAS.length} guías</a></p></div></section>
 <section class="start"><div class="wrap">${encabezado("De la idea al uso", "Empezar es simple.")}<div class="start-grid" data-revelar>
-  <article class="start-item"><b>01</b><h3>Elegís una herramienta</h3><p>Te ayudamos a empezar por la que más impacto tiene hoy en tu negocio.</p></article>
-  <article class="start-item"><b>02</b><h3>La dejamos funcionando</h3><p>En Córdoba instalamos. En el resto del país te llega lista para activar, con ayuda por WhatsApp.</p></article>
-  <article class="start-item"><b>03</b><h3>Medís y decidís</h3><p>El panel ordena la información y marca el próximo paso.</p></article></div></div></section>
+  <article class="start-item"><span class="num-paso" aria-hidden="true">01</span><h3>Elegís una herramienta</h3><p>Te ayudamos a empezar por la que más impacto tiene hoy en tu negocio.</p></article>
+  <article class="start-item"><span class="num-paso" aria-hidden="true">02</span><h3>La dejamos funcionando</h3><p>En Córdoba instalamos. En el resto del país te llega lista para activar, con ayuda por WhatsApp.</p></article>
+  <article class="start-item"><span class="num-paso" aria-hidden="true">03</span><h3>Medís y decidís</h3><p>El panel ordena la información y marca el próximo paso.</p></article></div></div></section>
 <section id="clientes"><div class="wrap">${encabezado(
     "Clientes",
     "Resultados reales, contados por quienes los lograron.",
@@ -318,7 +320,7 @@ ${tienda()}
     "Consultar casos",
     "btn dark",
   )}</div>
-  <div class="client-rules"><div class="client-rule"><b>01</b><div><b>Nombre y permiso</b><br><span>El cliente decide si mostramos su marca, su testimonio y sus datos.</span></div></div><div class="client-rule"><b>02</b><div><b>Antes y después</b><br><span>Cada resultado dice punto de partida, período y contexto.</span></div></div><div class="client-rule"><b>03</b><div><b>Asociación, no magia</b><br><span>Si un número sube, contamos qué más pasó en ese tiempo.</span></div></div></div></div></div></section>
+  <div class="client-rules"><div class="client-rule"><span class="num-regla" aria-hidden="true">01</span><div><b>Nombre y permiso</b><br><span>El cliente decide si mostramos su marca, su testimonio y sus datos.</span></div></div><div class="client-rule"><span class="num-regla" aria-hidden="true">02</span><div><b>Antes y después</b><br><span>Cada resultado dice punto de partida, período y contexto.</span></div></div><div class="client-rule"><span class="num-regla" aria-hidden="true">03</span><div><b>Asociación, no magia</b><br><span>Si un número sube, contamos qué más pasó en ese tiempo.</span></div></div></div></div></div></section>
 <section id="faq" style="padding-top:0"><div class="wrap">${encabezado("Preguntas frecuentes", "Una respuesta corta para cada duda.")}${faqHtml(FAQ_HOME)}</div></section>
 <section class="cta"><div class="wrap cta-grid"><h2>Pedí tu demo gratis.</h2><div><p>Escribinos <b>DEMO</b> por WhatsApp y coordinamos para mostrarte, con tu negocio, qué métricas vas a ver y qué decisiones te ayudan a tomar.</p><div class="actions">${ext(
     wa("Hola, quiero una DEMO de MetricsField"),
@@ -330,7 +332,7 @@ ${tienda()}
     ruta: "/",
     titulo: "MetricsField: métricas para comercios | Córdoba, Argentina",
     descripcion:
-      "Convertimos reseñas, ventas y clientes en métricas para tu negocio: más reseñas en Google, la ganancia real de cada venta en Mercado Libre y clientes que vuelven. Hecho en Córdoba, Argentina. Pedí tu demo gratis.",
+      "Convertimos reseñas en métricas para tu negocio: más reseñas en Google, ganancia real en Mercado Libre y clientes que vuelven. Córdoba, Argentina.",
     cuerpo,
     ld: [
       {

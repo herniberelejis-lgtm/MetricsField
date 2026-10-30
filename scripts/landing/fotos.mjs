@@ -19,7 +19,10 @@ const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ORIGEN = join(RAIZ, "fotos", "productos");
 const DESTINO = join(RAIZ, "public", "landing", "assets", "img", "productos");
 export const NOMBRES = ["standee", "tarjeta", "sticker", "local"];
-const ANCHOS = [480, 960];
+// Del más chico al más grande: el navegador elige el justo para el ancho
+// en pantalla y la densidad del celular (PageSpeed marcaba que bajaba 960
+// para mostrar 380).
+export const ANCHOS = [400, 560, 720, 960];
 
 mkdirSync(DESTINO, { recursive: true });
 const archivos = existsSync(ORIGEN) ? readdirSync(ORIGEN) : [];
@@ -35,7 +38,7 @@ for (const nombre of NOMBRES) {
       .webp({ quality: 80 })
       .toFile(join(DESTINO, `${nombre}-${ancho}.webp`));
   }
-  manifiesto[nombre] = { ancho: ANCHOS[1], alto: Math.round((ANCHOS[1] * 3) / 4) };
+  manifiesto[nombre] = { ancho: ANCHOS.at(-1), alto: Math.round((ANCHOS.at(-1) * 3) / 4) };
   console.log(`${nombre}: ${archivo} → ${ANCHOS.map((a) => `${nombre}-${a}.webp`).join(", ")}`);
 }
 
