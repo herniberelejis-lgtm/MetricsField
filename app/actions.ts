@@ -9,7 +9,7 @@ import { componerMiniaturaLogo } from "@/lib/imagenLogo";
 import { businessProfileHabilitado } from "@/lib/gbp";
 import { resenasApiHabilitada } from "@/lib/google-reviews";
 import { probarEnvioEmail } from "@/lib/email";
-import { pinValido } from "@/lib/pin";
+import { pinSeguro } from "@/lib/pin";
 import type {
   DestinoLink,
   EstadoCliente,
@@ -447,7 +447,7 @@ export async function accionNuevoPinPieza(fd: FormData): Promise<void> {
   await requireAdmin();
   const id = str(fd, "id");
   const pin = str(fd, "pin");
-  if (!pinValido(pin)) redirect("/admin/hardware?error=pin-invalido");
+  if (!pinSeguro(pin)) redirect("/admin/hardware?error=pin-invalido");
   // Regla de soporte: un PIN nuevo le da la pieza a quien lo pidió. Sin
   // verificar que es el dueño, es la puerta para quedarse con piezas ajenas.
   if (str(fd, "verificado") !== "si") redirect("/admin/hardware?error=sin-verificar");

@@ -333,7 +333,15 @@ Pensado para revendedores como Facundo, pero sirve para cualquiera.
   PIN.** Técnicamente es un "llavero": una cookie firmada en el celular
   (`mf_llavero`) que dice qué piezas maneja.
 - En **Mis piezas** se ve la lista con: toques de la semana, botón **Probar**,
-  **Cambiar** (elegir otro negocio), **Entregar** y **Quitar de este celular**.
+  **Cambiar** (elegir otro negocio), **Entregar**, **Quitar de este celular**
+  y **Dejar en blanco**.
+- **Ojo con la diferencia:** *Quitar de este celular* solo hace que ese
+  celular deje de manejarla — **la pieza sigue llevando al mismo negocio**.
+  *Dejar en blanco* la resetea: deja de llevar al negocio, se borran su PIN,
+  su ficha y el contacto, sale de todas las cuentas de Google, y la próxima
+  persona que la escanee la activa como nueva (lo mismo que "Devolver al
+  inventario" del admin, pero lo hace el dueño). Es lo que usa un revendedor
+  para reutilizar una pieza de muestra.
 - **Escanear una pieza propia** con ese celular muestra las opciones de dueño
   (y ese toque no se cuenta).
 - **Sumar una pieza:** botón que abre 10 minutos para escanear piezas ya
@@ -341,7 +349,13 @@ Pensado para revendedores como Facundo, pero sirve para cualquiera.
 - **Entregar** (cuando el revendedor se la da a un local): genera un **PIN
   nuevo** para el dueño nuevo, la saca de su celular y de su cuenta, borra el
   contacto anterior y arma un **mensaje de WhatsApp** listo para mandar con
-  el link y el PIN. Tiene "Me equivoqué" para deshacer.
+  el link y el PIN. Tiene "Me equivoqué" para deshacer. Como el revendedor
+  conoce ese PIN, el mensaje le recomienda al dueño **cambiarlo por uno
+  suyo** la primera vez que entre (desde ahí, el revendedor ya no puede).
+- **PIN:** de 4 a 8 números, y no se aceptan los fáciles de adivinar (todos
+  iguales como 1111, escaleras como 1234 o 9876, pares repetidos como 1212).
+  Los PIN viejos que ya eran así siguen sirviendo para entrar; solo no se
+  pueden elegir nuevos.
 - **Guardar con Google:** el usuario entra con su cuenta de Google y las
   piezas quedan guardadas ahí (columna `duenio_email`). Si pierde o cambia el
   celular, entra con Google desde cualquier lado y las recupera sin PIN. Usa
@@ -876,8 +890,13 @@ Si no → regla de soporte (§8): foto de la pieza en el local → Admin → Har
 el mismo celular (o use "Sumar una pieza" con los PIN), que guarde con Google,
 y que use **Entregar** cuando se la da a un local.
 
-**Me devolvieron una pieza / usé una para probar** → Admin → Hardware →
-"Devolver al inventario" (tildar la confirmación).
+**Me devolvieron una pieza / usé una para probar** → si la maneja tu celular:
+Mis piezas → "Dejar en blanco". Si no: Admin → Hardware → "Devolver al
+inventario" (tildar la confirmación).
+
+**"Borré la pieza y sigue llevando al negocio"** → usó "Quitar de este
+celular", que no cambia la pieza. Tiene que usar **"Dejar en blanco"** (o
+volver a sumarla con su PIN y después dejarla en blanco).
 
 **Un cliente dice que el cartel lleva a otro negocio** → en Mis piezas (si es
 autogestionada) → Cambiar; si es de cliente del panel → `/admin/clientes/<id>`

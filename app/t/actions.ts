@@ -14,6 +14,7 @@ import {
   getLink,
   guardarDatosActivacion,
   guardarLugarAutogestion,
+  liberarPiezaAutogestionada,
   rotarPinAutogestion,
   salPinAutogestion,
   verificarPinAutogestion,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/places";
 import { validarContacto } from "@/lib/activacion";
 import { permitir, limpiarVencidos, ipDelRequest } from "@/lib/ratelimit";
-import { pinValido } from "@/lib/pin";
+import { ERROR_PIN_FACIL, pinAlAzar, pinSeguro, pinValido } from "@/lib/pin";
 import { urlResenaGoogle } from "@/lib/url";
 import {
   empezarModoSumar,
@@ -41,7 +42,6 @@ import {
   terminarModoSumar,
   ticketParaSumar,
 } from "@/lib/llavero";
-import crypto from "node:crypto";
 import { accesoAPieza, cerrarCuenta, cuentaActual } from "@/lib/cuenta-piezas";
 
 // Autogestión de hardware (canal Mercado Libre): activar una pieza libre
@@ -210,6 +210,7 @@ export async function activarCartel(
   if (!pinValido(String(datos.pin ?? ""))) {
     return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
   }
+  if (!pinSeguro(String(datos.pin))) return { ok: false, error: ERROR_PIN_FACIL };
   const contacto = validarContacto({ email: datos.email, whatsapp: datos.whatsapp, acepta: datos.aceptaNovedades });
   if (!contacto.ok) return { ok: false, error: contacto.error };
 
@@ -264,6 +265,7 @@ export async function editarCartel(
 ): Promise<{ ok: boolean; error?: string; nombre?: string; sinAcceso?: boolean }> {
   const pinNuevo = String(datos.pinNuevo ?? "");
   if (pinNuevo && !pinValido(pinNuevo)) return { ok: false, error: "El PIN nuevo tiene que ser de 4 a 8 números." };
+  if (pinNuevo && !pinSeguro(pinNuevo)) return { ok: false, error: ERROR_PIN_FACIL };
   const pieza = String(slug ?? "").slice(0, 80);
   const sal = await accesoAPieza(pieza);
   // Sin acceso y sin PIN (cambió el PIN en otro lado, venció la sesión de
@@ -343,13 +345,14 @@ export async function entregarPieza(
   const pieza = String(slug ?? "").slice(0, 80);
   const elegido = String(pinElegido ?? "");
   if (elegido && !pinValido(elegido)) return { ok: false, error: "El PIN tiene que ser de 4 a 8 números." };
+  if (elegido && !pinSeguro(elegido)) return { ok: false, error: ERROR_PIN_FACIL };
   const sal = await accesoAPieza(pieza);
   if (!sal) return { ok: false, error: "Este celular ya no maneja esta pieza. Sumala de nuevo con su PIN." };
   limpiarVencidos();
   if (!(await permitir(`entregar-pieza:${pieza}`, 20, 24 * 60 * 60_000))) {
     return { ok: false, error: "Demasiados intentos por hoy. Probá mañana." };
   }
-  const pin = elegido || String(crypto.randomInt(1000, 10000));
+  const pin = elegido || pinAlAzar();
   if (!(await rotarPinAutogestion(pieza, sal, pin))) {
     return { ok: false, error: "Esta pieza ya no se puede entregar desde este celular." };
   }
@@ -369,6 +372,30 @@ export async function olvidarPieza(slug: string): Promise<{ ok: true }> {
   const email = await cuentaActual();
   if (email && (await piezaEsDeCuenta(pieza, email))) await desvincularPieza(pieza);
   await quitarDelLlavero(pieza);
+  return { ok: true };
+}
+
+/** Dejar la pieza en blanco, como recién comprada: deja de llevar al
+ * negocio, se borran su PIN, su lugar y el contacto, y sale de todas las
+ * cuentas de Google. La próxima persona que la escanee la activa para su
+ * negocio — es lo que hace un revendedor para volver a usarla, o un dueño
+ * que ya no la quiere apuntando a su local. "Quitar" solo la saca de este
+ * celular; esto cambia la pieza. Solo quien la maneja (llavero o cuenta),
+ * y solo si el PIN no cambió mientras tanto. Sacarla del llavero lo hace el
+ * navegador en /t/llavero, como en entregarPieza. */
+export async function dejarEnBlanco(slug: string): Promise<{ ok: boolean; error?: string }> {
+  const pieza = String(slug ?? "").slice(0, 80);
+  const sal = await accesoAPieza(pieza);
+  if (!sal) return { ok: false, error: "Este celular ya no maneja esta pieza. Sumala de nuevo con su PIN." };
+  limpiarVencidos();
+  if (!(await permitir(`en-blanco-pieza:${pieza}`, 20, 24 * 60 * 60_000))) {
+    return { ok: false, error: "Demasiados intentos por hoy. Probá mañana." };
+  }
+  if (!(await liberarPiezaAutogestionada(pieza, sal))) {
+    return { ok: false, error: "Esta pieza ya no se puede dejar en blanco desde este celular." };
+  }
+  console.info(`Pieza ${pieza} dejada en blanco por su dueño`);
+  revalidatePath(`/t/${pieza}`);
   return { ok: true };
 }
 
