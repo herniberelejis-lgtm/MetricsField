@@ -58,6 +58,10 @@ const nextConfig: NextConfig = {
         destination: "https://metricsfield.com/:path*",
         permanent: true,
       },
+      // El producto se llama "Reviews" (como en Instagram) pero su página
+      // es /reputacion, la dirección que ya indexó Google: metricsfield.com/
+      // reviews es el atajo para compartir.
+      { source: "/reviews", destination: "/reputacion", permanent: true },
       // El sitio público vive en metricsfield.com: en el subdominio de
       // producto, sus páginas mandan allá.
       ...RUTAS_SITIO.map((source) => ({
