@@ -82,14 +82,14 @@ const pesos = (n) => "$" + n.toLocaleString("es-AR");
 // piezas: es mensual o una prueba). Lo usan la tienda y las verticales.
 // `reemplaza`: las dos formas de pagar el panel se excluyen en el carrito.
 const SOFTWARE = {
-  reputacion: { nombre: "Panel de Reputación", detalle: "$25.000/mes + IVA, sin permanencia", precio: "$25.000/mes + IVA", texto: "Toques, reseñas con respuesta sugerida y tu visibilidad en Google.", href: "/reputacion", reemplaza: "reputacion3" },
+  reputacion: { nombre: "Panel de Reviews", detalle: "$25.000/mes + IVA, sin permanencia", precio: "$25.000/mes + IVA", texto: "Toques, reseñas con respuesta sugerida y tu visibilidad en Google.", href: "/reputacion", reemplaza: "reputacion3" },
   retail: { nombre: "Prueba de Retail", detalle: "30 días gratis, sin tarjeta", precio: "30 días gratis", texto: "La ganancia real de cada venta en Mercado Libre.", href: "/retail" },
   loyalty: { nombre: "Piloto de Loyalty", detalle: "Programa piloto, a coordinar", precio: "Piloto · a coordinar", texto: "Club de beneficios con la tarjeta en Google Wallet.", href: "/loyalty" },
 };
 // Promo: 3 meses del panel por adelantado y una pieza de cada de regalo. No
 // tiene tarjeta propia: aparece dentro de la del panel.
 SOFTWARE.reputacion3 = {
-  nombre: "Panel de Reputación · 3 meses por adelantado",
+  nombre: "Panel de Reviews · 3 meses por adelantado",
   detalle: "$75.000 + IVA por 3 meses · de regalo 1 standee, 1 tarjeta PVC y 1 sticker",
   reemplaza: "reputacion",
 };
@@ -104,7 +104,7 @@ function tienda() {
   return `<section id="tienda"><div class="wrap">${encabezado(
     "Piezas NFC + QR",
     "Elegí dónde empieza el contacto.",
-    "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reputación es aparte: $25.000 por mes + IVA, sin permanencia. " + PROMO_PANEL,
+    "Cada pieza lleva chip NFC y QR impreso, y se paga una vez. El panel de Reviews es aparte: $25.000 por mes + IVA, sin permanencia. " + PROMO_PANEL,
   )}<div class="shop-grid" data-revelar>${PIEZAS.map(
     (p) => `<article class="shop-card">${foto(p.foto, `${p.nombre} de MetricsField con NFC y QR`) ?? `<div class="device" aria-hidden="true">${p.dibujo}</div>`}<h3>${p.nombre}</h3><p class="muted">${p.texto}</p><div class="price">${pesos(p.precio)}</div><small>Pago único · IVA no incluido</small><button class="btn dark" type="button" data-add="${p.nombre}" data-price="${p.precio}">Agregar al carrito</button></article>`,
   ).join("")}</div>
@@ -133,8 +133,8 @@ const PUERTAS = [
     href: "/reputacion",
     num: "01",
     estado: ["ready", "Disponible"],
-    nombre: "Reputación",
-    texto: "Más reseñas en Google con un toque.",
+    nombre: "Reviews",
+    texto: "Más reseñas y mejor reputación en Google, con un toque.",
     vis: `<div class="vis vis-rep"><div class="rep-top"><b>4,7</b><span class="estrellas">${"<i></i>".repeat(5)}</span></div>${barras([30, 42, 38, 55, 64, 72, 88])}<span class="vis-pie">Reseñas por semana</span></div>`,
   },
   {
@@ -178,7 +178,7 @@ const PRODUCTOS = [
     p: "Un cartel NFC o QR lleva a cada cliente directo a dejar su reseña en Google, el mismo camino para todos. En tu panel ves los toques, las reseñas nuevas con una respuesta sugerida, qué valoran y qué hay que arreglar.",
     pasos: [["Acercan el celular", "Sin app ni contraseña."], ["Dejan su reseña", "Directo en tu ficha de Google."], ["Vos medís", "Toques, reseñas, vistas y temas."]],
     kw: ["Reseñas de Google", "Google Maps", "SEO local", "GEO e IA", "Respuestas a reseñas"],
-    ctas: [`<a class="btn dark" href="/reputacion">Conocer Reputación</a>`, ext(wa("Hola, quiero una demo de Reputación"), "Pedir demo")],
+    ctas: [`<a class="btn dark" href="/reputacion">Conocer Reviews</a>`, ext(wa("Hola, quiero una DEMO de MetricsField Reviews"), "Pedir demo")],
   },
   {
     id: "retail",
@@ -210,26 +210,46 @@ const PRODUCTOS = [
 ];
 
 const CICLO = [
-  ["Te encuentran", "Aparecés cuando te buscan cerca, en Google, en Maps y en las respuestas de la IA.", "Reputación", "/guias/posicionamiento-en-google-maps"],
-  ["Te eligen", "Las reseñas recientes y bien respondidas convencen a quien todavía no te conoce.", "Reputación", "/guias/como-conseguir-resenas-en-google"],
+  ["Te encuentran", "Aparecés cuando te buscan cerca, en Google, en Maps y en las respuestas de la IA.", "Reviews", "/guias/posicionamiento-en-google-maps"],
+  ["Te eligen", "Las reseñas recientes y bien respondidas convencen a quien todavía no te conoce.", "Reviews", "/guias/como-conseguir-resenas-en-google"],
   ["Te compran", "Cada venta deja ganancia de verdad, no solo facturación.", "Retail", "/guias/rentabilidad-real-mercado-libre"],
   ["Vuelven", "Un beneficio claro y la tarjeta en el celular para que la segunda visita llegue antes.", "Loyalty", "/guias/fidelizacion-de-clientes"],
-  ["Te recomiendan", "El cliente fiel cuenta su experiencia y trae al próximo.", "Reputación + Loyalty", "/guias/ciclo-de-vida-del-cliente"],
+  ["Te recomiendan", "El cliente fiel cuenta su experiencia y trae al próximo.", "Reviews + Loyalty", "/guias/ciclo-de-vida-del-cliente"],
 ];
 
 const FAQ_HOME = [
-  ["¿Qué es MetricsField?", "Una empresa de Córdoba, Argentina, que convierte lo que pasa en tu negocio en métricas para decidir mejor. Tiene tres soluciones: Reputación (más reseñas en Google con carteles NFC/QR y un panel), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en piloto). Además, Intel: calculadoras y guías gratis."],
+  ["¿Qué es MetricsField?", "Una empresa de Córdoba, Argentina, que convierte lo que pasa en tu negocio en métricas para decidir mejor. Tiene tres soluciones: Reviews (más reseñas en Google con carteles NFC/QR y un panel), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en piloto). Además, Intel: calculadoras y guías gratis."],
   ["¿Mis clientes tienen que instalar una app?", "No. El cartel abre desde el navegador del celular por NFC o QR, y la tarjeta de Loyalty vive en Google Wallet, que ya viene en Android."],
   ["¿Es seguro para mi ficha de Google?", "Sí. El cartel lleva a todos los clientes al mismo link público de Google para dejar su reseña, sin filtrar por calificación y sin premios a cambio, que es lo que piden las políticas de Google."],
   ["¿Cómo calcula Retail la ganancia real?", "Reúne lo que Mercado Libre descuenta en cada operación (comisión, envío, publicidad) más impuestos y el costo del producto que cargás. La prueba gratis dura 30 días."],
   ["¿Loyalty ya se puede contratar?", "Está en etapa piloto: lo estamos probando con pocos comercios antes de abrirlo. Si te interesa, escribinos y te sumamos a la lista."],
-  ["¿Funciona fuera de Córdoba?", "Sí. Retail y las herramientas de Intel funcionan online en todo el país. En Reputación, en Córdoba instalamos y al resto del país enviamos las piezas listas para activar con ayuda por WhatsApp."],
+  ["¿Funciona fuera de Córdoba?", "Sí. Retail y las herramientas de Intel funcionan online en todo el país. En Reviews, en Córdoba instalamos y al resto del país enviamos las piezas listas para activar con ayuda por WhatsApp."],
 ];
+
+// Las tres soluciones arriba de todo, para entender en un vistazo qué
+// hacemos (la mayoría llega desde Instagram, en el celular y con apuro).
+const SOLUCIONES = [
+  ["/reputacion", "★", "Reviews", "Más reseñas y mejor reputación en Google."],
+  ["/retail", "$", "Retail", "La ganancia real de cada venta en Mercado Libre."],
+  ["/loyalty", "↻", "Loyalty", "Un club para que tus clientes vuelvan."],
+];
+
+/** La foto del cartel en uso, arriba en la home: es lo primero que se ve
+ * en el celular y explica el producto sin leer. Se carga ya (no lazy). */
+function fotoHome() {
+  const f = FOTOS.local;
+  if (!f) return "";
+  const base = "/landing/assets/img/productos/local";
+  return `<figure class="hero-foto"><img src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 980px) 100vw, 520px" width="${f.ancho}" height="${f.alto}" alt="Un mozo le acerca al cliente la tarjeta de MetricsField para dejar su reseña en Google" fetchpriority="high" decoding="async"><figcaption>Un toque y tu cliente ya está dejando la reseña.</figcaption></figure>`;
+}
 
 function home() {
   const cuerpo = `<section class="hero"><div class="wrap">
   <div class="hero-grid"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
-  <div class="hero-side"><p class="lead">Medimos lo que pasa en tu negocio y te lo mostramos simple, con tres soluciones: <a href="/reputacion"><b>Reputación</b></a>, más reseñas en Google con un cartel NFC/QR y un panel con tus métricas; <a href="/retail"><b>Retail</b></a>, la ganancia real de cada venta en Mercado Libre; y <a href="/loyalty"><b>Loyalty</b></a>, un club para que tus clientes vuelvan.</p><div class="actions">${ext(
+  <div class="hero-side">${fotoHome()}<p class="lead">Tres soluciones, una para cada problema:</p><ul class="soluciones">${SOLUCIONES.map(
+    ([href, icono, nombre, texto]) =>
+      `<li><a href="${href}"><span class="sol-icono" aria-hidden="true">${icono}</span><span><b>${nombre}</b><small>${texto}</small></span><span class="sol-ir" aria-hidden="true">→</span></a></li>`,
+  ).join("")}</ul><div class="actions">${ext(
     wa("Hola, quiero una DEMO de MetricsField"),
     "Pedí tu demo gratis",
     "btn dark",
@@ -274,8 +294,8 @@ function home() {
     "Mirá qué decisiones te ayuda a tomar.",
     "Esta demo usa información de ejemplo. Sirve para entender el producto; no representa resultados de un cliente.",
   )}<div class="demo-shell" data-revelar><div class="demo-top"><div class="tabs" role="tablist" aria-label="Productos de la demo">
-    <button class="tab" type="button" role="tab" aria-selected="true" data-demo="reputacion">Reputación</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="retail">Retail</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="loyalty">Loyalty</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="intel">Intel</button></div><span class="demo-label">Demo · datos de ejemplo</span></div>
-  <div class="demo-content" aria-live="polite"><div class="demo-copy"><div class="eyebrow" data-demo-kicker>Reputación en Google</div><h3 data-demo-title>La opinión aparece mientras todavía importa.</h3><p data-demo-text>Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.</p></div>
+    <button class="tab" type="button" role="tab" aria-selected="true" data-demo="reputacion">Reviews</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="retail">Retail</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="loyalty">Loyalty</button><button class="tab" type="button" role="tab" aria-selected="false" data-demo="intel">Intel</button></div><span class="demo-label">Demo · datos de ejemplo</span></div>
+  <div class="demo-content" aria-live="polite"><div class="demo-copy"><div class="eyebrow" data-demo-kicker>Reseñas y reputación en Google</div><h3 data-demo-title>La opinión aparece mientras todavía importa.</h3><p data-demo-text>Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.</p></div>
   <div class="metric-grid"><div class="metric"><small data-metric-a-label>Toques al cartel</small><strong data-metric-a>148</strong></div><div class="metric"><small data-metric-b-label>Terminan en reseña</small><strong data-metric-b>62%</strong></div>
   <div class="chart" role="img" aria-label="Gráfico ilustrativo de una semana"><i class="bar" style="height:32%"></i><i class="bar" style="height:47%"></i><i class="bar" style="height:39%"></i><i class="bar" style="height:68%"></i><i class="bar" style="height:82%"></i><i class="bar" style="height:74%"></i><i class="bar" style="height:94%"></i></div></div></div></div></div></section>
 ${tienda()}
@@ -376,19 +396,19 @@ ${v.extra ?? ""}
 const VERTICALES = [
   {
     ruta: "/reputacion",
-    nombre: "Reputación",
+    nombre: "Reviews",
     demo: "reputacion",
-    nombreLd: "MetricsField Reputación",
-    titulo: "Más reseñas en Google con carteles NFC y QR | MetricsField",
+    nombreLd: "MetricsField Reviews",
+    titulo: "Más reseñas en Google con carteles NFC y QR | MetricsField Reviews",
     descripcion:
       "Carteles NFC y QR que llevan a tus clientes directo a tu reseña en Google, y un panel con toques, reseñas y respuestas sugeridas. Córdoba y todo el país.",
-    eyebrow: "Reputación · disponible",
+    eyebrow: "MetricsField Reviews · reseñas y reputación en Google",
     h1: "Más reseñas en Google, con un toque del celular.",
     lead: "Un cartel en el mostrador lleva a cada cliente directo a la ventana de reseña de tu ficha. Vos ves en un panel cuántos lo usaron, qué reseñas llegaron, qué valoran y qué hay que responder hoy.",
-    ctas: [ext(wa("Hola, quiero una demo de Reputación"), "Pedir una demo", "btn dark"), `<a class="btn" href="#tienda">Ver piezas y precios</a>`],
+    ctas: [ext(wa("Hola, quiero una DEMO de MetricsField Reviews"), "Pedí tu demo gratis", "btn dark"), `<a class="btn" href="#tienda">Ver piezas y precios</a>`],
     // Si hay una foto del cartel en uso (fotos/productos/local.jpg), va esa.
     fotoLocal: "El cartel de MetricsField en el mostrador de un local",
-    captura: { src: "/landing/assets/img/panel-resumen.webp", alt: "Resumen del panel de Reputación con toques, reseñas y calificación", w: 1919, h: 874 },
+    captura: { src: "/landing/assets/img/panel-resumen.webp", alt: "Resumen del panel de Reviews con toques, reseñas y calificación", w: 1919, h: 874 },
     featuresEyebrow: "Qué incluye",
     featuresH2: "El cartel, el panel y alguien que te ayuda.",
     features: [
@@ -417,7 +437,7 @@ const VERTICALES = [
     ],
     ctaH2: "Que te elijan antes de conocerte.",
     ctaP: "Escribinos y te mostramos el panel con datos de ejemplo. Si te sirve, en una semana lo tenés en tu mostrador.",
-    ctasFinal: [ext(wa("Hola, quiero empezar con Reputación"), "Hablar por WhatsApp", "btn light"), `<a class="btn" href="/guias/como-conseguir-resenas-en-google">Leer la guía de reseñas</a>`],
+    ctasFinal: [ext(wa("Hola, quiero empezar con MetricsField Reviews"), "Hablar por WhatsApp", "btn light"), `<a class="btn" href="/guias/como-conseguir-resenas-en-google">Leer la guía de reseñas</a>`],
     ldExtra: { serviceType: "Gestión de reseñas de Google para comercios" },
   },
   {
@@ -492,7 +512,7 @@ const VERTICALES = [
     ],
     pasosH2: "Así se suma un cliente.",
     pasos: [
-      ["Toca el cartel", "En el mostrador, como con Reputación."],
+      ["Toca el cartel", "En el mostrador, como con Reviews."],
       ["Se suma al club", "Con su consentimiento, en segundos."],
       ["Guarda la tarjeta", "Un botón y queda en Google Wallet."],
       ["Vuelve y canjea", "Muestra el QR y vos lo validás."],

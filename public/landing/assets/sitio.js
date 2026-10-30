@@ -73,7 +73,7 @@
 
   // ---- demo por pestañas (datos de ejemplo, lo dice la propia demo) ----
   var demos = {
-    reputacion: { barras: [32, 47, 39, 68, 82, 74, 94], k: "Reputación en Google", t: "La opinión aparece mientras todavía importa.", x: "Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.", al: "Toques al cartel", a: "148", bl: "Terminan en reseña", b: "62%" },
+    reputacion: { barras: [32, 47, 39, 68, 82, 74, 94], k: "Reseñas y reputación en Google", t: "La opinión aparece mientras todavía importa.", x: "Toques al cartel, reseñas nuevas, qué valoran y qué hay que responder hoy.", al: "Toques al cartel", a: "148", bl: "Terminan en reseña", b: "62%" },
     retail: { barras: [58, 44, 63, 51, 72, 66, 80], k: "Rentabilidad en Mercado Libre", t: "Facturar más no siempre es ganar más.", x: "Comisión, envío, publicidad, impuestos y costo del producto, venta por venta.", al: "Ventas del mes", a: "324", bl: "Margen real", b: "18,4%" },
     loyalty: { barras: [20, 28, 35, 41, 50, 57, 66], k: "Fidelización · piloto", t: "Una visita puede convertirse en una relación.", x: "Tarjeta en la billetera del celular, beneficios claros y quién vuelve y cada cuánto.", al: "Clientes en el club", a: "286", bl: "Vuelven en 60 días", b: "41%" },
     intel: { barras: [70, 55, 82, 64, 90, 76, 60], k: "Intel · herramientas gratis", t: "Los números que conviene saber antes de decidir.", x: "Cuántas reseñas te faltan, cuánto ganás de verdad por venta y cuánto vale un cliente que vuelve.", al: "Calculadoras", a: "3", bl: "Guías", b: "10" }
