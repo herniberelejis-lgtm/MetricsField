@@ -46,11 +46,13 @@ function encabezado(eyebrow, h2, texto = "") {
 const MANIFIESTO_FOTOS = join(RAIZ, "assets", "img", "productos", "fotos.json");
 const FOTOS = existsSync(MANIFIESTO_FOTOS) ? JSON.parse(readFileSync(MANIFIESTO_FOTOS, "utf8")) : {};
 
+const srcset = (base) => [400, 560, 720, 960].map((a) => `${base}-${a}.webp ${a}w`).join(", ");
+
 function foto(nombre, alt, clase = "foto-producto") {
   const f = FOTOS[nombre];
   if (!f) return null;
   const base = `/landing/assets/img/productos/${nombre}`;
-  return `<img class="${clase}" src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 600px) 100vw, 400px" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+  return `<img class="${clase}" src="${base}-960.webp" srcset="${srcset(base)}" sizes="(max-width: 600px) calc(100vw - 32px), 400px" width="${f.ancho}" height="${f.alto}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 }
 
 const PIEZAS = [
@@ -240,7 +242,7 @@ function fotoHome() {
   const f = FOTOS.local;
   if (!f) return "";
   const base = "/landing/assets/img/productos/local";
-  return `<figure class="hero-foto"><img src="${base}-960.webp" srcset="${base}-480.webp 480w, ${base}-960.webp 960w" sizes="(max-width: 980px) 100vw, 520px" width="${f.ancho}" height="${f.alto}" alt="Un mozo le acerca al cliente la tarjeta de MetricsField para dejar su reseña en Google" fetchpriority="high" decoding="async"><figcaption>Un toque y tu cliente ya está dejando la reseña.</figcaption></figure>`;
+  return `<figure class="hero-foto"><img src="${base}-960.webp" srcset="${srcset(base)}" sizes="(max-width: 980px) calc(100vw - 32px), 480px" width="${f.ancho}" height="${f.alto}" alt="Un mozo le acerca al cliente la tarjeta de MetricsField para dejar su reseña en Google" fetchpriority="high" decoding="async"><figcaption>Un toque y tu cliente ya está dejando la reseña.</figcaption></figure>`;
 }
 
 function home() {

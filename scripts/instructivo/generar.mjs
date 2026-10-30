@@ -125,9 +125,9 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
 
   <h4>Cómo usar cada pieza</h4>
   <div class="piezas">
-    ${pieza("landing/assets/img/productos/standee-480.webp", "Standee de mostrador", "En la caja, a la vista. Al cobrar: “¿Nos dejás una reseña? Acercá el celu acá”.")}
-    ${pieza("landing/assets/img/productos/tarjeta-480.webp", "Tarjeta PVC", "En el bolsillo del mozo o de quien atiende. Se la acerca al cliente al cerrar la cuenta.")}
-    ${pieza("landing/assets/img/productos/sticker-480.webp", "Sticker NFC", "En la mesa, el mostrador o la puerta. El cliente lo toca mientras espera.")}
+    ${pieza("landing/assets/img/productos/standee-560.webp", "Standee de mostrador", "En la caja, a la vista. Al cobrar: “¿Nos dejás una reseña? Acercá el celu acá”.")}
+    ${pieza("landing/assets/img/productos/tarjeta-560.webp", "Tarjeta PVC", "En el bolsillo del mozo o de quien atiende. Se la acerca al cliente al cerrar la cuenta.")}
+    ${pieza("landing/assets/img/productos/sticker-560.webp", "Sticker NFC", "En la mesa, el mostrador o la puerta. El cliente lo toca mientras espera.")}
   </div>
   <div class="regla">Pedile la reseña a todos tus clientes por igual y sin ofrecer nada a cambio: es lo que pide Google para que tus reseñas cuenten.</div>
 </div>

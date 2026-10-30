@@ -2,6 +2,8 @@
 // metadatos y datos estructurados, navegación, pie, carrito y barra del
 // celular. La usan todas las páginas que arma generar.mjs.
 
+import { readFileSync } from "node:fs";
+
 export const SITIO = "https://metricsfield.com";
 export const WA = "https://wa.me/5493515191716";
 export const RETAIL_APP = "https://retail.metricsfield.com";
@@ -9,6 +11,13 @@ export const VERSION = "20261030";
 // Logo horizontal (public/brand/logo-horizontal.svg, 5057×982) a 32 px de alto.
 const LOGO_W = 165;
 const LOGO_H = 32;
+// El CSS va en línea en cada página: como <link> bloqueaba el primer
+// dibujo una vuelta de red entera (PageSpeed). El original sigue
+// siendo public/landing/assets/sitio.css: si lo editás, regenerá la landing.
+const CSS = readFileSync(new URL("../../public/landing/assets/sitio.css", import.meta.url), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/\s*\n\s*/g, " ")
+  .trim();
 
 export function wa(texto) {
   return `${WA}?text=${encodeURIComponent(texto)}`;
@@ -118,16 +127,15 @@ export function pagina({ ruta, titulo, descripcion, cuerpo, ld = [], tipoOg = "w
 <link rel="icon" type="image/svg+xml" href="/landing/assets/img/isotipo.svg">
 <link rel="icon" type="image/png" href="/landing/assets/img/favicon.png" sizes="64x64">
 <link rel="apple-touch-icon" href="/apple-icon.png">
-<link rel="preload" href="/landing/assets/fonts/montserrat-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/landing/assets/fonts/montserrat-400-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/landing/assets/sitio.css?v=${VERSION}">
+<link rel="preload" href="/landing/assets/fonts/montserrat-variable-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>${CSS}</style>
 ${jsonLd([ORGANIZACION, ...ld])}
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
 <header class="nav">
   <div class="wrap nav-in">
-    <a class="brand" href="/" aria-label="MetricsField, inicio"><img src="/brand/logo-horizontal.svg" alt="MetricsField" width="${LOGO_W}" height="${LOGO_H}"></a>
+    <a class="brand" href="/" aria-label="MetricsField, inicio"><img src="/brand/logo-horizontal.svg" alt="MetricsField" width="${LOGO_W}" height="${LOGO_H}" fetchpriority="high"></a>
     <nav class="links" aria-label="Principal">${NAV.map(([href, nombre]) => `<a href="${href}"${activo(href)}>${nombre}</a>`).join("")}</nav>
     <div class="actions">
       <a class="btn ocultar-movil" href="${wa("Hola, quiero conocer MetricsField")}" target="_blank" rel="noopener">WhatsApp</a>
