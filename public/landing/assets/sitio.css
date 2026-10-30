@@ -78,7 +78,7 @@ img{max-width:100%;height:auto;display:block}
 .door-top{display:flex;justify-content:space-between;align-items:center}
 .door .num{font-size:.74rem;color:var(--muted);font-weight:600}
 .door .status{margin:0}
-.door-txt h3{font-size:1.45rem;letter-spacing:-.04em;margin:0 0 4px;line-height:1.1}
+.door-txt .door-titulo{font-size:1.45rem;font-weight:700;letter-spacing:-.04em;margin:0 0 4px;line-height:1.1;color:var(--ink)}
 .door-txt p{font-size:.84rem;margin:0;color:#3d3d3d}
 .door .ir{margin-top:auto;font-size:.82rem;font-weight:700;display:flex;gap:6px;align-items:center}
 .door .ir span{transition:transform .25s}
@@ -97,7 +97,7 @@ img{max-width:100%;height:auto;display:block}
 .mini-barras i{flex:1;height:var(--h);background:var(--dato);border-radius:3px 3px 0 0;transform-origin:bottom}
 .vis-ret{justify-content:center;gap:7px}
 .cascada{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:8px;font-size:.66rem;font-weight:600;color:#444}
-.cascada b{height:14px;position:relative}
+.cascada-barra{display:block;height:14px;position:relative}
 .cascada i{position:absolute;top:0;bottom:0;left:var(--x);width:var(--w);border-radius:4px;transform-origin:left}
 .cascada i.dato{background:var(--dato)}.cascada i.menos{background:var(--mejorar-fill)}.cascada i.mas{background:var(--bien-fill)}
 .vis-loy{justify-content:center;align-items:flex-start;gap:12px}
@@ -162,7 +162,7 @@ section{padding:96px 0}
 .ciclo li{list-style:none;padding:24px 20px;border-right:1px solid var(--line)}
 .ciclo li:last-child{border-right:0}
 .ciclo .paso{font-size:.74rem;font-weight:700;color:var(--muted)}
-.ciclo h3{margin:8px 0 6px;font-size:1.12rem;letter-spacing:-.02em}
+.ciclo .ciclo-titulo{margin:8px 0 6px;font-size:1.12rem;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .ciclo p{margin:0;font-size:.84rem;color:#3d3d3d}
 .ciclo .quien{display:inline-block;margin-top:12px;font-size:.72rem;font-weight:700;background:var(--azul-1);color:var(--link);border-radius:99px;padding:4px 9px}
 ol.ciclo{padding:0;margin:0}
@@ -234,7 +234,7 @@ ol.ciclo{padding:0;margin:0}
 .start-grid{display:grid;grid-template-columns:repeat(3,1fr)}
 .start-item{padding:28px;border-left:1px solid rgba(0,0,0,.18)}
 .start-item:first-child{border:0}
-.start-item b{font-size:2.8rem;letter-spacing:-.07em}
+.start-item .num-paso{display:block;font-size:2.8rem;font-weight:700;letter-spacing:-.07em;line-height:1}
 .start-item h3{margin:20px 0 8px}
 .start-item p{font-size:.88rem;margin:0}
 .clients-stage{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ink)}
@@ -244,6 +244,7 @@ ol.ciclo{padding:0;margin:0}
 .client-rule{display:grid;grid-template-columns:34px 1fr;gap:15px;border-bottom:1px solid var(--line);padding-bottom:16px}
 .client-rule:last-child{border:0}
 .client-rule span{font-size:.84rem;color:var(--muted)}
+.client-rule .num-regla{font-size:1rem;font-weight:700;color:var(--ink)}
 .faq{max-width:860px;margin-left:auto}
 .faq details{border-top:1px solid var(--line);padding:20px 0}
 .faq details:last-child{border-bottom:1px solid var(--line)}
