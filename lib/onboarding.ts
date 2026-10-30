@@ -53,19 +53,19 @@ export const MENSAJE_PRUEBA = "Hola, quiero probar por 15 días gratis su softwa
 export const USOS_PIEZAS = [
   {
     pieza: "Standee de mostrador",
-    foto: "/landing/assets/img/productos/standee-480.webp",
+    foto: "/landing/assets/img/productos/standee-560.webp",
     donde: "En la caja, a la vista.",
     como: "Cuando cobrás: “¿Nos dejás una reseña? Acercá el celu acá”.",
   },
   {
     pieza: "Tarjeta PVC",
-    foto: "/landing/assets/img/productos/tarjeta-480.webp",
+    foto: "/landing/assets/img/productos/tarjeta-560.webp",
     donde: "En el bolsillo del mozo o de quien atiende.",
     como: "Al cerrar la cuenta, se la acerca al cliente.",
   },
   {
     pieza: "Sticker NFC",
-    foto: "/landing/assets/img/productos/sticker-480.webp",
+    foto: "/landing/assets/img/productos/sticker-560.webp",
     donde: "En la mesa, el mostrador o la puerta.",
     como: "El cliente lo toca mientras espera.",
   },
