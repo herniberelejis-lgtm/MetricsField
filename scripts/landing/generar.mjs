@@ -218,7 +218,7 @@ const CICLO = [
 ];
 
 const FAQ_HOME = [
-  ["¿Qué es MetricsField?", "Software para comercios y vendedores de Argentina, hecho en Córdoba. Tiene tres productos: Reputación (más reseñas en Google con carteles NFC/QR y un panel), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en piloto). Además, Intel: calculadoras y guías gratis."],
+  ["¿Qué es MetricsField?", "Una empresa de Córdoba, Argentina, que convierte lo que pasa en tu negocio en métricas para decidir mejor. Tiene tres soluciones: Reputación (más reseñas en Google con carteles NFC/QR y un panel), Retail (la ganancia real de cada venta en Mercado Libre) y Loyalty (club de beneficios con tarjeta en Google Wallet, en piloto). Además, Intel: calculadoras y guías gratis."],
   ["¿Mis clientes tienen que instalar una app?", "No. El cartel abre desde el navegador del celular por NFC o QR, y la tarjeta de Loyalty vive en Google Wallet, que ya viene en Android."],
   ["¿Es seguro para mi ficha de Google?", "Sí. El cartel lleva a todos los clientes al mismo link público de Google para dejar su reseña, sin filtrar por calificación y sin premios a cambio, que es lo que piden las políticas de Google."],
   ["¿Cómo calcula Retail la ganancia real?", "Reúne lo que Mercado Libre descuenta en cada operación (comisión, envío, publicidad) más impuestos y el costo del producto que cargás. La prueba gratis dura 30 días."],
@@ -228,9 +228,13 @@ const FAQ_HOME = [
 
 function home() {
   const cuerpo = `<section class="hero"><div class="wrap">
-  <div class="hero-grid"><div><div class="eyebrow">Software para comercios y vendedores · Córdoba, Argentina</div><h1>Cada contacto deja un dato.<span>Cada dato, una decisión.</span></h1></div>
-  <div class="hero-side"><p class="lead">MetricsField convierte lo que pasa en tu negocio en información simple para conseguir más reseñas, ganar más por venta y lograr que tus clientes vuelvan.</p><div class="actions"><a class="btn dark" href="#productos">Encontrá tu herramienta</a><a class="btn" href="/herramientas">Probar las calculadoras</a></div>
-  <ul class="trust"><li>Sin apps para tus clientes</li><li>Soporte por WhatsApp</li><li>Hecho en Córdoba</li></ul></div></div>
+  <div class="hero-grid"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
+  <div class="hero-side"><p class="lead">Medimos lo que pasa en tu negocio y te lo mostramos simple, con tres soluciones: <a href="/reputacion"><b>Reputación</b></a>, más reseñas en Google con un cartel NFC/QR y un panel con tus métricas; <a href="/retail"><b>Retail</b></a>, la ganancia real de cada venta en Mercado Libre; y <a href="/loyalty"><b>Loyalty</b></a>, un club para que tus clientes vuelvan.</p><div class="actions">${ext(
+    wa("Hola, quiero una DEMO de MetricsField"),
+    "Pedí tu demo gratis",
+    "btn dark",
+  )}<a class="btn" href="#productos">Ver las soluciones</a></div>
+  <ul class="trust"><li>Demo gratis por WhatsApp</li><li>Sin apps para tus clientes</li><li>Hecho en Córdoba, Argentina</li></ul></div></div>
   <div class="portal-title"><h2>Elegí una puerta</h2><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
   <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
     (p) =>
@@ -296,17 +300,17 @@ ${tienda()}
   )}</div>
   <div class="client-rules"><div class="client-rule"><b>01</b><div><b>Nombre y permiso</b><br><span>El cliente decide si mostramos su marca, su testimonio y sus datos.</span></div></div><div class="client-rule"><b>02</b><div><b>Antes y después</b><br><span>Cada resultado dice punto de partida, período y contexto.</span></div></div><div class="client-rule"><b>03</b><div><b>Asociación, no magia</b><br><span>Si un número sube, contamos qué más pasó en ese tiempo.</span></div></div></div></div></div></section>
 <section id="faq" style="padding-top:0"><div class="wrap">${encabezado("Preguntas frecuentes", "Una respuesta corta para cada duda.")}${faqHtml(FAQ_HOME)}</div></section>
-<section class="cta"><div class="wrap cta-grid"><h2>Empezá por donde más te duele.</h2><div><p>Contanos cómo funciona tu negocio. Te mostramos el camino más corto para convertir ese problema en información útil.</p><div class="actions">${ext(
-    wa("Hola, quiero ver qué producto de MetricsField me sirve"),
-    "Hablar por WhatsApp",
+<section class="cta"><div class="wrap cta-grid"><h2>Pedí tu demo gratis.</h2><div><p>Escribinos <b>DEMO</b> por WhatsApp y coordinamos para mostrarte, con tu negocio, qué métricas vas a ver y qué decisiones te ayudan a tomar.</p><div class="actions">${ext(
+    wa("Hola, quiero una DEMO de MetricsField"),
+    "Pedir demo por WhatsApp",
     "btn light",
   )}<a class="btn" href="#productos">Comparar productos</a></div></div></div></section>`;
 
   return pagina({
     ruta: "/",
-    titulo: "MetricsField: reseñas en Google, Mercado Libre y fidelización",
+    titulo: "MetricsField: métricas para comercios | Córdoba, Argentina",
     descripcion:
-      "Software para comercios de Argentina: más reseñas en Google, la ganancia real de cada venta en Mercado Libre y clientes que vuelven. Calculadoras y guías gratis.",
+      "Convertimos reseñas, ventas y clientes en métricas para tu negocio: más reseñas en Google, la ganancia real de cada venta en Mercado Libre y clientes que vuelven. Hecho en Córdoba, Argentina. Pedí tu demo gratis.",
     cuerpo,
     ld: [
       {
