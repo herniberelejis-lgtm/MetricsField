@@ -248,7 +248,7 @@ export default function ActivarCartel({ slug }: { slug: string }) {
               required
               inputMode="numeric"
               autoComplete="off"
-              placeholder="Ej: 2580"
+              placeholder="De 4 a 8 números"
               aria-label="PIN de 4 números"
               className="w-full rounded-xl border px-3.5 py-3 text-center text-[20px] tracking-[0.3em] outline-none"
               style={{ borderColor: LINE, color: INK }}

@@ -33,7 +33,8 @@ export default function PantallaDuenio({ slug, nombre, url }: { slug: string; no
           Ver todas mis piezas
         </Link>
         <p className="mt-4 text-[12px] leading-snug" style={{ color: INK_SOFT }}>
-          Esto lo ves solo en este celular, que la puede cambiar sin PIN. Tus clientes van directo a Google.
+          Esto lo ves solo en este celular, que la puede cambiar sin PIN. Tus clientes van directo a Google. Para
+          dejarla en blanco (que no lleve a ningún negocio), entrá a Mis piezas.
         </p>
       </div>
     </div>

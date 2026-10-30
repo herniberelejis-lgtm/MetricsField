@@ -222,12 +222,12 @@ await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e001', 'huerfano-mostrado
 await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES
           ('p-9999-e2e001', NULL, '', 'nfc', 'e2e', 'resena'),
           ('huerfano-mostrador', NULL, 'Mostrador', 'nfc', '', 'resena')`;
-await accionArgs("activarCartel", ["huerfano-mostrador", { nombre: "Intruso", url: "https://g.page/r/intruso-huerfano/review", pin: "1234" }]);
+await accionArgs("activarCartel", ["huerfano-mostrador", { nombre: "Intruso", url: "https://g.page/r/intruso-huerfano/review", pin: "4829" }]);
 registrar("anónimo", "reclamar un link huérfano (de un cliente borrado)", "denegado",
   `url = '${await urlLink("huerfano-mostrador")}'`, (await urlLink("huerfano-mostrador")) === "");
 r = await fetch(`${BASE}/t/huerfano-mostrador`, { headers: { "x-real-ip": ipNueva() } });
 registrar("anónimo", "abrir el cartel de un cliente borrado", "404 (no ofrece activarlo)", `HTTP ${r.status}`, r.status === 404);
-await accionArgs("activarCartel", ["p-9999-e2e001", { nombre: "Mi negocio", url: "https://g.page/r/bueno-e2e/review", pin: "4321" }]);
+await accionArgs("activarCartel", ["p-9999-e2e001", { nombre: "Mi negocio", url: "https://g.page/r/bueno-e2e/review", pin: "5182" }]);
 registrar("comprador", "activar una pieza de inventario (control positivo)", "permitido",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
 
@@ -235,10 +235,10 @@ registrar("comprador", "activar una pieza de inventario (control positivo)", "pe
 // cualquier sitio: el destino tiene que ser de Google.
 await sql`DELETE FROM links_nfc WHERE id = 'p-9999-e2e004'`;
 await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES ('p-9999-e2e004', NULL, '', 'nfc', 'e2e', 'resena')`;
-await accionArgs("activarCartel", ["p-9999-e2e004", { nombre: "Phishing", url: "https://phishing.example/login", pin: "4321" }]);
+await accionArgs("activarCartel", ["p-9999-e2e004", { nombre: "Phishing", url: "https://phishing.example/login", pin: "5182" }]);
 registrar("comprador", "activar su pieza con un destino que no es de Google", "denegado",
   `url = '${await urlLink("p-9999-e2e004")}'`, (await urlLink("p-9999-e2e004")) === "");
-await accionArgs("editarCartel", ["p-9999-e2e001", "4321", { nombre: "Phishing", url: "https://phishing.example/login" }]);
+await accionArgs("editarCartel", ["p-9999-e2e001", "5182", { nombre: "Phishing", url: "https://phishing.example/login" }]);
 registrar("comprador", "cambiar el destino de su pieza a otro sitio (con PIN correcto)", "denegado",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
 
@@ -283,29 +283,55 @@ await accionArgs("editarCartel", ["p-9999-e2e001", "", { nombre: "Ajena", url: "
 registrar("comprador", "usar el llavero de SU pieza contra otra pieza", "denegado",
   `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
 const pinAntes = (await uno(sql`SELECT pin_salt AS s FROM links_nfc WHERE id = 'p-9999-e2e001'`)).s;
-await accionArgs("entregarPieza", ["p-9999-e2e001", "1111"], { pagina: "/t/p-9999-e2e001", cookie: conOtraPieza });
+await accionArgs("entregarPieza", ["p-9999-e2e001", "7364"], { pagina: "/t/p-9999-e2e001", cookie: conOtraPieza });
 const pinDespues = (await uno(sql`SELECT pin_salt AS s FROM links_nfc WHERE id = 'p-9999-e2e001'`)).s;
 registrar("comprador", "entregar (cambiar el PIN de) una pieza ajena", "denegado", pinAntes === pinDespues ? "PIN igual" : "PIN cambiado", pinAntes === pinDespues);
-await accionArgs("entregarPieza", ["p-9999-e2e005"], { pagina: "/t/p-9999-e2e005", cookie: llaveroPropio });
+r = await accionArgs("entregarPieza", ["p-9999-e2e005"], { pagina: "/t/p-9999-e2e005", cookie: llaveroPropio });
+const pinEntregado = ((await r.text()).match(/"pin":"(\d+)"/) ?? [])[1] ?? "";
 await accionArgs("editarCartel", ["p-9999-e2e005", "", { nombre: "Ya no es mía", url: "https://g.page/r/revendedor-3/review" }], {
   pagina: "/t/p-9999-e2e005", cookie: llaveroPropio,
 });
 registrar("revendedor", "cambiar una pieza que ya entregó (llavero viejo)", "denegado",
   `url = '${await urlLink("p-9999-e2e005")}'`, (await urlLink("p-9999-e2e005")) === "https://g.page/r/revendedor-2/review");
 
+// Dejar en blanco: solo quien maneja la pieza, y la deja reclamable de nuevo.
+await accionArgs("dejarEnBlanco", ["p-9999-e2e001"], { pagina: "/t/mis-piezas", cookie: conOtraPieza });
+registrar("comprador", "dejar en blanco una pieza ajena", "denegado",
+  `url = '${await urlLink("p-9999-e2e001")}'`, (await urlLink("p-9999-e2e001")) === "https://g.page/r/bueno-e2e/review");
+await accionArgs("dejarEnBlanco", ["p-9999-e2e005"], { pagina: "/t/mis-piezas", cookie: llaveroPropio });
+registrar("revendedor", "dejar en blanco una pieza que ya entregó (llavero viejo)", "denegado",
+  `url = '${await urlLink("p-9999-e2e005")}'`, (await urlLink("p-9999-e2e005")) === "https://g.page/r/revendedor-2/review");
+r = await accionArgs("sumarPieza", ["p-9999-e2e005", pinEntregado], { pagina: "/t/p-9999-e2e005/editar" });
+const llaveroDuenio = llaveroDe(r);
+await accionArgs("dejarEnBlanco", ["p-9999-e2e005"], { pagina: "/t/mis-piezas", cookie: llaveroDuenio });
+const enBlanco = await uno(sql`SELECT url_destino, autogestionado, pin_hash FROM links_nfc WHERE id = 'p-9999-e2e005'`);
+registrar("dueño", "dejar en blanco su pieza (control positivo)", "sin destino ni PIN",
+  `url = '${enBlanco.url_destino}', PIN ${enBlanco.pin_hash ? "sí" : "no"}`,
+  Boolean(llaveroDuenio) && enBlanco.url_destino === null && !enBlanco.autogestionado && !enBlanco.pin_hash);
+await accionArgs("activarCartel", ["p-9999-e2e005", { nombre: "Otro local", url: "https://g.page/r/otro-local/review", pin: "8053" }], {
+  pagina: "/t/p-9999-e2e005",
+});
+registrar("comprador", "activar una pieza que se dejó en blanco", "permitido",
+  `url = '${await urlLink("p-9999-e2e005")}'`, (await urlLink("p-9999-e2e005")) === "https://g.page/r/otro-local/review");
+
 // El contacto del comprador solo se guarda si marcó la casilla de aceptación.
 await sql`DELETE FROM links_nfc WHERE id IN ('p-9999-e2e002', 'p-9999-e2e003')`;
 await sql`INSERT INTO links_nfc (id, comercio_id, etiqueta, tipo, lote, destino) VALUES
           ('p-9999-e2e002', NULL, '', 'nfc', 'e2e', 'resena'),
           ('p-9999-e2e003', NULL, '', 'nfc', 'e2e', 'resena')`;
+await accionArgs("activarCartel", ["p-9999-e2e003", { nombre: "Fácil", url: "https://g.page/r/pin-facil/review", pin: "1234" }], {
+  pagina: "/t/p-9999-e2e003",
+});
+registrar("comprador", "activar con un PIN trivial (1234)", "denegado",
+  `url = '${await urlLink("p-9999-e2e003")}'`, (await urlLink("p-9999-e2e003")) === "");
 await accionArgs("activarCartel", ["p-9999-e2e002", {
-  nombre: "Sin permiso", url: "https://g.page/r/bueno-e2e-2/review", pin: "4321", email: "sinpermiso@ejemplo.test", aceptaNovedades: false,
+  nombre: "Sin permiso", url: "https://g.page/r/bueno-e2e-2/review", pin: "5182", email: "sinpermiso@ejemplo.test", aceptaNovedades: false,
 }]);
 let contacto = (await uno(sql`SELECT contacto_email AS e FROM links_nfc WHERE id = 'p-9999-e2e002'`)).e;
 registrar("comprador", "dejar su mail SIN marcar la casilla", "no se guarda",
   `mail = '${contacto}', url = '${await urlLink("p-9999-e2e002")}'`, contacto === "" && (await urlLink("p-9999-e2e002")) === "https://g.page/r/bueno-e2e-2/review");
 await accionArgs("activarCartel", ["p-9999-e2e003", {
-  nombre: "Con permiso", url: "https://g.page/r/bueno-e2e-3/review", pin: "4321", email: "conpermiso@ejemplo.test", aceptaNovedades: true,
+  nombre: "Con permiso", url: "https://g.page/r/bueno-e2e-3/review", pin: "5182", email: "conpermiso@ejemplo.test", aceptaNovedades: true,
 }]);
 contacto = (await uno(sql`SELECT contacto_email AS e FROM links_nfc WHERE id = 'p-9999-e2e003'`)).e;
 registrar("comprador", "dejar su mail marcando la casilla (control positivo)", "se guarda", `mail = '${contacto}'`, contacto === "conpermiso@ejemplo.test");
@@ -320,7 +346,7 @@ if (MODO !== "produccion") {
   await accionForm("accionEliminarCliente", { id: "e2e-borrable", confirmarNombre: "Borrable E2E" }, {
     pagina: "/admin/clientes", cookie: await cookiePasswordValida(),
   });
-  await accionArgs("activarCartel", ["e2e-borrable-mesa", { nombre: "Intruso", url: "https://g.page/r/intruso-borrado/review", pin: "1234" }]);
+  await accionArgs("activarCartel", ["e2e-borrable-mesa", { nombre: "Intruso", url: "https://g.page/r/intruso-borrado/review", pin: "4829" }]);
   const [{ n: linkBorrado }] = await sql`SELECT count(*)::int AS n FROM links_nfc WHERE id = 'e2e-borrable-mesa'`;
   const [{ n: comercioBorrado }] = await sql`SELECT count(*)::int AS n FROM comercios WHERE id = 'e2e-borrable'`;
   registrar("anónimo", "reclamar el cartel de un cliente recién borrado", "no existe",

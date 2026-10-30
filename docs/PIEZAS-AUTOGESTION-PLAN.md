@@ -248,3 +248,30 @@ y la sesión de piezas contra el panel.
   reseñas; podemos pedir pruebas y desactivar piezas). Revisar con legal.
 - Textos de ayuda: negocio sin ficha de Google, celular compartido; la guía
   impresa explica cómo cambiarla y entregarla.
+
+## 10. Piloto del 29/10 (prueba manual con revendedor)
+
+Funcionó: activación, cambio de destino, quitar y volver a sumar con PIN,
+entrega con PIN nuevo (el viejo deja de servir) y redirección a Google.
+Hallazgos y qué se hizo:
+
+- **"Borré todo y me sigue llevando a la reseña"**: "Quitar de mis piezas"
+  solo saca la pieza del celular; resetearla era solo del admin. Ahora hay
+  **Dejar en blanco** en Mis piezas (`dejarEnBlanco`, reusa
+  `liberarPiezaAutogestionada` con la condición de que la sal del PIN sea la
+  que se vio al chequear el acceso). La pieza queda reclamable por quien la
+  escanee después: la confirmación lo dice. También borra el estado de la
+  revisión semanal, para que el dueño nuevo no herede un aviso viejo.
+  "Quitar" pasó a llamarse **Quitar de este celular** y su confirmación avisa
+  que la pieza sigue llevando al mismo negocio.
+- **"Me equivoqué" después de una entrega real**: no es un agujero nuevo — el
+  revendedor sabe el PIN que entregó, con o sin ese botón. Mitigación: el
+  mensaje de entrega le recomienda al dueño cambiar el PIN por uno suyo; al
+  cambiarlo se rota la sal y el revendedor pierde el acceso.
+- **PIN triviales**: `pinSeguro` (lib/pin.ts) rechaza al ELEGIR (activar,
+  cambiar, entregar, el equipo) todos iguales, escaleras y pares repetidos;
+  el PIN al azar de Entregar también los evita. Para VERIFICAR se sigue
+  usando `pinValido`, así nadie con un PIN viejo queda afuera. Los ejemplos
+  de los campos ya no sugieren un PIN concreto (la gente copiaba "2580").
+- Pendiente de probar en real: otro teléfono, recuperación por Google y un
+  dueño independiente del revendedor.

@@ -65,6 +65,7 @@ export default function EntregarPieza({ slug, nombre }: { slug: string; nombre: 
     const mensaje =
       `¡Hola! Tu pieza de MetricsField ya está lista: cada cliente que la escanee va directo a dejarle una reseña a ${hecho.nombre} en Google.\n\n` +
       `Si algún día la querés cambiar, entrá a ${origen.replace(/^https?:\/\//, "")}/t/${slug}/editar y poné este PIN: ${hecho.pin}\n\n` +
+      `Te recomendamos cambiar el PIN por uno tuyo la primera vez que entres: así solo vos la podés cambiar.\n\n` +
       `Guardá este mensaje.`;
     async function copiar() {
       try {
@@ -195,7 +196,7 @@ export default function EntregarPieza({ slug, nombre }: { slug: string; nombre: 
             onChange={(e) => setPinElegido(e.target.value.replace(/\D/g, "").slice(0, 8))}
             inputMode="numeric"
             autoComplete="off"
-            placeholder="PIN nuevo, ej: 2580"
+            placeholder="PIN nuevo (4 a 8 números)"
             aria-label="PIN nuevo"
             className="mt-2.5 w-full rounded-xl border px-3.5 py-3 text-center text-[18px] tracking-[0.2em] outline-none"
             style={{ borderColor: LINE, color: INK }}

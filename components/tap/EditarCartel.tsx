@@ -239,7 +239,7 @@ export default function EditarCartel({
               onChange={(e) => setPinNuevo(e.target.value.replace(/\D/g, "").slice(0, 8))}
               inputMode="numeric"
               autoComplete="off"
-              placeholder="PIN nuevo, ej: 2580"
+              placeholder="PIN nuevo (4 a 8 números)"
               aria-label="PIN nuevo"
               className="-mt-3 w-full rounded-xl border px-3.5 py-3 text-center text-[18px] tracking-[0.2em] outline-none"
               style={{ borderColor: LINE, color: INK }}
