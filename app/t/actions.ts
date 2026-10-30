@@ -262,7 +262,7 @@ export async function editarCartel(
   slug: string,
   pin: string,
   datos: { nombre: string; placeId?: string | null; url?: string; sesionToken?: string; pinNuevo?: string },
-): Promise<{ ok: boolean; error?: string; nombre?: string; sinAcceso?: boolean }> {
+): Promise<{ ok: boolean; error?: string; nombre?: string; url?: string; mismoDestino?: boolean; sinAcceso?: boolean }> {
   const pinNuevo = String(datos.pinNuevo ?? "");
   if (pinNuevo && !pinValido(pinNuevo)) return { ok: false, error: "El PIN nuevo tiene que ser de 4 a 8 números." };
   if (pinNuevo && !pinSeguro(pinNuevo)) return { ok: false, error: ERROR_PIN_FACIL };
@@ -287,6 +287,10 @@ export async function editarCartel(
   if (!destino.ok) return { ok: false, error: destino.error };
   const nombre = nombreLimpio(datos.nombre, destino.nombreLugar);
   if (!nombre) return { ok: false, error: "Contanos el nombre de tu negocio." };
+  // Para avisar si el "cambio" deja el mismo link: el nombre nuevo con el
+  // link viejo se veía como "¡Listo!" y la pieza seguía en el negocio de
+  // antes (le pasó a un revendedor con el link pegado a mano).
+  const anterior = (await getLink(pieza))?.urlDestino ?? null;
 
   try {
     if (sal) {
@@ -315,7 +319,7 @@ export async function editarCartel(
   if (pinNuevo) await desvincularPieza(pieza);
   await guardarEnCuenta(pieza);
   revalidatePath(`/t/${pieza}`);
-  return { ok: true, nombre };
+  return { ok: true, nombre, url: destino.url, mismoDestino: anterior === destino.url };
 }
 
 /** Sumar una pieza a este navegador con su PIN, sin cambiar nada más: el

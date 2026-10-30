@@ -32,12 +32,16 @@ export default function EditarCartel({
   const [sesionToken, setSesionToken] = useState<string | undefined>();
   const [aMano, setAMano] = useState(false);
   const [nombre, setNombre] = useState(nombreActual);
-  const [url, setUrl] = useState(urlActual);
+  // Vacío a propósito: precargado con el link viejo, cambiar solo el nombre
+  // guardaba "¡Listo!" y la pieza seguía yendo al negocio anterior.
+  const [url, setUrl] = useState("");
   const [cambiarPin, setCambiarPin] = useState(false);
   const [pinNuevo, setPinNuevo] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [actual, setActual] = useState(nombreActual);
-  const [guardado, setGuardado] = useState<{ nombre: string; pinNuevo: string } | null>(null);
+  const [guardado, setGuardado] = useState<{ nombre: string; pinNuevo: string; url: string; mismoDestino: boolean } | null>(
+    null,
+  );
   const [pendiente, startTransition] = useTransition();
   const router = useRouter();
 
@@ -46,6 +50,10 @@ export default function EditarCartel({
     setError(null);
     if (!lugar && !aMano) {
       setError("Buscá y elegí el negocio (paso 1).");
+      return;
+    }
+    if (aMano && !url.trim()) {
+      setError("Pegá el link de reseña del negocio nuevo.");
       return;
     }
     if (cambiarPin && pinNuevo.length < 4) {
@@ -70,7 +78,12 @@ export default function EditarCartel({
         }
         const nombreFinal = res.nombre || (lugar ? lugar.nombre : nombre);
         setActual(nombreFinal);
-        setGuardado({ nombre: nombreFinal, pinNuevo: cambiarPin ? pinNuevo : "" });
+        setGuardado({
+          nombre: nombreFinal,
+          pinNuevo: cambiarPin ? pinNuevo : "",
+          url: res.url ?? "",
+          mismoDestino: Boolean(res.mismoDestino),
+        });
       } catch {
         setError("No pudimos conectarnos. Revisá tu internet y probá de nuevo.");
       }
@@ -82,6 +95,7 @@ export default function EditarCartel({
     setLugar(null);
     setSesionToken(undefined);
     setAMano(false);
+    setUrl("");
     setCambiarPin(false);
     setPinNuevo("");
   }
@@ -93,18 +107,45 @@ export default function EditarCartel({
     return (
       <div className="flex min-h-screen flex-col items-center gap-5 px-4 py-8" style={{ background: "#f8f9fa" }}>
         <div className={`${tarjeta} text-center`} style={sombra}>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: "#e6f4ea" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M5 13l4 4L19 7" stroke="#1e8e3e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <div
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+            style={{ backgroundColor: guardado.mismoDestino ? "#fff8e6" : "#e6f4ea" }}
+          >
+            {guardado.mismoDestino ? (
+              <span className="text-[26px] font-bold" style={{ color: "#b06000" }} aria-hidden>
+                !
+              </span>
+            ) : (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M5 13l4 4L19 7" stroke="#1e8e3e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </div>
           <h1 className="mt-3 text-[20px] font-semibold" style={{ color: INK }}>
-            ¡Listo! Ya está cambiada
+            {guardado.mismoDestino ? "Guardado, pero lleva al mismo lugar" : "¡Listo! Ya está cambiada"}
           </h1>
-          <p className="mt-1.5 text-[14px]" style={{ color: INK_SOFT }}>
-            Desde ahora, quien la toque o la escanee va a dejarle una reseña a{" "}
-            <b style={{ color: INK }}>{guardado.nombre}</b>. No hace falta volver a grabar el chip.
-          </p>
+          {guardado.mismoDestino ? (
+            <p className="mt-2 rounded-lg px-3 py-2 text-left text-[13.5px]" style={{ background: "#fff8e6", color: "#7a5200" }}>
+              El link de reseña es el mismo que tenía: la pieza sigue llevando al mismo negocio de antes. Para que lleve
+              a otro, tocá <b>Cambiarla otra vez</b> y buscá el negocio nuevo en la lista.
+            </p>
+          ) : (
+            <p className="mt-1.5 text-[14px]" style={{ color: INK_SOFT }}>
+              Desde ahora, quien la toque o la escanee va a dejarle una reseña a{" "}
+              <b style={{ color: INK }}>{guardado.nombre}</b>. No hace falta volver a grabar el chip.
+            </p>
+          )}
+          {guardado.url && (
+            <a
+              href={guardado.url}
+              target="_blank"
+              rel="noopener"
+              className="mt-4 inline-block text-[14px] font-medium underline"
+              style={{ color: BRAND }}
+            >
+              Ver a dónde lleva ahora
+            </a>
+          )}
           {guardado.pinNuevo && (
             <p className="mt-3 rounded-lg px-3 py-2 text-[13px]" style={{ background: "#fff8e6", color: "#7a5200" }}>
               El PIN nuevo es <b className="font-mono text-[14px]">{guardado.pinNuevo}</b>. Pasáselo a quien se quede con la
@@ -196,6 +237,11 @@ export default function EditarCartel({
                   style={{ borderColor: LINE, color: INK }}
                 />
                 <div>
+                  {urlActual && (
+                    <p className="mb-1.5 text-[12px] leading-snug" style={{ color: INK_SOFT }}>
+                      Pegá el link del negocio <b>nuevo</b>. Si lo dejás igual, sigue llevando a {actual || "donde lleva hoy"}.
+                    </p>
+                  )}
                   <input
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
