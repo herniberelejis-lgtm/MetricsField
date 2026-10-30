@@ -81,7 +81,12 @@ Restos históricos en la base (ya sin uso en el código): la columna
   **Revisión semanal** (con el cron de los lunes, `lib/revision-piezas.ts`):
   revisa en Google el estado de la ficha de cada pieza (cerrada, borrada) y
   avisa una vez al equipo y a quien la maneja; se ve en el admin y en Mis
-  piezas. Estado guardado en `ajustes` (`estado_pieza:<id>`), sin migración. Diseño, riesgos y
+  piezas. Estado guardado en `ajustes` (`estado_pieza:<id>`), sin migración.
+  **Dejar en blanco** (Mis piezas, `dejarEnBlanco`): el dueño resetea su
+  pieza como recién comprada (misma función que "Devolver al inventario",
+  con la condición de que el PIN no haya cambiado). "Quitar de este
+  celular" en cambio NO toca la pieza: el piloto del 29/10 lo confundió.
+  Los PIN que se eligen pasan `pinSeguro` (sin 1111, 1234, 1212…). Diseño, riesgos y
   refutaciones: `docs/PIEZAS-AUTOGESTION-PLAN.md`.
   Después la edita en `/t/<código>/editar` con su PIN. No crea cliente en el
   CRM: en Admin → Hardware se ven los compradores ordenados por uso, con su

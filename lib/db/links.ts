@@ -315,7 +315,7 @@ export async function cambiarPinAutogestion(slug: string, pin: string): Promise<
  * comprador y queda lista para que la active quien la compre después. El
  * código y lo impreso no cambian. Los toques viejos quedan en la historia
  * pero no se le cuentan al dueño nuevo (se cuentan desde activado_en). */
-export async function liberarPiezaAutogestionada(slug: string): Promise<boolean> {
+export async function liberarPiezaAutogestionada(slug: string, salEsperada?: string): Promise<boolean> {
   const rows = await sql`
     UPDATE links_nfc SET
       autogestionado = FALSE,
@@ -326,6 +326,9 @@ export async function liberarPiezaAutogestionada(slug: string): Promise<boolean>
       destino = 'resena',
       etiqueta = ''
     WHERE id = ${slug} AND comercio_id IS NULL AND autogestionado = TRUE
+      -- Desde el celular del dueño: solo si el PIN no cambió entre que se
+      -- vio su acceso y ahora (el equipo la libera sin esta condición).
+      AND (${salEsperada ?? null}::text IS NULL OR pin_salt = ${salEsperada ?? null})
     RETURNING id
   `;
   if (rows.length === 0) return false;
@@ -340,6 +343,9 @@ export async function liberarPiezaAutogestionada(slug: string): Promise<boolean>
   } catch (e) {
     console.error("Liberar pieza: columnas opcionales", e instanceof Error ? e.message : e);
   }
+  // El estado de la revisión semanal era de la ficha anterior: que el dueño
+  // nuevo no herede un "cerrada" (ver lib/revision-piezas.ts).
+  await sql`DELETE FROM ajustes WHERE clave = ${"estado_pieza:" + slug}`.catch(() => {});
   return true;
 }
 

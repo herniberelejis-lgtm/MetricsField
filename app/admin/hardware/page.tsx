@@ -35,7 +35,7 @@ const ERRORES_ASIGNAR: Record<string, string> = {
   "sin-cliente": "Elegí a qué cliente asignarla antes de guardar.",
   "sin-url": 'Ese destino necesita una URL — asignala primero y cargá la URL desde la ficha del cliente → Links.',
   "no-libre": "Esa pieza ya no está libre: alguien la asignó o la activó recién. Mirá la lista actualizada.",
-  "pin-invalido": "El PIN tiene que ser de 4 a 8 números.",
+  "pin-invalido": "El PIN tiene que ser de 4 a 8 números y no uno fácil (1234, 1111, 1212).",
   "no-autogestionada": "Esa pieza ya no es autogestionada (alguien la asignó a un cliente o ya se devolvió).",
   "sin-confirmar": "Para devolver una pieza al inventario tildá la casilla de confirmación.",
   "sin-verificar": "Antes de poner un PIN nuevo, verificá que quien lo pide es el dueño (ver la regla arriba de la tabla) y tildá la casilla.",
