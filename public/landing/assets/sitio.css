@@ -4,11 +4,9 @@
    solo para bien / para mejorar, una sola familia: Montserrat), con el negro
    de marca para los bloques de mayor peso. Sin scripts ni fuentes externas:
    la CSP de la landing solo permite lo propio (middleware.ts, CSP_LANDING). */
-@font-face{font-family:Montserrat;font-weight:400;font-display:swap;src:url(/landing/assets/fonts/montserrat-400-latin.woff2) format("woff2")}
-@font-face{font-family:Montserrat;font-weight:500;font-display:swap;src:url(/landing/assets/fonts/montserrat-500-latin.woff2) format("woff2")}
-@font-face{font-family:Montserrat;font-weight:600;font-display:swap;src:url(/landing/assets/fonts/montserrat-600-latin.woff2) format("woff2")}
-@font-face{font-family:Montserrat;font-weight:700;font-display:swap;src:url(/landing/assets/fonts/montserrat-700-latin.woff2) format("woff2")}
-@font-face{font-family:Montserrat;font-weight:800;font-display:swap;src:url(/landing/assets/fonts/montserrat-800-latin.woff2) format("woff2")}
+/* Montserrat variable: un solo archivo para todos los pesos (antes eran cinco
+   copias del mismo archivo con nombres distintos y se bajaba cinco veces). */
+@font-face{font-family:Montserrat;font-weight:400 800;font-display:swap;src:url(/landing/assets/fonts/montserrat-variable-latin.woff2) format("woff2")}
 :root{
   --ink:#111111;--texto:#1a1a1a;--paper:#f4f5f7;--white:#fff;--muted:#5e5e5e;--line:#dcdfe4;--line-soft:#eef0f3;
   --dato:#6f9bcf;--azul-1:#eef4fb;--azul-2:#d9e6f4;--azul-3:#a9c5e6;--link:#1f4e80;--link-h:#183f68;
