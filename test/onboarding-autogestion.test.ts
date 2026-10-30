@@ -101,3 +101,22 @@ describe("placeIdValido", () => {
     expect(placeIdValido("corto")).toBe(false);
   });
 });
+
+// Las fotos y videos de la activación viven en public/ y se comparten con
+// la landing: si alguien regenera o borra una variante (pasó con las fotos
+// de 480 px), la pantalla de "¡Listo!" mostraba imágenes rotas sin aviso.
+describe("archivos de la activación", () => {
+  it("cada foto y video que usa existe en public/", async () => {
+    const { existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const onboarding = await import("@/lib/onboarding");
+    const rutas = [
+      ...onboarding.USOS_PIEZAS.map((u) => u.foto),
+      ...[onboarding.VIDEO_QR, onboarding.VIDEO_QR_MANUAL, onboarding.VIDEO_NFC].flatMap((v) =>
+        v ? Object.values(v).filter((x): x is string => typeof x === "string" && x.startsWith("/")) : [],
+      ),
+    ];
+    expect(rutas.length).toBeGreaterThan(0);
+    for (const ruta of rutas) expect(existsSync(join(process.cwd(), "public", ruta)), ruta).toBe(true);
+  });
+});
