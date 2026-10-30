@@ -28,7 +28,7 @@ const ESCENAS = {
   <div class="tel"><div class="tel-pantalla"><div class="pant-google"><span class="g-local">Café Ejemplo</span><span class="g-titulo">¿Cómo fue tu experiencia?</span><div class="g-estrellas">${estrellas(5)}</div><span class="g-texto"></span><span class="g-btn">Publicar</span></div></div></div>
 </div>`,
   "rep-panel": ventana(
-    "Tu panel · Reputación",
+    "Tu panel · Reviews",
     `<div class="d-kpis">${kpi("Toques al cartel", "148", 148)}${kpi("Reseñas nuevas", "62", 62)}${kpi("Calificación", "4,6", 4.6, 1)}</div>
 <div class="resena-nueva"><div class="r-cab"><b>Laura M.</b><span class="d-est">${estrellas(5)}</span><small>hace 5 minutos</small></div><p>Excelente atención y el café, buenísimo. Volvemos seguro.</p>
 <div class="r-sugerida"><small>Respuesta sugerida</small><p class="tipeo">¡Gracias, Laura! Nos alegra que te haya gustado. Te esperamos pronto.</p></div></div>`,
