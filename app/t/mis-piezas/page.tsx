@@ -7,7 +7,7 @@ import { TEXTO_ESTADO } from "@/lib/revision-piezas-core";
 import { oauthConfigurado } from "@/lib/google-oauth";
 import { firmaVerificable, leerPiezasDelLlavero, modoSumarActivo, MINUTOS_SUMAR } from "@/lib/llavero";
 import { esNavegadorInterno } from "@/lib/llavero-core";
-import { BotonQuitar, BotonSalirCuenta, BotonSumar, GuardarEnCuenta } from "@/components/tap/AccionesMisPiezas";
+import { BotonEnBlanco, BotonQuitar, BotonSalirCuenta, BotonSumar, GuardarEnCuenta } from "@/components/tap/AccionesMisPiezas";
 import AvisoNavegadorInterno from "@/components/tap/AvisoNavegadorInterno";
 import { BRAND, FONDO, INK, INK_SOFT, LINE, SOMBRA, TARJETA } from "@/components/tap/estilo";
 
@@ -174,8 +174,11 @@ export default async function MisPiezasPage({
                     Entregar
                   </a>
                 </div>
-                <div className="mt-2 text-right">
+                <div className="mt-2.5 flex items-baseline justify-between gap-3">
                   <BotonQuitar slug={p.id} />
+                  <span className="text-right">
+                    <BotonEnBlanco slug={p.id} nombre={p.nombreNegocio} />
+                  </span>
                 </div>
               </li>
             ))}

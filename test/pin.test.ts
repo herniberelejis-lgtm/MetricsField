@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pinValido, hashearPin, pinCoincide } from "@/lib/pin";
+import { pinValido, pinSeguro, pinAlAzar, hashearPin, pinCoincide } from "@/lib/pin";
 
 // El PIN es la única credencial de las piezas autogestionadas (canal Mercado
 // Libre): con él se cambia a dónde redirige un cartel ya impreso y en la
@@ -57,5 +57,31 @@ describe("hashearPin / pinCoincide", () => {
   it("no valida contra un hash de largo distinto en vez de tirar excepción", () => {
     const { salt } = hashearPin("1234");
     expect(pinCoincide("1234", "aabb", salt)).toBe(false);
+  });
+});
+
+describe("pinSeguro (al elegir un PIN)", () => {
+  it("rechaza los que se prueban primero", () => {
+    for (const pin of ["0000", "1111", "999999", "1234", "0123", "4321", "9876", "12345678", "1212", "6969", "121212"]) {
+      expect(pinSeguro(pin)).toBe(false);
+    }
+  });
+
+  it("acepta PIN comunes que no son triviales", () => {
+    for (const pin of ["4829", "1357", "2468", "1123", "190288", "1213"]) {
+      expect(pinSeguro(pin)).toBe(true);
+    }
+  });
+
+  it("nunca acepta lo que pinValido rechaza", () => {
+    for (const pin of ["123", "12a4", "", "4829\n"]) expect(pinSeguro(pin)).toBe(false);
+  });
+
+  it("pinAlAzar siempre da un PIN seguro de 4 dígitos", () => {
+    for (let i = 0; i < 500; i++) {
+      const pin = pinAlAzar();
+      expect(pin).toMatch(/^\d{4}$/);
+      expect(pinSeguro(pin)).toBe(true);
+    }
   });
 });

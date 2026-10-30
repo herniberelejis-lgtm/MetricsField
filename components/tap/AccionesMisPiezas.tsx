@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { dejarDeSumar, empezarASumar, guardarMisPiezasEnCuenta, olvidarPieza, salirDeCuenta } from "@/app/t/actions";
+import { dejarDeSumar, dejarEnBlanco, empezarASumar, guardarMisPiezasEnCuenta, olvidarPieza, salirDeCuenta } from "@/app/t/actions";
 import { BOTON_PRINCIPAL, BOTON_SECUNDARIO, BRAND, INK, INK_SOFT, LINE } from "./estilo";
 
 /** "Sumar una pieza": este navegador queda esperando un escaneo unos minutos. */
@@ -56,8 +56,9 @@ export function BotonSumar({ sumando, minutos }: { sumando: boolean; minutos: nu
   );
 }
 
-/** Sacar una pieza de este celular (la pieza no cambia). */
-export function BotonQuitar({ slug, texto = "Quitar de mis piezas" }: { slug: string; texto?: string }) {
+/** Sacar una pieza de este celular (la pieza no cambia: sigue llevando al
+ * mismo negocio). Para que deje de llevar ahí está BotonEnBlanco. */
+export function BotonQuitar({ slug, texto = "Quitar de este celular" }: { slug: string; texto?: string }) {
   const router = useRouter();
   const [pendiente, startTransition] = useTransition();
   return (
@@ -65,7 +66,7 @@ export function BotonQuitar({ slug, texto = "Quitar de mis piezas" }: { slug: st
       type="button"
       disabled={pendiente}
       onClick={() => {
-        if (!window.confirm("¿Sacarla de Mis piezas? Sale de este celular y de tu cuenta de Google. La pieza sigue funcionando igual; para volver a manejarla vas a necesitar su PIN.")) return;
+        if (!window.confirm("¿Quitarla de este celular? Ojo: la pieza NO cambia, sigue llevando a la reseña del mismo negocio. Solo dejás de manejarla desde acá (y desde tu cuenta de Google); para volver a manejarla vas a necesitar su PIN.\n\nSi lo que querés es que deje de llevar a ese negocio, usá «Dejar en blanco».")) return;
         startTransition(async () => {
           await olvidarPieza(slug);
           router.refresh();
@@ -76,6 +77,57 @@ export function BotonQuitar({ slug, texto = "Quitar de mis piezas" }: { slug: st
     >
       {texto}
     </button>
+  );
+}
+
+/** Dejar la pieza como recién comprada (ver dejarEnBlanco): deja de
+ * llevar al negocio y la activa el próximo que la escanee. */
+export function BotonEnBlanco({ slug, nombre }: { slug: string; nombre: string }) {
+  const router = useRouter();
+  const [pendiente, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <>
+      <button
+        type="button"
+        disabled={pendiente}
+        onClick={() => {
+          if (
+            !window.confirm(
+              `¿Dejar la pieza en blanco?\n\nDeja de llevar a la reseña de ${nombre || "este negocio"}, se borra su PIN y sale de tus piezas. Queda como recién comprada: la próxima persona que la escanee la activa para su negocio.\n\nHacelo cuando la tengas vos en la mano.`,
+            )
+          )
+            return;
+          setError(null);
+          startTransition(async () => {
+            try {
+              const r = await dejarEnBlanco(slug);
+              if (!r.ok) {
+                setError(r.error ?? "No se pudo.");
+                return;
+              }
+              await fetch("/t/llavero", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ op: "quitar", codigo: slug }),
+              }).catch(() => {});
+              router.refresh();
+            } catch {
+              setError("No pudimos conectarnos. Revisá tu internet y probá de nuevo.");
+            }
+          });
+        }}
+        className="text-[12.5px] underline"
+        style={{ color: "#c5221f" }}
+      >
+        {pendiente ? "Dejando en blanco…" : "Dejar en blanco"}
+      </button>
+      {error && (
+        <span className="mt-1 block text-[12px]" style={{ color: "#c5221f" }}>
+          {error}
+        </span>
+      )}
+    </>
   );
 }
 
