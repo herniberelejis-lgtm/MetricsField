@@ -64,7 +64,7 @@ export const GUIAS = [
       ["¿Sirve un cartel NFC o QR para pedir reseñas?", "Sirve porque acorta el camino: el cliente acerca el celular y se abre la ventana para calificar. Lo importante es que lleve a todos al mismo lugar, sin filtrar por calificación."],
     ],
     relacionadas: ["posicionamiento-en-google-maps", "seo-local-posicionamiento-web", "ciclo-de-vida-del-cliente"],
-    producto: { href: "/reputacion", nombre: "MetricsField Reputación", texto: "Carteles NFC/QR que llevan directo a tu reseña de Google, y un panel con toques, reseñas, respuestas sugeridas y qué dicen tus clientes." },
+    producto: { href: "/reputacion", nombre: "MetricsField Reviews", texto: "Carteles NFC/QR que llevan directo a tu reseña de Google, y un panel con toques, reseñas, respuestas sugeridas y qué dicen tus clientes." },
   },
   {
     slug: "posicionamiento-en-google-maps",
@@ -118,7 +118,7 @@ export const GUIAS = [
       ["¿Se puede pagar para aparecer primero en Maps?", "Existen anuncios pagos que aparecen marcados como tales. La posición orgánica no se compra: depende de relevancia, distancia y prominencia."],
     ],
     relacionadas: ["como-conseguir-resenas-en-google", "seo-local-posicionamiento-web", "geo-aparecer-en-respuestas-de-ia"],
-    producto: { href: "/reputacion", nombre: "MetricsField Reputación", texto: "Mide tus vistas en Google, pedidos de cómo llegar, llamadas y las palabras con las que te encuentran, junto con tus reseñas." },
+    producto: { href: "/reputacion", nombre: "MetricsField Reviews", texto: "Mide tus vistas en Google, pedidos de cómo llegar, llamadas y las palabras con las que te encuentran, junto con tus reseñas." },
   },
   {
     slug: "seo-local-posicionamiento-web",
@@ -165,7 +165,7 @@ export const GUIAS = [
       ["¿Cuánto cuesta el posicionamiento web?", "Lo básico (perfil completo, web clara, coherencia de datos, pedir reseñas) se puede hacer con tiempo propio. Lo que cuesta es la constancia: medir y mejorar todos los meses."],
     ],
     relacionadas: ["posicionamiento-en-google-maps", "geo-aparecer-en-respuestas-de-ia", "como-conseguir-resenas-en-google"],
-    producto: { href: "/reputacion", nombre: "MetricsField Reputación", texto: "Te muestra las búsquedas con las que te encontraron y cuántas personas te descubrieron sin conocerte." },
+    producto: { href: "/reputacion", nombre: "MetricsField Reviews", texto: "Te muestra las búsquedas con las que te encontraron y cuántas personas te descubrieron sin conocerte." },
   },
   {
     slug: "geo-aparecer-en-respuestas-de-ia",
@@ -209,7 +209,7 @@ export const GUIAS = [
       ["¿Qué es llms.txt?", "Una propuesta de archivo de texto en la raíz del sitio que resume qué hace tu negocio y cuáles son tus páginas clave, pensado para modelos de lenguaje. No es un estándar oficial, pero es simple de publicar."],
     ],
     relacionadas: ["seo-local-posicionamiento-web", "como-conseguir-resenas-en-google", "posicionamiento-en-google-maps"],
-    producto: { href: "/reputacion", nombre: "MetricsField Reputación", texto: "En el plan Premium registramos cada mes si los principales asistentes de IA te recomiendan." },
+    producto: { href: "/reputacion", nombre: "MetricsField Reviews", texto: "En el plan Premium registramos cada mes si los principales asistentes de IA te recomiendan." },
   },
   {
     slug: "rentabilidad-real-mercado-libre",
@@ -491,6 +491,6 @@ export const GUIAS = [
       ["¿Cómo se relacionan las reseñas con la recompra?", "Un cliente que vuelve y está contento es el que más probablemente deje una reseña, y esa reseña ayuda a que nuevos clientes te encuentren y te elijan."],
     ],
     relacionadas: ["como-conseguir-resenas-en-google", "rentabilidad-real-mercado-libre", "fidelizacion-de-clientes"],
-    producto: { href: "/", nombre: "MetricsField", texto: "Reputación, Retail y Loyalty: una herramienta para cada etapa del ciclo, con los datos conectados." },
+    producto: { href: "/", nombre: "MetricsField", texto: "Reviews, Retail y Loyalty: una herramienta para cada etapa del ciclo, con los datos conectados." },
   },
 ];

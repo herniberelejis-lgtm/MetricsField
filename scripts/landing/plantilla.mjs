@@ -5,7 +5,7 @@
 export const SITIO = "https://metricsfield.com";
 export const WA = "https://wa.me/5493515191716";
 export const RETAIL_APP = "https://retail.metricsfield.com";
-export const VERSION = "20261026";
+export const VERSION = "20261030";
 // Logo horizontal (public/brand/logo-horizontal.svg, 5057×982) a 32 px de alto.
 const LOGO_W = 165;
 const LOGO_H = 32;
@@ -49,7 +49,7 @@ export const ORGANIZACION = {
 };
 
 const NAV = [
-  ["/reputacion", "Reputación"],
+  ["/reputacion", "Reviews"],
   ["/retail", "Retail"],
   ["/loyalty", "Loyalty"],
   ["/herramientas", "Intel"],
@@ -173,7 +173,7 @@ function pie() {
         <a class="brand" href="/" aria-label="MetricsField, inicio"><img src="/brand/logo-horizontal-blanco.svg" alt="MetricsField" width="${LOGO_W}" height="${LOGO_H}"></a>
         <p style="font-size:.82rem;max-width:300px">Del contacto al dato. Del dato a una mejor decisión. Software para comercios y vendedores de Argentina, hecho en Córdoba.</p>
       </div>
-      <div><h2>Productos</h2><a href="/reputacion">Reputación en Google</a><a href="/retail">Retail · Mercado Libre</a><a href="/loyalty">Loyalty · fidelización</a><a href="/herramientas">Intel · calculadoras</a><a href="/#tienda">Tienda de piezas NFC</a></div>
+      <div><h2>Productos</h2><a href="/reputacion">Reviews · reseñas en Google</a><a href="/retail">Retail · Mercado Libre</a><a href="/loyalty">Loyalty · fidelización</a><a href="/herramientas">Intel · calculadoras</a><a href="/#tienda">Tienda de piezas NFC</a></div>
       <div><h2>Guías</h2><a href="/guias/como-conseguir-resenas-en-google">Reseñas en Google</a><a href="/guias/posicionamiento-en-google-maps">Google Maps</a><a href="/guias/seo-local-posicionamiento-web">SEO local</a><a href="/guias/geo-aparecer-en-respuestas-de-ia">GEO e IA</a><a href="/guias">Todas las guías</a></div>
       <div><h2>Más guías</h2><a href="/guias/rentabilidad-real-mercado-libre">Rentabilidad en Mercado Libre</a><a href="/guias/fidelizacion-de-clientes">Fidelización</a><a href="/guias/tarjeta-de-fidelidad-google-wallet">Google Wallet</a><a href="/guias/ciclo-de-vida-del-cliente">Ciclo del cliente</a></div>
       <div><h2>Contacto y legal</h2><a href="${WA}" target="_blank" rel="noopener">WhatsApp +54 9 351 519-1716</a><a href="mailto:info@metricsfield.com">info@metricsfield.com</a><a href="https://instagram.com/metricsfield" target="_blank" rel="noopener">Instagram</a><a href="/privacy">Privacidad</a><a href="/terms">Términos</a></div>
