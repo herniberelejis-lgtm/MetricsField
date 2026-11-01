@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #F4F5F7; }
+      #fondo { position: absolute; inset: 0; background: #F4F5F7; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="29.9" data-width="1080" data-height="1920">
+      <div id="fondo"></div>
+      <div id="gancho" data-composition-id="gancho" data-composition-src="compositions/gancho.html" data-start="0" data-duration="3.7" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="competencia" data-composition-id="competencia" data-composition-src="compositions/competencia.html" data-start="3.7" data-duration="3.5" data-track-index="2" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="toque" data-composition-id="toque" data-composition-src="compositions/toque.html" data-start="7.2" data-duration="4.5" data-track-index="3" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="google" data-composition-id="google" data-composition-src="compositions/google.html" data-start="11.7" data-duration="3.9" data-track-index="4" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="panel" data-composition-id="panel" data-composition-src="compositions/panel.html" data-start="15.6" data-duration="5.2" data-track-index="5" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="piezas" data-composition-id="piezas" data-composition-src="compositions/piezas.html" data-start="20.8" data-duration="3.8" data-track-index="6" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="cierre" data-composition-id="cierre" data-composition-src="compositions/cierre.html" data-start="24.6" data-duration="5.3" data-track-index="7" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <audio id="voz-gancho" data-start="0.1" data-duration="3.203" data-track-index="20" data-volume="1" src="assets/voz/es-AR-TomasNeural/gancho.wav"></audio>
+      <audio id="voz-competencia" data-start="3.85" data-duration="2.436" data-track-index="21" data-volume="1" src="assets/voz/es-AR-TomasNeural/competencia.wav"></audio>
+      <audio id="voz-toque" data-start="7.35" data-duration="3.887" data-track-index="22" data-volume="1" src="assets/voz/es-AR-TomasNeural/toque.wav"></audio>
+      <audio id="voz-google" data-start="11.85" data-duration="3.255" data-track-index="23" data-volume="1" src="assets/voz/es-AR-TomasNeural/google.wav"></audio>
+      <audio id="voz-panel" data-start="15.75" data-duration="4.62" data-track-index="24" data-volume="1" src="assets/voz/es-AR-TomasNeural/panel.wav"></audio>
+      <audio id="voz-piezas" data-start="20.95" data-duration="3.155" data-track-index="25" data-volume="1" src="assets/voz/es-AR-TomasNeural/piezas.wav"></audio>
+      <audio id="voz-cierre" data-start="24.75" data-duration="3.926" data-track-index="26" data-volume="1" src="assets/voz/es-AR-TomasNeural/cierre.wav"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

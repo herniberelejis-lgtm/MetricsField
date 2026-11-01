@@ -1,0 +1,36 @@
+<template>
+  <style>
+#root{position:absolute;inset:0;background:#F4F5F7;font-family:Montserrat,sans-serif;color:#111111;overflow:hidden}
+.tit{position:absolute;left:84px;right:84px;top:230px;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.03em;margin:0}
+.acc{color:#2563EB}
+.sub{position:absolute;left:84px;right:84px;font-weight:600;font-size:38px;line-height:1.25;color:#5e5e5e;margin:0}
+.foto{position:absolute;left:84px;right:84px;border-radius:36px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.14);background:#ddd}
+.foto img{display:block;width:100%;height:100%;object-fit:cover}
+.etq{position:absolute;font-weight:700;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+
+#f-logo{position:absolute;left:84px;top:260px;width:620px;height:auto}
+#f-prod{position:absolute;left:84px;top:410px;font-weight:700;font-size:44px;color:#2563EB;margin:0}
+#f-loop{position:absolute;left:84px;right:84px;top:560px;font-weight:800;font-size:84px;line-height:1.04;letter-spacing:-0.03em;margin:0}
+#f-cta{position:absolute;left:84px;right:84px;top:900px;background:#111;color:#fff;border-radius:36px;padding:44px 48px}
+#f-cta b{display:block;font-weight:800;font-size:96px;letter-spacing:-0.03em;line-height:1}
+#f-cta span{display:block;font-size:36px;margin-top:14px;color:#cfd3da;font-weight:600}
+#f-web{top:1190px;color:#111;font-weight:700}
+
+  </style>
+  <div id="root" data-composition-id="cierre" data-width="1080" data-height="1920">
+    <img id="f-logo" src="assets/logo-horizontal.svg" alt="MetricsField">
+    <p id="f-prod">MetricsField Reviews</p>
+    <p id="f-loop">Clientes contentos.<br><span class="acc">Reseñas en Google.</span></p>
+    <div id="f-cta"><b>Comentá DEMO</b><span>y te lo mostramos en tu local</span></div>
+    <p id="f-web" class="sub">metricsfield.com/reviews · Córdoba, Argentina</p>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#f-logo", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
+    tl.fromTo("#f-prod", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.25);
+    tl.fromTo("#f-loop", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.4);
+    tl.fromTo("#f-cta", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 1.75);
+    tl.fromTo("#f-web", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 2.3);
+    window.__timelines["cierre"] = tl;
+  </script>
+</template>
