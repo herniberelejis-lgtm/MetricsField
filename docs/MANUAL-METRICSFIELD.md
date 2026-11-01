@@ -519,8 +519,12 @@ reseña. **Todo depende de que Google apruebe la Reviews API.**
 - **Landing:** `metricsfield.com`. El HTML vive en `public/landing/` y **se
   genera** con `node scripts/landing/generar.mjs` (no editar el HTML a mano:
   editar el generador y regenerar).
-- **Hero de la home:** "Cada contacto deja un dato. Cada dato, una decisión."
-- **Vertical Reputación:** "Más reseñas en Google, con un toque del celular."
+- **Hero de la home:** "Más reseñas en Google, con un toque del celular." con la
+  promesa de la marca arriba ("Medimos lo que pasa en tu negocio para que
+  decidas mejor"), los 3 pasos (acercan el celular → dejan la reseña → vos lo
+  ves en tu panel), "Pedí tu demo gratis" y el precio en una línea.
+- **Retail, Loyalty e Intel** van debajo, como "Otras soluciones de
+  MetricsField".
 - **Carrito → WhatsApp** de la agencia con el pedido armado.
 - **Intel:** calculadoras y **10 guías**: cómo conseguir reseñas,
   posicionamiento en Maps, SEO local, GEO (aparecer en respuestas de IA),
@@ -535,6 +539,44 @@ reseña. **Todo depende de que Google apruebe la Reviews API.**
   propuesta RADAR a cadenas.
 
 ---
+
+### Arquitectura de marca: una marca madre, productos con apellido
+
+- **MetricsField** es la marca (confianza, promesa común): *"Medimos lo que
+  pasa en tu negocio para que decidas mejor."*
+- Cada producto se nombra **MetricsField + nombre** y resuelve un dolor:
+
+| Producto | El dolor, en palabras del dueño |
+|---|---|
+| **MetricsField Reviews** | "Mis clientes salen contentos pero no dejan reseñas, y en Google gana el de enfrente." |
+| **MetricsField Retail** | "Vendo en Mercado Libre y no sé cuánto gano de verdad." |
+| **MetricsField Loyalty** | "No sé quién vuelve ni cómo hacer que vuelva." |
+| **MetricsField Intel** | "Decido a ojo." (calculadoras y guías gratis) |
+
+- **Frase de una línea:** *"Un cartel que tus clientes tocan con el celular
+  para dejarte una reseña en Google, y un panel para ver cuántas llegan y qué
+  dicen."*
+- **Hoy lidera Reviews** (es lo que vende). Retail y Loyalty se muestran como
+  "también hacemos" hasta tener clientes y casos; ahí suben de nivel.
+
+### Qué link usar en cada canal
+
+La home reparte; **cada canal manda a la página de su producto**, así cada
+persona ve un solo problema y una sola solución.
+
+| Canal / pieza | Link |
+|---|---|
+| Bio de Instagram, firma de mail, tarjeta personal | `metricsfield.com` |
+| Posts y anuncios de reseñas, "Comentá DEMO" | `metricsfield.com/reviews` |
+| Vendedores de Mercado Libre (posts, anuncios) | `metricsfield.com/retail` |
+| Comercios para el piloto del club | `metricsfield.com/loyalty` |
+| Contenido educativo (calculadoras) | `metricsfield.com/herramientas` |
+| Guías (SEO, posts largos) | `metricsfield.com/guias/<guía>` |
+| Cliente que ya compró una pieza | `app.metricsfield.com/t/mis-piezas` |
+| Cliente del panel | su link privado `app.metricsfield.com/portal/<código>` |
+
+En Instagram: una sola cuenta (@metricsfield), historias destacadas por
+producto y la mayoría de los posts de Reviews mientras sea lo principal.
 
 ## 13. Manual de marca
 
