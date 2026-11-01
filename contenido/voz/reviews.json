@@ -1,0 +1,15 @@
+{
+  "nombre": "reviews",
+  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural"],
+  "velocidad": "-4%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "gancho", "texto": "Tus clientes salen contentos… pero no te dejan reseña." },
+    { "id": "competencia", "texto": "Y en Google, el que gana es el de enfrente." },
+    { "id": "toque", "texto": "Con MetricsField, acercan el celular al cartel. Un toque." },
+    { "id": "google", "texto": "Se abre Google para dejar la reseña. Sin apps." },
+    { "id": "panel", "texto": "Y vos ves todo en tu panel: cuántos tocaron, qué reseñas llegaron y qué responder." },
+    { "id": "piezas", "texto": "Standee, tarjeta o sticker. Pago único." },
+    { "id": "cierre", "texto": "MetricsField Reviews. Comentá DEMO y te lo mostramos en tu local." }
+  ]
+}

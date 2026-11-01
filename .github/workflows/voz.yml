@@ -1,0 +1,49 @@
+# Voz en off de la fábrica de contenido (scripts/contenido/voz.py).
+# Corre al pushear un guion a una rama contenido/** y deja las pistas en
+# la misma rama (contenido/voz/<nombre>/). No toca main ni desarrollo.
+name: Voz en off
+
+on:
+  push:
+    branches: ["contenido/**"]
+    paths: ["contenido/voz/*.json", "scripts/contenido/voz.py", ".github/workflows/voz.yml"]
+  workflow_dispatch:
+    inputs:
+      guion:
+        description: "Guion a generar (ej: contenido/voz/reviews.json)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          pip install edge-tts==7.0.2
+
+      - name: Generar voces
+        run: |
+          if [ -n "${{ github.event.inputs.guion }}" ]; then
+            python scripts/contenido/voz.py "${{ github.event.inputs.guion }}"
+          else
+            for g in contenido/voz/*.json; do python scripts/contenido/voz.py "$g"; done
+          fi
+
+      - name: Guardar las pistas en la rama
+        run: |
+          git config user.name "metricsfield-voz"
+          git config user.email "voz@metricsfield.com"
+          git add contenido/voz
+          git diff --cached --quiet && exit 0
+          git commit -m "Contenido: voz en off generada [skip ci]"
+          git push
