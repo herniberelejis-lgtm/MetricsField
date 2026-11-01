@@ -35,9 +35,21 @@ function tarjetaGuia(g) {
   return `<a class="guia-card" href="/guias/${g.slug}"><span class="tema">${esc(g.tema)}</span><h3>${esc(g.h1)}</h3><p>${esc(g.descripcion)}</p></a>`;
 }
 
-function encabezado(eyebrow, h2, texto = "") {
-  return `<div class="section-head" data-revelar><div class="eyebrow">${eyebrow}</div><div><h2>${h2}</h2>${texto ? `<p class="muted">${texto}</p>` : ""}</div></div>`;
+function encabezado(eyebrow, h2, texto = "", foto = "") {
+  const izquierda = foto ? `<div><div class="eyebrow">${eyebrow}</div>${foto}</div>` : `<div class="eyebrow">${eyebrow}</div>`;
+  return `<div class="section-head${foto ? " con-foto" : ""}" data-revelar>${izquierda}<div><h2>${h2}</h2>${texto ? `<p class="muted">${texto}</p>` : ""}</div></div>`;
 }
+
+// Imágenes de las soluciones (scripts/landing/soluciones.mjs): escenas de
+// las demos y un recorte real del panel. 4:3, en 560 y 960 px.
+const imgSolucion = (nombre, alt, clase) =>
+  `<img class="${clase}" src="/landing/assets/img/soluciones/${nombre}-960.webp" srcset="/landing/assets/img/soluciones/${nombre}-560.webp 560w, /landing/assets/img/soluciones/${nombre}-960.webp 960w" sizes="(max-width: 980px) calc(100vw - 32px), 420px" width="960" height="720" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+const FOTO_PRODUCTO = {
+  reputacion: ["reviews", "Panel de Reviews: toques al cartel, reseñas nuevas y una respuesta sugerida"],
+  retail: ["retail", "Retail desarma una venta: comisión, envío, publicidad, impuestos y costo, hasta la ganancia real"],
+  loyalty: ["loyalty", "Tarjeta del club en el celular con los sellos que lleva el cliente"],
+  intel: ["intel", "Calculadora de cuántas reseñas de 5 estrellas faltan para subir la calificación"],
+};
 
 // ---------------------------------------------------------------- piezas
 
@@ -273,6 +285,7 @@ function home() {
     "Intel · gratis, desde hoy",
     "Tres preguntas que conviene contestar con números.",
     "Usalas sin registrarte. Las cuentas están explicadas al lado de cada resultado, y cada una tiene su guía para entender qué hacer después.",
+    imgSolucion("panel", "Panel de métricas de MetricsField: toques al cartel por día, por NFC y por QR", "seccion-foto"),
   )}<div class="calcs" data-revelar>${CALCS.resenas}${CALCS.ml}${CALCS.cliente}</div>
   <p class="actualizado"><a href="/herramientas">Ver las calculadoras con la explicación completa</a> · <a href="/guias">Leer las guías</a></p></div></section>
 <section id="productos"><div class="wrap">${encabezado(
@@ -280,7 +293,7 @@ function home() {
     "Elegí el problema que querés resolver.",
     "No vendemos una plataforma enorme que tengas que aprender. Empezás por una necesidad concreta y sumás lo demás cuando haga falta.",
   )}${PRODUCTOS.map(
-    (p, i) => `<article class="product" id="producto-${p.id}" data-revelar><div class="product-tag"><span class="product-index">0${i + 1}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></div><div class="product-body"><h3>${p.h3}</h3><p>${p.p}</p><div class="steps">${p.pasos
+    (p, i) => `<article class="product" id="producto-${p.id}" data-revelar><div><div class="product-tag"><span class="product-index">0${i + 1}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></div>${FOTO_PRODUCTO[p.id] ? imgSolucion(FOTO_PRODUCTO[p.id][0], FOTO_PRODUCTO[p.id][1], "product-foto") : ""}</div><div class="product-body"><h3>${p.h3}</h3><p>${p.p}</p><div class="steps">${p.pasos
       .map(([b, s]) => `<div class="step"><b>${b}</b><span>${s}</span></div>`)
       .join("")}</div><div class="actions">${p.ctas.join("")}</div><ul class="kw" aria-label="Temas">${p.kw.map((k) => `<li>${k}</li>`).join("")}</ul></div></article>`,
   ).join("")}</div></section>
@@ -311,16 +324,6 @@ ${tienda()}
   <article class="start-item"><span class="num-paso" aria-hidden="true">01</span><h3>Elegís una herramienta</h3><p>Te ayudamos a empezar por la que más impacto tiene hoy en tu negocio.</p></article>
   <article class="start-item"><span class="num-paso" aria-hidden="true">02</span><h3>La dejamos funcionando</h3><p>En Córdoba instalamos. En el resto del país te llega lista para activar, con ayuda por WhatsApp.</p></article>
   <article class="start-item"><span class="num-paso" aria-hidden="true">03</span><h3>Medís y decidís</h3><p>El panel ordena la información y marca el próximo paso.</p></article></div></div></section>
-<section id="clientes"><div class="wrap">${encabezado(
-    "Clientes",
-    "Resultados reales, contados por quienes los lograron.",
-    "Este espacio crece con casos verificables. No usamos logos, frases ni números sin permiso.",
-  )}<div class="clients-stage" data-revelar><div class="clients-copy"><span class="status pilot">En construcción</span><h3>La próxima historia puede ser la tuya.</h3><p class="muted">Estamos documentando implementaciones con nombre, contexto, punto de partida y resultado. Cuando un cliente autorice su publicación, su caso aparece acá.</p>${ext(
-    wa("Hola, quiero conocer los casos de MetricsField"),
-    "Consultar casos",
-    "btn dark",
-  )}</div>
-  <div class="client-rules"><div class="client-rule"><span class="num-regla" aria-hidden="true">01</span><div><b>Nombre y permiso</b><br><span>El cliente decide si mostramos su marca, su testimonio y sus datos.</span></div></div><div class="client-rule"><span class="num-regla" aria-hidden="true">02</span><div><b>Antes y después</b><br><span>Cada resultado dice punto de partida, período y contexto.</span></div></div><div class="client-rule"><span class="num-regla" aria-hidden="true">03</span><div><b>Asociación, no magia</b><br><span>Si un número sube, contamos qué más pasó en ese tiempo.</span></div></div></div></div></div></section>
 <section id="faq" style="padding-top:0"><div class="wrap">${encabezado("Preguntas frecuentes", "Una respuesta corta para cada duda.")}${faqHtml(FAQ_HOME)}</div></section>
 <section class="cta"><div class="wrap cta-grid"><h2>Pedí tu demo gratis.</h2><div><p>Escribinos <b>DEMO</b> por WhatsApp y coordinamos para mostrarte, con tu negocio, qué métricas vas a ver y qué decisiones te ayudan a tomar.</p><div class="actions">${ext(
     wa("Hola, quiero una DEMO de MetricsField"),
