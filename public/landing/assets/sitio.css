@@ -56,7 +56,6 @@ img{max-width:100%;height:auto;display:block}
    así el título arranca a la par de la foto y los botones terminan a la par
    de la última solución. */
 .hero-main{display:flex;flex-direction:column;justify-content:space-between;gap:28px}
-@media(min-width:981px){.hero-side .hero-foto img{aspect-ratio:2/1}}
 .hero h1{font-size:clamp(2.7rem,6vw,5.4rem);line-height:.95;letter-spacing:-.06em;margin:16px 0 24px;max-width:900px;font-weight:800}
 .hero h1 span{display:block;color:#62656b}
 .hero-side p.lead{font-size:1.24rem;letter-spacing:-.02em;margin:0 0 12px;font-weight:600}
@@ -64,6 +63,11 @@ img{max-width:100%;height:auto;display:block}
 .hero-foto img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:18px}
 .hero-foto figcaption{font-size:.8rem;color:var(--muted);margin-top:8px}
 .soluciones{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.soluciones .paso-fila{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink)}
+.hero-lead{font-size:1.12rem;margin:0;max-width:560px;color:var(--muted)}
+.precio-linea{font-size:.86rem;margin:14px 0 0;color:var(--muted)}
+.precio-linea b{color:var(--ink)}
+@media(min-width:981px){.switchboard.switchboard-otras{grid-template-columns:repeat(3,1fr)}}
 .soluciones a{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
 .soluciones a:hover{border-color:var(--ink);transform:translateX(2px)}
 .soluciones b{display:block;font-size:1rem}
