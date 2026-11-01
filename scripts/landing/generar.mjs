@@ -259,16 +259,17 @@ function fotoHome() {
 
 function home() {
   const cuerpo = `<section class="hero"><div class="wrap">
-  <div class="hero-grid"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
-  <div class="hero-side">${fotoHome()}<p class="lead">Convertimos reseñas, ventas y clientes en métricas claras para tomar mejores decisiones. Tres soluciones:</p><ul class="soluciones">${SOLUCIONES.map(
-    ([href, icono, nombre, texto]) =>
-      `<li><a href="${href}"><span class="sol-icono" aria-hidden="true">${icono}</span><span><b>${nombre}</b><small>${texto}</small></span><span class="sol-ir" aria-hidden="true">→</span></a></li>`,
-  ).join("")}</ul><div class="actions">${ext(
+  <div class="hero-grid"><div class="hero-main"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
+  <div><div class="actions">${ext(
     wa("Hola, quiero una DEMO de MetricsField"),
     "Pedí tu demo gratis",
     "btn dark",
   )}<a class="btn" href="#productos">Ver las soluciones</a></div>
   <ul class="trust"><li>Demo gratis por WhatsApp</li><li>Sin apps para tus clientes</li><li>Hecho en Córdoba, Argentina</li></ul></div></div>
+  <div class="hero-side">${fotoHome()}<p class="lead">Convertimos reseñas, ventas y clientes en métricas claras para tomar mejores decisiones. Tres soluciones:</p><ul class="soluciones">${SOLUCIONES.map(
+    ([href, icono, nombre, texto]) =>
+      `<li><a href="${href}"><span class="sol-icono" aria-hidden="true">${icono}</span><span><b>${nombre}</b><small>${texto}</small></span><span class="sol-ir" aria-hidden="true">→</span></a></li>`,
+  ).join("")}</ul></div></div>
   <div class="portal-title"><h2>Elegí una puerta</h2><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
   <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
     (p) =>
