@@ -5,6 +5,7 @@ import { ipDelRequest, limpiarVencidos, permitir } from "@/lib/ratelimit";
 import { hashearIp } from "@/lib/loyalty-antifraude";
 import { COOKIE_CLIENTE_FINAL, leerCookieClienteFinal, tokenVisitaValido } from "@/lib/loyalty-firma";
 import {
+  appleWalletConfigurado,
   comercioConLoyalty,
   emitirTarjetaGoogle,
   loyaltyHabilitado,
@@ -146,7 +147,9 @@ export default async function LoyaltyLandingPage({
             {programa.puntosBienvenida > 0 && ` y arrancá con ${programa.puntosBienvenida} de regalo`}.
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Tu tarjeta queda en Google Wallet: no tenés que bajar ninguna app.
+            {appleWalletConfigurado()
+              ? "Tu tarjeta queda en la billetera de tu celular (Google Wallet o Apple Wallet): no tenés que bajar ninguna app."
+              : "Tu tarjeta queda en Google Wallet: no tenés que bajar ninguna app."}
           </p>
           <div className="mt-5">
             {persona ? (
@@ -169,7 +172,7 @@ export default async function LoyaltyLandingPage({
   // /t/<slug>, 15 min) y no hubo otra en las últimas 20 h.
   let aviso: { texto: string; tono: "ok" | "info" } | null = null;
   if (sp.bienvenida) {
-    aviso = { texto: "¡Listo! Ya tenés tu tarjeta. Guardala en Google Wallet para tenerla siempre a mano.", tono: "ok" };
+    aviso = { texto: "¡Listo! Ya tenés tu tarjeta. Guardala en la billetera de tu celular para tenerla siempre a mano.", tono: "ok" };
   }
   if (tokenVisitaValido(sp.v, comercio.id)) {
     const visita = await acreditarVisita(membresia.id, programa.puntosPorVisita);
@@ -187,7 +190,7 @@ export default async function LoyaltyLandingPage({
     }
   }
   if (sp.wallet === "error") {
-    aviso = { texto: "Google Wallet no respondió. Probá de nuevo en un rato: tus puntos están a salvo.", tono: "info" };
+    aviso = { texto: "No pudimos agregar la tarjeta a tu billetera. Probá de nuevo en un rato: tus puntos están a salvo.", tono: "info" };
   }
 
   const saldo = await calcularSaldo(membresia.id);
@@ -237,7 +240,15 @@ export default async function LoyaltyLandingPage({
           Guardar en Google Wallet
         </a>
       )}
-      {esIphone && (
+      {esIphone && appleWalletConfigurado() && (
+        <a
+          href={`/l/${encodeURIComponent(comercio.id)}/apple`}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3.5 text-base font-semibold text-white"
+        >
+          Agregar a Apple Wallet
+        </a>
+      )}
+      {esIphone && !appleWalletConfigurado() && (
         <p className="rounded-2xl bg-white/80 px-4 py-3 text-center text-sm text-slate-500">
           Apple Wallet llega pronto. Mientras tanto, guardá esta página en favoritos: es tu tarjeta.
         </p>

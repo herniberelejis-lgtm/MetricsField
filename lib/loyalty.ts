@@ -38,6 +38,18 @@ export function walletGoogleConfigurado(): boolean {
   );
 }
 
+/** Apple Wallet listo para emitir: las cinco variables del certificado. Sin
+ * ellas el botón no se muestra (la landing sigue diciendo "llega pronto"). */
+export function appleWalletConfigurado(): boolean {
+  return Boolean(
+    process.env.APPLE_TEAM_ID &&
+      process.env.APPLE_PASS_TYPE_ID &&
+      process.env.APPLE_PASS_CERT &&
+      process.env.APPLE_PASS_KEY &&
+      process.env.APPLE_WWDR_CERT,
+  );
+}
+
 /** Estados de cuenta en los que Loyalty no atiende: ni landing, ni sumar
  * puntos, ni canjes, ni logo público. */
 const ESTADOS_SIN_LOYALTY = new Set(["baja", "pausado"]);

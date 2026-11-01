@@ -289,7 +289,8 @@ cambio está mal, no el test**. No borres un test para hacer pasar un cambio.
 | `test/loyalty-firma.test.ts` | Sesión, token de visita y link de tarjeta: no se falsifican, no se estiran, no valen unos como otros, fallan cerrados sin clave |
 | `test/loyalty-antifraude.test.ts` | El hash de IP |
 | `test/wallet-google.test.ts` | Firma del JWT RS256 de la Issuer API |
-| `test/wallet-apple.test.ts` | Firma PKCS#7 del `.pkpass`, validada contra OpenSSL de verdad |
+| `test/wallet-apple.test.ts` | Firma PKCS#7 del `.pkpass`, validada contra OpenSSL de verdad; las imágenes embebidas (PNG válidos, del tamaño que pide Apple); el dorso con el link; los PEM con los saltos de línea escritos como texto |
+| `test/loyalty-apple-ruta.test.ts` | La ruta `/apple` con la base y el generador simulados: sin sesión, con cookie falsificada o sin ser socia no entrega pase; con límite por IP, Apple sin configurar o falla al armar, vuelve con aviso; el log no lleva datos del cliente |
 | `scripts/prueba-permisos.mjs` | Aislamiento entre comercios (canjes, misiones, links de tarjeta, bajas ajenas), código vencido, sumar sin tap real o con el token de visita de otro comercio, misión cobrada dos veces. La lista completa está en el script |
 
 **La lógica de base de datos de Loyalty (`acreditarVisita`, `validarCanje`,
@@ -316,7 +317,9 @@ creer que pasó.
 | La ventana de 20 h o los topes (referidos, vencimiento del canje) | Constantes al tope de `lib/db/loyalty.ts` |
 | Cookies y tokens del cliente final | `lib/loyalty-firma.ts` |
 | Emitir o actualizar la tarjeta de Google | `lib/loyalty.ts` y `lib/wallet/google.ts` |
-| El `.pkpass` de Apple | `lib/wallet/apple.ts` |
+| El `.pkpass` de Apple (armado, firma, dorso) | `lib/wallet/apple.ts` |
+| Las imágenes del pase de Apple | `lib/wallet/apple-assets.ts` (embebidas en código; la cabecera explica cómo regenerarlas) |
+| El botón "Agregar a Apple Wallet" y la entrega del pase | `app/(loyalty)/l/[codigo]/apple/route.ts` y el botón en `page.tsx` |
 | El logo de la tarjeta (660×660) | `app/api/loyalty/logo/[comercioId]/route.ts` |
 | Configurar el club, beneficios y misiones (equipo) | `app/admin/clientes/[id]/loyalty/page.tsx` + acciones en `app/actions.ts` |
 | Liberar un teléfono | `accionLiberarTelefonoLoyalty` en `app/actions.ts` |
@@ -382,9 +385,17 @@ está apagado.
 **El pase de Apple es estático y lleva el saldo del momento de emitirlo.** No
 tiene `webServiceURL` ni push, así que ese número queda viejo apenas el cliente
 suma o canjea ("dice 100 y tengo 300"); el pase avisa que hay que tocar el cartel
-para actualizarlo. Mejorarlo (web service + APNs) está en la lista de pendientes
-de `docs/LOYALTY-ESTADO.md`; no lo "arregles" por tu cuenta. Además, sin cuenta de
-Apple Developer no se puede emitir ninguno.
+para actualizarlo, y su dorso trae el link "Ver mis puntos al día" a la tarjeta web.
+Mejorarlo (web service + APNs) está en la lista de pendientes de
+`docs/LOYALTY-ESTADO.md`; no lo "arregles" por tu cuenta.
+
+**Apple Wallet: el código está completo, pero nunca se probó con un certificado
+real ni en un iPhone real.** La ruta `/l/<comercio>/apple` y su botón existen y
+están cubiertos con certificados de prueba. El botón solo aparece en iPhone y solo
+cuando están cargadas las cinco `APPLE_*` (`appleWalletConfigurado()`); si no, la
+landing sigue diciendo "Apple Wallet llega pronto". Sin cuenta de Apple Developer
+no se puede emitir ninguno. Todos los pases llevan la marca de MetricsField, no el
+logo del comercio (el nombre del comercio va al lado, en `logoText`).
 
 **Modo demo de Google Wallet.** Hasta que Google apruebe el acceso de
 publicación, solo pueden guardar la tarjeta los Admin, los Developer y las cuentas
@@ -437,7 +448,8 @@ reimplementes algo hecho ni des por hecho algo que falta:
 | Alta, consentimiento, tarjeta de Google, visitas, misiones, canje | ✅ hecho |
 | Panel de admin y pestaña del portal del comercio | ✅ hecho |
 | Verificación del teléfono / "volver a entrar" | ❌ **decisión pendiente** (§2.5) |
-| Apple Wallet (iPhone) | ❌ el código existe; falta la cuenta de Apple Developer |
+| Apple Wallet (iPhone) | ⚠️ código completo y probado con certificados de prueba; falta la cuenta de Apple Developer y probarlo en un iPhone real |
+| Logo del comercio en el pase de Apple | ❌ hoy todos llevan la marca de MetricsField |
 | Actualización automática del pase de Apple | ❌ depende de Apple Wallet |
 | Vencimiento o rotación del link de la tarjeta | ❌ decisión (compromiso con pases ya emitidos) |
 | Antifraude nivel 2 (ubicación, etc.) | ❌ solo si el piloto muestra fraude |
