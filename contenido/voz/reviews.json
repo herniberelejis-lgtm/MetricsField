@@ -1,6 +1,6 @@
 {
   "nombre": "reviews",
-  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural"],
+  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural", "piper:es_AR-daniela-high"],
   "velocidad": "-4%",
   "tono": "-2Hz",
   "lineas": [
