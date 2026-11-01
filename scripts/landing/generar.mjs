@@ -240,12 +240,14 @@ const FAQ_HOME = [
   ["¿Funciona fuera de Córdoba?", "Sí. Retail y las herramientas de Intel funcionan online en todo el país. En Reviews, en Córdoba instalamos y al resto del país enviamos las piezas listas para activar con ayuda por WhatsApp."],
 ];
 
-// Las tres soluciones arriba de todo, para entender en un vistazo qué
-// hacemos (la mayoría llega desde Instagram, en el celular y con apuro).
-const SOLUCIONES = [
-  ["/reputacion", "★", "Reviews", "Más reseñas y mejor reputación en Google."],
-  ["/retail", "$", "Retail", "La ganancia real de cada venta en Mercado Libre."],
-  ["/loyalty", "↻", "Loyalty", "Un club para que tus clientes vuelvan."],
+// Primera pantalla: la marca (MetricsField) con su producto estrella
+// (Reviews) en primer plano y cómo funciona en tres pasos, para entenderlo
+// sin leer. Retail, Loyalty e Intel van justo debajo, como "otras
+// soluciones" (ver docs/MANUAL-METRICSFIELD.md, arquitectura de marca).
+const PASOS = [
+  ["1", "Acercan el celular", "Tocan el cartel o escanean el QR. Sin app."],
+  ["2", "Dejan su reseña en Google", "Se abre tu ficha lista para escribir, igual para todos."],
+  ["3", "Vos lo ves en tu panel", "Cuántos tocaron, qué reseñas llegaron y qué responder."],
 ];
 
 /** La foto del cartel en uso, arriba en la home: es lo primero que se ve
@@ -259,21 +261,22 @@ function fotoHome() {
 
 function home() {
   const cuerpo = `<section class="hero"><div class="wrap">
-  <div class="hero-grid"><div class="hero-main"><div><div class="eyebrow">Métricas para comercios · Hecho en Córdoba, Argentina</div><h1>Convertimos reseñas en métricas.<span>Y métricas en decisiones.</span></h1></div>
+  <div class="hero-grid"><div class="hero-main"><div><div class="eyebrow">MetricsField · Medimos lo que pasa en tu negocio para que decidas mejor</div><h1>Más reseñas en Google,<span>con un toque del celular.</span></h1><p class="lead hero-lead">Un cartel con NFC y QR en tu local y un panel con tus métricas: cuántas reseñas llegan, qué dicen y cómo vas contra tu competencia.</p></div>
   <div><div class="actions">${ext(
     wa("Hola, quiero una DEMO de MetricsField"),
     "Pedí tu demo gratis",
     "btn dark",
-  )}<a class="btn" href="#productos">Ver las soluciones</a></div>
+  )}<a class="btn" href="#tienda">Ver precios</a></div>
+  <p class="precio-linea">Piezas desde <b>$10.000</b> + IVA, pago único · Panel <b>$25.000/mes</b> + IVA, sin permanencia</p>
   <ul class="trust"><li>Demo gratis por WhatsApp</li><li>Sin apps para tus clientes</li><li>Hecho en Córdoba, Argentina</li></ul></div></div>
-  <div class="hero-side">${fotoHome()}<p class="lead">Convertimos reseñas, ventas y clientes en métricas claras para tomar mejores decisiones. Tres soluciones:</p><ul class="soluciones">${SOLUCIONES.map(
-    ([href, icono, nombre, texto]) =>
-      `<li><a href="${href}"><span class="sol-icono" aria-hidden="true">${icono}</span><span><b>${nombre}</b><small>${texto}</small></span><span class="sol-ir" aria-hidden="true">→</span></a></li>`,
-  ).join("")}</ul></div></div>
-  <div class="portal-title"><h2>Elegí una puerta</h2><p>Tres productos para tres momentos del cliente, y una cuarta abierta para todos.</p></div>
-  <nav class="switchboard" aria-label="Productos">${PUERTAS.map(
-    (p) =>
-      `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">${p.num}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><p class="door-titulo">${p.nombre}</p><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
+  <div class="hero-side">${fotoHome()}<p class="lead">Así funciona MetricsField Reviews:</p><ol class="soluciones pasos-hero">${PASOS.map(
+    ([n, titulo, texto]) =>
+      `<li><div class="paso-fila"><span class="sol-icono" aria-hidden="true">${n}</span><span><b>${titulo}</b><small>${texto}</small></span></div></li>`,
+  ).join("")}</ol></div></div>
+  <div class="portal-title"><h2>Otras soluciones de MetricsField</h2><p>Para otros problemas del negocio, con la misma marca y el mismo soporte.</p></div>
+  <nav class="switchboard switchboard-otras" aria-label="Otras soluciones">${PUERTAS.filter((p) => p.href !== "/reputacion").map(
+    (p, i) =>
+      `<a class="door" href="${p.href}" data-animar><span class="door-top"><span class="num">0${i + 1}</span><span class="status ${p.estado[0]}">${p.estado[1]}</span></span><div class="vis-caja" aria-hidden="true">${p.vis}</div><div class="door-txt"><p class="door-titulo">${p.nombre}</p><p>${p.texto}</p></div><span class="ir">Entrar <span aria-hidden="true">→</span></span></a>`,
   ).join("")}</nav></div>
   <div class="ticker"><div class="wrap ticker-in">
     <div class="proof"><b>17%</b><span>de ganancia inflada encontramos en una cuenta real de Mercado Libre</span></div>
@@ -452,7 +455,7 @@ const VERTICALES = [
     demo: "retail",
     nombreLd: "MetricsField Retail",
     tipoLd: "SoftwareApplication",
-    titulo: "Ganancia real de cada venta en Mercado Libre | MetricsField",
+    titulo: "Ganancia real de cada venta en Mercado Libre | MetricsField Retail",
     descripcion:
       "Conectá Mercado Libre y mirá la ganancia real de cada venta: comisión, envío, publicidad, IVA, impuestos y costo. Prueba gratis de 30 días, sin tarjeta.",
     eyebrow: "Retail · Mercado Libre",
@@ -566,7 +569,7 @@ ${demoHtml("intel", encabezado)}
   return pagina({
     ruta: "/herramientas",
     scripts: SCRIPTS_DEMO,
-    titulo: "Calculadoras gratis de reseñas, ventas y clientes | MetricsField",
+    titulo: "Calculadoras gratis de reseñas, ventas y clientes | MetricsField Intel",
     descripcion:
       "Calculá cuántas reseñas de 5★ te faltan, cuánto ganás de verdad por venta en Mercado Libre y cuánto vale un cliente que vuelve. Gratis y sin registrarte.",
     cuerpo,
