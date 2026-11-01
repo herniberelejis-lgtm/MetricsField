@@ -1,0 +1,11 @@
+{
+  "id": "P01",
+  "vertical": "METRICSFIELD",
+  "laminas": [
+    { "titulo": "Tu negocio genera datos todos los días.\n**¿Los estás usando?**", "accion": "Deslizá →" },
+    { "tipo": "item", "num": "01", "titulo": "Reviews", "texto": "Tus clientes te dejan la reseña en Google **con un toque del celular**. Vos ves todo en tu panel." },
+    { "tipo": "item", "num": "02", "titulo": "Retail", "texto": "Vendés en Mercado Libre: te mostramos **cuánto ganás de verdad** en cada venta." },
+    { "tipo": "item", "num": "03", "titulo": "Loyalty", "texto": "Tus clientes suman sellos en el celular y **vuelven**. En piloto en Córdoba." },
+    { "fondo": "negro", "titulo": "Medimos lo que pasa en tu negocio\npara que **decidas mejor**.", "accion": "Comentá DEMO y te lo mostramos.", "pie": "MetricsField · Córdoba, Argentina" }
+  ]
+}

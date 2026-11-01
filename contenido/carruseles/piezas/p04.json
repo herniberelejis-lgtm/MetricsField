@@ -1,0 +1,15 @@
+{
+  "id": "P04",
+  "vertical": "METRICSFIELD REVIEWS",
+  "laminas": [
+    { "tipo": "cifra", "cifra": "4,8", "texto": "Dos locales. Mismo puntaje.\n**Uno está en problemas.**", "accion": "¿Cuál es el tuyo? Deslizá →" },
+    { "tipo": "comparativa", "titulo": "Mismo 4,8.\nDistinta historia.", "fichas": [
+      { "nombre": "Local A", "cifra": "35", "texto": "reseñas.\nLa última, hace 5 meses." },
+      { "nombre": "Local B", "cifra": "412", "texto": "reseñas.\n9 nuevas esta semana.", "dato": true }
+    ], "etiqueta": "EJEMPLO ILUSTRATIVO" },
+    { "tipo": "item", "num": "01", "titulo": "Volumen", "texto": "Con 35 reseñas, **una sola mala experiencia** te baja el promedio." },
+    { "tipo": "item", "num": "02", "titulo": "Actividad reciente", "texto": "Tus clientes miran si te **siguen eligiendo hoy**, no hace un año." },
+    { "tipo": "item", "num": "03", "titulo": "Respuestas", "texto": "Responder cada reseña, buena o mala, **también es reputación**." },
+    { "fondo": "negro", "titulo": "Tu puntaje es el resultado.\n**Volumen, actividad y respuestas** son el proceso.", "accion": "Guardá este post y revisá tu perfil hoy.", "pie": "MetricsField · Medimos lo que importa" }
+  ]
+}
