@@ -21,7 +21,7 @@ isotipo y `**palabra**` resalta.
 Dos locales con 4,8. Uno está creciendo y el otro, en problemas. 👀
 El puntaje es el resultado; lo que lo sostiene es el volumen, la actividad
 reciente y cómo respondés. Deslizá y fijate en cuál de los dos estás.
-👉 Comentá CHECK y te decimos qué mirar en tu perfil de Google.
+👉 Comentá INFO y te contamos qué mirar en tu perfil de Google.
 📍 Córdoba, Argentina
 #reseñasgoogle #comerciolocal #córdoba #marketinglocal #emprendedoresargentinos
 

@@ -2,34 +2,27 @@
   <style>
 #root{position:absolute;inset:0;background:#F4F5F7;font-family:Montserrat,sans-serif;color:#111111;overflow:hidden}
 .tit{position:absolute;left:84px;right:84px;top:230px;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.03em;margin:0}
-.acc{color:#2563EB}
+.acc{background:#C8D8E8;padding:0 .08em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .sub{position:absolute;left:84px;right:84px;font-weight:600;font-size:38px;line-height:1.25;color:#5e5e5e;margin:0}
-.foto{position:absolute;left:84px;right:84px;border-radius:36px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.14);background:#ddd}
+.foto{position:absolute;left:84px;right:84px;border-radius:36px;overflow:hidden;box-shadow:none;background:#ddd}
 .foto img{display:block;width:100%;height:100%;object-fit:cover}
 .etq{position:absolute;font-weight:700;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
 
-#s-tel{position:absolute;left:240px;top:540px;width:600px;height:780px;border-radius:64px;background:#111;padding:18px;box-shadow:0 24px 50px rgba(0,0,0,.22)}
+#s-tel{position:absolute;left:240px;top:540px;width:600px;height:780px;border-radius:64px;background:#111;padding:18px;box-shadow:none}
 #s-pant{width:100%;height:100%;border-radius:48px;background:#fff;padding:70px 40px 40px;position:relative}
-.g{font-weight:800;font-size:46px;letter-spacing:-0.02em;margin:0}
-.g i{font-style:normal}
-.loc{font-weight:700;font-size:34px;margin:28px 0 0}
-.preg{font-size:28px;color:#5e5e5e;margin:10px 0 30px}
-.estrellas{display:flex;gap:10px}
-.est{font-size:68px;color:#dadce0;line-height:1}
-.est.llena{color:#f5b301}
+.loc{font-weight:700;font-size:40px;margin:20px 0 0}
+.preg{font-size:44px;font-weight:700;line-height:1.15;margin:30px 0 30px}
 #s-txt{margin-top:34px;height:150px;border:2px solid #dadce0;border-radius:18px;padding:18px;font-size:28px;color:#333}
-#s-btn{position:absolute;right:40px;bottom:44px;background:#1a73e8;color:#fff;font-weight:700;font-size:30px;border-radius:999px;padding:16px 36px}
+.nota{position:absolute;left:40px;right:40px;bottom:40px;font-size:22px;color:#8a8a8a;border:2px dashed #bbb;padding:14px;margin:0}
 
   </style>
   <div id="root" data-composition-id="google" data-width="1080" data-height="1920">
     <h1 id="s-tit" class="tit">Se abre Google.<br><span id="s-acc" class="acc">Sin apps.</span></h1>
     <div id="s-tel"><div id="s-pant">
-      <p class="g"><i style="color:#4285F4">G</i><i style="color:#EA4335">o</i><i style="color:#FBBC05">o</i><i style="color:#4285F4">g</i><i style="color:#34A853">l</i><i style="color:#EA4335">e</i></p>
       <p class="loc">Café Ejemplo</p>
-      <p class="preg">¿Cómo fue tu experiencia?</p>
-      <div class="estrellas"><span id="s-e1" class="est">★</span><span id="s-e2" class="est">★</span><span id="s-e3" class="est">★</span><span id="s-e4" class="est">★</span><span id="s-e5" class="est">★</span></div>
-      <div id="s-txt"><span id="s-escrito">Excelente atención y el café, buenísimo.</span></div>
-      <span id="s-btn">Publicar</span>
+      <p class="preg">Tu página de reseñas<br>en Google</p>
+      <div id="s-txt"><span id="s-escrito">El cliente escribe su opinión, la que quiera.</span></div>
+      <p id="s-nota" class="nota">[VIDEO REAL] grabar el toque y la página real de Google con un celular</p>
     </div></div>
   </div>
   <script>
@@ -37,12 +30,8 @@
     tl.fromTo("#s-tit", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
     tl.fromTo("#s-acc", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 2.65);
     tl.fromTo("#s-tel", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.2);
-    for (let i = 1; i <= 5; i++) {
-      tl.fromTo("#s-e" + i, { color: "#dadce0", scale: 1 }, { color: "#f5b301", scale: 1.15, duration: 0.12, ease: "power2.out" }, 0.8 + i * 0.16);
-      tl.to("#s-e" + i, { scale: 1, duration: 0.12, ease: "power2.in" }, 0.92 + i * 0.16);
-    }
-    tl.fromTo("#s-escrito", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "none" }, 1.7);
-    tl.fromTo("#s-btn", { scale: 1 }, { scale: 0.92, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.05);
+    tl.fromTo("#s-escrito", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.8, ease: "none" }, 1.2);
+    tl.fromTo("#s-nota", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.0);
     window.__timelines["google"] = tl;
   </script>
 </template>
