@@ -10,9 +10,9 @@
       },
       {
         "id": "competencia",
-        "texto": "Y en Google, el que gana es el de enfrente.",
+        "texto": "Y cuando te buscan en Google, esto es lo primero que ven.",
         "archivo": "contenido/voz/reviews/es-AR-TomasNeural/competencia.mp3",
-        "segundos": 3.456
+        "segundos": 3.816
       },
       {
         "id": "toque",
@@ -34,9 +34,9 @@
       },
       {
         "id": "piezas",
-        "texto": "Standee, tarjeta o sticker. Pago único.",
+        "texto": "Sticker, tarjeta o exhibidor. Todos llevan al mismo lugar: Google.",
         "archivo": "contenido/voz/reviews/es-AR-TomasNeural/piezas.mp3",
-        "segundos": 4.608
+        "segundos": 5.88
       },
       {
         "id": "cierre",
@@ -54,9 +54,9 @@
       },
       {
         "id": "competencia",
-        "texto": "Y en Google, el que gana es el de enfrente.",
+        "texto": "Y cuando te buscan en Google, esto es lo primero que ven.",
         "archivo": "contenido/voz/reviews/es-AR-ElenaNeural/competencia.mp3",
-        "segundos": 3.792
+        "segundos": 4.224
       },
       {
         "id": "toque",
@@ -78,9 +78,9 @@
       },
       {
         "id": "piezas",
-        "texto": "Standee, tarjeta o sticker. Pago único.",
+        "texto": "Sticker, tarjeta o exhibidor. Todos llevan al mismo lugar: Google.",
         "archivo": "contenido/voz/reviews/es-AR-ElenaNeural/piezas.mp3",
-        "segundos": 4.992
+        "segundos": 6.552
       },
       {
         "id": "cierre",
@@ -94,43 +94,43 @@
         "id": "gancho",
         "texto": "Tus clientes salen contentos… pero no te dejan reseña.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/gancho.mp3",
-        "segundos": 2.74
+        "segundos": 2.752
       },
       {
         "id": "competencia",
-        "texto": "Y en Google, el que gana es el de enfrente.",
+        "texto": "Y cuando te buscan en Google, esto es lo primero que ven.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/competencia.mp3",
-        "segundos": 2.218
+        "segundos": 2.833
       },
       {
         "id": "toque",
         "texto": "Con MetricsField, acercan el celular al cartel. Un toque.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/toque.mp3",
-        "segundos": 2.972
+        "segundos": 2.902
       },
       {
         "id": "google",
         "texto": "Se abre Google para dejar la reseña. Sin apps.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/google.mp3",
-        "segundos": 2.426
+        "segundos": 2.473
       },
       {
         "id": "panel",
         "texto": "Y vos ves todo en tu panel: cuántos tocaron, qué reseñas llegaron y qué responder.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/panel.mp3",
-        "segundos": 4.087
+        "segundos": 3.982
       },
       {
         "id": "piezas",
-        "texto": "Standee, tarjeta o sticker. Pago único.",
+        "texto": "Sticker, tarjeta o exhibidor. Todos llevan al mismo lugar: Google.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/piezas.mp3",
-        "segundos": 2.287
+        "segundos": 3.437
       },
       {
         "id": "cierre",
         "texto": "MetricsField Reviews. Comentá DEMO y te lo mostramos en tu local.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/cierre.mp3",
-        "segundos": 3.413
+        "segundos": 3.425
       }
     ]
   }
