@@ -42,3 +42,45 @@ primer y el último plano: "COMBO STICKER + TARJETA".
 - Cambié "¡y listo, reseña en segundos!" por "y se abre tu página de reseñas de
   Google": el toque abre la página, pero la reseña la escribe el cliente si
   quiere.
+
+## Video animado: "Dos tipos de cartel" (sticker + tarjeta, NFC y QR)
+
+Idea tomada de la referencia ("¿Sabían que hay 2 tipos de QR?"): primero el
+cartel común, que se pega y no te cuenta nada; después el nuestro, que te
+muestra cuántas veces lo usaron y te deja cambiar a dónde lleva sin
+reimprimir. Las dos cosas están verificadas en el código (`AUDITORIA.md`). Se
+nombra el panel, como ya lo hace la publicación ("Panel MetricsField sin
+cargo"), pero sin links, teléfonos ni web.
+
+Duración: 25 s, unos 22 s de locución. Subtítulos de una o dos palabras por
+golpe (como la referencia), en Montserrat, blanco sobre negro, y el azul
+niebla para la palabra clave.
+
+> ¿Sabías que hay dos tipos de cartel de reseñas?
+> El común: lo pegás… y nunca más sabés nada.
+> Y este.
+> Sticker con 3M para la mesa o la caja. Tarjeta para cada mozo.
+> Apoyan el celu o escanean el QR… y se abre tu página de reseñas de Google.
+> Y en el panel MetricsField Reviews ves cuántas veces lo usaron.
+> ¿Cambiaste el link? No reimprimís nada.
+> El cartel que te cuenta lo que pasa.
+
+| Bloque | Lo que se ve (animado) | Imagen de la biblioteca | Texto en pantalla |
+|---|---|---|---|
+| 1 · Gancho (0–3 s) | Fondo negro, dos carteles grises giran y caen lado a lado | ilustración propia | "2 TIPOS" |
+| 2 · El común (3–6 s) | Un cartel genérico se pega en una mesa; aparece un "?" y se llena de polvo | ilustración propia, sin marca | "NUNCA MÁS SABÉS NADA" |
+| 3 · Este (6–7 s) | Corte seco: entra nuestro sticker | `Sticker NFC.png` o la 61 | "Y ESTE" |
+| 4 · Producto (7–11 s) | Paneo: el sticker gira y muestra el adhesivo 3M; la tarjeta gira y muestra que es igual de los dos lados | 85 o 71 (sticker en la mesa), 70 o 62 (tarjeta en mano) | "STICKER 3M" · "1 POR MOZO" |
+| 5 · Toque (11–15 s) | El celular se apoya: onda de NFC, cae la notificación y se abre la página; en paralelo, la cámara lee el QR | 81 o 68 (toque), 56 (celular) | "APOYÁS" · "O ESCANEÁS" |
+| 6 · Panel (15–21 s) | Pantalla del panel: el contador de usos sube (+1, +2…) y el destino cambia de "Local A" a "Local B" con el mismo cartel | captura del portal con "Café Ejemplo" | "PANEL METRICSFIELD REVIEWS" · "SIN REIMPRIMIR" · "Datos de ejemplo" |
+| 7 · Cierre (21–25 s) | Paneo final con el sticker y la tarjeta juntos | `Pack Completo.png` | "EL CARTEL QUE TE CUENTA LO QUE PASA" |
+
+**Versión corta (15 s):** "¿Sabías que hay dos tipos de cartel de reseñas? El
+común no te cuenta nada. Este sí: apoyan el celu o escanean el QR, se abre tu
+página de Google, y en el panel MetricsField Reviews ves cuántas veces lo
+usaron. El cartel que te cuenta lo que pasa."
+
+**No usar de la biblioteca:** las imágenes en inglés ("Review us on Google",
+"Customer reviews", "Tap to review", 43 a 49 del índice), que parecen productos
+de otras marcas, ni las que dicen "multiplicá tus reseñas" o "conseguí más
+reseñas" (64, 73, 76), que prometen resultados.
