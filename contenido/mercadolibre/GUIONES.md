@@ -69,9 +69,9 @@ niebla para la palabra clave.
 |---|---|---|---|
 | 1 · Gancho (0–3 s) | Fondo negro, dos carteles grises giran y caen lado a lado | ilustración propia | "2 TIPOS" |
 | 2 · El común (3–6 s) | Un cartel genérico se pega en una mesa; aparece un "?" y se llena de polvo | ilustración propia, sin marca | "NUNCA MÁS SABÉS NADA" |
-| 3 · Este (6–7 s) | Corte seco: entra nuestro sticker | `Sticker NFC.png` o la 61 | "Y ESTE" |
-| 4 · Producto (7–11 s) | Paneo: el sticker gira y muestra el adhesivo 3M; la tarjeta gira y muestra que es igual de los dos lados | 85 o 71 (sticker en la mesa), 70 o 62 (tarjeta en mano) | "STICKER 3M" · "1 POR MOZO" |
-| 5 · Toque (11–15 s) | El celular se apoya: onda de NFC, cae la notificación y se abre la página; en paralelo, la cámara lee el QR | 81 o 68 (toque), 56 (celular) | "APOYÁS" · "O ESCANEÁS" |
+| 3 · Este (6–7 s) | Corte seco: entra nuestro sticker | `b61159c2-….jpg` (sticker azul de frente) | "Y ESTE" |
+| 4 · Producto (7–11 s) | Paneo: el sticker gira y muestra el adhesivo 3M; la tarjeta gira y muestra que es igual de los dos lados | `watermarked_img_972001080295113337.jpg` o `d94937a2-….jpg` (sticker en la mesa), `d55f7bac-….jpg` o `b891b6bb-….jpg` (tarjeta en mano) | "STICKER 3M" · "1 POR MOZO" |
+| 5 · Toque (11–15 s) | El celular se apoya: onda de NFC, cae la notificación y se abre la página; en paralelo, la cámara lee el QR | `watermarked_img_17150974710721864828.jpg` o `cdc3def1-….jpg` (toque), `Tarjeta Pvc.png` (celular sobre mármol) | "APOYÁS" · "O ESCANEÁS" |
 | 6 · Panel (15–21 s) | Pantalla del panel: el contador de usos sube (+1, +2…) y el destino cambia de "Local A" a "Local B" con el mismo cartel | captura del portal con "Café Ejemplo" | "PANEL METRICSFIELD REVIEWS" · "SIN REIMPRIMIR" · "Datos de ejemplo" |
 | 7 · Cierre (21–25 s) | Paneo final con el sticker y la tarjeta juntos | `Pack Completo.png` | "EL CARTEL QUE TE CUENTA LO QUE PASA" |
 
@@ -81,6 +81,7 @@ página de Google, y en el panel MetricsField Reviews ves cuántas veces lo
 usaron. El cartel que te cuenta lo que pasa."
 
 **No usar de la biblioteca:** las imágenes en inglés ("Review us on Google",
-"Customer reviews", "Tap to review", 43 a 49 del índice), que parecen productos
-de otras marcas, ni las que dicen "multiplicá tus reseñas" o "conseguí más
-reseñas" (64, 73, 76), que prometen resultados.
+"Customer reviews", "Tap to review": las capturas de pantalla de julio), que
+parecen productos de otras marcas, ni las que dicen "multiplicá tus reseñas",
+"conseguí más reseñas en segundos" o "el secreto de un negocio exitoso", que
+prometen resultados.
