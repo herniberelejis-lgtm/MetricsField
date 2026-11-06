@@ -85,3 +85,18 @@ usaron. El cartel que te cuenta lo que pasa."
 parecen productos de otras marcas, ni las que dicen "multiplicá tus reseñas",
 "conseguí más reseñas en segundos" o "el secreto de un negocio exitoso", que
 prometen resultados.
+
+## Video animado vendedor (30 s) — reemplaza a "Dos tipos de cartel"
+
+Proyecto HyperFrames en `contenido/videos/ml-vende/`; voz es-AR (Tomás) desde
+`contenido/voz/ml-vende.json`. Estructura: dolor → por qué pasa → solución →
+producto → toque → beneficio para el dueño → cierre con llamado a comprar.
+
+> Tu cliente se fue feliz… y no te dejó ni una reseña.
+> No es que no quiera. Le da fiaca buscarte.
+> Entonces ponésela a un toque.
+> Sticker con 3M para la mesa o la caja. Tarjeta para cada mozo.
+> Apoya el celu o escanea el QR… y tu página de reseñas de Google se abre sola. Sin apps.
+> Y vos, en el panel MetricsField Reviews, ves cuántos la usaron, qué reseñas llegaron y qué responder.
+> Y cada lunes, el resumen en tu mail.
+> Que tu buena atención se vea en Google. Llevá el tuyo.

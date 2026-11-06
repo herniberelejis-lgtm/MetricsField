@@ -1,0 +1,43 @@
+<template>
+  <style>
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#fff}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:96px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:34px;background:#fff;color:#111;border:3px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8;border-color:#C8D8E8}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+.foto{position:absolute;overflow:hidden;background:#ddd}
+.foto img{display:block;width:100%;height:100%;object-fit:cover}
+#f-t1{top:200px;font-size:72px;color:#5e5e5e}
+#f-t2{top:300px}
+#f-tel{position:absolute;left:190px;top:620px;width:700px;height:900px;border-radius:70px;background:#111;padding:20px}
+#f-pant{width:100%;height:100%;border-radius:52px;background:#F4F5F7;padding:80px 40px;position:relative}
+#f-bus{background:#fff;border:3px solid #dcdfe4;border-radius:999px;padding:26px 34px;font-size:40px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden}
+#f-bus .cur{display:inline-block;width:4px;height:44px;background:#111;vertical-align:middle;margin-left:4px}
+.res{margin-top:30px;background:#fff;border-radius:24px;padding:26px 30px;font-size:34px;color:#8a8a8a}
+#f-q{position:absolute;left:0;right:0;bottom:110px;text-align:center;font-weight:800;font-size:72px;color:#111}
+  </style>
+  <div id="root" data-composition-id="fiaca" data-width="1080" data-height="1920">
+    <h1 id="f-t1" class="tit">No es que no quiera.</h1>
+    <h1 id="f-t2" class="tit">Le da <span class="acc">fiaca</span> buscarte.</h1>
+    <div id="f-tel"><div id="f-pant">
+      <div id="f-bus"><span id="f-txt">el café de la esq</span><span class="cur"></span></div>
+      <div id="f-r1" class="res">¿Cómo se llamaba?</div>
+      <div id="f-r2" class="res">¿Era en esta cuadra?</div>
+      <p id="f-q">¿…?</p>
+    </div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#f-t1", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#f-t2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.1);
+    tl.fromTo("#f-tel", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.1);
+    tl.fromTo("#f-txt", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.9, ease: "steps(17)" }, 0.5);
+    tl.to("#f-txt", { clipPath: "inset(0 60% 0 0)", duration: 0.5, ease: "steps(7)" }, 1.6);
+    tl.fromTo("#f-r1", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.25 }, 1.45);
+    tl.fromTo("#f-r2", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.25 }, 1.7);
+    tl.fromTo("#f-q", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.2);
+    tl.to("#f-tel", { rotation: -4, y: 60, opacity: 0.4, duration: 0.5, ease: "power2.in" }, 2.75);
+    window.__timelines["fiaca"] = tl;
+  </script>
+</template>

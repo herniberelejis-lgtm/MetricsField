@@ -1,0 +1,48 @@
+<template>
+  <style>
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#fff}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:96px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:34px;background:#fff;color:#111;border:3px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8;border-color:#C8D8E8}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+.foto{position:absolute;overflow:hidden;background:#ddd}
+.foto img{display:block;width:100%;height:100%;object-fit:cover}
+#t-foto{inset:0}
+#t-foto img{object-position:48% 50%}
+.onda{position:absolute;left:554px;top:832px;width:260px;height:260px;border:8px solid #fff;border-radius:50%;opacity:0}
+#t-noti{position:absolute;left:60px;right:60px;top:120px;background:#fff;border-radius:40px;padding:30px 36px;display:flex;gap:26px;align-items:center}
+#t-noti .ico{width:84px;height:84px;border-radius:22px;background:#C8D8E8;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:44px}
+#t-noti b{display:block;font-size:36px;font-weight:700}
+#t-noti small{display:block;font-size:30px;color:#5e5e5e;margin-top:4px}
+#t-qr{position:absolute;left:765px;top:1095px;width:265px;height:230px}
+#t-qr i{position:absolute;width:70px;height:70px;border:8px solid #C8D8E8}
+#t-qr i:nth-child(1){left:0;top:0;border-right:none;border-bottom:none}
+#t-qr i:nth-child(2){right:0;top:0;border-left:none;border-bottom:none}
+#t-qr i:nth-child(3){left:0;bottom:0;border-right:none;border-top:none}
+#t-qr i:nth-child(4){right:0;bottom:0;border-left:none;border-top:none}
+#t-tit{top:1340px;font-size:84px}
+#t-tit span.caja{background:#fff;padding:4px 18px;line-height:1.25;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#t-c1{left:80px;top:1230px;background:#000;color:#fff;border-color:#000}
+  </style>
+  <div id="root" data-composition-id="toque" data-width="1080" data-height="1920">
+    <div id="t-foto" class="foto"><img src="assets/fotos/toque.jpg" alt="Un cliente apoya el celular en la tarjeta del mozo"></div>
+    <div id="t-o1" class="onda"></div><div id="t-o2" class="onda"></div>
+    <div id="t-qr"><i></i><i></i><i></i><i></i></div>
+    <div id="t-noti"><span class="ico">★</span><span><b>Tu página de reseñas de Google</b><small>Tocá para abrir</small></span></div>
+    <span id="t-c1" class="chip">NFC + QR</span>
+    <h1 id="t-tit" class="tit"><span class="caja">Apoyás o escaneás.</span><br><span class="acc">Se abre sola.</span><br><span class="caja">Sin apps.</span></h1>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#t-foto img", { scale: 1.25 }, { scale: 1.1, duration: 5.7, ease: "sine.inOut" }, 0);
+    tl.fromTo("#t-o1", { opacity: 0.95, scale: 0.3 }, { opacity: 0, scale: 1.8, duration: 0.9, ease: "power2.out" }, 0.4);
+    tl.fromTo("#t-o2", { opacity: 0.95, scale: 0.3 }, { opacity: 0, scale: 1.8, duration: 0.9, ease: "power2.out" }, 0.75);
+    tl.fromTo("#t-noti", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(1.5)" }, 1.2);
+    tl.fromTo("#t-c1", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.25 }, 0.3);
+    tl.fromTo("#t-qr", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 2.4);
+    tl.to("#t-qr", { scale: 0.9, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut" }, 2.8);
+    tl.fromTo("#t-tit", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.2);
+    window.__timelines["toque"] = tl;
+  </script>
+</template>
