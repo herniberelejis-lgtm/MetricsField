@@ -1,0 +1,19 @@
+{
+  "nombre": "edu-nfc-qr",
+  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural"],
+  "velocidad": "+4%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "gancho", "texto": "¿Querés que tu cliente te deje la reseña antes de irse… y no cuando ya se olvidó?" },
+    { "id": "problema", "texto": "Mandarle el link por WhatsApp después no sirve: se lo olvida, o le da fiaca buscarte." },
+    { "id": "dos", "texto": "Por eso esta pieza junta dos tecnologías: un chip NFC y un QR dinámico." },
+    { "id": "nfc", "texto": "Adentro hay un chip con una antena, sin batería. Cuando apoyan el celu, el teléfono le da energía, lee el link y abre tu página de reseñas de Google. Sin instalar nada." },
+    { "id": "qr", "texto": "¿Y el QR? Es el plan B: si el celu no tiene NFC, lo escanean con la cámara." },
+    { "id": "dinamico", "texto": "Y es dinámico: apunta a un link corto. Si cambiás de link o de local, lo cambiás vos y no reimprimís nada." },
+    { "id": "paso1", "texto": "¿Cómo se usa? Uno: escaneás el QR y la activás. Buscás tu negocio y elegís un PIN." },
+    { "id": "paso2", "texto": "Dos: grabás el chip una sola vez, con la app gratis NFC Tools." },
+    { "id": "paso3", "texto": "Tres: lo pegás en la mesa o se lo das al mozo, y pedís la reseña al cerrar la cuenta." },
+    { "id": "aviso", "texto": "Y cada lunes te llega cuántas personas la usaron." },
+    { "id": "cta", "texto": "¿Querés la guía paso a paso? Comentá GUÍA y te la mandamos." }
+  ]
+}
