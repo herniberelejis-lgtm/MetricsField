@@ -1,0 +1,16 @@
+{
+  "nombre": "ml-vende",
+  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural"],
+  "velocidad": "+4%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "gancho", "texto": "Tu cliente se fue feliz… y no te dejó ni una reseña." },
+    { "id": "fiaca", "texto": "No es que no quiera. Le da fiaca buscarte." },
+    { "id": "solucion", "texto": "Entonces ponésela a un toque." },
+    { "id": "productos", "texto": "Sticker con 3M para la mesa o la caja. Tarjeta para cada mozo." },
+    { "id": "toque", "texto": "Apoya el celu o escanea el QR… y tu página de reseñas de Google se abre sola. Sin apps." },
+    { "id": "panel", "texto": "Y vos, en el panel MetricsField Reviews, ves cuántos la usaron, qué reseñas llegaron y qué responder." },
+    { "id": "lunes", "texto": "Y cada lunes, el resumen en tu mail." },
+    { "id": "cierre", "texto": "Que tu buena atención se vea en Google. Llevá el tuyo." }
+  ]
+}
