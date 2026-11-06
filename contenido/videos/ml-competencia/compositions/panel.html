@@ -1,0 +1,87 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#F7F7F7}
+  </style>
+  <div id="root" data-composition-id="panel" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="panel-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="panel-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#panel-boil)">
+    <rect x="0" y="1560" width="1080" height="360" fill="#EAEAEA"/><path d="M0 1560 H1080" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g transform="translate(870 1880) scale(.82)"><g id="pn-due">
+  <g id="due">
+    <g id="due-cuerpo">
+      <rect x="-58" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="12" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="-40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <ellipse cx="40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <rect x="-100" y="-480" width="200" height="275" rx="56" fill="#C8DDD0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      
+      <g id="due-bI"><rect x="-128" y="-460" width="44" height="210" rx="22" fill="#C8DDD0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="-106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="due-bD"><rect x="84" y="-460" width="44" height="210" rx="22" fill="#C8DDD0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><g id="due-pulgar" opacity="0"><rect x="96" y="-300" width="22" height="50" rx="11" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g></g>
+      <g id="due-cabeza">
+        <rect x="-26" y="-510" width="52" height="40" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="0" cy="-600" r="100" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M-100 -615 Q-95 -715 0 -712 Q95 -715 100 -615 Q60 -665 0 -660 Q-60 -665 -100 -615 Z" fill="#3B2A20" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="-62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <circle cx="62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <g id="due-ojos"><ellipse cx="-34" cy="-605" rx="10" ry="14" fill="#111"/><ellipse cx="34" cy="-605" rx="10" ry="14" fill="#111"/></g>
+        <g id="due-parp" opacity="0"><path d="M-50 -606 H-18 M18 -606 H50" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none"/></g>
+        <path d="M-40 -560 Q-20 -578 0 -565 Q20 -578 40 -560 Q20 -550 0 -556 Q-20 -550 -40 -560 Z" fill="#3B2A20" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="due-feliz" d="M-36 -548 Q0 -505 36 -548" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="due-serio" d="M-26 -540 H26" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+        <ellipse id="due-boste" cx="0" cy="-535" rx="22" ry="30" fill="#5A2A2A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g></g></g>
+    <path id="pn-d1" transform="translate(990 1140) scale(0.9)" d="M0 -40 L10 -10 L40 0 L10 10 L0 40 L-10 10 L-40 0 L-10 -10 Z" fill="#FFD54A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+    </svg>
+
+    <h1 id="pn-t" class="tit" style="top:150px">Y ves cómo estás contra <span class="acc">tu competencia.</span></h1>
+    <div id="pn-panel" style="position:absolute;left:60px;width:740px;top:520px;background:#fff;border:5px solid #111;border-radius:36px;padding:34px">
+      <p style="display:flex;align-items:center;gap:14px;font-size:28px;font-weight:700;margin:0 0 20px"><img src="assets/isotipo.svg" alt="" style="width:40px;height:40px">MetricsField Reviews</p>
+      <div style="background:#F7F7F7;border-radius:20px;padding:18px;margin-bottom:22px"><small style="display:block;font-size:28px;font-weight:600">Usos de tus piezas este mes</small><b id="pn-k1" style="display:block;font-size:68px;font-weight:800">0</b></div>
+      <p style="font-size:30px;font-weight:800;margin:0 0 6px">Competidores que elegiste</p>
+      <div id="pn-r1" style="display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid #eaeaea;padding:16px 0;font-size:32px"><span style="font-weight:600">El de enfrente</span><span><b style="font-weight:800">★ 4,7</b> · 312</span></div>
+      <div id="pn-r2" style="display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid #eaeaea;padding:16px 0;font-size:32px;background:#C8D8E8;margin:0 -16px;padding:16px"><span style="font-weight:800">Tu café</span><span><b style="font-weight:800">★ 4,7</b> · 18</span></div>
+      <div id="pn-r3" style="display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid #eaeaea;padding:16px 0;font-size:32px"><span style="font-weight:600">Café de la plaza</span><span><b style="font-weight:800">★ 4,7</b> · 96</span></div>
+    </div>
+    <span id="pn-etq" class="etq" style="left:60px;top:1470px">Datos de ejemplo</span>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#panel-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 5.47, duration: 5.47, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    gsap.set("#due-bD", { transformOrigin: "50% 4%" }); gsap.set("#due-cabeza", { transformOrigin: "50% 100%" });
+    tl.fromTo("#pn-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#pn-panel", { opacity: 0, y: 80, rotation: -2 }, { opacity: 1, y: 0, rotation: 0, duration: 0.45, ease: "back.out(1.3)" }, 0.15);
+    tl.fromTo("#pn-due", { x: 400 }, { x: 0, duration: 0.5, ease: "back.out(1.3)" }, 0.2);
+    tl.fromTo("#pn-etq", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.3);
+    const k = { a: 0 };
+    tl.fromTo(k, { a: 0 }, { a: 148, duration: 1.2, ease: "power2.out", onUpdate: () => { document.querySelector("#pn-k1").textContent = Math.round(k.a); } }, 0.6);
+    tl.to("#due-cabeza", { rotation: -10, duration: 0.3, ease: "sine.inOut" }, 0.8);
+    ["#pn-r1", "#pn-r2", "#pn-r3"].forEach((r, i) => tl.fromTo(r, { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, 2.0 + i * 0.25));
+    tl.fromTo("#due-ojos", { scale: 1, transformOrigin: "50% 50%" }, { scale: 1.35, duration: 0.2, ease: "back.out(3)" }, 2.9);
+    tl.to("#due-cabeza", { rotation: 4, duration: 0.3 }, 3.8);
+    tl.fromTo("#due-bD", { rotation: 0 }, { rotation: -150, duration: 0.35, ease: "back.out(2)" }, 4.1);
+    tl.to("#due-pulgar", { opacity: 1, duration: 0.05 }, 4.2);
+    tl.fromTo("#pn-d1", { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 1.2, rotation: 45, duration: 0.35, ease: "back.out(2)" }, 4.3);
+    window.__timelines["panel"] = tl;
+  </script>
+</template>

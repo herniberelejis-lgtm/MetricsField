@@ -100,3 +100,20 @@ producto → toque → beneficio para el dueño → cierre con llamado a comprar
 > Y vos, en el panel MetricsField Reviews, ves cuántos la usaron, qué reseñas llegaron y qué responder.
 > Y cada lunes, el resumen en tu mail.
 > Que tu buena atención se vea en Google. Llevá el tuyo.
+
+## Video animado "El de enfrente" (34 s, dibujo animado)
+
+Proyecto en `contenido/videos/ml-competencia/` (dibujos compartidos en
+`contenido/videos/dibujos.mjs`); voz desde `contenido/voz/ml-competencia.json`.
+No promete más clientes: muestra el problema (el otro tiene sus reseñas al día)
+y lo que el producto hace (pedirla con un toque y comparar en el panel contra
+los competidores que elige el comercio). Cifras con "Datos de ejemplo".
+
+> Dos cafés en la misma cuadra. Mismo café, misma onda.
+> Pero la gente entra al de enfrente.
+> ¿Por qué? Porque antes de entrar, todos miran Google.
+> Y ahí el de enfrente tiene cientos de reseñas… y vos, dieciocho.
+> Tus clientes también salen contentos. Solo que nadie les pide la reseña.
+> Con el sticker en la mesa y la tarjeta del mozo, pueden dejártela con un toque o escaneando el QR.
+> Y en el panel MetricsField Reviews ves cuántos lo usan y cómo estás contra los competidores que elijas.
+> Que te elijan por lo que hacés bien. Llevá el tuyo.
