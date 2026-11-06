@@ -1,0 +1,79 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#D9C7AE}
+  </style>
+  <div id="root" data-composition-id="toque" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="toque-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="toque-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#toque-boil)">
+    <g transform="translate(400 1060) scale(1.5)">
+  <g id="t-st">
+    <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-147 -120 Q-147 -147 -120 -147 H120 Q147 -147 147 -120 V-30 Q70 -5 0 -30 Q-70 -55 -147 -30 Z" fill="#3D6FD6"/>
+    <path d="M-150 -30 Q-70 -55 0 -30 Q70 -5 150 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <text data-layout-ignore x="0" y="-92" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="34" fill="#FFD54A">★★★★★</text>
+    <text data-layout-ignore x="0" y="-52" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="24" fill="#fff">Dejá tu reseña</text>
+    <g transform="translate(-72 62)"><path d="M-30 -30 Q-10 0 -30 30 M-12 -44 Q16 0 -12 44 M6 -58 Q42 0 6 58" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(60 60)"><rect x="-55" y="-55" width="110" height="110" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-42" y="-42" width="30" height="30" fill="#111"/><rect x="12" y="-42" width="30" height="30" fill="#111"/><rect x="-42" y="12" width="30" height="30" fill="#111"/>
+      <rect x="18" y="18" width="10" height="10" fill="#111"/><rect x="32" y="30" width="10" height="10" fill="#111"/><rect x="18" y="36" width="8" height="8" fill="#111"/></g>
+    
+  </g></g>
+    <circle id="t-o0" cx="400" cy="1060" r="90" fill="none" stroke="#C8D8E8" stroke-width="12" opacity="0"/><circle id="t-o1" cx="400" cy="1060" r="90" fill="none" stroke="#C8D8E8" stroke-width="12" opacity="0"/><circle id="t-o2" cx="400" cy="1060" r="90" fill="none" stroke="#C8D8E8" stroke-width="12" opacity="0"/>
+    <g transform="translate(720 860)"><g id="t-celu">
+  <g id="t-tel">
+    <rect x="-150" y="-280" width="300" height="560" rx="46" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="-130" y="-255" width="260" height="510" rx="30" fill="#fff"/>
+    <rect x="-40" y="-246" width="80" height="16" rx="8" fill="#111"/>
+    <rect x="-110" y="-190" width="220" height="120" rx="20" fill="#C8D8E8"/><text data-layout-ignore x="0" y="-118" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="40" fill="#111">★</text><rect x="-110" y="-50" width="220" height="24" rx="12" fill="#EAEAEA"/><rect x="-110" y="-10" width="160" height="24" rx="12" fill="#EAEAEA"/><rect x="-110" y="60" width="220" height="80" rx="18" fill="#EAEAEA"/>
+  </g>
+      <g transform="translate(150 140)"><path d="M0 -60 q60 0 60 60 v90 q0 50 -60 50 q-70 0 -90 -40 l-30 -70 q-10 -30 20 -35 q20 -3 30 20 l10 20 v-95 Z" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    </g></g>
+    <g id="t-cam" opacity="0">
+      <path d="M260 920 h-50 v50 M540 920 h50 v50 M260 1200 h-50 v-50 M540 1200 h50 v-50" fill="none" stroke="#C8D8E8" stroke-width="14" stroke-linecap="round"/>
+      <rect id="t-scan" x="230" y="930" width="340" height="10" fill="#C8D8E8"/>
+    </g>
+  </g>
+    </svg>
+
+    <div id="t-noti" style="position:absolute;left:60px;right:60px;top:110px;background:#fff;border:5px solid #111;border-radius:40px;padding:28px 34px;display:flex;gap:26px;align-items:center">
+      <span style="width:84px;height:84px;border-radius:22px;background:#C8D8E8;border:4px solid #111;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:44px">★</span>
+      <span><b style="display:block;font-size:36px;font-weight:700">Tu página de reseñas de Google</b><small style="display:block;font-size:30px;color:#5e5e5e;margin-top:4px">Tocá para abrir</small></span></div>
+    <span id="t-c1" class="chip negro" style="left:80px;top:1390px">APOYÁS</span>
+    <span id="t-c2" class="chip negro" style="left:360px;top:1390px">O ESCANEÁS</span>
+    <h1 id="t-tit" class="tit" style="top:1500px;font-size:84px"><span class="acc">Se abre sola.</span><br>Sin apps.</h1>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#toque-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 5.7, duration: 5.7, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#t-celu", { x: 300, y: -500, rotation: -44, transformOrigin: "50% 50%" }, { x: -320, y: 120, rotation: -20, duration: 0.6, ease: "power3.out" }, 0.1);
+    tl.fromTo("#t-c1", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, 0.5);
+    [0, 1, 2].forEach((i) => tl.fromTo("#t-o" + i, { opacity: 0.95, attr: { r: 120 } }, { opacity: 0, attr: { r: 420 }, duration: 0.8, ease: "power2.out" }, 0.75 + i * 0.22));
+    tl.fromTo("#t-noti", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(1.5)" }, 1.25);
+    tl.fromTo("#t-tit", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.6);
+    tl.to("#t-celu", { x: 400, y: -200, rotation: 10, duration: 0.5, ease: "power2.in" }, 2.6);
+    tl.to("#t-noti", { y: -300, opacity: 0, duration: 0.3, ease: "power2.in" }, 2.7);
+    tl.fromTo("#t-c2", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, 3.0);
+    tl.fromTo("#t-cam", { opacity: 0, scale: 1.4, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 3.1);
+    tl.fromTo("#t-scan", { y: 0 }, { y: 250, duration: 0.6, yoyo: true, repeat: 1, ease: "sine.inOut" }, 3.4);
+    tl.fromTo("#t-noti", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(1.5)", immediateRender: false }, 4.5);
+    window.__timelines["toque"] = tl;
+  </script>
+</template>
