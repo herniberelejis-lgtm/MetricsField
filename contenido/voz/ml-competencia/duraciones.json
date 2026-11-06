@@ -1,0 +1,105 @@
+{
+  "nombre": "ml-competencia",
+  "voces": {
+    "es-AR-TomasNeural": [
+      {
+        "id": "gancho",
+        "texto": "Dos cafés en la misma cuadra. Mismo café, misma onda.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/gancho.mp3",
+        "segundos": 5.064
+      },
+      {
+        "id": "cruzan",
+        "texto": "Pero la gente entra al de enfrente.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/cruzan.mp3",
+        "segundos": 2.592
+      },
+      {
+        "id": "porque",
+        "texto": "¿Por qué? Porque antes de entrar, todos miran Google.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/porque.mp3",
+        "segundos": 4.392
+      },
+      {
+        "id": "fichas",
+        "texto": "Y ahí el de enfrente tiene cientos de reseñas… y vos, dieciocho.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/fichas.mp3",
+        "segundos": 4.776
+      },
+      {
+        "id": "contentos",
+        "texto": "Tus clientes también salen contentos. Solo que nadie les pide la reseña.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/contentos.mp3",
+        "segundos": 5.52
+      },
+      {
+        "id": "piezas",
+        "texto": "Con el sticker en la mesa y la tarjeta del mozo, pueden dejártela con un toque o escaneando el QR.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/piezas.mp3",
+        "segundos": 5.952
+      },
+      {
+        "id": "panel",
+        "texto": "Y en el panel MetricsField Reviews ves cuántos lo usan y cómo estás contra los competidores que elijas.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/panel.mp3",
+        "segundos": 5.976
+      },
+      {
+        "id": "cierre",
+        "texto": "Que te elijan por lo que hacés bien. Llevá el tuyo.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-TomasNeural/cierre.mp3",
+        "segundos": 4.128
+      }
+    ],
+    "es-AR-ElenaNeural": [
+      {
+        "id": "gancho",
+        "texto": "Dos cafés en la misma cuadra. Mismo café, misma onda.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/gancho.mp3",
+        "segundos": 5.232
+      },
+      {
+        "id": "cruzan",
+        "texto": "Pero la gente entra al de enfrente.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/cruzan.mp3",
+        "segundos": 2.712
+      },
+      {
+        "id": "porque",
+        "texto": "¿Por qué? Porque antes de entrar, todos miran Google.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/porque.mp3",
+        "segundos": 4.56
+      },
+      {
+        "id": "fichas",
+        "texto": "Y ahí el de enfrente tiene cientos de reseñas… y vos, dieciocho.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/fichas.mp3",
+        "segundos": 4.944
+      },
+      {
+        "id": "contentos",
+        "texto": "Tus clientes también salen contentos. Solo que nadie les pide la reseña.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/contentos.mp3",
+        "segundos": 5.952
+      },
+      {
+        "id": "piezas",
+        "texto": "Con el sticker en la mesa y la tarjeta del mozo, pueden dejártela con un toque o escaneando el QR.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/piezas.mp3",
+        "segundos": 6.456
+      },
+      {
+        "id": "panel",
+        "texto": "Y en el panel MetricsField Reviews ves cuántos lo usan y cómo estás contra los competidores que elijas.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/panel.mp3",
+        "segundos": 6.096
+      },
+      {
+        "id": "cierre",
+        "texto": "Que te elijan por lo que hacés bien. Llevá el tuyo.",
+        "archivo": "contenido/voz/ml-competencia/es-AR-ElenaNeural/cierre.mp3",
+        "segundos": 4.224
+      }
+    ]
+  }
+}
