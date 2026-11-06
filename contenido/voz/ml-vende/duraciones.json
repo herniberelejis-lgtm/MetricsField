@@ -1,0 +1,105 @@
+{
+  "nombre": "ml-vende",
+  "voces": {
+    "es-AR-TomasNeural": [
+      {
+        "id": "gancho",
+        "texto": "Tu cliente se fue feliz… y no te dejó ni una reseña.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/gancho.mp3",
+        "segundos": 3.768
+      },
+      {
+        "id": "fiaca",
+        "texto": "No es que no quiera. Le da fiaca buscarte.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/fiaca.mp3",
+        "segundos": 3.984
+      },
+      {
+        "id": "solucion",
+        "texto": "Entonces ponésela a un toque.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/solucion.mp3",
+        "segundos": 2.616
+      },
+      {
+        "id": "productos",
+        "texto": "Sticker con 3M para la mesa o la caja. Tarjeta para cada mozo.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/productos.mp3",
+        "segundos": 5.304
+      },
+      {
+        "id": "toque",
+        "texto": "Apoya el celu o escanea el QR… y tu página de reseñas de Google se abre sola. Sin apps.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/toque.mp3",
+        "segundos": 6.696
+      },
+      {
+        "id": "panel",
+        "texto": "Y vos, en el panel MetricsField Reviews, ves cuántos la usaron, qué reseñas llegaron y qué responder.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/panel.mp3",
+        "segundos": 6.384
+      },
+      {
+        "id": "lunes",
+        "texto": "Y cada lunes, el resumen en tu mail.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/lunes.mp3",
+        "segundos": 3.096
+      },
+      {
+        "id": "cierre",
+        "texto": "Que tu buena atención se vea en Google. Llevá el tuyo.",
+        "archivo": "contenido/voz/ml-vende/es-AR-TomasNeural/cierre.mp3",
+        "segundos": 4.44
+      }
+    ],
+    "es-AR-ElenaNeural": [
+      {
+        "id": "gancho",
+        "texto": "Tu cliente se fue feliz… y no te dejó ni una reseña.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/gancho.mp3",
+        "segundos": 4.176
+      },
+      {
+        "id": "fiaca",
+        "texto": "No es que no quiera. Le da fiaca buscarte.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/fiaca.mp3",
+        "segundos": 4.152
+      },
+      {
+        "id": "solucion",
+        "texto": "Entonces ponésela a un toque.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/solucion.mp3",
+        "segundos": 2.712
+      },
+      {
+        "id": "productos",
+        "texto": "Sticker con 3M para la mesa o la caja. Tarjeta para cada mozo.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/productos.mp3",
+        "segundos": 5.64
+      },
+      {
+        "id": "toque",
+        "texto": "Apoya el celu o escanea el QR… y tu página de reseñas de Google se abre sola. Sin apps.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/toque.mp3",
+        "segundos": 7.248
+      },
+      {
+        "id": "panel",
+        "texto": "Y vos, en el panel MetricsField Reviews, ves cuántos la usaron, qué reseñas llegaron y qué responder.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/panel.mp3",
+        "segundos": 6.864
+      },
+      {
+        "id": "lunes",
+        "texto": "Y cada lunes, el resumen en tu mail.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/lunes.mp3",
+        "segundos": 3.288
+      },
+      {
+        "id": "cierre",
+        "texto": "Que tu buena atención se vea en Google. Llevá el tuyo.",
+        "archivo": "contenido/voz/ml-vende/es-AR-ElenaNeural/cierre.mp3",
+        "segundos": 4.608
+      }
+    ]
+  }
+}
