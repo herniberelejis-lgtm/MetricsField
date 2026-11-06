@@ -1,0 +1,16 @@
+{
+  "nombre": "ml-competencia",
+  "voces": ["es-AR-TomasNeural", "es-AR-ElenaNeural"],
+  "velocidad": "+4%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "gancho", "texto": "Dos cafés en la misma cuadra. Mismo café, misma onda." },
+    { "id": "cruzan", "texto": "Pero la gente entra al de enfrente." },
+    { "id": "porque", "texto": "¿Por qué? Porque antes de entrar, todos miran Google." },
+    { "id": "fichas", "texto": "Y ahí el de enfrente tiene cientos de reseñas… y vos, dieciocho." },
+    { "id": "contentos", "texto": "Tus clientes también salen contentos. Solo que nadie les pide la reseña." },
+    { "id": "piezas", "texto": "Con el sticker en la mesa y la tarjeta del mozo, pueden dejártela con un toque o escaneando el QR." },
+    { "id": "panel", "texto": "Y en el panel MetricsField Reviews ves cuántos lo usan y cómo estás contra los competidores que elijas." },
+    { "id": "cierre", "texto": "Que te elijan por lo que hacés bien. Llevá el tuyo." }
+  ]
+}
