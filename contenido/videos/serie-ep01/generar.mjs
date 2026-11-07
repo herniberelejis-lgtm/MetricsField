@@ -1,6 +1,7 @@
 // Serie "30 días para renunciar" · Episodio 1: la presentación.
-// Hernán cuenta el trato (50 locales en 30 días o sigue en la oficina) y
-// abre el primer voto: PUERTA o MENSAJES.
+// Hernán renuncia en 30 días (ya lo decidió); la meta es que el negocio lo
+// banque: 50 locales usando sus piezas antes de irse. Abre
+// el primer voto: PUERTA o MENSAJES.
 //
 //   node contenido/videos/serie-ep01/generar.mjs
 //
@@ -16,7 +17,7 @@ const AQUI = dirname(fileURLToPath(import.meta.url));
 const VOZ = JSON.parse(readFileSync(join(AQUI, "assets/voz/duraciones.json"), "utf8"));
 const ORDEN = ["gancho", "caja", "trato", "ustedes", "dilema", "cta"];
 const DUR = Object.fromEntries(ORDEN.map((id) => [id, Math.round((VOZ[id] + (id === "cta" ? 1.5 : 0.4)) * 100) / 100]));
-const ESTADO = { dias: 30, locales: 0, meta: 50, renuncio: 0 };
+const ESTADO = { dias: 30, locales: 0, meta: 50, banca: 0 };
 
 const L4 = L.replace('stroke-width="6"', 'stroke-width="4"');
 const txt = (x, y, s, t, { peso = 800, color = "#111", anchor = "middle", ignorar = true } = {}) =>
@@ -33,7 +34,7 @@ const hudJs = `tl.fromTo("#hud", { y: -40, opacity: 0 }, { y: 0, opacity: 1, dur
 
 const escenas = {};
 
-// 1 · Gancho: en la oficina, mirando el almanaque. 30 días.
+// 1 · Gancho: en la oficina, el almanaque marca 30 días para renunciar.
 escenas.gancho = escena("gancho", DUR.gancho, {
   fondo: "#E4E7EA",
   svg: `
@@ -45,7 +46,7 @@ escenas.gancho = escena("gancho", DUR.gancho, {
     <g transform="translate(700 1150)"><rect x="-110" y="-120" width="220" height="140" rx="12" fill="#111" ${L}/><rect x="-96" y="-106" width="192" height="112" rx="6" fill="${C.niebla}"/><rect x="-20" y="20" width="40" height="60" fill="#111"/><rect x="-60" y="76" width="120" height="14" rx="6" fill="#111"/></g>
     <g id="g-gota" opacity="0"><path d="M470 860 q-20 34 0 52 q20 -18 0 -52 Z" fill="${C.niebla}" ${L}/></g>
   `,
-  html: `${HUD}${T("g-t", 260, `En 30 días decido si <span class="acc">renuncio.</span>`)}`,
+  html: `${HUD}${T("g-t", 260, `En 30 días <span class="acc">renuncio.</span>`)}`,
   js: `
     gsap.set("#her-cabeza", { transformOrigin: "50% 100%" });
     ${hudJs}
@@ -86,19 +87,19 @@ escenas.caja = escena("caja", DUR.caja, {
     ${pop("#c-c2", 4.2)}`,
 });
 
-// 3 · El trato: dos puertas. 50 locales → RENUNCIO. Si no → SIGO EN LA OFICINA.
+// 3 · La meta: dos puertas. 50 locales → ME BANCA. Menos → renuncia SIN RED.
 const puerta = (id, x, color, titulo, sub) => `
     <g id="${id}"><rect x="${x}" y="700" width="380" height="800" rx="16" fill="${color}" ${L}/><circle cx="${x + 330}" cy="1120" r="14" fill="#111"/>
     <rect x="${x + 30}" y="740" width="320" height="170" rx="16" fill="#fff" ${L}/>${txt(x + 190, 815, 44, titulo)}${txt(x + 190, 870, 30, sub, { peso: 600 })}</g>`;
 escenas.trato = escena("trato", DUR.trato, {
   svg: `
     ${piso(1500)}
-    ${puerta("t-p1", 70, C.verde, "RENUNCIO", "50 locales")}
-    ${puerta("t-p2", 630, "#9AA0A6", "OFICINA", "menos de 50")}
+    ${puerta("t-p1", 70, C.verde, "ME BANCA", "50 locales")}
+    ${puerta("t-p2", 630, "#9AA0A6", "SIN RED", "menos de 50")}
     <g transform="translate(540 1560) scale(.75)"><g id="t-her">${hernan("ther")}</g></g>
     ${destello("t-d1", 100, 660, 0.9)}${destello("t-d2", 420, 640, 0.7)}
   `,
-  html: `${HUD}${T("t-t", 260, `El trato: <span class="acc">50 locales.</span>`)}`,
+  html: `${HUD}${T("t-t", 260, `La meta: <span class="acc">50 locales.</span>`)}`,
   js: `
     gsap.set("#ther-cabeza", { transformOrigin: "50% 100%" }); gsap.set(["#ther-bD", "#ther-bI"], { transformOrigin: "50% 4%" });
     ${entraT("#t-t")}

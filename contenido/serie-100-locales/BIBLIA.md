@@ -1,13 +1,15 @@
 # Serie "30 días para renunciar" — biblia del formato
 
-> **Premisa elegida (07/11/2026):** Hernán tiene 30 días para decidir si renuncia
-> a su trabajo. Si en 30 días **50 locales** usan sus stickers y tarjetas,
-> renuncia; si no, sigue en la oficina. La audiencia decide qué hace cada día.
-> Marcador: DÍAS PARA DECIDIR · LOCALES x/50 · ¿RENUNCIO? (%). Episodio 1 en
-> `contenido/videos/serie-ep01/`; marcador reutilizable en `contenido/videos/serie.mjs`.
-> **Condición:** la premisa tiene que ser verdad (trabajo real, decisión real).
-> El resto de este documento (formato, voto, dilemas, fábrica) sigue valiendo;
-> donde dice "100 locales" leer "50".
+> **Premisa elegida (07/11/2026):** Hernán **renuncia a su trabajo en 30 días:
+> ya está decidido y es real** (renuncia al final del reto, pase lo que pase).
+> Lo que está en juego es si el emprendimiento lo va a bancar: la meta es que
+> **50 locales** usen sus stickers y tarjetas antes de irse. La audiencia decide
+> qué hace cada día. Marcador: DÍAS PARA RENUNCIAR · LOCALES x/50 · ¿ME BANCA? (%).
+> Nunca decir "si no llego, sigo en la oficina": no es verdad. Si no llega a 50,
+> renuncia igual, "sin red". Episodio 1 en `contenido/videos/serie-ep01/`;
+> marcador reutilizable en `contenido/videos/serie.mjs`. El día 30 se graba la
+> renuncia real. El resto de este documento (formato, voto, dilemas, fábrica)
+> sigue valiendo; donde dice "100 locales" leer "50".
 
 ## Formato original (base)
 

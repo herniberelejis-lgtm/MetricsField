@@ -56,17 +56,17 @@ svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
     </svg>
 
     <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:16px;font-family:Montserrat">
-      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS PARA DECIDIR</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">30</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS PARA RENUNCIAR</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">30</b></div>
       <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:220px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">LOCALES</small><b style="display:block;font-size:64px;font-weight:800;color:#C8D8E8;line-height:1.05">0<span style="font-size:36px;color:#aaa">/50</span></b></div>
-      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿RENUNCIO?</small>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿ME BANCA?</small>
         <div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="flex:1;height:22px;border-radius:11px;background:#333;overflow:hidden"><div id="hud-barra" style="height:100%;width:3%;background:#C8DDD0"></div></div><b style="font-size:44px;font-weight:800;color:#C8DDD0">0%</b></div></div>
-    </div><h1 id="g-t" class="tit" style="top:260px">En 30 días decido si <span class="acc">renuncio.</span></h1>
+    </div><h1 id="g-t" class="tit" style="top:260px">En 30 días <span class="acc">renuncio.</span></h1>
   </div>
   <script>
     const tl = gsap.timeline({ paused: true });
     const turb = document.querySelector("#gancho-turb");
     const reloj = { t: 0 };
-    tl.to(reloj, { t: 4.05, duration: 4.05, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+    tl.to(reloj, { t: 4.61, duration: 4.61, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
 
     gsap.set("#her-cabeza", { transformOrigin: "50% 100%" });
     tl.fromTo("#hud", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.6)" }, 0);
