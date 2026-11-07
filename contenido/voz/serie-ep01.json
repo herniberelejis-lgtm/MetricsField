@@ -1,14 +1,34 @@
 {
   "nombre": "serie-ep01",
-  "voces": ["es-AR-TomasNeural"],
+  "voces": [
+    "es-AR-TomasNeural"
+  ],
   "velocidad": "+6%",
   "tono": "-2Hz",
   "lineas": [
-    { "id": "gancho", "texto": "Soy Hernán… y en treinta días tengo que decidir si renuncio a mi trabajo." },
-    { "id": "caja", "texto": "Tengo una caja llena de stickers que llevan a Google a dejar reseñas, y un panel donde el dueño ve cuántos lo usan." },
-    { "id": "trato", "texto": "El trato es simple: si en treinta días cincuenta locales los usan, renuncio. Si no, sigo en la oficina." },
-    { "id": "ustedes", "texto": "Y no decido yo: deciden ustedes. Cada día, lo más votado en los comentarios es lo que hago." },
-    { "id": "dilema", "texto": "Mañana arranco. ¿Voy local por local, o les escribo uno por uno a los que tienen pocas reseñas?" },
-    { "id": "cta", "texto": "Comentá una palabra: PUERTA o MENSAJES. Nos vemos mañana… y que no se entere mi jefe." }
+    {
+      "id": "gancho",
+      "texto": "Soy Hernán… y en treinta días renuncio a mi trabajo. Ya está decidido."
+    },
+    {
+      "id": "caja",
+      "texto": "Tengo una caja llena de stickers que llevan a Google a dejar reseñas, y un panel donde el dueño ve cuántos lo usan."
+    },
+    {
+      "id": "trato",
+      "texto": "Lo que no sé es si esto me va a bancar. La meta: cincuenta locales usando mis stickers antes de irme."
+    },
+    {
+      "id": "ustedes",
+      "texto": "Y no decido yo: deciden ustedes. Cada día, lo más votado en los comentarios es lo que hago."
+    },
+    {
+      "id": "dilema",
+      "texto": "Mañana arranco. ¿Voy local por local, o les escribo uno por uno a los que tienen pocas reseñas?"
+    },
+    {
+      "id": "cta",
+      "texto": "Comentá una palabra: PUERTA o MENSAJES. Nos vemos mañana… y que no se entere mi jefe."
+    }
   ]
 }
