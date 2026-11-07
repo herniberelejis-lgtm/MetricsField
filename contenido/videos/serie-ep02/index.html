@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: Montserrat; font-weight: 100 900; src: url(assets/montserrat.woff2) format("woff2"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="50.48" data-width="1080" data-height="1920">
+      <div id="eligieron" data-composition-id="eligieron" data-composition-src="compositions/eligieron.html" data-start="0.00" data-duration="6.04" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="ruta" data-composition-id="ruta" data-composition-src="compositions/ruta.html" data-start="6.04" data-duration="3.51" data-track-index="2" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="nos" data-composition-id="nos" data-composition-src="compositions/nos.html" data-start="9.55" data-duration="8.49" data-track-index="3" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="info" data-composition-id="info" data-composition-src="compositions/info.html" data-start="18.04" data-duration="4.85" data-track-index="4" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="si" data-composition-id="si" data-composition-src="compositions/si.html" data-start="22.89" data-duration="7.06" data-track-index="5" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="libreta" data-composition-id="libreta" data-composition-src="compositions/libreta.html" data-start="29.95" data-duration="4.37" data-track-index="6" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="aprendi" data-composition-id="aprendi" data-composition-src="compositions/aprendi.html" data-start="34.32" data-duration="6.04" data-track-index="7" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="dilema" data-composition-id="dilema" data-composition-src="compositions/dilema.html" data-start="40.36" data-duration="4.2" data-track-index="8" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="cta" data-composition-id="cta" data-composition-src="compositions/cta.html" data-start="44.56" data-duration="5.92" data-track-index="9" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <audio id="voz-eligieron" data-start="0.15" data-duration="5.638" data-track-index="20" data-volume="1" src="assets/voz/eligieron.wav"></audio>
+      <audio id="voz-ruta" data-start="6.19" data-duration="2.911" data-track-index="21" data-volume="1" src="assets/voz/ruta.wav"></audio>
+      <audio id="voz-nos" data-start="9.70" data-duration="4.333" data-track-index="22" data-volume="1" src="assets/voz/nos.wav"></audio>
+      <audio id="voz-d-no3" data-start="14.13" data-duration="1.483" data-track-index="23" data-volume="1" src="assets/voz/d-no3.wav"></audio>
+      <audio id="voz-d-no2" data-start="15.92" data-duration="1.227" data-track-index="24" data-volume="1" src="assets/voz/d-no2.wav"></audio>
+      <audio id="voz-info" data-start="18.19" data-duration="2.364" data-track-index="25" data-volume="1" src="assets/voz/info.wav"></audio>
+      <audio id="voz-d-info" data-start="20.60" data-duration="1.685" data-track-index="26" data-volume="1" src="assets/voz/d-info.wav"></audio>
+      <audio id="voz-si" data-start="23.04" data-duration="4.346" data-track-index="27" data-volume="1" src="assets/voz/si.wav"></audio>
+      <audio id="voz-d-si" data-start="27.44" data-duration="1.609" data-track-index="28" data-volume="1" src="assets/voz/d-si.wav"></audio>
+      <audio id="voz-libreta" data-start="30.10" data-duration="3.769" data-track-index="29" data-volume="1" src="assets/voz/libreta.wav"></audio>
+      <audio id="voz-aprendi" data-start="34.47" data-duration="5.543" data-track-index="30" data-volume="1" src="assets/voz/aprendi.wav"></audio>
+      <audio id="voz-dilema" data-start="40.51" data-duration="3.796" data-track-index="31" data-volume="1" src="assets/voz/dilema.wav"></audio>
+      <audio id="voz-cta" data-start="44.71" data-duration="4.42" data-track-index="32" data-volume="1" src="assets/voz/cta.wav"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

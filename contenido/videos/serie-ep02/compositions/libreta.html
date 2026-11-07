@@ -1,0 +1,52 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#D9C7AE}
+  </style>
+  <div id="root" data-composition-id="libreta" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="libreta-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="libreta-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#libreta-boil)">
+    <g transform="translate(540 1050) rotate(-3)"><rect x="-420" y="-520" width="840" height="1000" rx="20" fill="#FFFDF4" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M-380 -380 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 -270 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 -160 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 -50 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 60 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 170 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 280 H380" stroke="#C8D8E8" stroke-width="4"/><path d="M-380 390 H380" stroke="#C8D8E8" stroke-width="4"/>
+      <path d="M-300 -520 V480" stroke="#E9A48C" stroke-width="4"/>
+      <text data-layout-ignore x="-280" y="-420" text-anchor="start" font-family="Montserrat" font-weight="800" font-size="54" fill="#111">Av. Gauss · día 1</text>
+      <text data-layout-ignore x="-280" y="-250" text-anchor="start" font-family="Montserrat" font-weight="800" font-size="56" fill="#D9534F">NO</text><path class="pal" d="M-110 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-88 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-66 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-44 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-120 -255 l100 -36" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M10 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M32 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M54 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M76 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M0 -255 l100 -36" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M130 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M152 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M174 -305 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/>
+      <text data-layout-ignore x="-280" y="-10" text-anchor="start" font-family="Montserrat" font-weight="800" font-size="56" fill="#111">INFO</text><path class="pal" d="M-60 -65 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-38 -65 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-16 -65 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M6 -65 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-70 -15 l100 -36" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/>
+      <text data-layout-ignore x="-280" y="230" text-anchor="start" font-family="Montserrat" font-weight="800" font-size="56" fill="#2E7D4F">SÍ</text><path class="pal" d="M-110 175 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-88 175 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/><path class="pal" d="M-66 175 l4 70" stroke="#111" stroke-width="7" stroke-linecap="round" opacity="0"/>
+      <g id="l-tot" opacity="0"><text x="0" y="420" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="64" fill="#111">20 puertas</text></g>
+    </g>
+  </g>
+    </svg>
+
+    <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:16px;font-family:Montserrat">
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS RESTANTES</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">29</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:220px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">LOCALES</small><b style="display:block;font-size:64px;font-weight:800;color:#C8D8E8;line-height:1.05"><span id="hud-loc">3</span><span style="font-size:36px;color:#aaa">/50</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿RENUNCIO?</small>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="flex:1;height:22px;border-radius:11px;background:#333;overflow:hidden"><div id="hud-barra" style="height:100%;width:6%;background:#C8DDD0"></div></div><b id="hud-pct" style="font-size:44px;font-weight:800;color:#C8DDD0">6%</b></div></div>
+    </div><span id="prueba" style="position:absolute;right:40px;bottom:40px;font-family:Montserrat;font-weight:700;font-size:28px;color:#fff;background:#D9534F;border-radius:999px;padding:8px 20px">PRUEBA · datos inventados</span>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#libreta-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 4.37, duration: 4.37, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo(".pal", { opacity: 0 }, { opacity: 1, duration: 0.05, stagger: 0.09 }, 0.4);
+    tl.fromTo("#l-tot", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.6);
+    window.__timelines["libreta"] = tl;
+  </script>
+</template>
