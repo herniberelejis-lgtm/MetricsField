@@ -1,0 +1,92 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#F7F7F7}
+  </style>
+  <div id="root" data-composition-id="dilema" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="dilema-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="dilema-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#dilema-boil)">
+    <rect x="0" y="0" width="540" height="1920" fill="#C8DDD0"/><rect x="540" y="0" width="540" height="1920" fill="#C8D8E8"/><path d="M540 0 V1920" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g id="d-izq"><g transform="translate(60 1400) scale(.85)"><rect x="0" y="-560" width="420" height="560" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="260" y="-360" width="120" height="360" fill="#D9C7AE" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="40" y="-430" width="180" height="180" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g transform="translate(230 1500) scale(.62)"><g id="d-her">
+  <g id="dher">
+    <g id="dher-cuerpo">
+      <rect x="-58" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="12" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="-40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <ellipse cx="40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <rect x="-100" y="-480" width="200" height="275" rx="56" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      
+      <path d="M-14 -478 h28 l-6 24 l18 120 l-26 30 l-26 -30 l18 -120 Z" fill="#111" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><g id="dher-bI"><rect x="-128" y="-460" width="44" height="210" rx="22" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="-106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="dher-bD"><rect x="84" y="-460" width="44" height="210" rx="22" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="dher-cabeza">
+        <rect x="-26" y="-510" width="52" height="40" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="0" cy="-600" r="100" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M-100 -615 Q-95 -715 0 -712 Q95 -715 100 -615 Q60 -665 0 -660 Q-60 -665 -100 -615 Z" fill="#3B2A20" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="-62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <circle cx="62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <g id="dher-ojos"><ellipse cx="-34" cy="-605" rx="10" ry="14" fill="#111"/><ellipse cx="34" cy="-605" rx="10" ry="14" fill="#111"/></g>
+        <g id="dher-parp" opacity="0"><path d="M-50 -606 H-18 M18 -606 H50" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none"/></g>
+        
+        <path id="dher-feliz" d="M-36 -548 Q0 -505 36 -548" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="dher-serio" d="M-26 -540 H26" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+        <ellipse id="dher-boste" cx="0" cy="-535" rx="22" ry="30" fill="#5A2A2A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g></g></g></g>
+    <g id="d-der"><g transform="translate(810 1080) scale(1.1)">
+  <g id="d-tel">
+    <rect x="-150" y="-280" width="300" height="560" rx="46" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="-130" y="-255" width="260" height="510" rx="30" fill="#fff"/>
+    <rect x="-40" y="-246" width="80" height="16" rx="8" fill="#111"/>
+    
+      <g id="d-m1"><rect x="-115" y="-200" width="200" height="80" rx="20" fill="#C8DDD0" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="-100" y="-150" text-anchor="start" font-family="Montserrat" font-weight="700" font-size="22" fill="#111">¡Hola! Vi tu local…</text></g>
+      <g id="d-m2"><rect x="-115" y="-100" width="200" height="80" rx="20" fill="#C8DDD0" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="-100" y="-50" text-anchor="start" font-family="Montserrat" font-weight="700" font-size="22" fill="#111">¡Hola! Vi tu café…</text></g>
+      <g id="d-m3"><rect x="-115" y="0" width="200" height="80" rx="20" fill="#C8DDD0" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="-100" y="50" text-anchor="start" font-family="Montserrat" font-weight="700" font-size="22" fill="#111">¡Hola! Vi tu bar…</text></g>
+  </g></g></g>
+  </g>
+    </svg>
+
+    <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:16px;font-family:Montserrat">
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS PARA DECIDIR</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">30</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:220px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">LOCALES</small><b style="display:block;font-size:64px;font-weight:800;color:#C8D8E8;line-height:1.05">0<span style="font-size:36px;color:#aaa">/50</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿RENUNCIO?</small>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="flex:1;height:22px;border-radius:11px;background:#333;overflow:hidden"><div id="hud-barra" style="height:100%;width:3%;background:#C8DDD0"></div></div><b style="font-size:44px;font-weight:800;color:#C8DDD0">0%</b></div></div>
+    </div>
+    <div id="d-a" style="position:absolute;left:30px;width:480px;top:270px;text-align:center;font-family:Montserrat;font-weight:800;font-size:96px;letter-spacing:-0.03em">PUERTA</div>
+    <div id="d-a2" style="position:absolute;left:30px;width:480px;top:390px;text-align:center;font-family:Montserrat;font-weight:600;font-size:36px">local por local</div>
+    <div id="d-b" style="position:absolute;left:570px;width:480px;top:270px;text-align:center;font-family:Montserrat;font-weight:800;font-size:82px;letter-spacing:-0.03em">MENSAJES</div>
+    <div id="d-b2" style="position:absolute;left:570px;width:480px;top:390px;text-align:center;font-family:Montserrat;font-weight:600;font-size:36px">uno por uno</div>
+    <div id="d-vs" style="position:absolute;left:470px;top:820px;width:140px;height:140px;border-radius:50%;background:#111;color:#fff;border:6px solid #fff;display:flex;align-items:center;justify-content:center;font-family:Montserrat;font-weight:800;font-size:56px">VS</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#dilema-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 5.9, duration: 5.9, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#d-izq", { x: -600 }, { x: 0, duration: 0.45, ease: "power3.out" }, 0.05);
+    tl.fromTo("#d-der", { x: 600 }, { x: 0, duration: 0.45, ease: "power3.out" }, 0.05);
+    tl.fromTo("#d-a", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.3);tl.fromTo("#d-a2", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.5);
+    tl.to("#d-her", { x: 60, duration: 1.2, ease: "power1.inOut" }, 0.5);
+    tl.to("#dher-cuerpo", { y: -14, duration: 0.15, yoyo: true, repeat: 7, ease: "sine.inOut" }, 0.5);
+    tl.fromTo("#d-b", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.4);tl.fromTo("#d-b2", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.6);
+    ["#d-m1", "#d-m2", "#d-m3"].forEach((m, i) => tl.fromTo(m, { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.25, ease: "back.out(2)" }, 2.7 + i * 0.3));
+    tl.fromTo("#d-vs", { scale: 0, rotation: -90, transformOrigin: "50% 50%" }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2.5)" }, 1.6);
+    window.__timelines["dilema"] = tl;
+  </script>
+</template>

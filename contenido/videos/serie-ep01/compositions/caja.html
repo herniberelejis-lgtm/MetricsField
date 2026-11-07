@@ -1,0 +1,108 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#F7F7F7}
+  </style>
+  <div id="root" data-composition-id="caja" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="caja-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="caja-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#caja-boil)">
+    <rect x="0" y="1500" width="1080" height="420" fill="#D9C7AE"/><path d="M0 1500 H1080" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g transform="translate(360 1500)"><g id="c-caja"><path d="M-220 -260 h440 v260 h-440 Z" fill="#C89B6A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><path id="c-tapa1" d="M-220 -260 l-60 -90 h220 l60 90 Z" fill="#B88A58" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><path id="c-tapa2" d="M220 -260 l60 -90 h-220 l-60 90 Z" fill="#B88A58" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="0" y="-110" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="40" fill="#111">FRÁGIL</text></g></g>
+    <g transform="translate(260 980) scale(.6)"><g id="c-s1">
+  <g id="c-s1c">
+    <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-147 -120 Q-147 -147 -120 -147 H120 Q147 -147 147 -120 V-30 Q70 -5 0 -30 Q-70 -55 -147 -30 Z" fill="#3D6FD6"/>
+    <path d="M-150 -30 Q-70 -55 0 -30 Q70 -5 150 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <g transform="translate(-72 62)"><path d="M-30 -30 Q-10 0 -30 30 M-12 -44 Q16 0 -12 44 M6 -58 Q42 0 6 58" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(60 60)"><rect x="-55" y="-55" width="110" height="110" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-42" y="-42" width="30" height="30" fill="#111"/><rect x="12" y="-42" width="30" height="30" fill="#111"/><rect x="-42" y="12" width="30" height="30" fill="#111"/>
+      <rect x="18" y="18" width="10" height="10" fill="#111"/><rect x="32" y="30" width="10" height="10" fill="#111"/><rect x="18" y="36" width="8" height="8" fill="#111"/></g>
+    
+    <g id="c-s1c-cara" transform="translate(0 -88)">
+      <circle cx="-38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="-34" cy="-6" r="8" fill="#111"/><circle cx="42" cy="-6" r="8" fill="#111"/>
+      <path d="M-22 18 Q0 38 22 18" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g></g></g>
+    <g transform="translate(470 900) scale(.55)"><g id="c-s2">
+  <g id="c-s2c">
+    <rect x="-170" y="-107" width="340" height="214" rx="24" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-167 -85 Q-167 -104 -148 -104 H148 Q167 -104 167 -85 V-30 Q80 -5 0 -30 Q-80 -55 -167 -30 Z" fill="#3D6FD6"/>
+    <path d="M-170 -30 Q-80 -55 0 -30 Q80 -5 170 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <g transform="translate(-80 40)"><path d="M-24 -24 Q-8 0 -24 24 M-10 -36 Q12 0 -10 36 M4 -48 Q34 0 4 48" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(80 40)"><rect x="-44" y="-44" width="88" height="88" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-34" y="-34" width="24" height="24" fill="#111"/><rect x="10" y="-34" width="24" height="24" fill="#111"/><rect x="-34" y="10" width="24" height="24" fill="#111"/><rect x="14" y="14" width="10" height="10" fill="#111"/></g>
+    
+    <g id="c-s2c-cara" transform="translate(0 -66)">
+      <circle cx="-38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="-34" cy="-6" r="8" fill="#111"/><circle cx="42" cy="-6" r="8" fill="#111"/>
+      <path d="M-22 18 Q0 38 22 18" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g></g></g>
+    <g transform="translate(360 760) scale(.5)"><g id="c-s3">
+  <g id="c-s3c">
+    <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-147 -120 Q-147 -147 -120 -147 H120 Q147 -147 147 -120 V-30 Q70 -5 0 -30 Q-70 -55 -147 -30 Z" fill="#3D6FD6"/>
+    <path d="M-150 -30 Q-70 -55 0 -30 Q70 -5 150 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <g transform="translate(-72 62)"><path d="M-30 -30 Q-10 0 -30 30 M-12 -44 Q16 0 -12 44 M6 -58 Q42 0 6 58" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(60 60)"><rect x="-55" y="-55" width="110" height="110" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-42" y="-42" width="30" height="30" fill="#111"/><rect x="12" y="-42" width="30" height="30" fill="#111"/><rect x="-42" y="12" width="30" height="30" fill="#111"/>
+      <rect x="18" y="18" width="10" height="10" fill="#111"/><rect x="32" y="30" width="10" height="10" fill="#111"/><rect x="18" y="36" width="8" height="8" fill="#111"/></g>
+    
+    <g id="c-s3c-cara" transform="translate(0 -88)">
+      <circle cx="-38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="38" cy="-8" r="19" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="-34" cy="-6" r="8" fill="#111"/><circle cx="42" cy="-6" r="8" fill="#111"/>
+      <path d="M-22 18 Q0 38 22 18" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g></g></g>
+    <g transform="translate(820 1180)"><g id="c-lap"><rect x="-200" y="-260" width="400" height="260" rx="18" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="-180" y="-240" width="360" height="220" rx="8" fill="#fff"/>
+      <text data-layout-ignore x="-160" y="-200" text-anchor="start" font-family="Montserrat" font-weight="800" font-size="24" fill="#111">Panel</text>
+      <rect id="c-b1" x="-150" y="-160" width="40" height="120" fill="#C8D8E8" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><rect id="c-b2" x="-90" y="-130" width="40" height="90" fill="#C8D8E8" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><rect id="c-b3" x="-30" y="-180" width="40" height="140" fill="#C8D8E8" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><rect id="c-b4" x="30" y="-200" width="40" height="160" fill="#C8DDD0" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M-240 0 h480 l-30 40 h-420 Z" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g></g>
+  </g>
+    </svg>
+
+    <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:16px;font-family:Montserrat">
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS PARA DECIDIR</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">30</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:220px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">LOCALES</small><b style="display:block;font-size:64px;font-weight:800;color:#C8D8E8;line-height:1.05">0<span style="font-size:36px;color:#aaa">/50</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿RENUNCIO?</small>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="flex:1;height:22px;border-radius:11px;background:#333;overflow:hidden"><div id="hud-barra" style="height:100%;width:3%;background:#C8DDD0"></div></div><b style="font-size:44px;font-weight:800;color:#C8DDD0">0%</b></div></div>
+    </div><h1 id="c-t" class="tit" style="top:260px">Esto es lo que <span class="acc">vendo.</span></h1>
+    <span id="c-c1" class="chip negro" style="left:80px;top:1620px">Stickers y tarjetas NFC + QR</span>
+    <span id="c-c2" class="chip dato" style="left:80px;top:1730px">Panel: cuántos lo usan</span>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#caja-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 5.88, duration: 5.88, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#c-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#c-caja", { y: 600 }, { y: 0, duration: 0.45, ease: "back.out(1.4)" }, 0.1);
+    tl.to("#c-tapa1", { rotation: -60, transformOrigin: "100% 100%", duration: 0.3, ease: "back.out(2)" }, 0.7);
+    tl.to("#c-tapa2", { rotation: 60, transformOrigin: "0% 100%", duration: 0.3, ease: "back.out(2)" }, 0.75);
+    ["#c-s1", "#c-s2", "#c-s3"].forEach((s, i) => tl.fromTo(s, { y: 500, opacity: 0, rotation: (i - 1) * 25, transformOrigin: "50% 50%" }, { y: 0, opacity: 1, rotation: (i - 1) * -8, duration: 0.45, ease: "back.out(1.8)" }, 0.95 + i * 0.15));
+    tl.fromTo("#c-c1", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 1.4);
+    tl.fromTo("#c-lap", { x: 600 }, { x: 0, duration: 0.45, ease: "back.out(1.3)" }, 3.2);
+    ["#c-b1", "#c-b2", "#c-b3", "#c-b4"].forEach((b, i) => tl.fromTo(b, { scaleY: 0, transformOrigin: "50% 100%" }, { scaleY: 1, duration: 0.3, ease: "back.out(2)" }, 3.6 + i * 0.12));
+    tl.fromTo("#c-c2", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 4.2);
+    window.__timelines["caja"] = tl;
+  </script>
+</template>

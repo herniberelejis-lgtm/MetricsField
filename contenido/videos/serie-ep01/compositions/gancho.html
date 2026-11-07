@@ -1,0 +1,82 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#E4E7EA}
+  </style>
+  <div id="root" data-composition-id="gancho" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="gancho-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="gancho-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#gancho-boil)">
+    <rect x="0" y="1500" width="1080" height="420" fill="#C9CDD2"/><path d="M0 1500 H1080" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g><rect x="620" y="560" width="360" height="300" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><path d="M800 560 v300 M620 710 h360" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(250 760) rotate(-4)"><g id="g-cal"><rect x="-120" y="-120" width="240" height="250" rx="20" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="-120" y="-120" width="240" height="70" rx="20" fill="#D9534F" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="0" y="-72" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="34" fill="#fff">DÍAS</text><text id="g-num" data-layout-ignore x="0" y="80" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="120" fill="#111">30</text></g></g>
+    <g transform="translate(540 1500) scale(.95)"><g id="g-her">
+  <g id="her">
+    <g id="her-cuerpo">
+      <rect x="-58" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="12" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="-40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <ellipse cx="40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <rect x="-100" y="-480" width="200" height="275" rx="56" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      
+      <path d="M-14 -478 h28 l-6 24 l18 120 l-26 30 l-26 -30 l18 -120 Z" fill="#111" stroke="#111111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><g id="her-bI"><rect x="-128" y="-460" width="44" height="210" rx="22" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="-106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="her-bD"><rect x="84" y="-460" width="44" height="210" rx="22" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="her-cabeza">
+        <rect x="-26" y="-510" width="52" height="40" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="0" cy="-600" r="100" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M-100 -615 Q-95 -715 0 -712 Q95 -715 100 -615 Q60 -665 0 -660 Q-60 -665 -100 -615 Z" fill="#3B2A20" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="-62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <circle cx="62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <g id="her-ojos"><ellipse cx="-34" cy="-605" rx="10" ry="14" fill="#111"/><ellipse cx="34" cy="-605" rx="10" ry="14" fill="#111"/></g>
+        <g id="her-parp" opacity="0"><path d="M-50 -606 H-18 M18 -606 H50" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none"/></g>
+        
+        <path id="her-feliz" d="M-36 -548 Q0 -505 36 -548" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="her-serio" d="M-26 -540 H26" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+        <ellipse id="her-boste" cx="0" cy="-535" rx="22" ry="30" fill="#5A2A2A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g></g></g>
+    <rect x="160" y="1240" width="760" height="40" rx="10" fill="#D9C7AE" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="200" y="1280" width="40" height="230" fill="#D9C7AE" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="840" y="1280" width="40" height="230" fill="#D9C7AE" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <g transform="translate(700 1150)"><rect x="-110" y="-120" width="220" height="140" rx="12" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="-96" y="-106" width="192" height="112" rx="6" fill="#C8D8E8"/><rect x="-20" y="20" width="40" height="60" fill="#111"/><rect x="-60" y="76" width="120" height="14" rx="6" fill="#111"/></g>
+    <g id="g-gota" opacity="0"><path d="M470 860 q-20 34 0 52 q20 -18 0 -52 Z" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+  </g>
+    </svg>
+
+    <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:16px;font-family:Montserrat">
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:250px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">DÍAS PARA DECIDIR</small><b style="display:block;font-size:64px;font-weight:800;color:#FFD54A;line-height:1.05">30</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:220px"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">LOCALES</small><b style="display:block;font-size:64px;font-weight:800;color:#C8D8E8;line-height:1.05">0<span style="font-size:36px;color:#aaa">/50</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1"><small style="display:block;font-size:28px;font-weight:800;letter-spacing:.02em;line-height:1.1">¿RENUNCIO?</small>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px"><div style="flex:1;height:22px;border-radius:11px;background:#333;overflow:hidden"><div id="hud-barra" style="height:100%;width:3%;background:#C8DDD0"></div></div><b style="font-size:44px;font-weight:800;color:#C8DDD0">0%</b></div></div>
+    </div><h1 id="g-t" class="tit" style="top:260px">En 30 días decido si <span class="acc">renuncio.</span></h1>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#gancho-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 4.05, duration: 4.05, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    gsap.set("#her-cabeza", { transformOrigin: "50% 100%" });
+    tl.fromTo("#hud", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.6)" }, 0);
+    tl.fromTo("#g-t", { scale: 1 }, { scale: 1.04, duration: 0.3, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0.5);
+    tl.fromTo("#g-cal", { y: -700, rotation: -30, transformOrigin: "50% 0%" }, { y: 0, rotation: 0, duration: 0.5, ease: "bounce.out" }, 0.2);
+    tl.to("#g-cal", { rotation: 6, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.8);
+    tl.to("#her-cabeza", { rotation: -12, duration: 0.3 }, 0.9);
+    tl.to("#her-feliz", { opacity: 0, duration: 0.08 }, 1.4); tl.to("#her-serio", { opacity: 1, duration: 0.08 }, 1.4);
+    tl.fromTo("#g-gota", { opacity: 0, y: 0 }, { opacity: 1, y: 30, duration: 0.5 }, 1.6);
+    tl.fromTo("#her-ojos", { scale: 1, transformOrigin: "50% 50%" }, { scale: 1.4, duration: 0.2, ease: "back.out(3)" }, 2.2);
+    window.__timelines["gancho"] = tl;
+  </script>
+</template>

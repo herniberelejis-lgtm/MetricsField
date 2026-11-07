@@ -1,4 +1,15 @@
-# Serie "100 locales en 30 días" — biblia del formato
+# Serie "30 días para renunciar" — biblia del formato
+
+> **Premisa elegida (07/11/2026):** Hernán tiene 30 días para decidir si renuncia
+> a su trabajo. Si en 30 días **50 locales** usan sus stickers y tarjetas,
+> renuncia; si no, sigue en la oficina. La audiencia decide qué hace cada día.
+> Marcador: DÍAS PARA DECIDIR · LOCALES x/50 · ¿RENUNCIO? (%). Episodio 1 en
+> `contenido/videos/serie-ep01/`; marcador reutilizable en `contenido/videos/serie.mjs`.
+> **Condición:** la premisa tiene que ser verdad (trabajo real, decisión real).
+> El resto de este documento (formato, voto, dilemas, fábrica) sigue valiendo;
+> donde dice "100 locales" leer "50".
+
+## Formato original (base)
 
 Serie diaria de Reels en dibujo animado: un emprendedor tiene 30 días para que
 100 locales usen su sticker de reseñas. **La audiencia decide qué hace cada día**
