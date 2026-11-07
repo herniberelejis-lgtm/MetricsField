@@ -1,0 +1,37 @@
+{
+  "nombre": "serie-ep02-duenos",
+  "voces": {
+    "es-AR-ElenaNeural": [
+      {
+        "id": "no1",
+        "texto": "No, gracias.",
+        "archivo": "contenido/voz/serie-ep02-duenos/es-AR-ElenaNeural/no1.mp3",
+        "segundos": 2.112
+      },
+      {
+        "id": "no2",
+        "texto": "Ya tengo un QR.",
+        "archivo": "contenido/voz/serie-ep02-duenos/es-AR-ElenaNeural/no2.mp3",
+        "segundos": 2.136
+      },
+      {
+        "id": "no3",
+        "texto": "No tengo tiempo para eso.",
+        "archivo": "contenido/voz/serie-ep02-duenos/es-AR-ElenaNeural/no3.mp3",
+        "segundos": 2.4
+      },
+      {
+        "id": "info",
+        "texto": "¿Me mandás info por WhatsApp?",
+        "archivo": "contenido/voz/serie-ep02-duenos/es-AR-ElenaNeural/info.mp3",
+        "segundos": 2.64
+      },
+      {
+        "id": "si",
+        "texto": "¡Dale, dejame uno!",
+        "archivo": "contenido/voz/serie-ep02-duenos/es-AR-ElenaNeural/si.mp3",
+        "segundos": 2.496
+      }
+    ]
+  }
+}

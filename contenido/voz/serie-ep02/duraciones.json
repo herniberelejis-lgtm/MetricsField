@@ -1,0 +1,61 @@
+{
+  "nombre": "serie-ep02",
+  "voces": {
+    "es-AR-TomasNeural": [
+      {
+        "id": "eligieron",
+        "texto": "Ustedes eligieron puerta. Así que agarré la caja y me fui a la avenida Gauss, en Villa Belgrano.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/eligieron.mp3",
+        "segundos": 6.864
+      },
+      {
+        "id": "ruta",
+        "texto": "Veinte locales en una tarde. Uno atrás del otro.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/ruta.mp3",
+        "segundos": 4.104
+      },
+      {
+        "id": "nos",
+        "texto": "El primero me dijo que no. El segundo, también. Y el tercero…",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/nos.mp3",
+        "segundos": 5.784
+      },
+      {
+        "id": "info",
+        "texto": "Cinco me pidieron que les mande más información.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/info.mp3",
+        "segundos": 3.288
+      },
+      {
+        "id": "si",
+        "texto": "Y tres… dijeron que sí. Una heladería, una barbería y un café.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/si.mp3",
+        "segundos": 5.52
+      },
+      {
+        "id": "libreta",
+        "texto": "Veinte puertas: trece no, cinco me pidieron info, tres sí.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/libreta.mp3",
+        "segundos": 4.704
+      },
+      {
+        "id": "aprendi",
+        "texto": "Lo que aprendí: el no más repetido fue ya tengo un QR. Pero ninguno sabía cuánta gente lo usa.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/aprendi.mp3",
+        "segundos": 6.816
+      },
+      {
+        "id": "dilema",
+        "texto": "Mañana: ¿vuelvo a ver a los cinco que pidieron info, o pruebo otra avenida?",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/dilema.mp3",
+        "segundos": 4.728
+      },
+      {
+        "id": "cta",
+        "texto": "Comentá una palabra: VUELVO o NUEVA. Tres de cincuenta… falta mucho.",
+        "archivo": "contenido/voz/serie-ep02/es-AR-TomasNeural/cta.mp3",
+        "segundos": 5.64
+      }
+    ]
+  }
+}
