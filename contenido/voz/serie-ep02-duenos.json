@@ -1,0 +1,13 @@
+{
+  "nombre": "serie-ep02-duenos",
+  "voces": ["es-AR-ElenaNeural"],
+  "velocidad": "+4%",
+  "tono": "+0Hz",
+  "lineas": [
+    { "id": "no1", "texto": "No, gracias." },
+    { "id": "no2", "texto": "Ya tengo un QR." },
+    { "id": "no3", "texto": "No tengo tiempo para eso." },
+    { "id": "info", "texto": "¿Me mandás info por WhatsApp?" },
+    { "id": "si", "texto": "¡Dale, dejame uno!" }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "nombre": "serie-ep02",
+  "voces": ["es-AR-TomasNeural"],
+  "velocidad": "+6%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "eligieron", "texto": "Ustedes eligieron puerta. Así que agarré la caja y me fui a la avenida Gauss, en Villa Belgrano." },
+    { "id": "ruta", "texto": "Veinte locales en una tarde. Uno atrás del otro." },
+    { "id": "nos", "texto": "El primero me dijo que no. El segundo, también. Y el tercero…" },
+    { "id": "info", "texto": "Cinco me pidieron que les mande más información." },
+    { "id": "si", "texto": "Y tres… dijeron que sí. Una heladería, una barbería y un café." },
+    { "id": "libreta", "texto": "Veinte puertas: trece no, cinco me pidieron info, tres sí." },
+    { "id": "aprendi", "texto": "Lo que aprendí: el no más repetido fue ya tengo un QR. Pero ninguno sabía cuánta gente lo usa." },
+    { "id": "dilema", "texto": "Mañana: ¿vuelvo a ver a los cinco que pidieron info, o pruebo otra avenida?" },
+    { "id": "cta", "texto": "Comentá una palabra: VUELVO o NUEVA. Tres de cincuenta… falta mucho." }
+  ]
+}
