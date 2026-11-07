@@ -52,3 +52,18 @@ export function fachada(id, nombre, color, L) {
     <rect x="280" y="-360" width="120" height="360" fill="${C.madera}" ${L}/><circle cx="300" cy="-180" r="9" fill="#111"/>
   </g>`;
 }
+
+/** Marcador de "30 días para decidir": día, locales activos, usos de los últimos
+ * 7 días y la balanza ALL-IN ↔ LO DEJO (`balanza` de -100, todo LO DEJO, a 100,
+ * todo ALL-IN; 0 = en el medio). */
+export function hudDecidir(id, { dia, locales, metaLocales, usos, balanza = 0 }) {
+  const pos = 50 + balanza / 2;
+  return `
+    <div id="${id}" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:14px;font-family:Montserrat">
+      <div style="${caja};width:150px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">DÍA</small><b style="display:block;font-size:60px;font-weight:800;color:#FFD54A;line-height:1.05">${dia}<span style="font-size:32px;color:#aaa">/30</span></b></div>
+      <div style="${caja};width:200px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">LOCALES</small><b style="display:block;font-size:60px;font-weight:800;color:${C.niebla};line-height:1.05"><span id="${id}-loc">${locales}</span><span style="font-size:32px;color:#aaa">/${metaLocales}</span></b></div>
+      <div style="${caja};width:170px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">USOS</small><b id="${id}-usos" style="display:block;font-size:60px;font-weight:800;color:${C.verde};line-height:1.05">${usos}</b></div>
+      <div style="${caja};flex:1;padding:10px 14px"><div style="display:flex;justify-content:space-between;font-size:28px;font-weight:800"><span style="color:${C.verde}">ALL-IN</span><span style="color:#bbb">LO DEJO</span></div>
+        <div style="position:relative;height:22px;margin-top:16px;border-radius:11px;overflow:visible;display:flex"><div style="flex:1;background:${C.verde};border-radius:11px 0 0 11px"></div><div style="flex:1;background:#555;border-radius:0 11px 11px 0"></div><div id="${id}-aguja" style="position:absolute;top:-8px;left:calc(${100 - pos}% - 6px);width:12px;height:38px;border-radius:6px;background:#fff;border:3px solid #111"></div></div></div>
+    </div>`;
+}

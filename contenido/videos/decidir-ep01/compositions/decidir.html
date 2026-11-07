@@ -1,0 +1,88 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#F7F7F7}
+  </style>
+  <div id="root" data-composition-id="decidir" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="decidir-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="decidir-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#decidir-boil)">
+    <rect x="0" y="1560" width="1080" height="360" fill="#EAEAEA"/><path d="M0 1560 H1080" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    
+  <g id="b-bal">
+    <rect x="520" y="900" width="40" height="560" fill="#111"/><path d="M440 1470 h200 l-30 -40 h-140 Z" fill="#111"/>
+    <g id="b-brazo"><rect x="190" y="880" width="700" height="24" rx="12" fill="#111"/>
+      <g><path d="M230 904 l-60 180 M230 904 l60 180" stroke="#111" stroke-width="5"/><path d="M150 1084 h160 q-20 60 -80 60 q-60 0 -80 -60 Z" fill="#C8DDD0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text x="230" y="1050" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="40" fill="#111">ALL-IN</text></g>
+      <g><path d="M850 904 l-60 180 M850 904 l60 180" stroke="#111" stroke-width="5"/><path d="M770 1084 h160 q-20 60 -80 60 q-60 0 -80 -60 Z" fill="#9AA0A6" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text x="850" y="1050" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="40" fill="#111">LO DEJO</text></g>
+    </g>
+    <circle cx="540" cy="892" r="22" fill="#FFD54A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+    <g transform="translate(540 1900) scale(.55)"><g id="b-her">
+  <g id="bher">
+    <g id="bher-cuerpo">
+      <rect x="-58" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="12" y="-235" width="46" height="235" rx="18" fill="#2B2B2B" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="-40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <ellipse cx="40" cy="-2" rx="42" ry="18" fill="#111"/>
+      <rect x="-100" y="-480" width="200" height="275" rx="56" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      
+      <g id="bher-bI"><rect x="-128" y="-460" width="44" height="210" rx="22" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="-106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="bher-bD"><rect x="84" y="-460" width="44" height="210" rx="22" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="106" cy="-245" r="28" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+      <g id="bher-cabeza">
+        <rect x="-26" y="-510" width="52" height="40" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="0" cy="-600" r="100" fill="#F2C9A0" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M-100 -615 Q-95 -715 0 -712 Q95 -715 100 -615 Q60 -665 0 -660 Q-60 -665 -100 -615 Z" fill="#3B2A20" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="-62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <circle cx="62" cy="-575" r="14" fill="#E9A48C" opacity=".8"/>
+        <g id="bher-ojos"><ellipse cx="-34" cy="-605" rx="10" ry="14" fill="#111"/><ellipse cx="34" cy="-605" rx="10" ry="14" fill="#111"/></g>
+        <g id="bher-parp" opacity="0"><path d="M-50 -606 H-18 M18 -606 H50" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none"/></g>
+        
+        <path id="bher-feliz" d="M-36 -548 Q0 -505 36 -548" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="bher-serio" d="M-26 -540 H26" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+        <ellipse id="bher-boste" cx="0" cy="-535" rx="22" ry="30" fill="#5A2A2A" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0"/>
+      </g>
+    </g>
+  </g></g></g>
+  </g>
+    </svg>
+
+    <div id="hud" style="position:absolute;left:40px;right:40px;top:40px;display:flex;gap:14px;font-family:Montserrat">
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:150px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">DÍA</small><b style="display:block;font-size:60px;font-weight:800;color:#FFD54A;line-height:1.05">1<span style="font-size:32px;color:#aaa">/30</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:200px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">LOCALES</small><b style="display:block;font-size:60px;font-weight:800;color:#C8D8E8;line-height:1.05"><span id="hud-loc">0</span><span style="font-size:32px;color:#aaa">/30</span></b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;width:170px"><small style="display:block;font-size:28px;font-weight:800;line-height:1.1">USOS</small><b id="hud-usos" style="display:block;font-size:60px;font-weight:800;color:#C8DDD0;line-height:1.05">0</b></div>
+      <div style="background:#111;border:4px solid #333;border-radius:20px;padding:10px 18px;color:#fff;text-align:center;flex:1;padding:10px 14px"><div style="display:flex;justify-content:space-between;font-size:28px;font-weight:800"><span style="color:#C8DDD0">ALL-IN</span><span style="color:#bbb">LO DEJO</span></div>
+        <div style="position:relative;height:22px;margin-top:16px;border-radius:11px;overflow:visible;display:flex"><div style="flex:1;background:#C8DDD0;border-radius:11px 0 0 11px"></div><div style="flex:1;background:#555;border-radius:0 11px 11px 0"></div><div id="hud-aguja" style="position:absolute;top:-8px;left:calc(50% - 6px);width:12px;height:38px;border-radius:6px;background:#fff;border:3px solid #111"></div></div></div>
+    </div><h1 id="b-t" class="tit" style="top:230px">30 días para <span class="acc">decidir.</span></h1>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#decidir-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 4.74, duration: 4.74, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    gsap.set("#bher-cabeza", { transformOrigin: "50% 100%" });
+    tl.fromTo("#b-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#b-bal", { y: -1200 }, { y: 0, duration: 0.55, ease: "bounce.out" }, 0.1);
+    tl.to("#b-brazo", { rotation: -8, svgOrigin: "540 892", duration: 0.5, ease: "sine.inOut" }, 1.0);
+    tl.to("#b-brazo", { rotation: 8, svgOrigin: "540 892", duration: 0.7, ease: "sine.inOut" }, 1.6);
+    tl.to("#b-brazo", { rotation: -4, svgOrigin: "540 892", duration: 0.6, ease: "sine.inOut" }, 2.4);
+    tl.to("#b-brazo", { rotation: 0, svgOrigin: "540 892", duration: 0.5, ease: "sine.inOut" }, 3.1);
+    tl.to("#bher-cabeza", { rotation: -15, duration: 0.3 }, 1.0);
+    tl.to("#bher-cabeza", { rotation: 15, duration: 0.4 }, 1.7);
+    tl.to("#bher-cabeza", { rotation: 0, duration: 0.3 }, 2.5);
+    window.__timelines["decidir"] = tl;
+  </script>
+</template>
