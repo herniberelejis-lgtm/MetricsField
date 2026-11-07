@@ -1,0 +1,64 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#F7F7F7}
+  </style>
+  <div id="root" data-composition-id="dinamico" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="dinamico-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="dinamico-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#dinamico-boil)">
+    <g transform="translate(220 1000) scale(1.05)"><g id="y-st">
+  <g id="y-stc">
+    <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-147 -120 Q-147 -147 -120 -147 H120 Q147 -147 147 -120 V-30 Q70 -5 0 -30 Q-70 -55 -147 -30 Z" fill="#3D6FD6"/>
+    <path d="M-150 -30 Q-70 -55 0 -30 Q70 -5 150 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <text data-layout-ignore x="0" y="-92" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="34" fill="#FFD54A">★★★★★</text>
+    <text data-layout-ignore x="0" y="-52" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="24" fill="#fff">Dejá tu reseña</text>
+    <g transform="translate(-72 62)"><path d="M-30 -30 Q-10 0 -30 30 M-12 -44 Q16 0 -12 44 M6 -58 Q42 0 6 58" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(60 60)"><rect x="-55" y="-55" width="110" height="110" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-42" y="-42" width="30" height="30" fill="#111"/><rect x="12" y="-42" width="30" height="30" fill="#111"/><rect x="-42" y="12" width="30" height="30" fill="#111"/>
+      <rect x="18" y="18" width="10" height="10" fill="#111"/><rect x="32" y="30" width="10" height="10" fill="#111"/><rect x="18" y="36" width="8" height="8" fill="#111"/></g>
+    
+  </g></g></g>
+    <g id="y-link"><rect x="90" y="1240" width="270" height="90" rx="45" fill="#C8D8E8" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="225" y="1300" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="34" fill="#111">link corto</text></g>
+    <path id="y-fl" d="M380 1285 C520 1285 520 1010 630 1010" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0"/>
+    <g id="y-d1"><rect x="640" y="940" width="380" height="150" rx="28" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="830" y="1002" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="32" fill="#111">Reseñas de</text><text data-layout-ignore x="830" y="1050" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="38" fill="#111">Local Centro</text></g><g id="y-d2"><rect x="640" y="1290" width="380" height="150" rx="28" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><text data-layout-ignore x="830" y="1352" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="32" fill="#111">Reseñas de</text><text data-layout-ignore x="830" y="1400" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="38" fill="#111">Local Nueva Cba.</text></g>
+    <g id="y-tij" opacity="0"><text data-layout-ignore x="520" y="1180" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="70" fill="#D9534F">✕</text></g>
+  </g>
+    </svg>
+<h1 id="y-t" class="tit" style="top:170px">Cambiás a dónde lleva. <span class="acc">No reimprimís.</span></h1>
+    <span id="y-c" class="chip negro" style="left:80px;top:1560px">El cartel queda igual</span>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#dinamico-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 6.84, duration: 6.84, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#y-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#y-st", { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.4, ease: "back.out(2)" }, 0.1);
+    tl.fromTo("#y-link", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.5);
+    tl.fromTo("#y-fl", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.8);
+    tl.fromTo("#y-d1", { opacity: 0, x: 200 }, { opacity: 1, x: 0, duration: 0.35, ease: "back.out(1.6)" }, 0.9);
+    tl.fromTo("#y-d2", { opacity: 0, x: 200 }, { opacity: 1, x: 0, duration: 0.35, ease: "back.out(1.6)" }, 1.4);
+    tl.to("#y-d1", { opacity: 0.35, duration: 0.3 }, 2.4);
+    tl.to("#y-fl", { attr: { d: "M380 1285 C520 1285 520 1360 630 1360" }, duration: 0.5, ease: "back.out(1.6)" }, 2.4);
+    tl.fromTo("#y-d2", { scale: 1, transformOrigin: "50% 50%" }, { scale: 1.08, duration: 0.2, yoyo: true, repeat: 1 }, 2.8);
+    tl.to("#y-st", { rotation: -6, duration: 0.15, yoyo: true, repeat: 3, transformOrigin: "50% 50%" }, 3.2);
+    tl.fromTo("#y-c", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 3.2);
+    window.__timelines["dinamico"] = tl;
+  </script>
+</template>

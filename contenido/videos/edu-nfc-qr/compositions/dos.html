@@ -1,0 +1,58 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#111}
+  </style>
+  <div id="root" data-composition-id="dos" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="dos-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="dos-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#dos-boil)">
+    <g transform="translate(540 1000) scale(1.9)"><g id="d-st">
+  <g id="d-stc">
+    <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M-147 -120 Q-147 -147 -120 -147 H120 Q147 -147 147 -120 V-30 Q70 -5 0 -30 Q-70 -55 -147 -30 Z" fill="#3D6FD6"/>
+    <path d="M-150 -30 Q-70 -55 0 -30 Q70 -5 150 -30" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <text data-layout-ignore x="0" y="-92" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="34" fill="#FFD54A">★★★★★</text>
+    <text data-layout-ignore x="0" y="-52" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="24" fill="#fff">Dejá tu reseña</text>
+    <g transform="translate(-72 62)"><path d="M-30 -30 Q-10 0 -30 30 M-12 -44 Q16 0 -12 44 M6 -58 Q42 0 6 58" fill="none" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g>
+    <g transform="translate(60 60)"><rect x="-55" y="-55" width="110" height="110" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-42" y="-42" width="30" height="30" fill="#111"/><rect x="12" y="-42" width="30" height="30" fill="#111"/><rect x="-42" y="12" width="30" height="30" fill="#111"/>
+      <rect x="18" y="18" width="10" height="10" fill="#111"/><rect x="32" y="30" width="10" height="10" fill="#111"/><rect x="18" y="36" width="8" height="8" fill="#111"/></g>
+    
+  </g></g></g>
+    <g id="d-a1" opacity="0"><path d="M300 1210 Q200 1400 250 1480" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path d="M228 1450 l22 34 l20 -38" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="d-a2" opacity="0"><path d="M760 1210 Q860 1400 810 1480" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path d="M788 1450 l22 34 l20 -38" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+    </svg>
+<h1 id="d-t" class="tit" style="top:170px;color:#fff">Dos tecnologías <span class="acc">en una pieza.</span></h1>
+    <span id="d-c1" class="chip dato" style="left:110px;top:1520px;font-size:44px">Chip NFC</span>
+    <span id="d-c2" class="chip dato" style="left:600px;top:1520px;font-size:44px">QR dinámico</span>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#dos-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 4.92, duration: 4.92, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#d-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+    tl.fromTo("#d-st", { scale: 0, rotation: -20, transformOrigin: "50% 50%" }, { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(2)" }, 0.1);
+    tl.fromTo("#d-a1", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 1.3);
+    tl.fromTo("#d-c1", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 1.4);
+    tl.fromTo("#d-a2", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 2.3);
+    tl.fromTo("#d-c2", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.4);
+    window.__timelines["dos"] = tl;
+  </script>
+</template>

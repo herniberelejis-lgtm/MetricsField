@@ -1,0 +1,67 @@
+<template>
+  <style>
+
+#root{position:absolute;inset:0;font-family:Montserrat,sans-serif;color:#111;overflow:hidden;background:#F7F7F7}
+.tit{position:absolute;left:80px;right:80px;margin:0;font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-0.035em}
+.acc{background:#C8D8E8;color:#111;padding:0 .1em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.chip{position:absolute;font-weight:700;font-size:36px;background:#fff;color:#111;border:5px solid #111;border-radius:999px;padding:12px 30px;white-space:nowrap}
+.chip.dato{background:#C8D8E8}
+.chip.negro{background:#111;color:#fff}
+.etq{position:absolute;font-weight:600;font-size:28px;color:#5e5e5e;background:#fff;border:2px solid #dcdfe4;border-radius:999px;padding:8px 22px}
+svg.esc{position:absolute;left:0;top:0;width:1080px;height:1920px}
+
+#root{background:#D9C7AE}
+  </style>
+  <div id="root" data-composition-id="nfc" data-width="1080" data-height="1920">
+    <svg class="esc" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+  <filter id="nfc-boil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence id="nfc-turb" type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1"/>
+    <feDisplacementMap in="SourceGraphic" scale="5"/>
+  </filter></defs>
+      <g filter="url(#nfc-boil)">
+    <g transform="translate(400 1120) scale(1.6)"><g id="n-rx">
+      <rect x="-150" y="-150" width="300" height="300" rx="34" fill="#fff" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill-opacity=".55"/>
+      <g id="n-ant"><rect x="-120" y="-120" width="240" height="240" rx="30" fill="none" stroke="#C88A2B" stroke-width="8"/><rect x="-98" y="-98" width="196" height="196" rx="25" fill="none" stroke="#C88A2B" stroke-width="8"/><rect x="-76" y="-76" width="152" height="152" rx="20" fill="none" stroke="#C88A2B" stroke-width="8"/><rect x="-54" y="-54" width="108" height="108" rx="15" fill="none" stroke="#C88A2B" stroke-width="8"/></g><rect id="n-chip" x="-26" y="-26" width="52" height="52" rx="8" fill="#111"/>
+    </g></g>
+    <g id="n-rayos" opacity="0"><path d="M470 760 l-40 90 h50 l-40 100" fill="none" stroke="#FFD54A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M600 780 l-30 70 h40 l-30 80" fill="none" stroke="#FFD54A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g transform="translate(560 520)"><g id="n-celu">
+  <g id="n-tel">
+    <rect x="-150" y="-280" width="300" height="560" rx="46" fill="#111" stroke="#111111" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="-130" y="-255" width="260" height="510" rx="30" fill="#fff"/>
+    <rect x="-40" y="-246" width="80" height="16" rx="8" fill="#111"/>
+    <rect x="-110" y="-190" width="220" height="120" rx="20" fill="#C8D8E8"/><text data-layout-ignore x="0" y="-118" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="40" fill="#111">★</text><rect x="-110" y="-50" width="220" height="24" rx="12" fill="#EAEAEA"/><rect x="-110" y="-10" width="160" height="24" rx="12" fill="#EAEAEA"/>
+  </g></g></g>
+    <g id="n-link" opacity="0"><path d="M400 1080 C400 900 520 860 560 700" fill="none" stroke="#111" stroke-width="8" stroke-dasharray="4 22" stroke-linecap="round"/></g>
+  </g>
+    </svg>
+<h1 id="n-t" class="tit" style="top:1530px;font-size:84px"><span class="acc">Sin batería.</span> Sin apps.</h1>
+    <span id="n-c1" class="chip negro" style="left:80px;top:170px">Antena + chip</span>
+    <span id="n-c2" class="chip" style="left:80px;top:270px">El celu le da energía</span>
+    
+    <div id="n-noti" style="position:absolute;left:60px;right:60px;top:380px;background:#fff;border:5px solid #111;border-radius:40px;padding:28px 34px;display:flex;gap:26px;align-items:center">
+      <span style="width:84px;height:84px;border-radius:22px;background:#C8D8E8;border:4px solid #111;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:44px">★</span>
+      <span><b style="display:block;font-size:36px;font-weight:700">Tu página de reseñas de Google</b><small style="display:block;font-size:30px;color:#5e5e5e;margin-top:4px">Tocá para abrir</small></span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const turb = document.querySelector("#nfc-turb");
+    const reloj = { t: 0 };
+    tl.to(reloj, { t: 10.63, duration: 10.63, ease: "none", onUpdate: () => turb.setAttribute("seed", String(1 + (Math.floor(reloj.t * 12) % 6))) }, 0);
+
+    tl.fromTo("#n-rx", { scale: 0.3, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.6)" }, 0.05);
+    tl.fromTo("#n-ant rect", { opacity: 0 }, { opacity: 1, duration: 0.15, stagger: 0.12 }, 0.4);
+    tl.fromTo("#n-c1", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.5);
+    tl.fromTo("#n-t", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 1.6);
+    tl.fromTo("#n-celu", { y: -900, rotation: -20, transformOrigin: "50% 50%" }, { y: 0, rotation: -8, duration: 0.55, ease: "power3.out" }, 3.3);
+    tl.fromTo("#n-rayos", { opacity: 0 }, { opacity: 1, duration: 0.12, yoyo: true, repeat: 7 }, 4.3);
+    tl.fromTo("#n-c2", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 4.3);
+    tl.to("#n-ant rect", { stroke: "#FFD54A", duration: 0.2, stagger: 0.08 }, 4.5);
+    tl.fromTo("#n-link", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 6.0);
+    tl.fromTo("#n-link path", { strokeDashoffset: 0 }, { strokeDashoffset: -260, duration: 1.4, ease: "none" }, 6.0);
+    tl.fromTo("#n-noti", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(1.5)" }, 7.2);
+    tl.fromTo("#n-t", { scale: 1, transformOrigin: "0% 50%" }, { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1, ease: "sine.inOut" }, 8.9);
+    tl.to("#n-celu", { y: -30, duration: 0.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, 7.6);
+    window.__timelines["nfc"] = tl;
+  </script>
+</template>

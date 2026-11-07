@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: Montserrat; font-weight: 100 900; src: url(assets/montserrat.woff2) format("woff2"); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="62.78" data-width="1080" data-height="1920">
+      <div id="gancho" data-composition-id="gancho" data-composition-src="compositions/gancho.html" data-start="0.00" data-duration="4.31" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="problema" data-composition-id="problema" data-composition-src="compositions/problema.html" data-start="4.31" data-duration="5.18" data-track-index="2" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="dos" data-composition-id="dos" data-composition-src="compositions/dos.html" data-start="9.49" data-duration="4.92" data-track-index="3" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="nfc" data-composition-id="nfc" data-composition-src="compositions/nfc.html" data-start="14.41" data-duration="10.63" data-track-index="4" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="qr" data-composition-id="qr" data-composition-src="compositions/qr.html" data-start="25.04" data-duration="5.77" data-track-index="5" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="dinamico" data-composition-id="dinamico" data-composition-src="compositions/dinamico.html" data-start="30.81" data-duration="6.84" data-track-index="6" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="paso1" data-composition-id="paso1" data-composition-src="compositions/paso1.html" data-start="37.65" data-duration="6.54" data-track-index="7" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="paso2" data-composition-id="paso2" data-composition-src="compositions/paso2.html" data-start="44.19" data-duration="4.59" data-track-index="8" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="paso3" data-composition-id="paso3" data-composition-src="compositions/paso3.html" data-start="48.78" data-duration="5.54" data-track-index="9" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="aviso" data-composition-id="aviso" data-composition-src="compositions/aviso.html" data-start="54.32" data-duration="3.42" data-track-index="10" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="cta" data-composition-id="cta" data-composition-src="compositions/cta.html" data-start="57.74" data-duration="5.04" data-track-index="11" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <audio id="voz-gancho" data-start="0.15" data-duration="3.911" data-track-index="20" data-volume="1" src="assets/voz/gancho.wav"></audio>
+      <audio id="voz-problema" data-start="4.46" data-duration="4.784" data-track-index="21" data-volume="1" src="assets/voz/problema.wav"></audio>
+      <audio id="voz-dos" data-start="9.64" data-duration="4.521" data-track-index="22" data-volume="1" src="assets/voz/dos.wav"></audio>
+      <audio id="voz-nfc" data-start="14.56" data-duration="10.227" data-track-index="23" data-volume="1" src="assets/voz/nfc.wav"></audio>
+      <audio id="voz-qr" data-start="25.19" data-duration="5.365" data-track-index="24" data-volume="1" src="assets/voz/qr.wav"></audio>
+      <audio id="voz-dinamico" data-start="30.96" data-duration="6.444" data-track-index="25" data-volume="1" src="assets/voz/dinamico.wav"></audio>
+      <audio id="voz-paso1" data-start="37.80" data-duration="6.144" data-track-index="26" data-volume="1" src="assets/voz/paso1.wav"></audio>
+      <audio id="voz-paso2" data-start="44.34" data-duration="4.189" data-track-index="27" data-volume="1" src="assets/voz/paso2.wav"></audio>
+      <audio id="voz-paso3" data-start="48.93" data-duration="5.141" data-track-index="28" data-volume="1" src="assets/voz/paso3.wav"></audio>
+      <audio id="voz-aviso" data-start="54.47" data-duration="2.423" data-track-index="29" data-volume="1" src="assets/voz/aviso.wav"></audio>
+      <audio id="voz-cta" data-start="57.89" data-duration="3.643" data-track-index="30" data-volume="1" src="assets/voz/cta.wav"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

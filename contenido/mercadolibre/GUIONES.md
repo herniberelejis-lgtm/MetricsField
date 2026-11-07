@@ -117,3 +117,22 @@ los competidores que elige el comercio). Cifras con "Datos de ejemplo".
 > Con el sticker en la mesa y la tarjeta del mozo, pueden dejártela con un toque o escaneando el QR.
 > Y en el panel MetricsField Reviews ves cuántos lo usan y cómo estás contra los competidores que elijas.
 > Que te elijan por lo que hacés bien. Llevá el tuyo.
+
+## Reel educativo "NFC + QR dinámico" (63 s, dibujo animado, Instagram)
+
+Proyecto en `contenido/videos/edu-nfc-qr/`; voz desde `contenido/voz/edu-nfc-qr.json`.
+Qué es, cómo funciona y cómo se usa, con el flujo real de `main`: el chip viene
+vacío; se escanea el QR para activar la pieza (negocio + PIN) y se graba el chip
+una vez con NFC Tools pegando el link de la pieza. CTA: "Comentá GUÍA".
+
+> ¿Querés que tu cliente te deje la reseña antes de irse… y no cuando ya se olvidó?
+> Mandarle el link por WhatsApp después no sirve: se lo olvida, o le da fiaca buscarte.
+> Por eso esta pieza junta dos tecnologías: un chip NFC y un QR dinámico.
+> Adentro hay un chip con una antena, sin batería. Cuando apoyan el celu, el teléfono le da energía, lee el link y abre tu página de reseñas de Google. Sin instalar nada.
+> ¿Y el QR? Es el plan B: si el celu no tiene NFC, lo escanean con la cámara.
+> Y es dinámico: apunta a un link corto. Si cambiás de link o de local, lo cambiás vos y no reimprimís nada.
+> ¿Cómo se usa? Uno: escaneás el QR y la activás. Buscás tu negocio y elegís un PIN.
+> Dos: grabás el chip una sola vez, con la app gratis NFC Tools.
+> Tres: lo pegás en la mesa o se lo das al mozo, y pedís la reseña al cerrar la cuenta.
+> Y cada lunes te llega cuántas personas la usaron.
+> ¿Querés la guía paso a paso? Comentá GUÍA y te la mandamos.
