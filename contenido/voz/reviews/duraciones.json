@@ -94,7 +94,7 @@
         "id": "gancho",
         "texto": "Tus clientes salen contentos… pero no te dejan reseña.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/gancho.mp3",
-        "segundos": 2.705
+        "segundos": 2.717
       },
       {
         "id": "competencia",
@@ -106,31 +106,31 @@
         "id": "toque",
         "texto": "Con MetricsField, acercan el celular al cartel. Un toque.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/toque.mp3",
-        "segundos": 3.088
+        "segundos": 2.984
       },
       {
         "id": "google",
         "texto": "Se abre Google para dejar la reseña. Sin apps.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/google.mp3",
-        "segundos": 2.403
+        "segundos": 2.473
       },
       {
         "id": "panel",
         "texto": "Y vos ves todo en tu panel: cuántos tocaron, qué reseñas llegaron y qué responder.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/panel.mp3",
-        "segundos": 4.04
+        "segundos": 4.087
       },
       {
         "id": "piezas",
         "texto": "Sticker, tarjeta o exhibidor. Todos llevan al mismo lugar: Google.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/piezas.mp3",
-        "segundos": 3.495
+        "segundos": 3.425
       },
       {
         "id": "cierre",
         "texto": "MetricsField Reviews. Comentá DEMO y te lo mostramos en tu local.",
         "archivo": "contenido/voz/reviews/piper-es_AR-daniela-high/cierre.mp3",
-        "segundos": 3.437
+        "segundos": 3.495
       }
     ]
   }

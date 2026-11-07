@@ -4,9 +4,9 @@
     "es-AR-TomasNeural": [
       {
         "id": "gancho",
-        "texto": "Soy Hernán… y en treinta días tengo que decidir si renuncio a mi trabajo.",
+        "texto": "Soy Hernán… y en treinta días renuncio a mi trabajo. Ya está decidido.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/gancho.mp3",
-        "segundos": 4.608
+        "segundos": 5.472
       },
       {
         "id": "caja",
@@ -16,9 +16,9 @@
       },
       {
         "id": "trato",
-        "texto": "El trato es simple: si en treinta días cincuenta locales los usan, renuncio. Si no, sigo en la oficina.",
+        "texto": "Lo que no sé es si esto me va a bancar. La meta: cincuenta locales usando mis stickers antes de irme.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/trato.mp3",
-        "segundos": 7.776
+        "segundos": 6.84
       },
       {
         "id": "ustedes",
