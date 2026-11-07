@@ -4,21 +4,21 @@
     "es-AR-TomasNeural": [
       {
         "id": "gancho",
-        "texto": "Soy Hernán… y en treinta días renuncio a mi trabajo. Ya está decidido.",
+        "texto": "Soy Hernán, tengo veintidós años… y trabajo en dos empresas al mismo tiempo.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/gancho.mp3",
-        "segundos": 5.472
+        "segundos": 5.112
       },
       {
         "id": "caja",
-        "texto": "Tengo una caja llena de stickers que llevan a Google a dejar reseñas, y un panel donde el dueño ve cuántos lo usan.",
+        "texto": "Pero me encantaría tener mi propio negocio. Y lo tengo acá: stickers que llevan a Google a dejar reseñas, y un panel donde el dueño ve cuántos lo usan.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/caja.mp3",
-        "segundos": 6.408
+        "segundos": 9.264
       },
       {
         "id": "trato",
-        "texto": "Lo que no sé es si esto me va a bancar. La meta: cincuenta locales usando mis stickers antes de irme.",
+        "texto": "El trato conmigo mismo: si en treinta días consigo cincuenta locales, renuncio a los dos trabajos sin pensarlo. Si no, sigo como estoy.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/trato.mp3",
-        "segundos": 6.84
+        "segundos": 9.456
       },
       {
         "id": "ustedes",
@@ -34,9 +34,9 @@
       },
       {
         "id": "cta",
-        "texto": "Comentá una palabra: PUERTA o MENSAJES. Nos vemos mañana… y que no se entere mi jefe.",
+        "texto": "Comentá una palabra: PUERTA o MENSAJES. Nos vemos mañana… y que no se enteren mis jefes.",
         "archivo": "contenido/voz/serie-ep01/es-AR-TomasNeural/cta.mp3",
-        "segundos": 6.312
+        "segundos": 6.456
       }
     ]
   }
