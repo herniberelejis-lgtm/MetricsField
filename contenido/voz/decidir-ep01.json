@@ -1,0 +1,15 @@
+{
+  "nombre": "decidir-ep01",
+  "voces": ["es-AR-TomasNeural"],
+  "velocidad": "+5%",
+  "tono": "-2Hz",
+  "lineas": [
+    { "id": "ahorros", "texto": "Soy Hernán. Gasté todos mis ahorros en esto." },
+    { "id": "producto", "texto": "Tarjetas y stickers con NFC y QR: el cliente de un comercio apoya el celular, o escanea, y se abre la página para dejar su reseña en Google." },
+    { "id": "panel", "texto": "Y el dueño ve en un panel cuántas personas lo usan." },
+    { "id": "decidir", "texto": "Ahora tengo treinta días para decidir: o voy all-in, o lo dejo y busco otra cosa." },
+    { "id": "datos", "texto": "Y como lo mío es medir, voy a decidir con datos: si en treinta días llego a treinta locales activos, trescientos usos por semana y quince locales que pagan, voy all-in. Si no, lo dejo." },
+    { "id": "ustedes", "texto": "Pero el camino lo eligen ustedes. Cada día, lo más votado en los comentarios es lo que hago." },
+    { "id": "cta", "texto": "Primera decisión: ¿arranco por cafeterías o por peluquerías? Comentá una palabra: CAFÉ o PELU. Mañana te muestro qué pasó." }
+  ]
+}
