@@ -12,8 +12,14 @@
 
 const MASCARA = String.raw`/\/portal\/[^/?#]+/`;
 
+/** JSON para pegar dentro de un <script>: JSON.stringify no escapa "<", y un
+ * nombre de comercio con "</script>" cerraría el bloque antes de tiempo. */
+function jsonParaScript(valor: string): string {
+  return JSON.stringify(valor).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+}
+
 function codigoGtag(gaId: string, comercio: string): string {
-  const id = JSON.stringify(gaId);
+  const id = jsonParaScript(gaId);
   return `(function(){
 var m=${MASCARA};
 function limpia(u){return u?u.replace(m,"/portal/codigo"):u;}
@@ -27,9 +33,9 @@ document.head.appendChild(s);
 var ubicacion=limpia(location.origin+location.pathname+location.search);
 gtag("js",new Date());
 gtag("config",${id},{send_page_view:false,page_location:ubicacion,page_referrer:limpia(document.referrer),page_title:"Portal"});
-gtag("event","page_view",{comercio:${JSON.stringify(comercio)}});
+gtag("event","page_view",{comercio:${jsonParaScript(comercio)}});
 window.addEventListener("portal:panel",function(e){
-gtag("event","ver_panel",{panel:String(e.detail),comercio:${JSON.stringify(comercio)}});
+gtag("event","ver_panel",{panel:String(e.detail),comercio:${jsonParaScript(comercio)}});
 });
 })();`;
 }

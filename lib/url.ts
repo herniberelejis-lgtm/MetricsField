@@ -43,13 +43,34 @@ export function urlSegura(url: string): string | null {
 // lo detecta, marca el dominio entero: dejan de andar TODOS los carteles.
 // Los clientes de la agencia (portal, admin) siguen pudiendo poner
 // cualquier destino con urlSegura — son cuentas conocidas.
-const HOSTS_RESENA_GOOGLE = ["g.page", "goo.gl", "google.com", "google.com.ar"];
+// Lista por host EXACTO y, donde hace falta, por comienzo de ruta. No alcanza
+// con "cualquier subdominio de google.com": sites.google.com, docs.google.com
+// y script.google.com alojan páginas que arma cualquiera (un formulario que
+// pide la clave del banco), y google.com/url y google.com/amp redirigen a
+// sitios de afuera. Con eso, una pieza comprada servía de phishing con
+// nuestro dominio adelante.
+const GOOGLE_PRINCIPAL = ["google.com", "www.google.com", "google.com.ar", "www.google.com.ar"];
+const DESTINOS_RESENA_GOOGLE: { hosts: string[]; rutas?: string[] }[] = [
+  { hosts: ["g.page", "maps.app.goo.gl"] },
+  { hosts: ["goo.gl"], rutas: ["/maps/"] },
+  { hosts: ["search.google.com"], rutas: ["/local/"] },
+  { hosts: ["maps.google.com", "maps.google.com.ar"] },
+  { hosts: GOOGLE_PRINCIPAL, rutas: ["/maps", "/search", "/local/"] },
+];
+
+function rutaEmpiezaCon(pathname: string, prefijo: string): boolean {
+  if (prefijo.endsWith("/")) return pathname.startsWith(prefijo);
+  return pathname === prefijo || pathname.startsWith(`${prefijo}/`);
+}
 
 export function urlResenaGoogle(url: string): string | null {
   const limpia = urlSegura(url);
   if (!limpia) return null;
-  const { protocol, hostname, username, password } = new URL(limpia);
-  if (protocol !== "https:" || username || password) return null;
+  const { protocol, hostname, username, password, pathname, port } = new URL(limpia);
+  if (protocol !== "https:" || username || password || port) return null;
   const host = hostname.toLowerCase().replace(/\.$/, "");
-  return HOSTS_RESENA_GOOGLE.some((h) => host === h || host.endsWith(`.${h}`)) ? limpia : null;
+  const ok = DESTINOS_RESENA_GOOGLE.some(
+    (d) => d.hosts.includes(host) && (!d.rutas || d.rutas.some((r) => rutaEmpiezaCon(pathname, r))),
+  );
+  return ok ? limpia : null;
 }
