@@ -101,3 +101,36 @@ describe("urlResenaGoogle", () => {
     }
   });
 });
+
+describe("urlResenaGoogle: páginas de Google que arma cualquiera", () => {
+  it("rechaza sitios, formularios, scripts y redirecciones alojados en Google", () => {
+    for (const malo of [
+      "https://sites.google.com/view/pagina-falsa-banco",
+      "https://docs.google.com/forms/d/e/xxx/viewform",
+      "https://script.google.com/macros/s/xxx/exec",
+      "https://www.google.com/url?q=https://malo.example&sa=D",
+      "https://www.google.com/amp/s/malo.example/login",
+      "https://translate.google.com/translate?u=https://malo.example",
+      "https://drive.google.com/file/d/xxx/view",
+      "https://goo.gl/abc123",
+      "https://www.google.com/mapsfalso",
+      "https://www.google.com:8443/maps/place/x",
+    ]) {
+      expect(urlResenaGoogle(malo), malo).toBeNull();
+    }
+  });
+
+  it("sigue aceptando los links de reseña y de ficha reales", () => {
+    for (const buena of [
+      "https://g.page/r/CXyZ/review",
+      "https://search.google.com/local/writereview?placeid=ChIJabc123",
+      "https://www.google.com/maps/place/Mi+Negocio/@-31.4,-64.2,17z",
+      "https://maps.google.com/?cid=1234567890",
+      "https://goo.gl/maps/AbC123",
+      "https://maps.app.goo.gl/AbC123",
+      "https://www.google.com/search?q=mi+negocio#lrd=0x123:0x456,3",
+    ]) {
+      expect(urlResenaGoogle(buena), buena).toBe(buena);
+    }
+  });
+});
