@@ -1,7 +1,11 @@
 // Validación del contacto opcional que deja el comprador de una pieza al
 // activarla (canal Mercado Libre). Funciones puras: se testean sin base.
 
-const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@.]{2,}$/;
+// Solo los caracteres de una casilla común. Comillas, paréntesis, ángulos,
+// comas y punto y coma quedan afuera: son los que un parser de direcciones
+// puede leer como "otro destinatario" (nuestro mail saliendo a quien no lo
+// pidió).
+const EMAIL = /^[a-z0-9._%+-]{1,64}@[a-z0-9-]{1,63}(\.[a-z0-9-]{1,63})*\.[a-z]{2,24}$/;
 
 /** Mail en minúsculas y sin espacios; "" si viene vacío; null si es inválido. */
 export function normalizarEmail(email: string): string | null {

@@ -20,6 +20,12 @@ export const dynamic = "force-dynamic";
 // "bot" ya cubre TelegramBot, Twitterbot, Googlebot, etc.
 const UA_BOT = /bot|crawler|spider|preview|facebookexternalhit|whatsapp\/|slurp|curl/i;
 
+// Cupo por IP compartido entre "código que no existe" y "pieza sin activar":
+// alcanza para un revendedor que activa una tanda, no para adivinar códigos.
+const CUPO_PIEZA_LIBRE = "tap-libre";
+const MAX_PIEZAS_LIBRES = 60;
+const VENTANA_PIEZAS_LIBRES = 10 * 60_000;
+
 const DESCRIPCION_RESENA = "Tu reseña nos ayuda muchísimo. Gracias por confiar en nosotros 🙏";
 
 // generateMetadata corre en cada visita a esta ruta, haya o no un logo — el
@@ -71,11 +77,19 @@ export default async function TapPage({
 }) {
   const { slug } = await params;
   // Una sola consulta con lo justo: link + datos mínimos del comercio.
+  const h = await headers();
   const datos = await getDatosTap(slug);
-  if (!datos) notFound();
+  if (!datos) {
+    // Un código que no existe gasta el mismo cupo por IP que ver una pieza
+    // sin activar (más abajo): quien prueba códigos al azar se queda sin
+    // cupo antes de dar con una pieza libre para activarla antes que quien
+    // la compró.
+    limpiarVencidos();
+    await permitir(`${CUPO_PIEZA_LIBRE}:${ipDelRequest(h)}`, MAX_PIEZAS_LIBRES, VENTANA_PIEZAS_LIBRES);
+    notFound();
+  }
   const { link, comercio } = datos;
 
-  const h = await headers();
   const userAgent = h.get("user-agent") ?? "";
   const esCrawler = UA_BOT.test(userAgent);
   const esPrefetch =
@@ -167,6 +181,8 @@ export default async function TapPage({
   // no se ofrece activarlo, y reclamarlo está bloqueado en activarAutogestion.
   if (!comercio) {
     if (link.etiqueta) notFound();
+    // Mismo resultado que un código inexistente para quien ya gastó el cupo.
+    if (!(await permitir(`${CUPO_PIEZA_LIBRE}:${ip}`, MAX_PIEZAS_LIBRES, VENTANA_PIEZAS_LIBRES))) notFound();
     return <ActivarCartel slug={slug} />;
   }
 
